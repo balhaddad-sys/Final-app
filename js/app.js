@@ -5,8 +5,8 @@
 
 // ==================== Configuration ====================
 const CONFIG = {
-  // Google Apps Script Backend URL
-  BACKEND_URL: 'https://script.google.com/macros/s/AKfycbxANSK_xHaEGx_VVw9JvcHeAuEuoB1xmfwXypYU5CcHEbN6Uo4OiU4C2f2fnQRgTAuuQg/exec',
+  // Google Apps Script Backend URL (updated with Claude Haiku 4.5 and Drive API fixes)
+  BACKEND_URL: 'https://script.google.com/macros/s/AKfycbzhjAuQlU0AMWJSQ3wC1_QZcr-esOJ7bSDaQJHGTrg9u0DEWJOZpAQwLdWl9xsfCetHgg/exec',
   APP_NAME: 'MedWard Master',
   VERSION: '1.0.0'
 };
