@@ -166,8 +166,11 @@ function getPreferredProvider() {
  */
 function analyzeImageWithVisionAI(base64Image, documentType, provider) {
   try {
-    // Remove data:image/...;base64, prefix if present
-    const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+    // Remove data:image/...;base64, prefix if present and clean whitespace
+    let base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+    // Remove all whitespace characters (spaces, newlines, tabs, etc.)
+    base64Data = base64Data.replace(/\s/g, '');
+
     const mediaType = getMediaTypeFromBase64(base64Image);
 
     Logger.log(`Using ${provider} Vision API for image analysis`);
@@ -187,7 +190,9 @@ function analyzeImageWithVisionAI(base64Image, documentType, provider) {
 
     try {
       if (fallbackProvider === 'claude') {
-        const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+        let base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+        // Remove all whitespace characters (spaces, newlines, tabs, etc.)
+        base64Data = base64Data.replace(/\s/g, '');
         const mediaType = getMediaTypeFromBase64(base64Image);
         return analyzeImageWithClaude(base64Data, mediaType, documentType);
       } else {
