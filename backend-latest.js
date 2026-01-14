@@ -345,6 +345,7 @@ function analyzeImageWithVisionAI(base64Image, documentType, provider) {
 
 /**
  * Analyze image using Claude Vision API (Anthropic)
+ * Optimized with minimal logging
  */
 function analyzeImageWithClaude(base64Data, mediaType, documentType) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
@@ -355,12 +356,8 @@ function analyzeImageWithClaude(base64Data, mediaType, documentType) {
 
   const prompt = buildVisionPrompt(documentType);
 
-  // Log payload details for debugging
-  Logger.log('Preparing Claude Vision API request');
-  Logger.log('Media type: ' + mediaType);
-  Logger.log('Base64 data length: ' + base64Data.length);
-  Logger.log('Base64 starts with: ' + base64Data.substring(0, 50));
-  Logger.log('Base64 ends with: ' + base64Data.substring(base64Data.length - 20));
+  // Minimal logging - only essential info
+  Logger.log('Claude Vision API: ' + base64Data.length + ' chars, ' + mediaType);
 
   const requestPayload = {
     model: CONFIG.CLAUDE_MODEL,
@@ -398,8 +395,6 @@ function analyzeImageWithClaude(base64Data, mediaType, documentType) {
   const result = JSON.parse(response.getContentText());
 
   if (result.error) {
-    Logger.log('Claude API returned error: ' + JSON.stringify(result.error));
-
     // Provide helpful error messages for common issues
     let errorMsg = 'Claude API Error: ' + JSON.stringify(result.error);
     if (result.error.type === 'not_found_error' && result.error.message && result.error.message.includes('model')) {
@@ -412,10 +407,9 @@ function analyzeImageWithClaude(base64Data, mediaType, documentType) {
       errorMsg = 'Claude API permission error. Your API key may not have access to this model.';
     }
 
+    Logger.log('Claude API error: ' + result.error.type);
     throw new Error(errorMsg);
   }
-
-  Logger.log('Claude Vision API request successful');
 
   // Extract the text content from Claude's response
   const extractedText = result.content[0].text;
@@ -538,92 +532,112 @@ function getMediaTypeFromBase64(base64String) {
 /**
  * Sanitize and validate base64 string for Vision APIs
  * Handles data URLs and cleans up common encoding issues
+ * Optimized version with minimal logging
  */
 function sanitizeBase64(base64String) {
   if (!base64String) {
     throw new Error('Base64 string is empty or null');
   }
 
-  Logger.log('=== sanitizeBase64 function ===');
-  Logger.log('Input string length: ' + base64String.length);
-  Logger.log('Input starts with: ' + base64String.substring(0, 100));
+  // Remove data URL prefix if present (single operation)
+  let cleanBase64 = base64String.includes(',') && base64String.startsWith('data:')
+    ? base64String.split(',')[1]
+    : base64String;
 
-  // Check if this is a data URL
-  const isDataUrl = base64String.startsWith('data:');
-  Logger.log('Is data URL: ' + isDataUrl);
+  // Remove whitespace and URL encoding artifacts in one pass
+  cleanBase64 = cleanBase64
+    .replace(/\s+/g, '')
+    .replace(/%20/g, '')
+    .replace(/%2B/g, '+')
+    .replace(/%2F/g, '/')
+    .replace(/%3D/g, '=');
 
-  // Remove data URL prefix if present
-  let cleanBase64 = base64String;
-  if (isDataUrl) {
-    if (base64String.includes(',')) {
-      cleanBase64 = base64String.split(',')[1];
-      Logger.log('Removed data URL prefix, new length: ' + cleanBase64.length);
-    } else {
-      Logger.log('Warning: Data URL format detected but no comma found');
-    }
-  }
-
-  // Remove all whitespace characters (spaces, newlines, tabs, carriage returns)
-  const beforeWhitespace = cleanBase64.length;
-  cleanBase64 = cleanBase64.replace(/\s+/g, '');
-  if (cleanBase64.length !== beforeWhitespace) {
-    Logger.log('Removed whitespace, length changed from ' + beforeWhitespace + ' to ' + cleanBase64.length);
-  }
-
-  // Remove any URL encoding artifacts
-  cleanBase64 = cleanBase64.replace(/%20/g, '').replace(/%2B/g, '+').replace(/%2F/g, '/').replace(/%3D/g, '=');
-
-  // Validate base64 format - should only contain A-Z, a-z, 0-9, +, /, and = for padding
-  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-  if (!base64Regex.test(cleanBase64)) {
-    Logger.log('❌ Base64 validation FAILED');
-    Logger.log('Length: ' + cleanBase64.length);
-    Logger.log('First 100 chars: ' + cleanBase64.substring(0, 100));
-    Logger.log('Last 50 chars: ' + cleanBase64.substring(Math.max(0, cleanBase64.length - 50)));
-
-    // Find invalid characters for better error reporting
-    const invalidChars = cleanBase64.match(/[^A-Za-z0-9+/=]/g);
-    if (invalidChars) {
-      Logger.log('Invalid characters found: ' + invalidChars.join(', '));
-    }
-
-    throw new Error('Base64 string contains invalid characters. Use Drive API workflow to avoid encoding issues.');
-  }
-
-  // Validate minimum length (a 1x1 PNG is ~96 chars, set threshold to 50 to catch truncation)
+  // Fast validation: check minimum length first (cheapest operation)
   const MIN_BASE64_LENGTH = 50;
   if (cleanBase64.length < MIN_BASE64_LENGTH) {
-    Logger.log('❌ Base64 string too short: ' + cleanBase64.length + ' characters');
-    Logger.log('This usually indicates truncated or placeholder data');
     throw new Error(
       'Base64 string too short (' + cleanBase64.length + ' chars). ' +
-      'Expected at least ' + MIN_BASE64_LENGTH + ' characters for a valid image. ' +
-      'Ensure you are using the Drive API workflow (upload → fileId → interpret).'
+      'Expected at least ' + MIN_BASE64_LENGTH + ' characters. ' +
+      'Use Drive API workflow (upload → fileId → interpret).'
     );
   }
 
-  // Validate base64 padding
-  const paddingCount = (cleanBase64.match(/=/g) || []).length;
-  if (paddingCount > 2) {
-    Logger.log('Warning: Unusual base64 padding: ' + paddingCount + ' equals signs');
+  // Validate base64 format - only if length check passes
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanBase64)) {
+    // Only log details on validation failure
+    Logger.log('Base64 validation failed. Length: ' + cleanBase64.length);
+    throw new Error('Base64 string contains invalid characters. Use Drive API workflow to avoid encoding issues.');
   }
 
-  Logger.log('✓ Base64 validation passed');
-  Logger.log('Final length: ' + cleanBase64.length + ' characters');
-  Logger.log('Padding: ' + paddingCount + ' equals signs');
+  // Optional: Log only on success in debug mode (comment out for production)
+  // Logger.log('Base64 validated: ' + cleanBase64.length + ' chars');
 
   return cleanBase64;
 }
 
 /**
  * Get AI interpretation using preferred provider
+ * With intelligent caching for faster repeated requests
  */
 function getAIInterpretation(medicalText, documentType, provider, presentationFormat) {
-  if (provider === 'claude') {
-    return getClaudeInterpretation(medicalText, documentType, presentationFormat);
-  } else {
-    return getOpenAIInterpretation(medicalText, documentType, presentationFormat);
+  // Generate cache key from input parameters
+  const cacheKey = generateCacheKey(medicalText, documentType, provider, presentationFormat);
+
+  // Try to get cached result (cache expires after 1 hour)
+  const cache = CacheService.getScriptCache();
+  const cachedResult = cache.get(cacheKey);
+
+  if (cachedResult) {
+    Logger.log('✓ Cache hit - returning cached interpretation');
+    try {
+      return JSON.parse(cachedResult);
+    } catch (e) {
+      Logger.log('Cache parse error, fetching fresh data');
+      // Fall through to fetch new data
+    }
   }
+
+  // Cache miss - fetch fresh interpretation
+  Logger.log('Cache miss - fetching new interpretation');
+  let result;
+
+  if (provider === 'claude') {
+    result = getClaudeInterpretation(medicalText, documentType, presentationFormat);
+  } else {
+    result = getOpenAIInterpretation(medicalText, documentType, presentationFormat);
+  }
+
+  // Store in cache (max 1 hour = 3600 seconds)
+  try {
+    cache.put(cacheKey, JSON.stringify(result), 3600);
+  } catch (e) {
+    Logger.log('Warning: Failed to cache result: ' + e.message);
+    // Continue anyway - caching failure shouldn't break the app
+  }
+
+  return result;
+}
+
+/**
+ * Generate a cache key from interpretation parameters
+ * Uses MD5 hash to keep key size manageable
+ */
+function generateCacheKey(medicalText, documentType, provider, presentationFormat) {
+  // Normalize the text to handle minor variations
+  const normalizedText = medicalText.trim().toLowerCase().substring(0, 5000); // Limit to 5000 chars for hashing
+  const keyData = normalizedText + '|' + documentType + '|' + provider + '|' + (presentationFormat || 'detailed');
+
+  // Generate MD5 hash for consistent key length
+  const hash = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.MD5,
+    keyData,
+    Utilities.Charset.UTF_8
+  );
+
+  // Convert to hex string
+  return 'ai_interp_' + hash.map(function(byte) {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('');
 }
 
 /**
@@ -876,25 +890,20 @@ function parseAIResponse(aiResponse) {
 
 /**
  * Download image from Google Drive and convert to base64 data URL
+ * Optimized with minimal logging
  * @param {string} fileId - Google Drive file ID
  * @return {string} Base64 data URL or null if error
  */
 function downloadImageFromDrive(fileId) {
   try {
-    // Validate fileId
+    // Fast validation
     if (!fileId || typeof fileId !== 'string' || fileId.trim().length === 0) {
-      Logger.log('Invalid fileId provided: ' + fileId);
       return null;
     }
 
-    Logger.log('Downloading file from Drive: ' + fileId);
-
     // Get file from Drive
     const file = DriveApp.getFileById(fileId);
-
-    // Verify file exists and is accessible
     if (!file) {
-      Logger.log('File not found in Drive: ' + fileId);
       return null;
     }
 
@@ -902,37 +911,23 @@ function downloadImageFromDrive(fileId) {
     const mimeType = blob.getContentType();
     const fileSize = blob.getBytes().length;
 
-    Logger.log('File downloaded successfully');
-    Logger.log('- File name: ' + file.getName());
-    Logger.log('- MimeType: ' + mimeType);
-    Logger.log('- Size: ' + fileSize + ' bytes');
-
-    // Validate it's an image
-    if (!mimeType || !mimeType.startsWith('image/')) {
-      Logger.log('Warning: File does not appear to be an image. MimeType: ' + mimeType);
-      // Continue anyway - let the Vision API decide
-    }
-
     // Check size limits (10MB max for most Vision APIs)
     const MAX_SIZE = 10 * 1024 * 1024; // 10MB
     if (fileSize > MAX_SIZE) {
-      Logger.log('Error: File too large: ' + fileSize + ' bytes (max: ' + MAX_SIZE + ')');
+      Logger.log('File too large: ' + fileSize + ' bytes');
       throw new Error('Image file too large. Maximum size is 10MB.');
     }
 
-    // Convert to base64
+    // Convert to base64 and create data URL in one step
     const base64 = Utilities.base64Encode(blob.getBytes());
-    Logger.log('Converted to base64, length: ' + base64.length);
-
-    // Create data URL
     const dataUrl = 'data:' + mimeType + ';base64,' + base64;
-    Logger.log('Created data URL, total length: ' + dataUrl.length);
+
+    Logger.log('Drive download: ' + file.getName() + ' (' + fileSize + ' bytes)');
 
     return dataUrl;
 
   } catch (error) {
-    Logger.log('Error downloading from Drive: ' + error.toString());
-    Logger.log('Error stack: ' + (error.stack || 'No stack trace available'));
+    Logger.log('Drive download error: ' + error.toString());
     return null;
   }
 }

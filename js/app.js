@@ -12,7 +12,9 @@ const CONFIG = {
   COMPRESS_MAX_WIDTH: 1920,
   COMPRESS_MAX_HEIGHT: 1920,
   RETRY_ATTEMPTS: 3,
-  RETRY_DELAY: 2000
+  RETRY_DELAY: 1000, // Reduced from 2000ms to 1000ms for faster retries
+  CACHE_MAX_SIZE: 10, // Maximum cached results
+  CACHE_TTL: 3600000  // 1 hour cache lifetime
 };
 
 // ==================== State ====================
@@ -20,7 +22,8 @@ const State = {
   user: null,
   files: [],
   currentAnalysis: null,
-  wardPresentation: null
+  wardPresentation: null,
+  resultsCache: new Map() // LRU cache for analysis results
 };
 
 // ==================== DOM Elements ====================
@@ -281,6 +284,7 @@ function clearFiles() {
 window.removeFile = removeFile;
 
 // ==================== Image Compression ====================
+// Optimized with OffscreenCanvas support and faster processing
 async function compressImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -289,7 +293,6 @@ async function compressImage(file) {
       const img = new Image();
 
       img.onload = () => {
-        const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
 
@@ -299,28 +302,54 @@ async function compressImage(file) {
             CONFIG.COMPRESS_MAX_WIDTH / width,
             CONFIG.COMPRESS_MAX_HEIGHT / height
           );
-          width *= ratio;
-          height *= ratio;
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
         }
 
-        canvas.width = width;
-        canvas.height = height;
+        // Use OffscreenCanvas if available (faster, runs off main thread)
+        let canvas;
+        let ctx;
 
-        const ctx = canvas.getContext('2d');
+        if (typeof OffscreenCanvas !== 'undefined') {
+          canvas = new OffscreenCanvas(width, height);
+          ctx = canvas.getContext('2d', { alpha: false }); // Disable alpha for faster rendering
+        } else {
+          canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          ctx = canvas.getContext('2d', { alpha: false });
+        }
+
+        // Draw image with optimized settings
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              console.log(`📦 Compressed ${file.name}: ${formatFileSize(file.size)} → ${formatFileSize(blob.size)}`);
-              resolve(blob);
-            } else {
-              reject(new Error('Compression failed'));
-            }
-          },
-          file.type,
-          CONFIG.COMPRESS_QUALITY
-        );
+        // Convert to blob
+        if (canvas.convertToBlob) {
+          // OffscreenCanvas API
+          canvas.convertToBlob({
+            type: file.type,
+            quality: CONFIG.COMPRESS_QUALITY
+          }).then(blob => {
+            console.log(`📦 Compressed ${file.name}: ${formatFileSize(file.size)} → ${formatFileSize(blob.size)}`);
+            resolve(blob);
+          }).catch(() => reject(new Error('Compression failed')));
+        } else {
+          // Standard Canvas API
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                console.log(`📦 Compressed ${file.name}: ${formatFileSize(file.size)} → ${formatFileSize(blob.size)}`);
+                resolve(blob);
+              } else {
+                reject(new Error('Compression failed'));
+              }
+            },
+            file.type,
+            CONFIG.COMPRESS_QUALITY
+          );
+        }
       };
 
       img.onerror = () => reject(new Error('Failed to load image'));
@@ -368,45 +397,38 @@ async function analyzeImages(docType) {
     throw new Error('No files selected');
   }
 
-  // Step 1: Compress images
+  // Step 1: Compress images IN PARALLEL for faster processing
   updateStep('compress', 'active', 'Compressing images...');
   updateProgress(10);
 
-  const compressedFiles = [];
-  for (let i = 0; i < State.files.length; i++) {
-    const file = State.files[i];
-
-    try {
-      const compressed = await compressImage(file);
-      compressedFiles.push(compressed);
-      updateProgress(10 + (i + 1) / State.files.length * 20);
-    } catch (error) {
+  const compressionPromises = State.files.map(file =>
+    compressImage(file).catch(error => {
       console.warn(`Failed to compress ${file.name}, using original`);
-      compressedFiles.push(file);
-    }
-  }
+      return file; // Fallback to original on error
+    })
+  );
 
+  const compressedFiles = await Promise.all(compressionPromises);
+  updateProgress(30);
   updateStep('compress', 'completed', 'Compression complete');
 
-  // Step 2: Upload to cloud
+  // Step 2: Upload to cloud IN PARALLEL for faster uploads
   updateStep('upload', 'active', 'Uploading to cloud...');
   updateProgress(35);
 
-  const fileIds = [];
-  for (let i = 0; i < compressedFiles.length; i++) {
-    const file = compressedFiles[i];
+  const uploadPromises = compressedFiles.map(async (file, index) => {
     const base64 = await fileToBase64(file);
-
     const uploadResult = await callBackendWithRetry('uploadImage', { image: base64 });
 
     if (!uploadResult.success) {
-      throw new Error(`Failed to upload ${State.files[i].name}`);
+      throw new Error(`Failed to upload ${State.files[index].name}`);
     }
 
-    fileIds.push(uploadResult.fileId);
-    updateProgress(35 + (i + 1) / compressedFiles.length * 25);
-  }
+    return uploadResult.fileId;
+  });
 
+  const fileIds = await Promise.all(uploadPromises);
+  updateProgress(60);
   updateStep('upload', 'completed', 'Upload complete');
 
   // Step 3: OCR processing
@@ -446,12 +468,28 @@ async function analyzeText(docType) {
     throw new Error('Please enter medical report text');
   }
 
-  // Skip compression and upload steps
+  // Check cache first for instant results
+  const cacheKey = generateCacheKey(text, docType);
+  const cachedResult = getFromCache(cacheKey);
+
+  if (cachedResult) {
+    console.log('✓ Cache hit - using cached analysis');
+    updateStep('compress', 'completed', 'Not needed');
+    updateStep('upload', 'completed', 'Not needed');
+    updateStep('ocr', 'completed', 'Cached');
+    updateStep('analyze', 'completed', 'Cached result');
+    updateProgress(100);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    displayResults(cachedResult);
+    showToast('Using cached result (instant!)', 'success');
+    return;
+  }
+
+  // Cache miss - perform analysis
   updateStep('compress', 'completed', 'Not needed');
   updateStep('upload', 'completed', 'Not needed');
   updateProgress(40);
 
-  // Step 3: Direct analysis
   updateStep('ocr', 'active', 'Processing text...');
   updateProgress(60);
 
@@ -470,12 +508,60 @@ async function analyzeText(docType) {
     throw new Error(result.error || 'Analysis failed');
   }
 
+  // Store in cache for future use
+  addToCache(cacheKey, result);
+
   updateStep('ocr', 'completed', 'Text processed');
   updateStep('analyze', 'completed', 'Analysis complete');
   updateProgress(100);
 
   await new Promise(resolve => setTimeout(resolve, 500));
   displayResults(result);
+}
+
+// ==================== Caching Utilities ====================
+// Generate cache key for text-based analysis
+function generateCacheKey(text, docType) {
+  const normalized = text.trim().toLowerCase().substring(0, 5000);
+  return `${docType}:${hashString(normalized)}`;
+}
+
+// Simple hash function for cache keys
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return hash.toString(36);
+}
+
+// LRU cache management - configurable size and TTL
+function addToCache(key, value) {
+  if (State.resultsCache.size >= CONFIG.CACHE_MAX_SIZE) {
+    // Remove oldest entry
+    const firstKey = State.resultsCache.keys().next().value;
+    State.resultsCache.delete(firstKey);
+  }
+  State.resultsCache.set(key, {
+    data: value,
+    timestamp: Date.now()
+  });
+}
+
+function getFromCache(key) {
+  const cached = State.resultsCache.get(key);
+  if (!cached) return null;
+
+  // Check cache expiration
+  const age = Date.now() - cached.timestamp;
+  if (age > CONFIG.CACHE_TTL) {
+    State.resultsCache.delete(key);
+    return null;
+  }
+
+  return cached.data;
 }
 
 // ==================== Backend Communication ====================
