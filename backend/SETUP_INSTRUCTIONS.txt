@@ -1,5 +1,6 @@
 ================================================================================
-MedWard Master - Google Apps Script Setup Instructions
+MedWard Master - Google Apps Script Setup Instructions (v2.0)
+Enhanced with Claude Vision and GPT-4 Vision APIs
 ================================================================================
 
 STEP 1: CREATE APPS SCRIPT PROJECT
@@ -13,27 +14,94 @@ STEP 1: CREATE APPS SCRIPT PROJECT
 STEP 2: COPY THE CODE
 -----------------------------------
 1. Delete the default function myFunction() { } code
-2. Open Code.gs from this repository
+2. Open backend/Code.gs from this repository
 3. Copy the ENTIRE file content
 4. Paste into the Apps Script editor
 
 
-STEP 3: CONFIGURE API KEY (CRITICAL!)
+STEP 3: CONFIGURE API KEYS (CRITICAL!)
 -----------------------------------
-⚠️ NEVER put your API key directly in the code!
+⚠️ NEVER put your API keys directly in the code!
+
+You need to configure at least ONE of the following API providers:
+
+OPTION A: Use Claude (Anthropic) - RECOMMENDED
+----------------------------------------------
+Claude 3.5 Sonnet provides superior medical image analysis and OCR.
 
 1. Click the gear icon (⚙️) for Project Settings
 2. Scroll down to "Script Properties"
 3. Click "Add script property"
-4. Enter:
-   - Property: OPENAI_API_KEY
-   - Value: sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   (paste your actual OpenAI API key here)
-5. Click "Save script properties"
+4. Add the following properties:
+
+   Property: ANTHROPIC_API_KEY
+   Value: sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   (paste your Anthropic API key)
+
+5. (Optional) Set preferred provider:
+   Property: AI_PROVIDER
+   Value: claude
 
 
-STEP 4: ENABLE DRIVE API
+OPTION B: Use OpenAI GPT-4
+---------------------------
+GPT-4 and GPT-4 Vision for text and image analysis.
+
+1. Click the gear icon (⚙️) for Project Settings
+2. Scroll down to "Script Properties"
+3. Click "Add script property"
+4. Add the following properties:
+
+   Property: OPENAI_API_KEY
+   Value: sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   (paste your OpenAI API key)
+
+5. (Optional) Set preferred provider:
+   Property: AI_PROVIDER
+   Value: openai
+
+
+OPTION C: Use BOTH (Best Performance)
+--------------------------------------
+Configure both API keys for automatic fallback and redundancy.
+
+1. Add BOTH properties:
+   - ANTHROPIC_API_KEY = your Claude key
+   - OPENAI_API_KEY = your OpenAI key
+   - AI_PROVIDER = claude (or openai)
+
+2. The system will automatically fall back to the other provider if one fails
+
+3. Click "Save script properties"
+
+
+GETTING API KEYS
+================================================================================
+
+Claude (Anthropic) API Key:
+---------------------------
+1. Go to: https://console.anthropic.com/
+2. Sign up or log in
+3. Navigate to "API Keys"
+4. Create a new API key
+5. Copy the key (starts with sk-ant-)
+6. Add credits to your account at: https://console.anthropic.com/settings/billing
+
+OpenAI API Key:
+---------------
+1. Go to: https://platform.openai.com/
+2. Sign up or log in
+3. Navigate to "API Keys"
+4. Create a new API key
+5. Copy the key (starts with sk-)
+6. Add credits to your account at: https://platform.openai.com/account/billing
+
+
+STEP 4: DRIVE API (Optional)
 -----------------------------------
+Drive API is no longer required for OCR, but still used for report archiving.
+
+To enable report archiving to Google Drive:
 1. In the left sidebar, look for "Services" with a + icon
 2. Click the + icon next to "Services"
 3. Find "Drive API" in the list
@@ -49,7 +117,7 @@ STEP 5: DEPLOY AS WEB APP
 4. Choose "Web app"
 5. Configure deployment:
 
-   Description: MedWard Backend v1.0
+   Description: MedWard Backend v2.0 - Vision AI
    Execute as: Me (your-email@gmail.com)
    Who has access: Anyone
 
@@ -67,23 +135,70 @@ STEP 5: DEPLOY AS WEB APP
    ⚠️ SAVE THIS URL! You need it for the frontend!
 
 
-STEP 6: TEST THE BACKEND (Optional but Recommended)
+STEP 6: TEST THE BACKEND (Recommended)
 -----------------------------------
+Test with text interpretation:
+
 1. In the Apps Script editor, find the function dropdown
 2. Select "testInterpret" from the dropdown
 3. Click the Run button (▶️)
 4. Check the "Execution log" at the bottom
 5. Should see JSON output with interpretation results
 
+Test with image (optional):
+1. Modify testImageInterpret() function with a real base64 image
+2. Select "testImageInterpret" from dropdown
+3. Click Run
+4. Check execution log for results
+
+
+NEW FEATURES IN V2.0
+================================================================================
+
+✨ Claude Vision API Support
+   - Superior medical OCR accuracy
+   - Better understanding of medical terminology
+   - Handles complex lab reports and imaging results
+
+✨ GPT-4 Vision API Support
+   - High-quality image analysis
+   - Detailed text extraction
+   - Alternative to Claude Vision
+
+✨ Automatic Fallback
+   - If one provider fails, automatically tries the other
+   - Ensures high availability
+   - No downtime for image analysis
+
+✨ Configurable Provider
+   - Choose your preferred AI provider
+   - Switch between Claude and OpenAI easily
+   - Optimize for cost or performance
+
+✨ Enhanced OCR
+   - Removed basic Google Drive OCR
+   - Uses state-of-the-art vision models
+   - Much better accuracy on medical documents
+
+✨ Image Format Support
+   - PNG, JPEG, WebP
+   - High-resolution medical images
+   - Scanned documents and photos
+
 
 COMMON ISSUES & FIXES
 ================================================================================
 
-Issue: "OpenAI API key not configured"
-Fix: Make sure you added OPENAI_API_KEY in Script Properties (not in code!)
+Issue: "Anthropic API key not configured"
+Fix: Make sure you added ANTHROPIC_API_KEY in Script Properties (not in code!)
 
-Issue: "Drive API not found"
-Fix: Enable Drive API in Services (see Step 4)
+Issue: "OpenAI API key not configured"
+Fix: Make sure you added OPENAI_API_KEY in Script Properties
+
+Issue: "Both vision providers failed"
+Fix: Check that at least ONE API key is configured correctly
+     Check API key has sufficient credits
+     Check API key permissions on provider dashboard
 
 Issue: Authorization errors
 Fix: Run the testInterpret function first to trigger authorization
@@ -93,6 +208,15 @@ Fix: Make sure deployment has "Who has access: Anyone"
 
 Issue: 404 or deployment not found
 Fix: Use the /exec URL, not the /dev URL
+
+Issue: Image analysis too slow
+Fix: This is normal for vision models (5-15 seconds)
+     Consider using a faster model in CONFIG
+
+Issue: High API costs
+Fix: Monitor usage on provider dashboards
+     Consider using cheaper models for non-critical analyses
+     Set usage limits on API provider platforms
 
 
 UPDATING THE CODE
@@ -104,26 +228,73 @@ When you need to update the backend code:
 2. Click "Deploy" > "Manage deployments"
 3. Click the pencil (edit) icon next to your active deployment
 4. Under "Version", select "New version"
-5. Add description (optional)
+5. Add description: "Updated to v2.0 with Vision AI"
 6. Click "Deploy"
 
 The URL stays the same - no need to update the frontend!
+
+
+COST OPTIMIZATION
+================================================================================
+
+Claude Pricing (as of 2024):
+- Input: ~$3 per million tokens
+- Output: ~$15 per million tokens
+- Images: Count as input tokens based on size
+
+OpenAI GPT-4 Vision Pricing:
+- Input: ~$10 per million tokens
+- Output: ~$30 per million tokens
+- Images: Additional cost based on detail level
+
+Tips to Reduce Costs:
+- Use Claude for most analyses (cheaper and better)
+- Set MAX_TOKENS limit in CONFIG
+- Compress images before upload
+- Monitor usage on provider dashboards
+- Set monthly spending limits
 
 
 SECURITY NOTES
 ================================================================================
 
 ✅ DO:
-- Store API key in Script Properties
+- Store API keys in Script Properties
 - Use "Execute as: Me" for deployments
-- Monitor API usage on OpenAI dashboard
+- Monitor API usage on provider dashboards
 - Keep API keys secure and private
+- Rotate keys periodically
 
 ❌ DON'T:
 - Put API keys directly in code
 - Share your Apps Script project publicly
 - Commit API keys to Git
 - Use production patient data without HIPAA compliance
+- Share your deployment URL publicly without authentication
+
+
+PERFORMANCE TIPS
+================================================================================
+
+1. Image Quality:
+   - Use clear, high-resolution images
+   - Ensure good lighting and contrast
+   - Avoid blurry or rotated images
+
+2. Model Selection:
+   - Claude 3.5 Sonnet: Best for medical content
+   - GPT-4 Vision: Good alternative
+   - Consider switching based on document type
+
+3. Prompt Tuning:
+   - Vision prompts are optimized for medical documents
+   - Modify buildVisionPrompt() for specific needs
+   - Add more context for better results
+
+4. Caching:
+   - Consider caching common interpretations
+   - Store processed reports in Drive
+   - Reuse analysis for similar documents
 
 
 NEXT STEPS
@@ -136,8 +307,21 @@ After completing backend setup:
 3. Update CONFIG.BACKEND_URL with your URL
 4. Commit and push to GitHub
 5. Enable GitHub Pages
-6. Test the full application!
+6. Test the full application with both text and images!
 
+
+SUPPORT & RESOURCES
+================================================================================
+
+Documentation:
+- Anthropic API: https://docs.anthropic.com/
+- OpenAI API: https://platform.openai.com/docs/
+- Apps Script: https://developers.google.com/apps-script
+
+Troubleshooting:
+- Check Apps Script execution logs
+- Review API provider status pages
+- Test with simple examples first
 
 For detailed deployment instructions, see:
 - README.md (full documentation)
@@ -145,6 +329,7 @@ For detailed deployment instructions, see:
 
 
 ================================================================================
-Support: Open an issue in the GitHub repository
+Version: 2.0.0 (Vision AI Enhanced)
 Last Updated: January 2026
+Support: Open an issue in the GitHub repository
 ================================================================================
