@@ -34,6 +34,18 @@ function doPost(e) {
     const requestData = JSON.parse(e.postData.contents);
     const action = requestData.action;
 
+    // Log request details
+    Logger.log('=== Request received ===');
+    Logger.log('Action: ' + action);
+    Logger.log('Raw POST data length: ' + e.postData.contents.length);
+
+    if (requestData.image) {
+      Logger.log('Image data present in request');
+      Logger.log('Image data type: ' + typeof requestData.image);
+      Logger.log('Image data length: ' + requestData.image.length);
+      Logger.log('Image data starts with: ' + requestData.image.substring(0, 100));
+    }
+
     // Route to appropriate handler
     let response;
     switch(action) {
@@ -116,6 +128,8 @@ function handleInterpret(data) {
     // If image is provided, use Vision AI for extraction and analysis
     if (data.image) {
       Logger.log('Processing image with Vision AI...');
+      Logger.log('Image data in handleInterpret - length: ' + data.image.length);
+      Logger.log('Image data in handleInterpret - first 100 chars: ' + data.image.substring(0, 100));
       visionAnalysis = analyzeImageWithVisionAI(data.image, documentType, provider);
 
       if (!visionAnalysis || !visionAnalysis.extractedText) {
@@ -387,26 +401,35 @@ function sanitizeBase64(base64String) {
     throw new Error('Base64 string is empty or null');
   }
 
+  Logger.log('=== sanitizeBase64 function ===');
+  Logger.log('Input string length: ' + base64String.length);
+  Logger.log('Input starts with: ' + base64String.substring(0, 100));
+  Logger.log('Input contains comma: ' + base64String.includes(','));
+
   // Remove data URL prefix if present
   let cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String;
+  Logger.log('After removing data URL prefix, length: ' + cleanBase64.length);
 
   // Remove all whitespace characters (spaces, newlines, tabs, carriage returns)
   cleanBase64 = cleanBase64.replace(/\s+/g, '');
+  Logger.log('After removing whitespace, length: ' + cleanBase64.length);
 
   // Remove any URL encoding artifacts
   cleanBase64 = cleanBase64.replace(/%20/g, '');
+  Logger.log('After removing URL encoding, length: ' + cleanBase64.length);
 
   // Validate base64 format - should only contain A-Z, a-z, 0-9, +, /, and = for padding
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
   if (!base64Regex.test(cleanBase64)) {
     Logger.log('Invalid base64 characters detected. Length: ' + cleanBase64.length);
     Logger.log('First 100 chars: ' + cleanBase64.substring(0, 100));
+    Logger.log('Last 50 chars: ' + cleanBase64.substring(Math.max(0, cleanBase64.length - 50)));
     throw new Error('Base64 string contains invalid characters');
   }
 
   // Validate minimum length
   if (cleanBase64.length < 100) {
-    throw new Error('Base64 string too short - possible corruption');
+    throw new Error('Base64 string too short - possible corruption. Length: ' + cleanBase64.length);
   }
 
   Logger.log('Base64 validation passed. Length: ' + cleanBase64.length);
