@@ -913,10 +913,277 @@ body {
   background: var(--warning);
 }
 
+/* ==================== View Toggle ==================== */
+.view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--gray-100);
+  padding: 0.25rem;
+  border-radius: var(--radius);
+  margin-right: 1rem;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--gray-600);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toggle-btn.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-btn:hover:not(.active) {
+  color: var(--gray-900);
+}
+
+/* ==================== Ward Presentation ==================== */
+.ward-presentation {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.ward-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 1rem;
+  background: var(--gray-900);
+  color: white;
+  text-align: center;
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin: -2rem -2rem 1.5rem -2rem;
+  border-top: 4px solid var(--primary);
+  border-bottom: 4px solid var(--primary);
+}
+
+.ward-section {
+  margin-bottom: 2rem;
+}
+
+.ward-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Status Table */
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.status-table th,
+.status-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--gray-300);
+}
+
+.status-table th {
+  background: var(--gray-100);
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.status-green {
+  background: var(--success);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.status-yellow {
+  background: var(--warning);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.status-red {
+  background: var(--danger);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.8);
+  }
+}
+
+/* Active Issues */
+.issue-list {
+  list-style: none;
+  counter-reset: issue-counter;
+}
+
+.issue-item {
+  counter-increment: issue-counter;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--gray-50);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius);
+  position: relative;
+}
+
+.issue-item::before {
+  content: counter(issue-counter) ". ";
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.issue-name {
+  font-weight: 700;
+  color: var(--gray-900);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.issue-details {
+  margin-top: 0.25rem;
+  color: var(--gray-700);
+}
+
+.issue-arrow {
+  color: var(--primary);
+  font-weight: 700;
+  margin: 0 0.5rem;
+}
+
+/* Today's Plan */
+.plan-list {
+  list-style: none;
+}
+
+.plan-item {
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  margin-bottom: 0.5rem;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  position: relative;
+}
+
+.plan-item::before {
+  content: '☐';
+  position: absolute;
+  left: 0.75rem;
+  font-size: 1.2rem;
+  color: var(--gray-400);
+}
+
+.plan-item:hover {
+  background: var(--primary-light);
+}
+
+.plan-item:hover::before {
+  color: var(--primary);
+}
+
+/* Watch For */
+.watchfor-list {
+  list-style: none;
+}
+
+.watchfor-item {
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  margin-bottom: 0.5rem;
+  background: var(--danger-light);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius);
+  position: relative;
+  color: var(--gray-900);
+}
+
+.watchfor-item::before {
+  content: '⚠️';
+  position: absolute;
+  left: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.watchfor-arrow {
+  color: var(--danger);
+  font-weight: 700;
+  margin: 0 0.5rem;
+}
+
+/* Divider */
+.ward-divider {
+  border: none;
+  border-top: 2px solid var(--gray-900);
+  margin: 1.5rem 0;
+}
+
+.ward-divider-thin {
+  border-top: 1px dashed var(--gray-300);
+}
+
+/* Generate Ward Button */
+.generate-ward-btn {
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+.generate-ward-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.generate-ward-btn:disabled {
+  background: var(--gray-300);
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ==================== Responsive Design ==================== */
 @media (max-width: 1024px) {
   .dashboard-container {
     grid-template-columns: 1fr;
+  }
+
+  .view-toggle {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .panel-actions {
+    flex-wrap: wrap;
   }
 }
 

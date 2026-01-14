@@ -212,6 +212,7 @@ function handleInterpret(data) {
     const documentType = data.documentType || 'general';
     const username = data.username || 'Anonymous';
     const provider = data.provider || getPreferredProvider();
+    const presentationFormat = data.presentationFormat || 'detailed'; // 'detailed' or 'ward'
 
     let medicalText = data.text || '';
     let visionAnalysis = null;
@@ -272,7 +273,7 @@ function handleInterpret(data) {
     }
 
     // Get comprehensive AI interpretation
-    const interpretation = getAIInterpretation(medicalText, documentType, provider);
+    const interpretation = getAIInterpretation(medicalText, documentType, provider, presentationFormat);
 
     // If vision analysis provided initial insights, merge them
     if (visionAnalysis && visionAnalysis.initialInsights) {
@@ -617,26 +618,26 @@ function sanitizeBase64(base64String) {
 /**
  * Get AI interpretation using preferred provider
  */
-function getAIInterpretation(medicalText, documentType, provider) {
+function getAIInterpretation(medicalText, documentType, provider, presentationFormat) {
   if (provider === 'claude') {
-    return getClaudeInterpretation(medicalText, documentType);
+    return getClaudeInterpretation(medicalText, documentType, presentationFormat);
   } else {
-    return getOpenAIInterpretation(medicalText, documentType);
+    return getOpenAIInterpretation(medicalText, documentType, presentationFormat);
   }
 }
 
 /**
  * Get interpretation using Claude API
  */
-function getClaudeInterpretation(medicalText, documentType) {
+function getClaudeInterpretation(medicalText, documentType, presentationFormat) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
 
   if (!apiKey) {
     throw new Error('Anthropic API key not configured in Script Properties');
   }
 
-  const systemPrompt = buildSystemPrompt(documentType);
-  const userPrompt = buildUserPrompt(medicalText, documentType);
+  const systemPrompt = buildSystemPrompt(documentType, presentationFormat);
+  const userPrompt = buildUserPrompt(medicalText, documentType, presentationFormat);
 
   const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
     method: 'post',
@@ -684,15 +685,15 @@ function getClaudeInterpretation(medicalText, documentType) {
 /**
  * Get interpretation using OpenAI API
  */
-function getOpenAIInterpretation(medicalText, documentType) {
+function getOpenAIInterpretation(medicalText, documentType, presentationFormat) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
 
   if (!apiKey) {
     throw new Error('OpenAI API key not configured in Script Properties');
   }
 
-  const systemPrompt = buildSystemPrompt(documentType);
-  const userPrompt = buildUserPrompt(medicalText, documentType);
+  const systemPrompt = buildSystemPrompt(documentType, presentationFormat);
+  const userPrompt = buildUserPrompt(medicalText, documentType, presentationFormat);
 
   const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
     method: 'post',
@@ -723,9 +724,9 @@ function getOpenAIInterpretation(medicalText, documentType) {
 }
 
 /**
- * Build system prompt based on document type
+ * Build system prompt based on document type and presentation format
  */
-function buildSystemPrompt(documentType) {
+function buildSystemPrompt(documentType, presentationFormat) {
   const basePrompt = `You are MedWard Master, an expert medical AI assistant specializing in clinical interpretation.
 Your role is to analyze medical reports and provide clear, actionable insights for healthcare professionals.
 
@@ -743,13 +744,29 @@ You have advanced training in:
     'general': 'Provide comprehensive analysis of all clinical information presented with appropriate clinical context.'
   };
 
-  return basePrompt + '\n\n' + (typeSpecific[documentType] || typeSpecific['general']);
+  let formatSpecific = '';
+  if (presentationFormat === 'ward') {
+    formatSpecific = '\n\nYou are generating output for ward rounds. Format your response to be concise, scannable, and actionable for busy clinicians. Prioritize brevity and clinical relevance. Use standard medical abbreviations.';
+  }
+
+  return basePrompt + '\n\n' + (typeSpecific[documentType] || typeSpecific['general']) + formatSpecific;
 }
 
 /**
  * Build user prompt for interpretation
  */
-function buildUserPrompt(medicalText, documentType) {
+function buildUserPrompt(medicalText, documentType, presentationFormat) {
+  if (presentationFormat === 'ward') {
+    return buildWardPresentationPrompt(medicalText, documentType);
+  } else {
+    return buildDetailedPrompt(medicalText, documentType);
+  }
+}
+
+/**
+ * Build detailed presentation prompt (original format)
+ */
+function buildDetailedPrompt(medicalText, documentType) {
   return `Please analyze this ${documentType} report and provide a structured interpretation in JSON format with the following sections:
 
 {
@@ -773,6 +790,53 @@ Important:
 - Consider differential diagnoses where appropriate
 - Provide actionable clinical recommendations
 - Use evidence-based clinical reasoning
+
+Medical Report:
+${medicalText}`;
+}
+
+/**
+ * Build ward presentation prompt (concise format for rounds)
+ */
+function buildWardPresentationPrompt(medicalText, documentType) {
+  return `Generate a ward presentation summary in JSON format for morning rounds. Be CONCISE, SCANNABLE, and ACTIONABLE.
+
+Return JSON in this EXACT structure:
+
+{
+  "wardPresentation": {
+    "header": "Age Sex | Primary Diagnosis | POD/Day# | Key Comorbidities",
+    "status": [
+      {"domain": "Hemodynamics", "indicator": "green|yellow|red", "value": "Brief status"},
+      {"domain": "Respiratory", "indicator": "green|yellow|red", "value": "Brief status"},
+      {"domain": "Renal", "indicator": "green|yellow|red", "value": "Brief status"},
+      {"domain": "Infection", "indicator": "green|yellow|red", "value": "Brief status"}
+    ],
+    "activeIssues": [
+      {"issue": "Issue name", "status": "Current status", "action": "What to do"},
+      "Maximum 5 issues, prioritized by urgency"
+    ],
+    "todaysPlan": [
+      "Checkbox item 1 - specific actionable task",
+      "Checkbox item 2 - specific actionable task",
+      "Maximum 6 tasks"
+    ],
+    "watchFor": [
+      "Red flag 1 with → clinical implication",
+      "Red flag 2 with → clinical implication",
+      "Maximum 4 red flags"
+    ]
+  }
+}
+
+FORMATTING RULES:
+1. Use standard medical abbreviations (DM, HTN, CKD, POD, UO, Cr, Hb, BP, SpO2)
+2. Quantify everything with numbers, not descriptions
+3. Front-load critical info - most urgent first
+4. Each issue needs "issue → status → action" format
+5. No prose, use bullet points
+6. Maximum one page when printed
+7. Traffic light indicators: green (stable), yellow (watch), red (urgent)
 
 Medical Report:
 ${medicalText}`;

@@ -19,7 +19,8 @@ const CONFIG = {
 const State = {
   user: null,
   files: [],
-  currentAnalysis: null
+  currentAnalysis: null,
+  wardPresentation: null
 };
 
 // ==================== DOM Elements ====================
@@ -112,6 +113,17 @@ function init() {
   // Results
   Elements.newAnalysisBtn?.addEventListener('click', startNewAnalysis);
   Elements.printBtn?.addEventListener('click', () => window.print());
+
+  // View Toggle
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => toggleResultsView(btn.dataset.view));
+  });
+
+  // Export Ward Presentation
+  const exportWardBtn = document.getElementById('export-ward-btn');
+  if (exportWardBtn) {
+    exportWardBtn.addEventListener('click', exportWardPresentation);
+  }
 
   console.log('✅ Initialization complete');
 }
@@ -559,6 +571,10 @@ function updateStep(stepName, state, statusText) {
 function displayResults(data) {
   hideProcessing();
 
+  // Store analysis in state
+  State.currentAnalysis = data;
+  State.wardPresentation = null; // Reset ward presentation
+
   // Show results panel
   Elements.resultsPanel?.classList.add('active');
 
@@ -678,6 +694,256 @@ function showToast(message, type = 'info') {
   setTimeout(() => {
     Elements.toast.classList.remove('show');
   }, 4000);
+}
+
+// ==================== Ward Presentation ====================
+function toggleResultsView(view) {
+  // Update toggle buttons
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+
+  // Show/hide views
+  const detailedView = document.getElementById('detailed-view');
+  const wardView = document.getElementById('ward-view');
+  const exportBtn = document.getElementById('export-ward-btn');
+
+  if (view === 'ward') {
+    if (detailedView) detailedView.style.display = 'none';
+    if (wardView) wardView.style.display = 'block';
+    if (exportBtn) exportBtn.style.display = 'inline-flex';
+
+    // Generate ward presentation if not already generated
+    if (!State.wardPresentation && State.currentAnalysis) {
+      generateWardPresentation();
+    }
+  } else {
+    if (detailedView) detailedView.style.display = 'block';
+    if (wardView) wardView.style.display = 'none';
+    if (exportBtn) exportBtn.style.display = 'none';
+  }
+}
+
+async function generateWardPresentation() {
+  const wardContent = document.getElementById('ward-content');
+  if (!wardContent) return;
+
+  // Show loading
+  wardContent.innerHTML = '<div class="loading"><div class="processing-spinner"></div><p>Generating ward presentation...</p></div>';
+
+  try {
+    const files = State.files;
+    const docType = Elements.reportType?.value || Elements.reportTypeText?.value;
+
+    const payload = {
+      documentType: docType,
+      username: State.user?.username || 'Guest',
+      presentationFormat: 'ward'
+    };
+
+    // Handle images or text
+    if (files && files.length > 0) {
+      // Use existing file upload logic
+      const compressedFile = await compressImage(files[0]);
+      const base64 = await fileToBase64(compressedFile);
+      const uploadResult = await callBackendWithRetry('uploadImage', { image: base64 });
+
+      if (!uploadResult.success) {
+        throw new Error('Failed to upload image');
+      }
+
+      payload.fileId = uploadResult.fileId;
+    } else {
+      payload.text = Elements.textInput?.value.trim();
+    }
+
+    const result = await callBackendWithRetry('interpret', payload);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to generate ward presentation');
+    }
+
+    State.wardPresentation = result.wardPresentation || result;
+    displayWardPresentation(State.wardPresentation);
+
+  } catch (error) {
+    console.error('Ward presentation error:', error);
+    wardContent.innerHTML = `<div class="error-message">
+      <p>⚠️ Failed to generate ward presentation: ${error.message}</p>
+      <button class="btn-secondary" onclick="generateWardPresentation()">Try Again</button>
+    </div>`;
+  }
+}
+
+// Make generateWardPresentation globally available
+window.generateWardPresentation = generateWardPresentation;
+
+function displayWardPresentation(data) {
+  const wardContent = document.getElementById('ward-content');
+  if (!wardContent) return;
+
+  // Handle both ward format and detailed format
+  const ward = data.wardPresentation || data;
+
+  let html = '';
+
+  // Header
+  if (ward.header) {
+    html += `<div class="ward-header">${escapeHtml(ward.header)}</div>`;
+  }
+
+  html += '<hr class="ward-divider">';
+
+  // Status Table
+  if (ward.status && ward.status.length > 0) {
+    html += '<div class="ward-section">';
+    html += '<div class="ward-section-title">STATUS</div>';
+    html += '<table class="status-table">';
+    html += '<thead><tr><th>Domain</th><th>Status</th><th>Value</th></tr></thead>';
+    html += '<tbody>';
+
+    ward.status.forEach(item => {
+      const indicatorClass = `status-${item.indicator || 'green'}`;
+      html += `<tr>
+        <td><strong>${escapeHtml(item.domain)}</strong></td>
+        <td><span class="status-indicator ${indicatorClass}"></span></td>
+        <td>${escapeHtml(item.value)}</td>
+      </tr>`;
+    });
+
+    html += '</tbody></table>';
+    html += '</div>';
+  }
+
+  // Active Issues
+  if (ward.activeIssues && ward.activeIssues.length > 0) {
+    html += '<div class="ward-section">';
+    html += '<div class="ward-section-title">ACTIVE ISSUES</div>';
+    html += '<ul class="issue-list">';
+
+    ward.activeIssues.forEach(issue => {
+      if (typeof issue === 'string') {
+        html += `<li class="issue-item">${escapeHtml(issue)}</li>`;
+      } else {
+        html += `<li class="issue-item">
+          <div class="issue-name">${escapeHtml(issue.issue)}</div>
+          <div class="issue-details">
+            ${escapeHtml(issue.status)}
+            <span class="issue-arrow">→</span>
+            ${escapeHtml(issue.action)}
+          </div>
+        </li>`;
+      }
+    });
+
+    html += '</ul>';
+    html += '</div>';
+  }
+
+  // Today's Plan
+  if (ward.todaysPlan && ward.todaysPlan.length > 0) {
+    html += '<div class="ward-section">';
+    html += '<div class="ward-section-title">TODAY\'S PLAN</div>';
+    html += '<ul class="plan-list">';
+
+    ward.todaysPlan.forEach(item => {
+      html += `<li class="plan-item">${escapeHtml(item)}</li>`;
+    });
+
+    html += '</ul>';
+    html += '</div>';
+  }
+
+  // Watch For
+  if (ward.watchFor && ward.watchFor.length > 0) {
+    html += '<div class="ward-section">';
+    html += '<div class="ward-section-title">WATCH FOR</div>';
+    html += '<ul class="watchfor-list">';
+
+    ward.watchFor.forEach(item => {
+      html += `<li class="watchfor-item">${escapeHtml(item)}</li>`;
+    });
+
+    html += '</ul>';
+    html += '</div>';
+  }
+
+  html += '<hr class="ward-divider">';
+
+  wardContent.innerHTML = html;
+}
+
+function exportWardPresentation() {
+  const wardContent = document.getElementById('ward-content');
+  if (!wardContent) return;
+
+  // Create a printable version
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Ward Presentation - MedWard Master</title>
+      <style>
+        body {
+          font-family: 'Courier New', monospace;
+          font-size: 12pt;
+          line-height: 1.6;
+          margin: 1in;
+        }
+        .ward-header {
+          font-size: 14pt;
+          font-weight: bold;
+          text-align: center;
+          border-top: 3px solid #000;
+          border-bottom: 3px solid #000;
+          padding: 0.5in 0;
+          margin-bottom: 0.5in;
+        }
+        .ward-section-title {
+          font-weight: bold;
+          margin-top: 0.3in;
+          margin-bottom: 0.1in;
+        }
+        .status-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 0.2in;
+        }
+        .status-table th, .status-table td {
+          border: 1px solid #000;
+          padding: 0.1in;
+          text-align: left;
+        }
+        .issue-list, .plan-list, .watchfor-list {
+          list-style: none;
+          padding-left: 0;
+        }
+        .issue-item, .plan-item, .watchfor-item {
+          margin-bottom: 0.1in;
+        }
+        .ward-divider {
+          border: none;
+          border-top: 2px solid #000;
+          margin: 0.3in 0;
+        }
+        @page {
+          margin: 0.5in;
+        }
+      </style>
+    </head>
+    <body>
+      ${wardContent.innerHTML}
+      <script>
+        window.onload = function() {
+          window.print();
+          window.close();
+        };
+      </script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
 }
 
 // ==================== Start App ====================
