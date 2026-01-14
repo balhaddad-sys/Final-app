@@ -1,20 +1,27 @@
 /**
- * MedWard Master - Backend API
+ * MedWard Master - Backend API (Enhanced with Vision AI)
  * Google Apps Script Web App
  *
  * SETUP INSTRUCTIONS:
  * 1. Copy this code to script.google.com
- * 2. Add Script Property: OPENAI_API_KEY = your_openai_key
- * 3. Enable Drive API service
- * 4. Deploy as Web App (Execute as: Me, Access: Anyone)
+ * 2. Add Script Properties:
+ *    - OPENAI_API_KEY = your_openai_key (for GPT-4 and GPT-4 Vision)
+ *    - ANTHROPIC_API_KEY = your_anthropic_key (for Claude Vision)
+ *    - AI_PROVIDER = 'claude' or 'openai' (optional, defaults to claude)
+ * 3. Deploy as Web App (Execute as: Me, Access: Anyone)
+ *
+ * Note: Drive API is no longer required (removed basic OCR)
  */
 
 // Configuration
 const CONFIG = {
-  OPENAI_MODEL: 'gpt-4',
-  MAX_TOKENS: 2000,
+  OPENAI_TEXT_MODEL: 'gpt-4',
+  OPENAI_VISION_MODEL: 'gpt-4-vision-preview',
+  CLAUDE_MODEL: 'claude-3-5-sonnet-20241022',
+  MAX_TOKENS: 4000,
   TEMPERATURE: 0.7,
-  DRIVE_FOLDER_NAME: 'MedWard Reports'
+  DRIVE_FOLDER_NAME: 'MedWard Reports',
+  DEFAULT_PROVIDER: 'claude' // 'claude' or 'openai'
 };
 
 /**
@@ -56,7 +63,11 @@ function doPost(e) {
  * Handle OPTIONS requests for CORS preflight
  */
 function doGet(e) {
-  return createCORSResponse({ status: 'MedWard Backend API is running' });
+  return createCORSResponse({
+    status: 'MedWard Backend API is running',
+    version: '2.0.0',
+    features: ['Claude Vision', 'GPT-4 Vision', 'Advanced OCR']
+  });
 }
 
 /**
@@ -95,30 +106,43 @@ function handleLogin(data) {
  */
 function handleInterpret(data) {
   try {
-    let medicalText = data.text || '';
     const documentType = data.documentType || 'general';
     const username = data.username || 'Anonymous';
+    const provider = data.provider || getPreferredProvider();
 
-    // If image is provided, extract text using OCR
+    let medicalText = data.text || '';
+    let visionAnalysis = null;
+
+    // If image is provided, use Vision AI for extraction and analysis
     if (data.image) {
-      medicalText = performOCR(data.image);
-      if (!medicalText) {
-        return { success: false, error: 'OCR failed to extract text from image' };
+      Logger.log('Processing image with Vision AI...');
+      visionAnalysis = analyzeImageWithVisionAI(data.image, documentType, provider);
+
+      if (!visionAnalysis || !visionAnalysis.extractedText) {
+        return { success: false, error: 'Vision AI failed to analyze image' };
       }
+
+      medicalText = visionAnalysis.extractedText;
     }
 
     if (!medicalText || medicalText.trim().length === 0) {
-      return { success: false, error: 'No medical text provided' };
+      return { success: false, error: 'No medical text provided or extracted' };
     }
 
-    // Get AI interpretation
-    const interpretation = getAIInterpretation(medicalText, documentType);
+    // Get comprehensive AI interpretation
+    const interpretation = getAIInterpretation(medicalText, documentType, provider);
+
+    // If vision analysis provided initial insights, merge them
+    if (visionAnalysis && visionAnalysis.initialInsights) {
+      interpretation.visionInsights = visionAnalysis.initialInsights;
+    }
 
     // Archive the report to Google Drive
     archiveReport(medicalText, interpretation, username, documentType);
 
     return {
       success: true,
+      provider: provider,
       ...interpretation,
       timestamp: new Date().toISOString()
     };
@@ -130,57 +154,123 @@ function handleInterpret(data) {
 }
 
 /**
- * Perform OCR on base64 image using Google Drive API
+ * Get preferred AI provider from Script Properties or use default
  */
-function performOCR(base64Image) {
+function getPreferredProvider() {
+  const provider = PropertiesService.getScriptProperties().getProperty('AI_PROVIDER');
+  return provider || CONFIG.DEFAULT_PROVIDER;
+}
+
+/**
+ * Analyze medical image using Vision AI (Claude or GPT-4 Vision)
+ */
+function analyzeImageWithVisionAI(base64Image, documentType, provider) {
   try {
     // Remove data:image/...;base64, prefix if present
-    const base64Data = base64Image.split(',')[1] || base64Image;
+    const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+    const mediaType = getMediaTypeFromBase64(base64Image);
 
-    // Decode base64 to blob
-    const blob = Utilities.newBlob(
-      Utilities.base64Decode(base64Data),
-      'image/png',
-      'temp_image.png'
-    );
+    Logger.log(`Using ${provider} Vision API for image analysis`);
 
-    // Upload to Drive temporarily
-    const file = Drive.Files.insert(
-      { title: 'temp_ocr_' + new Date().getTime() },
-      blob,
-      { ocr: true, ocrLanguage: 'en' }
-    );
-
-    // Get the recognized text
-    const doc = Drive.Files.get(file.id);
-    const text = doc.description || '';
-
-    // Delete temporary file
-    Drive.Files.remove(file.id);
-
-    return text;
+    if (provider === 'claude') {
+      return analyzeImageWithClaude(base64Data, mediaType, documentType);
+    } else {
+      return analyzeImageWithOpenAIVision(base64Image, documentType);
+    }
 
   } catch (error) {
-    Logger.log('OCR Error: ' + error.toString());
-    return null;
+    Logger.log('Vision AI error: ' + error.toString());
+
+    // Try fallback to other provider
+    const fallbackProvider = provider === 'claude' ? 'openai' : 'claude';
+    Logger.log(`Attempting fallback to ${fallbackProvider}`);
+
+    try {
+      if (fallbackProvider === 'claude') {
+        const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+        const mediaType = getMediaTypeFromBase64(base64Image);
+        return analyzeImageWithClaude(base64Data, mediaType, documentType);
+      } else {
+        return analyzeImageWithOpenAIVision(base64Image, documentType);
+      }
+    } catch (fallbackError) {
+      Logger.log('Fallback also failed: ' + fallbackError.toString());
+      throw new Error('Both vision providers failed');
+    }
   }
 }
 
 /**
- * Get AI interpretation using OpenAI API
+ * Analyze image using Claude Vision API (Anthropic)
  */
-function getAIInterpretation(medicalText, documentType) {
+function analyzeImageWithClaude(base64Data, mediaType, documentType) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
+
+  if (!apiKey) {
+    throw new Error('Anthropic API key not configured in Script Properties');
+  }
+
+  const prompt = buildVisionPrompt(documentType);
+
+  const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    method: 'post',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json'
+    },
+    payload: JSON.stringify({
+      model: CONFIG.CLAUDE_MODEL,
+      max_tokens: CONFIG.MAX_TOKENS,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: base64Data
+            }
+          },
+          {
+            type: 'text',
+            text: prompt
+          }
+        ]
+      }]
+    }),
+    muteHttpExceptions: true
+  });
+
+  const result = JSON.parse(response.getContentText());
+
+  if (result.error) {
+    throw new Error('Claude API Error: ' + JSON.stringify(result.error));
+  }
+
+  // Extract the text content from Claude's response
+  const extractedText = result.content[0].text;
+
+  return {
+    extractedText: extractedText,
+    initialInsights: `Analyzed with Claude Vision (${CONFIG.CLAUDE_MODEL})`,
+    provider: 'claude'
+  };
+}
+
+/**
+ * Analyze image using GPT-4 Vision API
+ */
+function analyzeImageWithOpenAIVision(base64Image, documentType) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
 
   if (!apiKey) {
     throw new Error('OpenAI API key not configured in Script Properties');
   }
 
-  // Build the prompt based on document type
-  const systemPrompt = buildSystemPrompt(documentType);
-  const userPrompt = buildUserPrompt(medicalText, documentType);
+  const prompt = buildVisionPrompt(documentType);
 
-  // Call OpenAI API
   const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
     method: 'post',
     headers: {
@@ -188,7 +278,169 @@ function getAIInterpretation(medicalText, documentType) {
       'Content-Type': 'application/json'
     },
     payload: JSON.stringify({
-      model: CONFIG.OPENAI_MODEL,
+      model: CONFIG.OPENAI_VISION_MODEL,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: prompt
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: base64Image,
+              detail: 'high'
+            }
+          }
+        ]
+      }],
+      max_tokens: CONFIG.MAX_TOKENS
+    }),
+    muteHttpExceptions: true
+  });
+
+  const result = JSON.parse(response.getContentText());
+
+  if (result.error) {
+    throw new Error('OpenAI Vision API Error: ' + result.error.message);
+  }
+
+  const extractedText = result.choices[0].message.content;
+
+  return {
+    extractedText: extractedText,
+    initialInsights: `Analyzed with GPT-4 Vision (${CONFIG.OPENAI_VISION_MODEL})`,
+    provider: 'openai'
+  };
+}
+
+/**
+ * Build vision-specific prompt for image analysis
+ */
+function buildVisionPrompt(documentType) {
+  const typeSpecific = {
+    'lab': 'laboratory test results, including all test names, values, units, and reference ranges',
+    'imaging': 'medical imaging report, including findings, impressions, technique, and clinical correlations',
+    'pathology': 'pathology report, including specimen description, microscopic findings, and diagnosis',
+    'general': 'medical document, extracting all relevant clinical information'
+  };
+
+  const docDescription = typeSpecific[documentType] || typeSpecific['general'];
+
+  return `You are analyzing a medical ${docDescription}.
+
+Please perform these tasks:
+
+1. EXTRACT ALL TEXT: Extract all visible text from the image with high accuracy. Include:
+   - All test names and values
+   - All reference ranges and units
+   - All headings and labels
+   - All dates, patient info, and identifiers
+   - All findings and impressions
+   - Maintain the original structure and formatting as much as possible
+
+2. ORGANIZE THE TEXT: Present the extracted text in a clear, structured format that preserves:
+   - Hierarchical relationships
+   - Section headers
+   - List structures
+   - Tabular data (if present)
+
+3. QUALITY CHECK: Ensure you've captured:
+   - All numerical values accurately
+   - All medical terminology correctly
+   - All units of measurement
+   - All flags or abnormal indicators
+
+Please provide the complete extracted text now. Be thorough and accurate.`;
+}
+
+/**
+ * Get media type from base64 string
+ */
+function getMediaTypeFromBase64(base64String) {
+  if (base64String.startsWith('data:')) {
+    const match = base64String.match(/data:([^;]+);/);
+    return match ? match[1] : 'image/png';
+  }
+  // Default to common medical image formats
+  return 'image/png';
+}
+
+/**
+ * Get AI interpretation using preferred provider
+ */
+function getAIInterpretation(medicalText, documentType, provider) {
+  if (provider === 'claude') {
+    return getClaudeInterpretation(medicalText, documentType);
+  } else {
+    return getOpenAIInterpretation(medicalText, documentType);
+  }
+}
+
+/**
+ * Get interpretation using Claude API
+ */
+function getClaudeInterpretation(medicalText, documentType) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
+
+  if (!apiKey) {
+    throw new Error('Anthropic API key not configured in Script Properties');
+  }
+
+  const systemPrompt = buildSystemPrompt(documentType);
+  const userPrompt = buildUserPrompt(medicalText, documentType);
+
+  const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    method: 'post',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json'
+    },
+    payload: JSON.stringify({
+      model: CONFIG.CLAUDE_MODEL,
+      max_tokens: CONFIG.MAX_TOKENS,
+      system: systemPrompt,
+      messages: [{
+        role: 'user',
+        content: userPrompt
+      }]
+    }),
+    muteHttpExceptions: true
+  });
+
+  const result = JSON.parse(response.getContentText());
+
+  if (result.error) {
+    throw new Error('Claude API Error: ' + JSON.stringify(result.error));
+  }
+
+  const aiResponse = result.content[0].text;
+  return parseAIResponse(aiResponse);
+}
+
+/**
+ * Get interpretation using OpenAI API
+ */
+function getOpenAIInterpretation(medicalText, documentType) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
+
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured in Script Properties');
+  }
+
+  const systemPrompt = buildSystemPrompt(documentType);
+  const userPrompt = buildUserPrompt(medicalText, documentType);
+
+  const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'post',
+    headers: {
+      'Authorization': 'Bearer ' + apiKey,
+      'Content-Type': 'application/json'
+    },
+    payload: JSON.stringify({
+      model: CONFIG.OPENAI_TEXT_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -205,7 +457,6 @@ function getAIInterpretation(medicalText, documentType) {
     throw new Error('OpenAI API Error: ' + result.error.message);
   }
 
-  // Parse the AI response
   const aiResponse = result.choices[0].message.content;
   return parseAIResponse(aiResponse);
 }
@@ -215,16 +466,23 @@ function getAIInterpretation(medicalText, documentType) {
  */
 function buildSystemPrompt(documentType) {
   const basePrompt = `You are MedWard Master, an expert medical AI assistant specializing in clinical interpretation.
-Your role is to analyze medical reports and provide clear, actionable insights for healthcare professionals.`;
+Your role is to analyze medical reports and provide clear, actionable insights for healthcare professionals.
+
+You have advanced training in:
+- Clinical pathology and laboratory medicine
+- Medical imaging interpretation
+- Pathology and histopathology
+- Differential diagnosis
+- Clinical correlations`;
 
   const typeSpecific = {
-    'lab': 'Focus on laboratory values, reference ranges, and clinical significance of abnormalities.',
-    'imaging': 'Emphasize radiological findings, anatomical locations, and clinical correlations.',
-    'pathology': 'Highlight histological findings, cellular changes, and diagnostic implications.',
-    'general': 'Provide comprehensive analysis of all clinical information presented.'
+    'lab': 'Focus on laboratory values, reference ranges, clinical significance of abnormalities, and potential underlying conditions.',
+    'imaging': 'Emphasize radiological findings, anatomical locations, clinical correlations, and recommended follow-up.',
+    'pathology': 'Highlight histological findings, cellular changes, diagnostic implications, and staging information.',
+    'general': 'Provide comprehensive analysis of all clinical information presented with appropriate clinical context.'
   };
 
-  return basePrompt + '\n' + (typeSpecific[documentType] || typeSpecific['general']);
+  return basePrompt + '\n\n' + (typeSpecific[documentType] || typeSpecific['general']);
 }
 
 /**
@@ -235,18 +493,25 @@ function buildUserPrompt(medicalText, documentType) {
 
 {
   "interpretation": {
-    "summary": "Brief overview in 2-3 sentences",
-    "keyFindings": ["Finding 1", "Finding 2", "..."],
-    "abnormalities": ["Abnormality 1 with values and significance", "..."],
-    "normalFindings": ["Normal finding 1", "..."]
+    "summary": "Brief clinical overview in 2-3 sentences highlighting the most important findings",
+    "keyFindings": ["Finding 1 with clinical significance", "Finding 2 with clinical significance", "..."],
+    "abnormalities": ["Abnormality 1 with values, severity, and clinical implications", "..."],
+    "normalFindings": ["Normal finding 1", "Normal finding 2", "..."]
   },
-  "clinicalPearls": ["Pearl 1", "Pearl 2", "..."],
-  "potentialQuestions": ["Question 1 for patient", "Question 2", "..."],
+  "clinicalPearls": ["Clinical pearl 1 relevant to these findings", "Pearl 2", "..."],
+  "potentialQuestions": ["Question 1 to ask the patient", "Question 2 about symptoms or history", "..."],
   "presentation": {
-    "patientFriendly": "Explanation in simple terms",
-    "recommendations": ["Recommendation 1", "Recommendation 2", "..."]
+    "patientFriendly": "Clear explanation in simple, non-medical terms that a patient can understand",
+    "recommendations": ["Recommendation 1 for follow-up or further testing", "Recommendation 2", "..."]
   }
 }
+
+Important:
+- Be precise with numerical values and reference ranges
+- Highlight any critical or urgent findings
+- Consider differential diagnoses where appropriate
+- Provide actionable clinical recommendations
+- Use evidence-based clinical reasoning
 
 Medical Report:
 ${medicalText}`;
@@ -302,6 +567,7 @@ MedWard Master - Medical Report Archive
 Date: ${timestamp}
 User: ${username}
 Document Type: ${documentType}
+AI Provider: ${interpretation.provider || 'N/A'}
 
 ORIGINAL TEXT:
 ${medicalText}
@@ -348,14 +614,31 @@ function generateToken() {
 }
 
 /**
- * Test function for development
+ * Test function for text interpretation
  */
 function testInterpret() {
   const testData = {
     action: 'interpret',
-    text: 'Hemoglobin: 10.2 g/dL (Low)\nWBC: 4.5 K/uL (Normal)\nPlatelets: 150 K/uL (Normal)',
+    text: 'Hemoglobin: 10.2 g/dL (Low, Reference: 13.5-17.5)\nWBC: 4.5 K/uL (Normal, Reference: 4.0-11.0)\nPlatelets: 150 K/uL (Normal, Reference: 150-400)',
     documentType: 'lab',
     username: 'TestUser'
+  };
+
+  const result = handleInterpret(testData);
+  Logger.log(JSON.stringify(result, null, 2));
+}
+
+/**
+ * Test function for image interpretation (requires base64 image)
+ */
+function testImageInterpret() {
+  // Note: Replace with actual base64 image data for testing
+  const testData = {
+    action: 'interpret',
+    image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...',
+    documentType: 'lab',
+    username: 'TestUser',
+    provider: 'claude' // or 'openai'
   };
 
   const result = handleInterpret(testData);

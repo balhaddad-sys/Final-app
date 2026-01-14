@@ -1,21 +1,30 @@
 # 🏥 MedWard Master - Deployment Manual
 
-**Version 3.5** | GitHub Pages + Google Apps Script Backend
+**Version 4.0** | GitHub Pages + Google Apps Script Backend + Vision AI
 
 ---
 
 ## 📋 Overview
 
-MedWard Master is a web-based medical report interpretation tool that combines a static frontend hosted on GitHub Pages with a serverless backend powered by Google Apps Script. This architecture eliminates the need for traditional server infrastructure while providing powerful AI-driven medical analysis.
+MedWard Master is a web-based medical report interpretation tool that combines a static frontend hosted on GitHub Pages with a serverless backend powered by Google Apps Script. This architecture eliminates the need for traditional server infrastructure while providing powerful AI-driven medical analysis with advanced vision capabilities.
 
 ### Architecture Components
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
 | **Frontend** | GitHub Pages | Static hosting for UI |
-| **Backend API** | Google Apps Script | Request handling & AI calls |
-| **AI Engine** | OpenAI GPT-4 | Medical interpretation |
+| **Backend API** | Google Apps Script | Request handling & AI orchestration |
+| **AI Engine** | Claude 3.5 Sonnet / GPT-4 | Medical interpretation |
+| **Vision AI** | Claude Vision / GPT-4 Vision | Advanced OCR & image analysis |
 | **Storage** | Google Drive | Report archiving |
+
+### ✨ New in Version 4.0
+
+- **Claude Vision API**: Superior medical OCR with better accuracy on complex documents
+- **GPT-4 Vision API**: Alternative vision provider for image analysis
+- **Automatic Fallback**: Seamless switching between providers for high availability
+- **Enhanced Image Analysis**: High-quality text extraction from medical images
+- **Configurable AI Provider**: Choose between Claude and OpenAI based on your needs
 
 ---
 
@@ -30,33 +39,60 @@ MedWard Master is a web-based medical report interpretation tool that combines a
 5. Copy the entire contents of `backend/Code.gs` from this repository
 6. Paste it into the Apps Script editor
 
-### 1.2 Configure Script Properties
+### 1.2 Configure Script Properties (API Keys)
 
-Your OpenAI API key must be stored securely in Script Properties, **not in the code**:
+You need to configure **at least ONE** AI provider. Configure both for automatic fallback!
 
-1. In Apps Script, go to **Project Settings** (gear icon ⚙️)
-2. Scroll to **Script Properties**
-3. Click **Add script property**
+**Option A: Claude (Anthropic) - RECOMMENDED**
+
+Claude 3.5 Sonnet provides superior medical OCR and interpretation:
+
+1. Get your API key from [console.anthropic.com](https://console.anthropic.com/)
+2. In Apps Script, go to **Project Settings** (gear icon ⚙️)
+3. Scroll to **Script Properties**
+4. Click **Add script property**
+5. **Property name**: `ANTHROPIC_API_KEY`
+6. **Value**: Your Anthropic API key (starts with `sk-ant-`)
+7. (Optional) Add: `AI_PROVIDER` = `claude`
+8. Click **Save**
+
+**Option B: OpenAI (GPT-4)**
+
+Use GPT-4 and GPT-4 Vision for analysis:
+
+1. Get your API key from [platform.openai.com](https://platform.openai.com/)
+2. In Apps Script, go to **Project Settings** (gear icon ⚙️)
+3. Add script property:
 4. **Property name**: `OPENAI_API_KEY`
 5. **Value**: Your OpenAI API key (starts with `sk-`)
-6. Click **Save**
+6. (Optional) Add: `AI_PROVIDER` = `openai`
+7. Click **Save**
 
-> ⚠️ **Important**: Never commit your API key to the repository!
+**Option C: Both APIs (Best)**
 
-### 1.3 Enable Required Services
+Configure both for automatic fallback and redundancy:
+- Add both `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`
+- Set `AI_PROVIDER` to your preferred default (`claude` or `openai`)
+- System automatically falls back if one provider fails
 
-The script requires the Drive API for OCR functionality:
+> ⚠️ **Important**: Never commit API keys to the repository!
+
+### 1.3 Enable Drive API (Optional)
+
+Drive API is now optional (only needed for report archiving):
 
 1. In the left sidebar, click **Services** (+ icon)
 2. Search for and select **Drive API**
 3. Click **Add**
 4. Version: **v2** (default)
 
+> 💡 **Note**: Vision AI no longer requires Drive API for OCR!
+
 ### 1.4 Deploy as Web App
 
 1. Click **Deploy** > **New deployment**
 2. Click the gear icon ⚙️ and select type: **Web app**
-3. **Description**: `MedWard Backend v1.0`
+3. **Description**: `MedWard Backend v2.0 - Vision AI Enhanced`
 4. **Execute as**: `Me (your-email@gmail.com)`
 5. **Who has access**: `Anyone`
 6. Click **Deploy**
@@ -68,6 +104,16 @@ https://script.google.com/macros/s/ABC123xyz.../exec
 ```
 
 > 💡 **Save this URL!** You will need it in Part 2.
+
+### 1.5 Test Your Backend
+
+Test the backend with text analysis:
+
+1. Select `testInterpret` from the function dropdown
+2. Click **Run** (▶️)
+3. Check the execution log for JSON output
+
+For image testing, modify `testImageInterpret()` with a real base64 image.
 
 ---
 

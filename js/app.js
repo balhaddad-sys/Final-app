@@ -5,8 +5,8 @@
 
 // ==================== Configuration ====================
 const CONFIG = {
-  // IMPORTANT: Replace this with your deployed Google Apps Script URL
-  BACKEND_URL: 'YOUR_APPS_SCRIPT_URL_HERE',
+  // Google Apps Script Backend URL
+  BACKEND_URL: 'https://script.google.com/macros/s/AKfycbz-wDxy9_fy5z8fYxlyGn0TJL-qmGGaxisnQFc7VE_knoFnOX6hhpAx4HVo1fbO13VO8w/exec',
   APP_NAME: 'MedWard Master',
   VERSION: '1.0.0'
 };
