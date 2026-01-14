@@ -13,15 +13,16 @@
  * Note: Drive API is no longer required (removed basic OCR)
  */
 
-// Configuration
+// Configuration - OPTIMIZED FOR SPEED
 const CONFIG = {
   OPENAI_TEXT_MODEL: 'gpt-4',
   OPENAI_VISION_MODEL: 'gpt-4-vision-preview',
   CLAUDE_MODEL: 'claude-3-5-sonnet-20241022',
-  MAX_TOKENS: 4000,
-  TEMPERATURE: 0.7,
+  MAX_TOKENS: 1500, // Reduced for faster responses
+  TEMPERATURE: 0.8, // Slightly higher for faster generation
   DRIVE_FOLDER_NAME: 'MedWard Reports',
-  DEFAULT_PROVIDER: 'claude' // 'claude' or 'openai'
+  DEFAULT_PROVIDER: 'claude', // 'claude' or 'openai'
+  SKIP_ARCHIVING: true // Skip archiving for speed
 };
 
 /**
@@ -34,17 +35,7 @@ function doPost(e) {
     const requestData = JSON.parse(e.postData.contents);
     const action = requestData.action;
 
-    // Log request details
-    Logger.log('=== Request received ===');
-    Logger.log('Action: ' + action);
-    Logger.log('Raw POST data length: ' + e.postData.contents.length);
-
-    if (requestData.image) {
-      Logger.log('Image data present in request');
-      Logger.log('Image data type: ' + typeof requestData.image);
-      Logger.log('Image data length: ' + requestData.image.length);
-      Logger.log('Image data starts with: ' + requestData.image.substring(0, 100));
-    }
+    // Minimal logging for speed
 
     // Route to appropriate handler
     let response;
@@ -122,17 +113,13 @@ function handleLogin(data) {
  */
 function handleUploadImage(data) {
   try {
-    Logger.log('=== handleUploadImage ===');
-
     if (!data.image) {
       return { success: false, error: 'No image data provided' };
     }
 
-    Logger.log('Image data length received: ' + data.image.length);
-
     // Extract base64 data and media type
     let base64Data = data.image;
-    let mediaType = 'image/png';
+    let mediaType = 'image/jpeg'; // Default to JPEG for speed
 
     // Check if it's a data URL
     if (base64Data.startsWith('data:')) {
@@ -143,46 +130,29 @@ function handleUploadImage(data) {
       }
     }
 
-    Logger.log('Media type: ' + mediaType);
-    Logger.log('Base64 data length (after prefix removal): ' + base64Data.length);
-
     // Convert base64 to blob
     const blob = Utilities.newBlob(
       Utilities.base64Decode(base64Data),
       mediaType,
-      'medical-image-' + new Date().getTime()
+      'img-' + new Date().getTime()
     );
 
-    Logger.log('Blob created, size: ' + blob.getBytes().length);
-
     // Get or create MedWard folder
-    const folderName = CONFIG.DRIVE_FOLDER_NAME || 'MedWard Images';
     let folder;
-    const folders = DriveApp.getFoldersByName(folderName);
-
-    if (folders.hasNext()) {
-      folder = folders.next();
-    } else {
-      folder = DriveApp.createFolder(folderName);
-    }
-
-    Logger.log('Using folder: ' + folder.getName());
+    const folders = DriveApp.getFoldersByName(CONFIG.DRIVE_FOLDER_NAME);
+    folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(CONFIG.DRIVE_FOLDER_NAME);
 
     // Save to Drive
     const file = folder.createFile(blob);
-    const fileId = file.getId();
-
-    Logger.log('File saved to Drive with ID: ' + fileId);
 
     return {
       success: true,
-      fileId: fileId,
+      fileId: file.getId(),
       fileName: file.getName(),
       fileSize: file.getSize()
     };
 
   } catch (error) {
-    Logger.log('Upload error: ' + error.toString());
     return {
       success: false,
       error: 'Failed to upload image: ' + error.toString()
@@ -205,20 +175,13 @@ function handleInterpret(data) {
 
     // If fileId is provided, download from Drive
     if (data.fileId) {
-      Logger.log('Processing image from Drive fileId: ' + data.fileId);
       imageData = downloadImageFromDrive(data.fileId);
-
       if (!imageData) {
         return { success: false, error: 'Failed to download image from Drive' };
       }
-
-      Logger.log('Downloaded image from Drive, length: ' + imageData.length);
     }
     // If image is provided directly (legacy support)
     else if (data.image) {
-      Logger.log('Processing image with Vision AI (direct upload)...');
-      Logger.log('Image data in handleInterpret - length: ' + data.image.length);
-      Logger.log('Image data in handleInterpret - first 100 chars: ' + data.image.substring(0, 100));
       imageData = data.image;
     }
 
@@ -245,8 +208,10 @@ function handleInterpret(data) {
       interpretation.visionInsights = visionAnalysis.initialInsights;
     }
 
-    // Archive the report to Google Drive
-    archiveReport(medicalText, interpretation, username, documentType);
+    // Skip archiving for speed (configurable)
+    if (!CONFIG.SKIP_ARCHIVING) {
+      archiveReport(medicalText, interpretation, username, documentType);
+    }
 
     return {
       success: true,
@@ -278,8 +243,6 @@ function analyzeImageWithVisionAI(base64Image, documentType, provider) {
     const base64Data = sanitizeBase64(base64Image);
     const mediaType = getMediaTypeFromBase64(base64Image);
 
-    Logger.log(`Using ${provider} Vision API for image analysis`);
-
     if (provider === 'claude') {
       return analyzeImageWithClaude(base64Data, mediaType, documentType);
     } else {
@@ -287,23 +250,15 @@ function analyzeImageWithVisionAI(base64Image, documentType, provider) {
     }
 
   } catch (error) {
-    Logger.log('Vision AI error: ' + error.toString());
-
-    // Try fallback to other provider
+    // Try fallback to other provider quickly
     const fallbackProvider = provider === 'claude' ? 'openai' : 'claude';
-    Logger.log(`Attempting fallback to ${fallbackProvider}`);
 
-    try {
-      if (fallbackProvider === 'claude') {
-        const base64Data = sanitizeBase64(base64Image);
-        const mediaType = getMediaTypeFromBase64(base64Image);
-        return analyzeImageWithClaude(base64Data, mediaType, documentType);
-      } else {
-        return analyzeImageWithOpenAIVision(base64Image, documentType);
-      }
-    } catch (fallbackError) {
-      Logger.log('Fallback also failed: ' + fallbackError.toString());
-      throw new Error('Both vision providers failed');
+    if (fallbackProvider === 'claude') {
+      const base64Data = sanitizeBase64(base64Image);
+      const mediaType = getMediaTypeFromBase64(base64Image);
+      return analyzeImageWithClaude(base64Data, mediaType, documentType);
+    } else {
+      return analyzeImageWithOpenAIVision(base64Image, documentType);
     }
   }
 }
@@ -319,13 +274,6 @@ function analyzeImageWithClaude(base64Data, mediaType, documentType) {
   }
 
   const prompt = buildVisionPrompt(documentType);
-
-  // Log payload details for debugging
-  Logger.log('Preparing Claude Vision API request');
-  Logger.log('Media type: ' + mediaType);
-  Logger.log('Base64 data length: ' + base64Data.length);
-  Logger.log('Base64 starts with: ' + base64Data.substring(0, 50));
-  Logger.log('Base64 ends with: ' + base64Data.substring(base64Data.length - 20));
 
   const requestPayload = {
     model: CONFIG.CLAUDE_MODEL,
@@ -363,18 +311,15 @@ function analyzeImageWithClaude(base64Data, mediaType, documentType) {
   const result = JSON.parse(response.getContentText());
 
   if (result.error) {
-    Logger.log('Claude API returned error: ' + JSON.stringify(result.error));
     throw new Error('Claude API Error: ' + JSON.stringify(result.error));
   }
-
-  Logger.log('Claude Vision API request successful');
 
   // Extract the text content from Claude's response
   const extractedText = result.content[0].text;
 
   return {
     extractedText: extractedText,
-    initialInsights: `Analyzed with Claude Vision (${CONFIG.CLAUDE_MODEL})`,
+    initialInsights: `Analyzed with Claude Vision`,
     provider: 'claude'
   };
 }
@@ -436,43 +381,16 @@ function analyzeImageWithOpenAIVision(base64Image, documentType) {
 }
 
 /**
- * Build vision-specific prompt for image analysis
+ * Build vision-specific prompt for image analysis - OPTIMIZED FOR SPEED
  */
 function buildVisionPrompt(documentType) {
-  const typeSpecific = {
-    'lab': 'laboratory test results, including all test names, values, units, and reference ranges',
-    'imaging': 'medical imaging report, including findings, impressions, technique, and clinical correlations',
-    'pathology': 'pathology report, including specimen description, microscopic findings, and diagnosis',
-    'general': 'medical document, extracting all relevant clinical information'
-  };
+  return `Extract all text from this medical ${documentType} image. Include:
+- Test names, values, units, reference ranges
+- Headers, labels, dates
+- Findings and impressions
+- Maintain structure and formatting
 
-  const docDescription = typeSpecific[documentType] || typeSpecific['general'];
-
-  return `You are analyzing a medical ${docDescription}.
-
-Please perform these tasks:
-
-1. EXTRACT ALL TEXT: Extract all visible text from the image with high accuracy. Include:
-   - All test names and values
-   - All reference ranges and units
-   - All headings and labels
-   - All dates, patient info, and identifiers
-   - All findings and impressions
-   - Maintain the original structure and formatting as much as possible
-
-2. ORGANIZE THE TEXT: Present the extracted text in a clear, structured format that preserves:
-   - Hierarchical relationships
-   - Section headers
-   - List structures
-   - Tabular data (if present)
-
-3. QUALITY CHECK: Ensure you've captured:
-   - All numerical values accurately
-   - All medical terminology correctly
-   - All units of measurement
-   - All flags or abnormal indicators
-
-Please provide the complete extracted text now. Be thorough and accurate.`;
+Provide complete extracted text accurately and concisely.`;
 }
 
 /**
@@ -495,38 +413,17 @@ function sanitizeBase64(base64String) {
     throw new Error('Base64 string is empty or null');
   }
 
-  Logger.log('=== sanitizeBase64 function ===');
-  Logger.log('Input string length: ' + base64String.length);
-  Logger.log('Input starts with: ' + base64String.substring(0, 100));
-  Logger.log('Input contains comma: ' + base64String.includes(','));
-
   // Remove data URL prefix if present
   let cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String;
-  Logger.log('After removing data URL prefix, length: ' + cleanBase64.length);
 
-  // Remove all whitespace characters (spaces, newlines, tabs, carriage returns)
-  cleanBase64 = cleanBase64.replace(/\s+/g, '');
-  Logger.log('After removing whitespace, length: ' + cleanBase64.length);
+  // Remove all whitespace and URL encoding
+  cleanBase64 = cleanBase64.replace(/\s+/g, '').replace(/%20/g, '');
 
-  // Remove any URL encoding artifacts
-  cleanBase64 = cleanBase64.replace(/%20/g, '');
-  Logger.log('After removing URL encoding, length: ' + cleanBase64.length);
-
-  // Validate base64 format - should only contain A-Z, a-z, 0-9, +, /, and = for padding
-  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-  if (!base64Regex.test(cleanBase64)) {
-    Logger.log('Invalid base64 characters detected. Length: ' + cleanBase64.length);
-    Logger.log('First 100 chars: ' + cleanBase64.substring(0, 100));
-    Logger.log('Last 50 chars: ' + cleanBase64.substring(Math.max(0, cleanBase64.length - 50)));
-    throw new Error('Base64 string contains invalid characters');
+  // Quick validation
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanBase64) || cleanBase64.length < 100) {
+    throw new Error('Invalid base64 string');
   }
 
-  // Validate minimum length
-  if (cleanBase64.length < 100) {
-    throw new Error('Base64 string too short - possible corruption. Length: ' + cleanBase64.length);
-  }
-
-  Logger.log('Base64 validation passed. Length: ' + cleanBase64.length);
   return cleanBase64;
 }
 
@@ -625,58 +522,33 @@ function getOpenAIInterpretation(medicalText, documentType) {
 }
 
 /**
- * Build system prompt based on document type
+ * Build system prompt based on document type - OPTIMIZED FOR SPEED
  */
 function buildSystemPrompt(documentType) {
-  const basePrompt = `You are MedWard Master, an expert medical AI assistant specializing in clinical interpretation.
-Your role is to analyze medical reports and provide clear, actionable insights for healthcare professionals.
-
-You have advanced training in:
-- Clinical pathology and laboratory medicine
-- Medical imaging interpretation
-- Pathology and histopathology
-- Differential diagnosis
-- Clinical correlations`;
-
-  const typeSpecific = {
-    'lab': 'Focus on laboratory values, reference ranges, clinical significance of abnormalities, and potential underlying conditions.',
-    'imaging': 'Emphasize radiological findings, anatomical locations, clinical correlations, and recommended follow-up.',
-    'pathology': 'Highlight histological findings, cellular changes, diagnostic implications, and staging information.',
-    'general': 'Provide comprehensive analysis of all clinical information presented with appropriate clinical context.'
-  };
-
-  return basePrompt + '\n\n' + (typeSpecific[documentType] || typeSpecific['general']);
+  return `You are MedWard Master, an expert medical AI providing concise clinical interpretations for healthcare professionals. Analyze medical reports efficiently and provide actionable insights.`;
 }
 
 /**
- * Build user prompt for interpretation
+ * Build user prompt for interpretation - OPTIMIZED FOR SPEED
  */
 function buildUserPrompt(medicalText, documentType) {
-  return `Please analyze this ${documentType} report and provide a structured interpretation in JSON format with the following sections:
-
+  return `Analyze this ${documentType} report. Provide JSON with:
 {
   "interpretation": {
-    "summary": "Brief clinical overview in 2-3 sentences highlighting the most important findings",
-    "keyFindings": ["Finding 1 with clinical significance", "Finding 2 with clinical significance", "..."],
-    "abnormalities": ["Abnormality 1 with values, severity, and clinical implications", "..."],
-    "normalFindings": ["Normal finding 1", "Normal finding 2", "..."]
+    "summary": "Brief 1-2 sentence overview",
+    "keyFindings": ["Finding 1", "Finding 2"],
+    "abnormalities": ["Abnormality 1 with value & severity"],
+    "normalFindings": ["Normal 1", "Normal 2"]
   },
-  "clinicalPearls": ["Clinical pearl 1 relevant to these findings", "Pearl 2", "..."],
-  "potentialQuestions": ["Question 1 to ask the patient", "Question 2 about symptoms or history", "..."],
+  "clinicalPearls": ["Pearl 1", "Pearl 2"],
+  "potentialQuestions": ["Question 1", "Question 2"],
   "presentation": {
-    "patientFriendly": "Clear explanation in simple, non-medical terms that a patient can understand",
-    "recommendations": ["Recommendation 1 for follow-up or further testing", "Recommendation 2", "..."]
+    "patientFriendly": "Simple patient explanation",
+    "recommendations": ["Rec 1", "Rec 2"]
   }
 }
 
-Important:
-- Be precise with numerical values and reference ranges
-- Highlight any critical or urgent findings
-- Consider differential diagnoses where appropriate
-- Provide actionable clinical recommendations
-- Use evidence-based clinical reasoning
-
-Medical Report:
+Report:
 ${medicalText}`;
 }
 
@@ -719,27 +591,11 @@ function parseAIResponse(aiResponse) {
  */
 function downloadImageFromDrive(fileId) {
   try {
-    Logger.log('Downloading file from Drive: ' + fileId);
-
-    // Get file from Drive
     const file = DriveApp.getFileById(fileId);
     const blob = file.getBlob();
-    const mimeType = blob.getContentType();
-
-    Logger.log('File downloaded. MimeType: ' + mimeType + ', Size: ' + blob.getBytes().length);
-
-    // Convert to base64
     const base64 = Utilities.base64Encode(blob.getBytes());
-
-    // Create data URL
-    const dataUrl = 'data:' + mimeType + ';base64,' + base64;
-
-    Logger.log('Converted to data URL, length: ' + dataUrl.length);
-
-    return dataUrl;
-
+    return 'data:' + blob.getContentType() + ';base64,' + base64;
   } catch (error) {
-    Logger.log('Error downloading from Drive: ' + error.toString());
     return null;
   }
 }
