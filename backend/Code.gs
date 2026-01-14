@@ -17,7 +17,7 @@
 const CONFIG = {
   OPENAI_TEXT_MODEL: 'gpt-4',
   OPENAI_VISION_MODEL: 'gpt-4-vision-preview',
-  CLAUDE_MODEL: 'claude-3-5-sonnet-20241022',
+  CLAUDE_MODEL: 'claude-haiku-4-5-20250929', // Claude Haiku 4.5 - Fastest model
   MAX_TOKENS: 1500, // Reduced for faster responses
   TEMPERATURE: 0.8, // Slightly higher for faster generation
   DRIVE_FOLDER_NAME: 'MedWard Reports',
