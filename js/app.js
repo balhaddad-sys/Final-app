@@ -16,7 +16,8 @@ const AppState = {
   user: null,
   token: null,
   currentInput: null,
-  currentResults: null
+  currentResults: null,
+  selectedFiles: [] // Array to store multiple selected files
 };
 
 // ==================== Debug Helper (for mobile) ====================
@@ -56,7 +57,7 @@ const Elements = {
   medicalText: document.getElementById('medical-text'),
   imageUpload: document.getElementById('image-upload'),
   fileNameDisplay: document.getElementById('file-name'),
-  imagePreview: document.getElementById('image-preview'),
+  imageGallery: document.getElementById('image-gallery'),
   docType: document.getElementById('doc-type'),
 
   // Buttons
@@ -98,6 +99,14 @@ function initializeEventListeners() {
 
   // File Upload
   Elements.imageUpload.addEventListener('change', handleFileSelect);
+
+  // Drag and Drop
+  const fileLabel = document.querySelector('.file-label');
+  if (fileLabel) {
+    fileLabel.addEventListener('dragover', handleDragOver);
+    fileLabel.addEventListener('dragleave', handleDragLeave);
+    fileLabel.addEventListener('drop', handleDrop);
+  }
 
   // Analysis
   Elements.analyzeBtn.addEventListener('click', handleAnalyze);
@@ -187,41 +196,124 @@ function toggleInputMethod(method) {
 }
 
 function handleFileSelect(event) {
-  const file = event.target.files[0];
+  const files = Array.from(event.target.files);
 
-  if (file) {
+  if (files.length > 0) {
+    // Add new files to the state
+    AppState.selectedFiles = [...AppState.selectedFiles, ...files];
+
     // Update file name display
-    Elements.fileNameDisplay.textContent = file.name;
+    const fileCount = AppState.selectedFiles.length;
+    Elements.fileNameDisplay.textContent = fileCount === 1
+      ? `${AppState.selectedFiles[0].name}`
+      : `${fileCount} images selected`;
 
-    // Show preview
+    // Update gallery display
+    updateImageGallery();
+  }
+}
+
+function updateImageGallery() {
+  Elements.imageGallery.innerHTML = '';
+
+  AppState.selectedFiles.forEach((file, index) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      Elements.imagePreview.innerHTML = `
-        <img src="${e.target.result}" alt="Preview">
-        <p class="mt-lg">${file.name} (${formatFileSize(file.size)})</p>
+      const galleryItem = document.createElement('div');
+      galleryItem.className = 'gallery-item';
+      galleryItem.innerHTML = `
+        <img src="${e.target.result}" alt="${file.name}">
+        <div class="gallery-item-info">${file.name} (${formatFileSize(file.size)})</div>
+        <button class="gallery-item-remove" onclick="removeImage(${index})" title="Remove image">×</button>
       `;
+      Elements.imageGallery.appendChild(galleryItem);
     };
     reader.readAsDataURL(file);
+  });
+}
+
+function removeImage(index) {
+  AppState.selectedFiles.splice(index, 1);
+
+  // Update display
+  if (AppState.selectedFiles.length === 0) {
+    Elements.fileNameDisplay.textContent = 'Choose images or drag and drop here';
+    Elements.imageGallery.innerHTML = '';
+    Elements.imageUpload.value = ''; // Reset file input
+  } else {
+    const fileCount = AppState.selectedFiles.length;
+    Elements.fileNameDisplay.textContent = fileCount === 1
+      ? `${AppState.selectedFiles[0].name}`
+      : `${fileCount} images selected`;
+    updateImageGallery();
+  }
+}
+
+// Make removeImage globally available
+window.removeImage = removeImage;
+
+// ==================== Drag and Drop ====================
+function handleDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.style.borderColor = 'var(--primary-color)';
+  e.currentTarget.style.background = 'rgba(37, 99, 235, 0.1)';
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.style.borderColor = '';
+  e.currentTarget.style.background = '';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.style.borderColor = '';
+  e.currentTarget.style.background = '';
+
+  const files = Array.from(e.dataTransfer.files).filter(file =>
+    file.type.startsWith('image/') || file.type === 'application/pdf'
+  );
+
+  if (files.length > 0) {
+    // Add dropped files to state
+    AppState.selectedFiles = [...AppState.selectedFiles, ...files];
+
+    // Update file name display
+    const fileCount = AppState.selectedFiles.length;
+    Elements.fileNameDisplay.textContent = fileCount === 1
+      ? `${AppState.selectedFiles[0].name}`
+      : `${fileCount} images selected`;
+
+    // Update gallery display
+    updateImageGallery();
+
+    showToast(`${files.length} file(s) added!`, 'success');
+  } else {
+    showToast('Please drop valid image files', 'error');
   }
 }
 
 function clearInputs() {
   Elements.medicalText.value = '';
   Elements.imageUpload.value = '';
-  Elements.fileNameDisplay.textContent = 'Choose an image file or drag here';
-  Elements.imagePreview.innerHTML = '';
+  Elements.fileNameDisplay.textContent = 'Choose images or drag and drop here';
+  Elements.imageGallery.innerHTML = '';
   Elements.docType.selectedIndex = 0;
+  AppState.selectedFiles = []; // Clear selected files array
 }
 
 // ==================== Analysis ====================
 async function handleAnalyze() {
   const text = Elements.medicalText.value.trim();
-  const file = Elements.imageUpload.files[0];
+  const files = AppState.selectedFiles;
   const docType = Elements.docType.value;
 
   // Validation
-  if (!text && !file) {
-    showToast('Please enter text or upload an image', 'error');
+  if (!text && files.length === 0) {
+    showToast('Please enter text or upload images', 'error');
     return;
   }
 
@@ -234,37 +326,78 @@ async function handleAnalyze() {
       username: AppState.user?.username || 'Guest'
     };
 
-    // Handle image or text
-    if (file) {
-      debugLog(`[Frontend] File selected: ${file.name}, Size: ${file.size} bytes`);
+    // Handle images or text
+    if (files.length > 0) {
+      debugLog(`[Frontend] ${files.length} file(s) selected`);
 
-      // Step 1: Upload image to Drive
-      debugLog(`[Frontend] Step 1: Uploading image to Google Drive...`);
-      const base64Data = await fileToBase64(file);
-      debugLog(`[Frontend] Base64 encoded. Length: ${base64Data.length}`);
+      // Step 1: Upload images to Drive
+      updateLoadingStep('upload', 'active');
+      updateProgress(10);
 
-      const uploadResponse = await callBackend('uploadImage', { image: base64Data });
+      const fileIds = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        debugLog(`[Frontend] Uploading file ${i + 1}/${files.length}: ${file.name}, Size: ${file.size} bytes`);
 
-      if (!uploadResponse.success) {
-        throw new Error('Failed to upload image: ' + uploadResponse.error);
+        const base64Data = await fileToBase64(file);
+        debugLog(`[Frontend] Base64 encoded. Length: ${base64Data.length}`);
+
+        const uploadResponse = await callBackend('uploadImage', { image: base64Data });
+
+        if (!uploadResponse.success) {
+          throw new Error(`Failed to upload ${file.name}: ${uploadResponse.error}`);
+        }
+
+        debugLog(`[Frontend] Image ${i + 1} uploaded to Drive. FileId: ${uploadResponse.fileId}`);
+        fileIds.push(uploadResponse.fileId);
+
+        // Update progress
+        updateProgress(10 + (i + 1) / files.length * 30);
       }
 
-      debugLog(`[Frontend] Image uploaded to Drive. FileId: ${uploadResponse.fileId}`);
-      debugLog(`[Frontend] File size: ${uploadResponse.fileSize} bytes`);
+      updateLoadingStep('upload', 'completed');
 
-      // Step 2: Use fileId for interpretation (much smaller payload!)
-      payload.fileId = uploadResponse.fileId;
+      // Step 2: OCR processing
+      updateLoadingStep('ocr', 'active');
+      updateProgress(50);
+
+      // For multiple files, we'll use the first one for now
+      // In future, you could process all or combine them
+      payload.fileId = fileIds[0];
+
+      if (fileIds.length > 1) {
+        updateLoadingMessage(`Processing ${fileIds.length} images with AI Vision...`);
+      }
 
     } else {
       payload.text = text;
+      updateLoadingStep('upload', 'completed');
+      updateLoadingStep('ocr', 'active');
+      updateProgress(40);
     }
+
+    // Step 3: Analyze content
+    updateLoadingStep('ocr', 'completed');
+    updateLoadingStep('analyze', 'active');
+    updateProgress(70);
 
     debugLog(`[Frontend] Calling interpret with payload. Keys: ${Object.keys(payload)}`);
 
     // Call backend for interpretation
     const response = await callBackend('interpret', payload);
 
+    // Step 4: Generate results
+    updateLoadingStep('analyze', 'completed');
+    updateLoadingStep('results', 'active');
+    updateProgress(90);
+
     if (response.success) {
+      updateProgress(100);
+      updateLoadingStep('results', 'completed');
+
+      // Small delay to show completion
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       AppState.currentResults = response;
       displayResults(response);
       showToast('Analysis complete!', 'success');
@@ -460,8 +593,51 @@ function showLoading(show) {
 
   if (show) {
     Elements.analyzeBtn.innerHTML = '<span class="spinner"></span> Analyzing...';
+    // Reset loading state
+    resetLoadingState();
   } else {
     Elements.analyzeBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Report';
+  }
+}
+
+function resetLoadingState() {
+  // Reset progress bar
+  updateProgress(0);
+
+  // Reset all steps
+  const steps = document.querySelectorAll('.step-item');
+  steps.forEach(step => {
+    step.classList.remove('active', 'completed');
+  });
+
+  // Reset messages
+  updateLoadingMessage('Analyzing with AI Vision...');
+  document.getElementById('loading-title').textContent = 'Processing Medical Report';
+}
+
+function updateProgress(percentage) {
+  const progressFill = document.getElementById('progress-fill');
+  if (progressFill) {
+    progressFill.style.width = `${percentage}%`;
+  }
+}
+
+function updateLoadingStep(stepName, status) {
+  const step = document.querySelector(`.step-item[data-step="${stepName}"]`);
+  if (step) {
+    step.classList.remove('active', 'completed');
+    if (status === 'active') {
+      step.classList.add('active');
+    } else if (status === 'completed') {
+      step.classList.add('completed');
+    }
+  }
+}
+
+function updateLoadingMessage(message) {
+  const loadingMessage = document.getElementById('loading-message');
+  if (loadingMessage) {
+    loadingMessage.textContent = message;
   }
 }
 

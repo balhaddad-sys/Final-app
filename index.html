@@ -74,13 +74,18 @@
               type="file"
               id="image-upload"
               accept="image/*"
+              multiple
               class="file-input"
             >
             <label for="image-upload" class="file-label">
-              <span class="upload-icon">📎</span>
-              <span id="file-name">Choose an image file or drag here</span>
+              <div class="upload-icon-wrapper">
+                <span class="upload-icon">📷</span>
+                <div class="upload-pulse"></div>
+              </div>
+              <span id="file-name" class="file-name-text">Choose images or drag and drop here</span>
+              <span class="file-hint">Supports multiple images • JPG, PNG, PDF</span>
             </label>
-            <div id="image-preview" class="image-preview"></div>
+            <div id="image-gallery" class="image-gallery"></div>
           </div>
         </div>
 
@@ -106,8 +111,35 @@
 
         <!-- Loading Indicator -->
         <div id="loading-indicator" class="loading" style="display: none;">
-          <div class="spinner"></div>
-          <p>Analyzing medical report with AI...</p>
+          <div class="loading-content">
+            <div class="spinner-container">
+              <div class="spinner"></div>
+              <div class="spinner-ring"></div>
+            </div>
+            <h3 id="loading-title" class="loading-title">Processing Medical Report</h3>
+            <p id="loading-message" class="loading-message">Analyzing with AI Vision...</p>
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div id="loading-steps" class="loading-steps">
+              <div class="step-item" data-step="upload">
+                <span class="step-icon">📤</span>
+                <span class="step-text">Uploading images...</span>
+              </div>
+              <div class="step-item" data-step="ocr">
+                <span class="step-icon">👁️</span>
+                <span class="step-text">Extracting text with OCR...</span>
+              </div>
+              <div class="step-item" data-step="analyze">
+                <span class="step-icon">🧠</span>
+                <span class="step-text">Analyzing medical content...</span>
+              </div>
+              <div class="step-item" data-step="results">
+                <span class="step-icon">✨</span>
+                <span class="step-text">Generating insights...</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
