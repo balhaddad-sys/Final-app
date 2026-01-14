@@ -20,7 +20,8 @@ const State = {
   user: null,
   files: [],
   currentAnalysis: null,
-  wardPresentation: null
+  wardPresentation: null,
+  sourceData: null // Store fileId or text for reuse
 };
 
 // ==================== DOM Elements ====================
@@ -429,6 +430,13 @@ async function analyzeImages(docType) {
     throw new Error(result.error || 'Analysis failed');
   }
 
+  // Store source data for ward presentation reuse
+  State.sourceData = {
+    type: 'image',
+    fileId: fileIds[0],
+    documentType: docType
+  };
+
   updateStep('ocr', 'completed', 'Text extracted');
   updateStep('analyze', 'completed', 'Analysis complete');
   updateProgress(100);
@@ -469,6 +477,13 @@ async function analyzeText(docType) {
   if (!result.success) {
     throw new Error(result.error || 'Analysis failed');
   }
+
+  // Store source data for ward presentation reuse
+  State.sourceData = {
+    type: 'text',
+    text: text,
+    documentType: docType
+  };
 
   updateStep('ocr', 'completed', 'Text processed');
   updateStep('analyze', 'completed', 'Analysis complete');
@@ -674,6 +689,22 @@ function startNewAnalysis() {
   if (Elements.textInput) Elements.textInput.value = '';
   Elements.analyzeTextBtn.disabled = true;
 
+  // Clear state
+  State.currentAnalysis = null;
+  State.wardPresentation = null;
+  State.sourceData = null;
+
+  // Reset to detailed view
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === 'detailed');
+  });
+  const detailedView = document.getElementById('detailed-view');
+  const wardView = document.getElementById('ward-view');
+  const exportBtn = document.getElementById('export-ward-btn');
+  if (detailedView) detailedView.style.display = 'block';
+  if (wardView) wardView.style.display = 'none';
+  if (exportBtn) exportBtn.style.display = 'none';
+
   // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -728,51 +759,151 @@ async function generateWardPresentation() {
   const wardContent = document.getElementById('ward-content');
   if (!wardContent) return;
 
+  console.log('🏥 Generating ward presentation...');
+  console.log('📋 State.sourceData:', State.sourceData);
+  console.log('📊 State.currentAnalysis:', State.currentAnalysis);
+
   // Show loading
   wardContent.innerHTML = '<div class="loading"><div class="processing-spinner"></div><p>Generating ward presentation...</p></div>';
 
   try {
-    const files = State.files;
-    const docType = Elements.reportType?.value || Elements.reportTypeText?.value;
+    // Check if we have source data to reuse
+    if (!State.sourceData) {
+      throw new Error('No source data available. Please analyze a report first.');
+    }
 
     const payload = {
-      documentType: docType,
+      documentType: State.sourceData.documentType,
       username: State.user?.username || 'Guest',
       presentationFormat: 'ward'
     };
 
-    // Handle images or text
-    if (files && files.length > 0) {
-      // Use existing file upload logic
-      const compressedFile = await compressImage(files[0]);
-      const base64 = await fileToBase64(compressedFile);
-      const uploadResult = await callBackendWithRetry('uploadImage', { image: base64 });
-
-      if (!uploadResult.success) {
-        throw new Error('Failed to upload image');
-      }
-
-      payload.fileId = uploadResult.fileId;
+    // Use stored source data
+    if (State.sourceData.type === 'image') {
+      payload.fileId = State.sourceData.fileId;
+      console.log('📷 Using stored fileId:', payload.fileId);
     } else {
-      payload.text = Elements.textInput?.value.trim();
+      payload.text = State.sourceData.text;
+      console.log('📝 Using stored text (length):', payload.text?.length);
     }
 
+    console.log('🚀 Calling backend with payload:', { ...payload, text: payload.text ? '(text truncated)' : undefined });
+
     const result = await callBackendWithRetry('interpret', payload);
+    console.log('✅ Backend response:', result);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to generate ward presentation');
     }
 
-    State.wardPresentation = result.wardPresentation || result;
-    displayWardPresentation(State.wardPresentation);
+    // Check if backend returned ward presentation
+    if (result.wardPresentation) {
+      console.log('🎯 Ward presentation received from backend');
+      State.wardPresentation = result.wardPresentation;
+      displayWardPresentation(State.wardPresentation);
+    } else if (hasWardFields(result)) {
+      console.log('🎯 Result has ward fields directly');
+      State.wardPresentation = result;
+      displayWardPresentation(State.wardPresentation);
+    } else {
+      // Fallback: Convert detailed analysis to ward format
+      console.log('⚠️ Backend did not return ward format, converting detailed analysis...');
+      State.wardPresentation = convertToWardFormat(State.currentAnalysis || result);
+      displayWardPresentation(State.wardPresentation);
+    }
 
   } catch (error) {
-    console.error('Ward presentation error:', error);
-    wardContent.innerHTML = `<div class="error-message">
-      <p>⚠️ Failed to generate ward presentation: ${error.message}</p>
+    console.error('❌ Ward presentation error:', error);
+    wardContent.innerHTML = `<div class="error-message" style="padding: 2rem; text-align: center;">
+      <p style="color: #ef4444; font-size: 1.1rem; margin-bottom: 1rem;">⚠️ Failed to generate ward presentation</p>
+      <p style="color: #666; margin-bottom: 1.5rem;">${escapeHtml(error.message)}</p>
       <button class="btn-secondary" onclick="generateWardPresentation()">Try Again</button>
     </div>`;
   }
+}
+
+// Check if result has ward presentation fields
+function hasWardFields(data) {
+  return data && (data.header || data.status || data.activeIssues || data.todaysPlan);
+}
+
+// Convert detailed analysis to ward format (fallback)
+function convertToWardFormat(analysis) {
+  console.log('🔄 Converting detailed analysis to ward format');
+
+  if (!analysis || !analysis.interpretation) {
+    return {
+      header: 'Medical Report Analysis',
+      status: [{domain: 'Analysis', indicator: 'yellow', value: 'Limited data available'}],
+      activeIssues: ['Detailed analysis format detected - limited ward presentation'],
+      todaysPlan: ['Review full detailed analysis'],
+      watchFor: ['Check detailed report for complete information']
+    };
+  }
+
+  const interp = analysis.interpretation;
+
+  // Build ward presentation from detailed analysis
+  const ward = {
+    header: 'Medical Report | Analysis Summary',
+    status: [],
+    activeIssues: [],
+    todaysPlan: [],
+    watchFor: []
+  };
+
+  // Extract status from abnormalities
+  if (interp.abnormalities && interp.abnormalities.length > 0) {
+    ward.status.push({
+      domain: 'Abnormalities',
+      indicator: 'red',
+      value: `${interp.abnormalities.length} findings require attention`
+    });
+
+    // Add abnormalities as active issues
+    interp.abnormalities.slice(0, 5).forEach(abn => {
+      ward.activeIssues.push({
+        issue: 'Abnormal Finding',
+        status: abn,
+        action: 'Review and assess clinical significance'
+      });
+    });
+  } else {
+    ward.status.push({
+      domain: 'Results',
+      indicator: 'green',
+      value: 'No abnormalities detected'
+    });
+  }
+
+  // Add key findings to plan
+  if (interp.keyFindings && interp.keyFindings.length > 0) {
+    interp.keyFindings.slice(0, 4).forEach(finding => {
+      ward.todaysPlan.push(`Review: ${finding}`);
+    });
+  }
+
+  // Add recommendations to watch for
+  if (analysis.presentation?.recommendations && analysis.presentation.recommendations.length > 0) {
+    analysis.presentation.recommendations.slice(0, 4).forEach(rec => {
+      ward.watchFor.push(rec);
+    });
+  }
+
+  // Fallback content
+  if (ward.activeIssues.length === 0) {
+    ward.activeIssues.push('Review complete analysis for detailed findings');
+  }
+  if (ward.todaysPlan.length === 0) {
+    ward.todaysPlan.push('Review detailed analysis report');
+    ward.todaysPlan.push('Correlate with clinical presentation');
+  }
+  if (ward.watchFor.length === 0) {
+    ward.watchFor.push('Clinical correlation recommended');
+  }
+
+  console.log('✅ Converted ward format:', ward);
+  return ward;
 }
 
 // Make generateWardPresentation globally available
