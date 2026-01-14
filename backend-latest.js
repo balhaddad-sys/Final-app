@@ -4,13 +4,25 @@
  *
  * SETUP INSTRUCTIONS:
  * 1. Copy this code to script.google.com
- * 2. Add Script Properties:
- *    - OPENAI_API_KEY = your_openai_key (for GPT-4 and GPT-4 Vision)
- *    - ANTHROPIC_API_KEY = your_anthropic_key (for Claude Vision)
+ * 2. Add Script Properties (File > Project properties > Script properties):
+ *    - ANTHROPIC_API_KEY = your_anthropic_key (for Claude Vision - RECOMMENDED)
+ *    - OPENAI_API_KEY = your_openai_key (for GPT-4 Vision - optional fallback)
  *    - AI_PROVIDER = 'claude' or 'openai' (optional, defaults to claude)
- * 3. Deploy as Web App (Execute as: Me, Access: Anyone)
+ * 3. Enable Google Drive API (Services > Drive API)
+ * 4. Deploy as Web App:
+ *    - Execute as: Me (your account with Drive access)
+ *    - Who has access: Anyone (for public access) or Anyone with Google account
+ * 5. Copy the deployment URL to js/app.js CONFIG.BACKEND_URL
  *
- * Note: Drive API is no longer required (removed basic OCR)
+ * RECOMMENDED WORKFLOW (avoids base64 size limits):
+ * 1. Frontend calls 'uploadImage' action → uploads to Google Drive → returns fileId
+ * 2. Frontend calls 'interpret' action with fileId (not base64)
+ * 3. Backend downloads from Drive, processes with Vision AI
+ *
+ * LEGACY WORKFLOW (has size limitations):
+ * - Frontend can still send base64 directly to 'interpret' action
+ * - Limited to ~50KB due to URL/payload size restrictions
+ * - Use Drive workflow for production
  */
 
 // Configuration
@@ -203,22 +215,42 @@ function handleInterpret(data) {
     let visionAnalysis = null;
     let imageData = null;
 
-    // If fileId is provided, download from Drive
+    // If fileId is provided, download from Drive (RECOMMENDED)
     if (data.fileId) {
+      Logger.log('=== Using Drive API workflow ===');
       Logger.log('Processing image from Drive fileId: ' + data.fileId);
+
       imageData = downloadImageFromDrive(data.fileId);
 
       if (!imageData) {
-        return { success: false, error: 'Failed to download image from Drive' };
+        const errorMsg = 'Failed to download image from Google Drive. Please check: ' +
+          '1) File ID is valid, ' +
+          '2) File exists in Drive, ' +
+          '3) Script has Drive access permissions';
+        Logger.log('ERROR: ' + errorMsg);
+        return { success: false, error: errorMsg };
       }
 
-      Logger.log('Downloaded image from Drive, length: ' + imageData.length);
+      Logger.log('✓ Successfully downloaded image from Drive');
+      Logger.log('Image data length: ' + imageData.length + ' characters');
     }
-    // If image is provided directly (legacy support)
+    // If image is provided directly (legacy support - has size limitations)
     else if (data.image) {
-      Logger.log('Processing image with Vision AI (direct upload)...');
-      Logger.log('Image data in handleInterpret - length: ' + data.image.length);
-      Logger.log('Image data in handleInterpret - first 100 chars: ' + data.image.substring(0, 100));
+      Logger.log('=== Using direct base64 upload (legacy) ===');
+      Logger.log('⚠️ Warning: Direct base64 upload has size limitations. Consider using Drive API.');
+      Logger.log('Image data length: ' + data.image.length + ' characters');
+      Logger.log('Image data starts with: ' + data.image.substring(0, 100));
+
+      // Validate the image data is not truncated (data URL includes prefix, so threshold is higher)
+      const MIN_DATA_URL_LENGTH = 75; // Accounts for 'data:image/png;base64,' prefix + minimal base64
+      if (data.image.length < MIN_DATA_URL_LENGTH) {
+        const errorMsg = 'Image data appears to be truncated or invalid. ' +
+          'Length: ' + data.image.length + ' characters (expected at least ' + MIN_DATA_URL_LENGTH + '). ' +
+          'Use the Drive API workflow (upload image first, then pass fileId) for reliable operation.';
+        Logger.log('ERROR: ' + errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
       imageData = data.image;
     }
 
@@ -488,7 +520,8 @@ function getMediaTypeFromBase64(base64String) {
 }
 
 /**
- * Sanitize and validate base64 string for Claude API
+ * Sanitize and validate base64 string for Vision APIs
+ * Handles data URLs and cleans up common encoding issues
  */
 function sanitizeBase64(base64String) {
   if (!base64String) {
@@ -498,35 +531,71 @@ function sanitizeBase64(base64String) {
   Logger.log('=== sanitizeBase64 function ===');
   Logger.log('Input string length: ' + base64String.length);
   Logger.log('Input starts with: ' + base64String.substring(0, 100));
-  Logger.log('Input contains comma: ' + base64String.includes(','));
+
+  // Check if this is a data URL
+  const isDataUrl = base64String.startsWith('data:');
+  Logger.log('Is data URL: ' + isDataUrl);
 
   // Remove data URL prefix if present
-  let cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String;
-  Logger.log('After removing data URL prefix, length: ' + cleanBase64.length);
+  let cleanBase64 = base64String;
+  if (isDataUrl) {
+    if (base64String.includes(',')) {
+      cleanBase64 = base64String.split(',')[1];
+      Logger.log('Removed data URL prefix, new length: ' + cleanBase64.length);
+    } else {
+      Logger.log('Warning: Data URL format detected but no comma found');
+    }
+  }
 
   // Remove all whitespace characters (spaces, newlines, tabs, carriage returns)
+  const beforeWhitespace = cleanBase64.length;
   cleanBase64 = cleanBase64.replace(/\s+/g, '');
-  Logger.log('After removing whitespace, length: ' + cleanBase64.length);
+  if (cleanBase64.length !== beforeWhitespace) {
+    Logger.log('Removed whitespace, length changed from ' + beforeWhitespace + ' to ' + cleanBase64.length);
+  }
 
   // Remove any URL encoding artifacts
-  cleanBase64 = cleanBase64.replace(/%20/g, '');
-  Logger.log('After removing URL encoding, length: ' + cleanBase64.length);
+  cleanBase64 = cleanBase64.replace(/%20/g, '').replace(/%2B/g, '+').replace(/%2F/g, '/').replace(/%3D/g, '=');
 
   // Validate base64 format - should only contain A-Z, a-z, 0-9, +, /, and = for padding
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
   if (!base64Regex.test(cleanBase64)) {
-    Logger.log('Invalid base64 characters detected. Length: ' + cleanBase64.length);
+    Logger.log('❌ Base64 validation FAILED');
+    Logger.log('Length: ' + cleanBase64.length);
     Logger.log('First 100 chars: ' + cleanBase64.substring(0, 100));
     Logger.log('Last 50 chars: ' + cleanBase64.substring(Math.max(0, cleanBase64.length - 50)));
-    throw new Error('Base64 string contains invalid characters');
+
+    // Find invalid characters for better error reporting
+    const invalidChars = cleanBase64.match(/[^A-Za-z0-9+/=]/g);
+    if (invalidChars) {
+      Logger.log('Invalid characters found: ' + invalidChars.join(', '));
+    }
+
+    throw new Error('Base64 string contains invalid characters. Use Drive API workflow to avoid encoding issues.');
   }
 
-  // Validate minimum length
-  if (cleanBase64.length < 100) {
-    throw new Error('Base64 string too short - possible corruption. Length: ' + cleanBase64.length);
+  // Validate minimum length (a 1x1 PNG is ~96 chars, set threshold to 50 to catch truncation)
+  const MIN_BASE64_LENGTH = 50;
+  if (cleanBase64.length < MIN_BASE64_LENGTH) {
+    Logger.log('❌ Base64 string too short: ' + cleanBase64.length + ' characters');
+    Logger.log('This usually indicates truncated or placeholder data');
+    throw new Error(
+      'Base64 string too short (' + cleanBase64.length + ' chars). ' +
+      'Expected at least ' + MIN_BASE64_LENGTH + ' characters for a valid image. ' +
+      'Ensure you are using the Drive API workflow (upload → fileId → interpret).'
+    );
   }
 
-  Logger.log('Base64 validation passed. Length: ' + cleanBase64.length);
+  // Validate base64 padding
+  const paddingCount = (cleanBase64.match(/=/g) || []).length;
+  if (paddingCount > 2) {
+    Logger.log('Warning: Unusual base64 padding: ' + paddingCount + ' equals signs');
+  }
+
+  Logger.log('✓ Base64 validation passed');
+  Logger.log('Final length: ' + cleanBase64.length + ' characters');
+  Logger.log('Padding: ' + paddingCount + ' equals signs');
+
   return cleanBase64;
 }
 
@@ -715,31 +784,62 @@ function parseAIResponse(aiResponse) {
 /**
  * Download image from Google Drive and convert to base64 data URL
  * @param {string} fileId - Google Drive file ID
- * @return {string} Base64 data URL
+ * @return {string} Base64 data URL or null if error
  */
 function downloadImageFromDrive(fileId) {
   try {
+    // Validate fileId
+    if (!fileId || typeof fileId !== 'string' || fileId.trim().length === 0) {
+      Logger.log('Invalid fileId provided: ' + fileId);
+      return null;
+    }
+
     Logger.log('Downloading file from Drive: ' + fileId);
 
     // Get file from Drive
     const file = DriveApp.getFileById(fileId);
+
+    // Verify file exists and is accessible
+    if (!file) {
+      Logger.log('File not found in Drive: ' + fileId);
+      return null;
+    }
+
     const blob = file.getBlob();
     const mimeType = blob.getContentType();
+    const fileSize = blob.getBytes().length;
 
-    Logger.log('File downloaded. MimeType: ' + mimeType + ', Size: ' + blob.getBytes().length);
+    Logger.log('File downloaded successfully');
+    Logger.log('- File name: ' + file.getName());
+    Logger.log('- MimeType: ' + mimeType);
+    Logger.log('- Size: ' + fileSize + ' bytes');
+
+    // Validate it's an image
+    if (!mimeType || !mimeType.startsWith('image/')) {
+      Logger.log('Warning: File does not appear to be an image. MimeType: ' + mimeType);
+      // Continue anyway - let the Vision API decide
+    }
+
+    // Check size limits (10MB max for most Vision APIs)
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (fileSize > MAX_SIZE) {
+      Logger.log('Error: File too large: ' + fileSize + ' bytes (max: ' + MAX_SIZE + ')');
+      throw new Error('Image file too large. Maximum size is 10MB.');
+    }
 
     // Convert to base64
     const base64 = Utilities.base64Encode(blob.getBytes());
+    Logger.log('Converted to base64, length: ' + base64.length);
 
     // Create data URL
     const dataUrl = 'data:' + mimeType + ';base64,' + base64;
-
-    Logger.log('Converted to data URL, length: ' + dataUrl.length);
+    Logger.log('Created data URL, total length: ' + dataUrl.length);
 
     return dataUrl;
 
   } catch (error) {
     Logger.log('Error downloading from Drive: ' + error.toString());
+    Logger.log('Error stack: ' + (error.stack || 'No stack trace available'));
     return null;
   }
 }
@@ -824,13 +924,55 @@ function testInterpret() {
 }
 
 /**
- * Test function for image interpretation (requires base64 image)
+ * Test function for image interpretation using Drive API (recommended)
+ * This demonstrates the proper two-step workflow:
+ * 1. Upload image to Drive (get fileId)
+ * 2. Interpret using fileId (avoids base64 size limits)
  */
-function testImageInterpret() {
-  // Note: Replace with actual base64 image data for testing
+function testImageInterpretWithDrive() {
+  // Step 1: Upload a minimal valid PNG to Drive
+  // This is a 1x1 red pixel PNG (minimal valid image for testing)
+  const minimalPNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+
+  Logger.log('=== Test: Upload image to Drive ===');
+  const uploadResult = handleUploadImage({ image: minimalPNG });
+  Logger.log('Upload result: ' + JSON.stringify(uploadResult, null, 2));
+
+  if (!uploadResult.success) {
+    Logger.log('ERROR: Upload failed');
+    return uploadResult;
+  }
+
+  // Step 2: Interpret using the Drive fileId
+  Logger.log('=== Test: Interpret image from Drive ===');
+  const interpretData = {
+    action: 'interpret',
+    fileId: uploadResult.fileId,  // Use fileId instead of base64
+    documentType: 'lab',
+    username: 'TestUser',
+    provider: 'claude' // or 'openai'
+  };
+
+  const result = handleInterpret(interpretData);
+  Logger.log('Interpret result: ' + JSON.stringify(result, null, 2));
+
+  return result;
+}
+
+/**
+ * Legacy test function for direct base64 image interpretation
+ * NOTE: This approach has size limitations. Use testImageInterpretWithDrive() instead.
+ * Only use this for small test images.
+ */
+function testImageInterpretDirect() {
+  // Using a minimal valid 1x1 red pixel PNG for testing
+  const minimalPNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+
+  Logger.log('=== Test: Direct image interpretation (legacy) ===');
+
   const testData = {
     action: 'interpret',
-    image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...',
+    image: minimalPNG,
     documentType: 'lab',
     username: 'TestUser',
     provider: 'claude' // or 'openai'
@@ -838,4 +980,14 @@ function testImageInterpret() {
 
   const result = handleInterpret(testData);
   Logger.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+/**
+ * Keep old function name for backwards compatibility
+ * but redirect to the Drive-based approach
+ */
+function testImageInterpret() {
+  Logger.log('⚠️ testImageInterpret() is deprecated. Use testImageInterpretWithDrive() instead.');
+  return testImageInterpretWithDrive();
 }
