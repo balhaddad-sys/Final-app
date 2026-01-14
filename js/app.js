@@ -130,7 +130,13 @@ function init() {
     exportWardBtn.addEventListener('click', exportWardPresentation);
   }
 
-  console.log('✅ Initialization complete');
+  // Copy to Clipboard
+  const copyBtn = document.getElementById('copy-ward-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', copyToClipboard);
+  }
+
+  console.log('✅ MedWard Master initialized - Clinical Grade');
 }
 
 // ==================== Authentication ====================
@@ -677,45 +683,45 @@ function displayResults(data) {
     Elements.analysisTimestamp.textContent = `Completed at ${now.toLocaleTimeString()}`;
   }
 
-  // Build results HTML
+  // Build results HTML with professional icons
   const sections = [
     {
-      icon: '📊',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="16" height="16" rx="2"/><path d="M6 10h8M10 6v8"/></svg>',
       title: 'Summary',
       content: data.interpretation?.summary || 'No summary available'
     },
     {
-      icon: '🔍',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4"/></svg>',
       title: 'Key Findings',
       content: formatList(data.interpretation?.keyFindings)
     },
     {
-      icon: '⚠️',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2l8 16H2L10 2z"/><path d="M10 8v4M10 14h.01"/></svg>',
       title: 'Abnormalities & Alerts',
       content: formatList(data.interpretation?.abnormalities, 'alert-item') || '<p>No abnormalities detected.</p>'
     },
     {
-      icon: '✅',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M7 10l2 2 4-4"/></svg>',
       title: 'Normal Findings',
       content: formatList(data.interpretation?.normalFindings, 'success-item') || '<p>No normal findings listed.</p>'
     },
     {
-      icon: '💡',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l2 2"/></svg>',
       title: 'Clinical Pearls',
       content: formatList(data.clinicalPearls) || '<p>No clinical pearls available.</p>'
     },
     {
-      icon: '💬',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h16M2 10h16M2 16h16"/></svg>',
       title: 'Discussion Points',
       content: formatList(data.potentialQuestions) || '<p>No specific discussion points.</p>'
     },
     {
-      icon: '👤',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="6" r="3"/><path d="M4 18c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>',
       title: 'Patient Explanation',
       content: data.presentation?.patientFriendly || 'No patient explanation available'
     },
     {
-      icon: '📝',
+      icon: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8l6-6 6 6M10 2v12M4 16h12"/></svg>',
       title: 'Recommendations',
       content: formatList(data.presentation?.recommendations) || '<p>No specific recommendations.</p>'
     }
@@ -779,9 +785,11 @@ function startNewAnalysis() {
   const detailedView = document.getElementById('detailed-view');
   const wardView = document.getElementById('ward-view');
   const exportBtn = document.getElementById('export-ward-btn');
+  const copyBtn = document.getElementById('copy-ward-btn');
   if (detailedView) detailedView.style.display = 'block';
   if (wardView) wardView.style.display = 'none';
   if (exportBtn) exportBtn.style.display = 'none';
+  if (copyBtn) copyBtn.style.display = 'none';
 
   // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -817,10 +825,13 @@ function toggleResultsView(view) {
   const wardView = document.getElementById('ward-view');
   const exportBtn = document.getElementById('export-ward-btn');
 
+  const copyBtn = document.getElementById('copy-ward-btn');
+
   if (view === 'ward') {
     if (detailedView) detailedView.style.display = 'none';
     if (wardView) wardView.style.display = 'block';
     if (exportBtn) exportBtn.style.display = 'inline-flex';
+    if (copyBtn) copyBtn.style.display = 'inline-flex';
 
     // Generate ward presentation if not already generated
     if (!State.wardPresentation && State.currentAnalysis) {
@@ -830,6 +841,7 @@ function toggleResultsView(view) {
     if (detailedView) detailedView.style.display = 'block';
     if (wardView) wardView.style.display = 'none';
     if (exportBtn) exportBtn.style.display = 'none';
+    if (copyBtn) copyBtn.style.display = 'none';
   }
 }
 
@@ -996,19 +1008,52 @@ function displayWardPresentation(data) {
 
   let html = '';
 
-  // Header
-  if (ward.header) {
-    html += `<div class="ward-header">${escapeHtml(ward.header)}</div>`;
-  }
+  // Document Header
+  html += `
+    <header class="document-header">
+      <div class="document-header__title">
+        <span class="document-header__icon">MED</span>
+        <h1>${escapeHtml(ward.header || 'Ward Round Summary')}</h1>
+      </div>
+      <div class="document-header__meta">
+        <time class="document-header__date" datetime="${new Date().toISOString()}">${new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</time>
+        <span class="document-header__time">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+      </div>
+    </header>
+  `;
 
-  html += '<hr class="ward-divider">';
+  // Patient Banner (placeholder)
+  html += `
+    <section class="patient-banner" aria-label="Patient Information">
+      <div class="patient-banner__bed">Bed --</div>
+      <div class="patient-banner__info">
+        <span class="patient-banner__demographics">-- / --</span>
+        <span class="patient-banner__admission">Day -- of Admission</span>
+      </div>
+      <div class="patient-banner__diagnosis">
+        <span class="patient-banner__dx-label">Primary Dx:</span>
+        <span class="patient-banner__dx-value">--</span>
+      </div>
+    </section>
+  `;
 
-  // Status Table
+  // Vitals Strip (placeholder)
+  html += `
+    <section class="vitals-strip" aria-label="Vital Signs">
+      <div class="vital"><span class="vital__label">T:</span><span class="vital__value">--</span></div>
+      <div class="vital"><span class="vital__label">HR:</span><span class="vital__value">--</span></div>
+      <div class="vital"><span class="vital__label">BP:</span><span class="vital__value">--</span></div>
+      <div class="vital"><span class="vital__label">RR:</span><span class="vital__value">--</span></div>
+      <div class="vital"><span class="vital__label">SpO2:</span><span class="vital__value">--</span></div>
+    </section>
+  `;
+
+  // Status Summary
   if (ward.status && ward.status.length > 0) {
-    html += '<div class="ward-section">';
-    html += '<div class="ward-section-title">STATUS</div>';
+    html += '<section class="ward-section status-summary">';
+    html += '<h2 class="ward-section__header"><span class="section-badge section-badge--alert">!</span>Status Overview</h2>';
     html += '<table class="status-table">';
-    html += '<thead><tr><th>Domain</th><th>Status</th><th>Value</th></tr></thead>';
+    html += '<thead><tr><th scope="col">Domain</th><th scope="col">Status</th><th scope="col">Details</th></tr></thead>';
     html += '<tbody>';
 
     ward.status.forEach(item => {
@@ -1020,124 +1065,302 @@ function displayWardPresentation(data) {
       </tr>`;
     });
 
-    html += '</tbody></table>';
-    html += '</div>';
+    html += '</tbody></table></section>';
   }
 
-  // Active Issues
+  // Active Issues/Problems
   if (ward.activeIssues && ward.activeIssues.length > 0) {
-    html += '<div class="ward-section">';
-    html += '<div class="ward-section-title">ACTIVE ISSUES</div>';
-    html += '<ul class="issue-list">';
+    html += '<section class="ward-section">';
+    html += '<h2 class="ward-section__header"><span class="section-badge">1</span>Active Issues</h2>';
+    html += '<ol class="problem-list" role="list">';
 
     ward.activeIssues.forEach(issue => {
       if (typeof issue === 'string') {
-        html += `<li class="issue-item">${escapeHtml(issue)}</li>`;
+        // Parse for severity indicators
+        const isCritical = issue.toLowerCase().includes('critical') || issue.toLowerCase().includes('acute') || issue.toLowerCase().includes('urgent');
+        const itemClass = isCritical ? 'problem-item--critical' : '';
+        html += `<li class="problem-item ${itemClass}">${escapeHtml(issue)}</li>`;
       } else {
-        html += `<li class="issue-item">
-          <div class="issue-name">${escapeHtml(issue.issue)}</div>
-          <div class="issue-details">
-            ${escapeHtml(issue.status)}
-            <span class="issue-arrow">→</span>
-            ${escapeHtml(issue.action)}
-          </div>
+        const itemClass = issue.severity === 'critical' ? 'problem-item--critical' : '';
+        html += `<li class="problem-item ${itemClass}">
+          <div class="problem-item__title">${escapeHtml(issue.issue || issue.title || '')}</div>
+          <div class="problem-item__detail">${escapeHtml(issue.status || '')}</div>
+          ${issue.action ? `<div class="problem-item__action">${escapeHtml(issue.action)}</div>` : ''}
         </li>`;
       }
     });
 
-    html += '</ul>';
-    html += '</div>';
+    html += '</ol></section>';
   }
 
   // Today's Plan
   if (ward.todaysPlan && ward.todaysPlan.length > 0) {
-    html += '<div class="ward-section">';
-    html += '<div class="ward-section-title">TODAY\'S PLAN</div>';
-    html += '<ul class="plan-list">';
+    html += '<section class="ward-section">';
+    html += '<h2 class="ward-section__header"><span class="section-badge section-badge--plan">P</span>Today\'s Plan</h2>';
+    html += '<ul class="plan-list" role="list">';
 
-    ward.todaysPlan.forEach(item => {
-      html += `<li class="plan-item">${escapeHtml(item)}</li>`;
+    ward.todaysPlan.forEach((item, index) => {
+      html += `<li class="plan-item" data-index="${index}">
+        <span class="plan-item__checkbox" role="checkbox" aria-checked="false"></span>
+        <span class="plan-item__text">${escapeHtml(item)}</span>
+      </li>`;
     });
 
-    html += '</ul>';
-    html += '</div>';
+    html += '</ul></section>';
   }
 
   // Watch For
   if (ward.watchFor && ward.watchFor.length > 0) {
-    html += '<div class="ward-section">';
-    html += '<div class="ward-section-title">WATCH FOR</div>';
-    html += '<ul class="watchfor-list">';
+    html += '<section class="watchfor-section" aria-label="Red Flags">';
+    html += '<h2 class="watchfor-section__header"><span class="watchfor-icon" aria-hidden="true">⚑</span>Watch For</h2>';
+    html += '<ul class="watchfor-list" role="list">';
 
     ward.watchFor.forEach(item => {
-      html += `<li class="watchfor-item">${escapeHtml(item)}</li>`;
+      // Clean up item text - remove prefixes
+      const cleanText = item.replace(/^(REQUEST|OBTAIN|VERIFY|CLARIFY|ENSURE|DOCUMENT|MONITOR|WATCH):\s*/i, '').trim();
+      html += `<li class="watchfor-item">${escapeHtml(cleanText)}</li>`;
     });
 
-    html += '</ul>';
-    html += '</div>';
+    html += '</ul></section>';
   }
 
-  html += '<hr class="ward-divider">';
+  // Document Footer
+  html += `
+    <footer class="document-footer">
+      <p class="document-footer__disclaimer">AI-generated summary for clinical review. Verify all information against source documentation.</p>
+      <p class="document-footer__timestamp">Generated: <time datetime="${new Date().toISOString()}">${new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}</time></p>
+    </footer>
+  `;
 
   wardContent.innerHTML = html;
+
+  // Add click handlers for checkboxes
+  attachPlanCheckboxHandlers();
 }
 
+// Attach checkbox handlers for plan items
+function attachPlanCheckboxHandlers() {
+  document.querySelectorAll('.plan-item__checkbox').forEach(checkbox => {
+    checkbox.addEventListener('click', function() {
+      const planItem = this.closest('.plan-item');
+      const isCompleted = planItem.classList.contains('plan-item--completed');
+
+      if (isCompleted) {
+        planItem.classList.remove('plan-item--completed');
+        this.setAttribute('aria-checked', 'false');
+      } else {
+        planItem.classList.add('plan-item--completed');
+        this.setAttribute('aria-checked', 'true');
+      }
+    });
+  });
+}
+
+// ==================== Export Functions ====================
 function exportWardPresentation() {
   const wardContent = document.getElementById('ward-content');
-  if (!wardContent) return;
+  if (!wardContent) {
+    showToast('No ward presentation to export', 'error');
+    return;
+  }
 
-  // Create a printable version
+  // Create a clinical-grade printable version
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Ward Presentation - MedWard Master</title>
+      <title>Ward Round Summary - MedWard Master</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
       <style>
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
         body {
-          font-family: 'Courier New', monospace;
-          font-size: 12pt;
-          line-height: 1.6;
-          margin: 1in;
+          font-family: 'Source Sans Pro', sans-serif;
+          font-size: 11pt;
+          line-height: 1.5;
+          margin: 0.75in;
+          color: #1A1A1A;
+          background: white;
         }
-        .ward-header {
+        .document-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 3px solid #495057;
+        }
+        .document-header__title h1 {
+          font-family: 'Crimson Pro', serif;
+          font-size: 20pt;
+          font-weight: 700;
+          margin: 0;
+        }
+        .document-header__meta {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9pt;
+          color: #6C757D;
+        }
+        .patient-banner {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          gap: 1rem;
+          padding: 0.5rem 0.75rem;
+          background: #E9ECEF;
+          border-left: 4px solid #1565C0;
+          margin-bottom: 1rem;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9pt;
+        }
+        .vitals-strip {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.25rem 1rem;
+          padding: 0.5rem 0.75rem;
+          background: #F8F9FA;
+          border: 1px solid #DEE2E6;
+          margin-bottom: 1rem;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9pt;
+        }
+        .ward-section {
+          margin-bottom: 1rem;
+          page-break-inside: avoid;
+        }
+        .ward-section__header, h2 {
+          font-family: 'Crimson Pro', serif;
           font-size: 14pt;
-          font-weight: bold;
-          text-align: center;
-          border-top: 3px solid #000;
-          border-bottom: 3px solid #000;
-          padding: 0.5in 0;
-          margin-bottom: 0.5in;
-        }
-        .ward-section-title {
-          font-weight: bold;
-          margin-top: 0.3in;
-          margin-bottom: 0.1in;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+          border-bottom: 2px solid #495057;
+          padding-bottom: 0.25rem;
+          margin-bottom: 0.5rem;
         }
         .status-table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 0.2in;
+          margin-bottom: 1rem;
+          font-size: 10pt;
         }
-        .status-table th, .status-table td {
-          border: 1px solid #000;
-          padding: 0.1in;
+        .status-table th {
+          background: #E9ECEF;
+          padding: 0.35rem 0.5rem;
+          border: 1px solid #DEE2E6;
           text-align: left;
+          font-weight: 600;
+          font-size: 9pt;
         }
-        .issue-list, .plan-list, .watchfor-list {
+        .status-table td {
+          padding: 0.35rem 0.5rem;
+          border: 1px solid #DEE2E6;
+        }
+        .status-indicator {
+          display: inline-block;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          margin-right: 0.35rem;
+        }
+        .status-red { background: #C62828; }
+        .status-yellow { background: #E65100; }
+        .status-green { background: #2E7D32; }
+        .problem-list, .issue-list {
           list-style: none;
-          padding-left: 0;
+          counter-reset: problem;
+          margin: 0;
+          padding: 0;
         }
-        .issue-item, .plan-item, .watchfor-item {
-          margin-bottom: 0.1in;
+        .problem-item, .issue-item {
+          counter-increment: problem;
+          padding: 0.5rem 0.75rem 0.5rem 2rem;
+          margin-bottom: 0.35rem;
+          background: #F8F9FA;
+          border-left: 3px solid #1565C0;
+          position: relative;
+          page-break-inside: avoid;
+          font-size: 10pt;
         }
-        .ward-divider {
+        .problem-item::before, .issue-item::before {
+          content: counter(problem) ".";
+          position: absolute;
+          left: 0.5rem;
+          font-weight: 700;
+          color: #1565C0;
+          font-family: 'JetBrains Mono', monospace;
+        }
+        .problem-item--critical {
+          border-left-color: #C62828;
+          background: #FFEBEE;
+        }
+        .plan-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        .plan-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          padding: 0.35rem 0;
+          border-bottom: 1px solid #DEE2E6;
+          font-size: 10pt;
+        }
+        .plan-item__checkbox {
+          flex-shrink: 0;
+          width: 14px;
+          height: 14px;
+          border: 2px solid #ADB5BD;
+          border-radius: 2px;
+          margin-top: 0.1rem;
+        }
+        .watchfor-section {
+          background: #FFEBEE;
+          border: 1px solid #C62828;
+          border-radius: 3px;
+          padding: 0.75rem;
+          margin-bottom: 1rem;
+          page-break-inside: avoid;
+        }
+        .watchfor-section__header {
+          font-weight: 700;
+          color: #C62828;
+          margin-bottom: 0.5rem;
+          font-size: 10pt;
+          text-transform: uppercase;
           border: none;
-          border-top: 2px solid #000;
-          margin: 0.3in 0;
+          padding: 0;
+        }
+        .watchfor-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        .watchfor-item {
+          padding: 0.25rem 0;
+          font-size: 10pt;
+        }
+        .watchfor-item::before {
+          content: "⚑ ";
+          color: #C62828;
+          font-weight: 700;
+        }
+        .document-footer {
+          margin-top: 1.5rem;
+          padding-top: 0.75rem;
+          border-top: 1px solid #DEE2E6;
+          font-size: 8pt;
+          color: #6C757D;
+          text-align: center;
         }
         @page {
-          margin: 0.5in;
+          margin: 0.75in;
+          size: A4;
         }
       </style>
     </head>
@@ -1145,14 +1368,81 @@ function exportWardPresentation() {
       ${wardContent.innerHTML}
       <script>
         window.onload = function() {
-          window.print();
-          window.close();
+          setTimeout(function() {
+            window.print();
+          }, 250);
         };
       </script>
     </body>
     </html>
   `);
   printWindow.document.close();
+}
+
+// Copy ward summary to clipboard (for pasting into EMR)
+async function copyToClipboard() {
+  const wardContent = document.getElementById('ward-content');
+  if (!wardContent) {
+    showToast('No ward presentation to copy', 'error');
+    return;
+  }
+
+  // Convert to plain text format suitable for EMR
+  const plainText = convertToPlainText(wardContent);
+
+  try {
+    await navigator.clipboard.writeText(plainText);
+    showToast('Copied to clipboard', 'success');
+  } catch (err) {
+    showToast('Failed to copy', 'error');
+  }
+}
+
+// Convert ward HTML to plain text for EMR systems
+function convertToPlainText(element) {
+  let text = '';
+
+  // Header
+  text += '═══════════════════════════════════════════════════════════════\n';
+  text += '                    WARD ROUND SUMMARY\n';
+  text += `                    ${new Date().toLocaleDateString()}\n`;
+  text += '═══════════════════════════════════════════════════════════════\n\n';
+
+  // Process each section
+  const sections = element.querySelectorAll('.ward-section, .watchfor-section, .medications-section');
+  sections.forEach(section => {
+    const header = section.querySelector('h2, .ward-section__header, .watchfor-section__header');
+    if (header) {
+      text += header.textContent.toUpperCase().trim() + '\n';
+      text += '───────────────────────────────────────────────────────────────\n';
+    }
+
+    // Process lists
+    const listItems = section.querySelectorAll('li');
+    listItems.forEach((item, index) => {
+      const itemText = item.textContent.trim();
+      text += `  ${index + 1}. ${itemText}\n`;
+    });
+
+    // Process tables
+    const tables = section.querySelectorAll('table');
+    tables.forEach(table => {
+      const rows = table.querySelectorAll('tr');
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('th, td');
+        const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join(' | ');
+        text += `  ${rowText}\n`;
+      });
+    });
+
+    text += '\n';
+  });
+
+  // Footer
+  text += '═══════════════════════════════════════════════════════════════\n';
+  text += 'AI-generated summary. Verify against source documentation.\n';
+
+  return text;
 }
 
 // ==================== Start App ====================
