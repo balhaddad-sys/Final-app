@@ -30,8 +30,8 @@ const CONFIG = {
   OPENAI_TEXT_MODEL: 'gpt-4',
   OPENAI_VISION_MODEL: 'gpt-4-vision-preview',
   // Claude model - check https://docs.anthropic.com/en/docs/models-overview for latest versions
-  // Common options: claude-3-5-sonnet-20241022, claude-3-5-sonnet-20240620, claude-3-opus-20240229
-  CLAUDE_MODEL: 'claude-3-5-sonnet-20240620',
+  // Haiku is faster and more cost-effective for most medical analysis tasks
+  CLAUDE_MODEL: 'claude-haiku-4-5-20251001',
   MAX_TOKENS: 4000,
   TEMPERATURE: 0.7,
   DRIVE_FOLDER_NAME: 'MedWard Reports',
