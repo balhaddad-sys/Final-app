@@ -29,7 +29,9 @@
 const CONFIG = {
   OPENAI_TEXT_MODEL: 'gpt-4',
   OPENAI_VISION_MODEL: 'gpt-4-vision-preview',
-  CLAUDE_MODEL: 'claude-3-5-sonnet-20241022',
+  // Claude model - check https://docs.anthropic.com/en/docs/models-overview for latest versions
+  // Haiku is faster and more cost-effective for most medical analysis tasks
+  CLAUDE_MODEL: 'claude-haiku-4-5-20251001',
   MAX_TOKENS: 4000,
   TEMPERATURE: 0.7,
   DRIVE_FOLDER_NAME: 'MedWard Reports',
@@ -396,7 +398,20 @@ function analyzeImageWithClaude(base64Data, mediaType, documentType) {
 
   if (result.error) {
     Logger.log('Claude API returned error: ' + JSON.stringify(result.error));
-    throw new Error('Claude API Error: ' + JSON.stringify(result.error));
+
+    // Provide helpful error messages for common issues
+    let errorMsg = 'Claude API Error: ' + JSON.stringify(result.error);
+    if (result.error.type === 'not_found_error' && result.error.message && result.error.message.includes('model')) {
+      errorMsg = 'Claude model "' + CONFIG.CLAUDE_MODEL + '" not found. ' +
+        'Please check https://docs.anthropic.com/en/docs/models-overview for available models ' +
+        'and update CONFIG.CLAUDE_MODEL in the script.';
+    } else if (result.error.type === 'authentication_error') {
+      errorMsg = 'Claude authentication failed. Please verify ANTHROPIC_API_KEY in Script Properties.';
+    } else if (result.error.type === 'permission_error') {
+      errorMsg = 'Claude API permission error. Your API key may not have access to this model.';
+    }
+
+    throw new Error(errorMsg);
   }
 
   Logger.log('Claude Vision API request successful');
@@ -645,7 +660,21 @@ function getClaudeInterpretation(medicalText, documentType) {
   const result = JSON.parse(response.getContentText());
 
   if (result.error) {
-    throw new Error('Claude API Error: ' + JSON.stringify(result.error));
+    Logger.log('Claude API returned error: ' + JSON.stringify(result.error));
+
+    // Provide helpful error messages for common issues
+    let errorMsg = 'Claude API Error: ' + JSON.stringify(result.error);
+    if (result.error.type === 'not_found_error' && result.error.message && result.error.message.includes('model')) {
+      errorMsg = 'Claude model "' + CONFIG.CLAUDE_MODEL + '" not found. ' +
+        'Please check https://docs.anthropic.com/en/docs/models-overview for available models ' +
+        'and update CONFIG.CLAUDE_MODEL in the script.';
+    } else if (result.error.type === 'authentication_error') {
+      errorMsg = 'Claude authentication failed. Please verify ANTHROPIC_API_KEY in Script Properties.';
+    } else if (result.error.type === 'permission_error') {
+      errorMsg = 'Claude API permission error. Your API key may not have access to this model.';
+    }
+
+    throw new Error(errorMsg);
   }
 
   const aiResponse = result.content[0].text;
