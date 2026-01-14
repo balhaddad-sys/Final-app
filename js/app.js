@@ -8,13 +8,14 @@
 const CONFIG = {
   BACKEND_URL: 'https://script.google.com/macros/s/AKfycby-3iNSD4CquZiyg0inXQ_sGs3IxNrSx1WzRREIv2ABKnyPP5GjvSYZdzClkZqWZ9M7Og/exec',
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  COMPRESS_QUALITY: 0.8,
-  COMPRESS_MAX_WIDTH: 1920,
-  COMPRESS_MAX_HEIGHT: 1920,
-  RETRY_ATTEMPTS: 3,
-  RETRY_DELAY: 1000, // Reduced from 2000ms to 1000ms for faster retries
-  CACHE_MAX_SIZE: 10, // Maximum cached results
-  CACHE_TTL: 3600000  // 1 hour cache lifetime
+  COMPRESS_QUALITY: 0.6, // Reduced for faster compression
+  COMPRESS_MAX_WIDTH: 1280, // Reduced for faster processing
+  COMPRESS_MAX_HEIGHT: 1280, // Reduced for faster processing
+  COMPRESS_THRESHOLD: 500 * 1024, // Skip compression for files < 500KB
+  RETRY_ATTEMPTS: 2, // Reduced retry attempts
+  RETRY_DELAY: 500, // Faster retries
+  CACHE_MAX_SIZE: 20, // Increased cache size
+  CACHE_TTL: 7200000  // 2 hour cache lifetime
 };
 
 // ==================== State ====================
@@ -285,8 +286,14 @@ function clearFiles() {
 window.removeFile = removeFile;
 
 // ==================== Image Compression ====================
-// Optimized with OffscreenCanvas support and faster processing
+// Ultra-fast compression with smart skipping
 async function compressImage(file) {
+  // Skip compression for small files - faster!
+  if (file.size < CONFIG.COMPRESS_THRESHOLD) {
+    console.log(`⚡ Skipping compression for small file: ${file.name}`);
+    return file;
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -313,41 +320,29 @@ async function compressImage(file) {
 
         if (typeof OffscreenCanvas !== 'undefined') {
           canvas = new OffscreenCanvas(width, height);
-          ctx = canvas.getContext('2d', { alpha: false }); // Disable alpha for faster rendering
+          ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: false });
         } else {
           canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
-          ctx = canvas.getContext('2d', { alpha: false });
+          ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: false });
         }
 
-        // Draw image with optimized settings
+        // Fast rendering - medium quality for speed
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
+        ctx.imageSmoothingQuality = 'medium'; // Changed from 'high' to 'medium' for speed
         ctx.drawImage(img, 0, 0, width, height);
 
         // Convert to blob
         if (canvas.convertToBlob) {
-          // OffscreenCanvas API
           canvas.convertToBlob({
-            type: file.type,
+            type: 'image/jpeg', // JPEG is faster than PNG
             quality: CONFIG.COMPRESS_QUALITY
-          }).then(blob => {
-            console.log(`📦 Compressed ${file.name}: ${formatFileSize(file.size)} → ${formatFileSize(blob.size)}`);
-            resolve(blob);
-          }).catch(() => reject(new Error('Compression failed')));
+          }).then(resolve).catch(() => reject(new Error('Compression failed')));
         } else {
-          // Standard Canvas API
           canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                console.log(`📦 Compressed ${file.name}: ${formatFileSize(file.size)} → ${formatFileSize(blob.size)}`);
-                resolve(blob);
-              } else {
-                reject(new Error('Compression failed'));
-              }
-            },
-            file.type,
+            (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
+            'image/jpeg', // JPEG is faster than PNG
             CONFIG.COMPRESS_QUALITY
           );
         }
@@ -463,8 +458,7 @@ async function analyzeImages(docType) {
   updateStep('analyze', 'completed', 'Analysis complete');
   updateProgress(100);
 
-  // Show results after brief delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Show results immediately - no delay!
   displayResults(result);
 
 }
@@ -487,7 +481,6 @@ async function analyzeText(docType) {
     updateStep('ocr', 'completed', 'Cached');
     updateStep('analyze', 'completed', 'Cached result');
     updateProgress(100);
-    await new Promise(resolve => setTimeout(resolve, 300));
     displayResults(cachedResult);
     showToast('Using cached result (instant!)', 'success');
     return;
@@ -530,7 +523,6 @@ async function analyzeText(docType) {
   updateStep('analyze', 'completed', 'Analysis complete');
   updateProgress(100);
 
-  await new Promise(resolve => setTimeout(resolve, 500));
   displayResults(result);
 }
 
