@@ -52,6 +52,9 @@ function doPost(e) {
       case 'login':
         response = handleLogin(requestData);
         break;
+      case 'uploadImage':
+        response = handleUploadImage(requestData);
+        break;
       case 'interpret':
         response = handleInterpret(requestData);
         break;
@@ -114,6 +117,80 @@ function handleLogin(data) {
 }
 
 /**
+ * Handle image upload to Google Drive
+ * Accepts base64 image, saves to Drive, returns file ID
+ */
+function handleUploadImage(data) {
+  try {
+    Logger.log('=== handleUploadImage ===');
+
+    if (!data.image) {
+      return { success: false, error: 'No image data provided' };
+    }
+
+    Logger.log('Image data length received: ' + data.image.length);
+
+    // Extract base64 data and media type
+    let base64Data = data.image;
+    let mediaType = 'image/png';
+
+    // Check if it's a data URL
+    if (base64Data.startsWith('data:')) {
+      const match = base64Data.match(/data:([^;]+);base64,(.+)/);
+      if (match) {
+        mediaType = match[1];
+        base64Data = match[2];
+      }
+    }
+
+    Logger.log('Media type: ' + mediaType);
+    Logger.log('Base64 data length (after prefix removal): ' + base64Data.length);
+
+    // Convert base64 to blob
+    const blob = Utilities.newBlob(
+      Utilities.base64Decode(base64Data),
+      mediaType,
+      'medical-image-' + new Date().getTime()
+    );
+
+    Logger.log('Blob created, size: ' + blob.getBytes().length);
+
+    // Get or create MedWard folder
+    const folderName = CONFIG.DRIVE_FOLDER_NAME || 'MedWard Images';
+    let folder;
+    const folders = DriveApp.getFoldersByName(folderName);
+
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+
+    Logger.log('Using folder: ' + folder.getName());
+
+    // Save to Drive
+    const file = folder.createFile(blob);
+    const fileId = file.getId();
+
+    Logger.log('File saved to Drive with ID: ' + fileId);
+
+    return {
+      success: true,
+      fileId: fileId,
+      fileName: file.getName(),
+      fileSize: file.getSize()
+    };
+
+  } catch (error) {
+    Logger.log('Upload error: ' + error.toString());
+    return {
+      success: false,
+      error: 'Failed to upload image: ' + error.toString()
+    };
+  }
+}
+
+/**
  * Handle medical report interpretation requests
  */
 function handleInterpret(data) {
@@ -124,13 +201,30 @@ function handleInterpret(data) {
 
     let medicalText = data.text || '';
     let visionAnalysis = null;
+    let imageData = null;
 
-    // If image is provided, use Vision AI for extraction and analysis
-    if (data.image) {
-      Logger.log('Processing image with Vision AI...');
+    // If fileId is provided, download from Drive
+    if (data.fileId) {
+      Logger.log('Processing image from Drive fileId: ' + data.fileId);
+      imageData = downloadImageFromDrive(data.fileId);
+
+      if (!imageData) {
+        return { success: false, error: 'Failed to download image from Drive' };
+      }
+
+      Logger.log('Downloaded image from Drive, length: ' + imageData.length);
+    }
+    // If image is provided directly (legacy support)
+    else if (data.image) {
+      Logger.log('Processing image with Vision AI (direct upload)...');
       Logger.log('Image data in handleInterpret - length: ' + data.image.length);
       Logger.log('Image data in handleInterpret - first 100 chars: ' + data.image.substring(0, 100));
-      visionAnalysis = analyzeImageWithVisionAI(data.image, documentType, provider);
+      imageData = data.image;
+    }
+
+    // If we have image data, use Vision AI for extraction and analysis
+    if (imageData) {
+      visionAnalysis = analyzeImageWithVisionAI(imageData, documentType, provider);
 
       if (!visionAnalysis || !visionAnalysis.extractedText) {
         return { success: false, error: 'Vision AI failed to analyze image' };
@@ -615,6 +709,38 @@ function parseAIResponse(aiResponse) {
   } catch (error) {
     Logger.log('Parse error: ' + error.toString());
     throw new Error('Failed to parse AI response');
+  }
+}
+
+/**
+ * Download image from Google Drive and convert to base64 data URL
+ * @param {string} fileId - Google Drive file ID
+ * @return {string} Base64 data URL
+ */
+function downloadImageFromDrive(fileId) {
+  try {
+    Logger.log('Downloading file from Drive: ' + fileId);
+
+    // Get file from Drive
+    const file = DriveApp.getFileById(fileId);
+    const blob = file.getBlob();
+    const mimeType = blob.getContentType();
+
+    Logger.log('File downloaded. MimeType: ' + mimeType + ', Size: ' + blob.getBytes().length);
+
+    // Convert to base64
+    const base64 = Utilities.base64Encode(blob.getBytes());
+
+    // Create data URL
+    const dataUrl = 'data:' + mimeType + ';base64,' + base64;
+
+    Logger.log('Converted to data URL, length: ' + dataUrl.length);
+
+    return dataUrl;
+
+  } catch (error) {
+    Logger.log('Error downloading from Drive: ' + error.toString());
+    return null;
   }
 }
 

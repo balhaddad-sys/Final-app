@@ -237,22 +237,31 @@ async function handleAnalyze() {
     // Handle image or text
     if (file) {
       debugLog(`[Frontend] File selected: ${file.name}, Size: ${file.size} bytes`);
+
+      // Step 1: Upload image to Drive
+      debugLog(`[Frontend] Step 1: Uploading image to Google Drive...`);
       const base64Data = await fileToBase64(file);
       debugLog(`[Frontend] Base64 encoded. Length: ${base64Data.length}`);
-      debugLog(`[Frontend] Base64 starts with: ${base64Data.substring(0, 100)}`);
-      debugLog(`[Frontend] Base64 ends with: ${base64Data.substring(base64Data.length - 50)}`);
-      payload.image = base64Data;
-      debugLog(`[Frontend] Payload.image length: ${payload.image.length}`);
+
+      const uploadResponse = await callBackend('uploadImage', { image: base64Data });
+
+      if (!uploadResponse.success) {
+        throw new Error('Failed to upload image: ' + uploadResponse.error);
+      }
+
+      debugLog(`[Frontend] Image uploaded to Drive. FileId: ${uploadResponse.fileId}`);
+      debugLog(`[Frontend] File size: ${uploadResponse.fileSize} bytes`);
+
+      // Step 2: Use fileId for interpretation (much smaller payload!)
+      payload.fileId = uploadResponse.fileId;
+
     } else {
       payload.text = text;
     }
 
-    debugLog(`[Frontend] Calling backend with payload. Keys: ${Object.keys(payload)}`);
-    if (payload.image) {
-      debugLog(`[Frontend] Payload image length before sending: ${payload.image.length}`);
-    }
+    debugLog(`[Frontend] Calling interpret with payload. Keys: ${Object.keys(payload)}`);
 
-    // Call backend
+    // Call backend for interpretation
     const response = await callBackend('interpret', payload);
 
     if (response.success) {
