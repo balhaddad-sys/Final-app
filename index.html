@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -16,10 +16,15 @@
   <nav class="navbar">
     <div class="nav-container">
       <div class="nav-brand">
-        <div class="brand-icon">🏥</div>
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7v10c0 5.5 3.8 9.7 10 11 6.2-1.3 10-5.5 10-11V7l-10-5z"/>
+            <path d="M12 8v8M8 12h8"/>
+          </svg>
+        </div>
         <div class="brand-info">
           <h1 class="brand-name">MedWard Master</h1>
-          <span class="brand-tagline">AI Medical Analysis</span>
+          <span class="brand-tagline">Clinical Analysis Platform</span>
         </div>
       </div>
       <div class="nav-user" id="nav-user" style="display: none;">
@@ -40,9 +45,14 @@
       <div class="login-wrapper">
         <div class="login-card">
           <div class="login-header">
-            <div class="login-icon">🏥</div>
+            <div class="login-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7v10c0 5.5 3.8 9.7 10 11 6.2-1.3 10-5.5 10-11V7l-10-5z"/>
+                <path d="M12 8v8M8 12h8"/>
+              </svg>
+            </div>
             <h2>Welcome to MedWard Master</h2>
-            <p>Professional AI-Powered Medical Report Analysis</p>
+            <p>Clinical-Grade AI Medical Report Analysis</p>
           </div>
           <div class="login-form">
             <div class="form-field">
@@ -57,7 +67,7 @@
             </button>
           </div>
           <div class="login-footer">
-            <p>🔒 Secure • 🤖 AI-Powered • ⚡ Fast Analysis</p>
+            <p>Secure • AI-Powered • Evidence-Based</p>
           </div>
         </div>
       </div>
@@ -70,8 +80,18 @@
         <!-- Upload Panel -->
         <div class="dashboard-panel upload-panel">
           <div class="panel-header">
-            <h3>📊 New Analysis</h3>
-            <p>Upload medical reports for AI-powered interpretation</p>
+            <div class="panel-header-flex">
+              <div class="panel-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="16" height="16" rx="2"/>
+                  <path d="M7 10l3 3 6-6"/>
+                </svg>
+              </div>
+              <div>
+                <h3>New Analysis</h3>
+                <p>Upload medical reports for clinical interpretation</p>
+              </div>
+            </div>
           </div>
 
           <div class="upload-tabs">
@@ -94,7 +114,13 @@
           <div class="upload-content active" data-content="image">
             <div class="dropzone" id="dropzone">
               <input type="file" id="file-input" multiple accept="image/*,.pdf" hidden>
-              <div class="dropzone-icon">📷</div>
+              <div class="dropzone-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M3 16l5-5 5 5 7-7"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                </svg>
+              </div>
               <h4>Drop images here or click to browse</h4>
               <p>Supports JPG, PNG, PDF • Max 10MB per file</p>
               <button class="btn-secondary btn-browse">Browse Files</button>
@@ -106,10 +132,10 @@
               <label>Report Type</label>
               <div class="select-wrapper">
                 <select id="report-type" class="form-select">
-                  <option value="lab">🧪 Laboratory Results</option>
-                  <option value="imaging">🔬 Imaging Report (X-ray, CT, MRI)</option>
-                  <option value="pathology">🦠 Pathology Report</option>
-                  <option value="general">📋 General Medical Report</option>
+                  <option value="lab">Laboratory Results</option>
+                  <option value="imaging">Imaging Report (X-ray, CT, MRI)</option>
+                  <option value="pathology">Pathology Report</option>
+                  <option value="general">General Medical Report</option>
                 </select>
               </div>
             </div>
@@ -139,10 +165,10 @@ Platelets: 250 K/uL
               <label>Report Type</label>
               <div class="select-wrapper">
                 <select id="report-type-text" class="form-select">
-                  <option value="lab">🧪 Laboratory Results</option>
-                  <option value="imaging">🔬 Imaging Report</option>
-                  <option value="pathology">🦠 Pathology Report</option>
-                  <option value="general">📋 General Medical Report</option>
+                  <option value="lab">Laboratory Results</option>
+                  <option value="imaging">Imaging Report</option>
+                  <option value="pathology">Pathology Report</option>
+                  <option value="general">General Medical Report</option>
                 </select>
               </div>
             </div>
@@ -207,7 +233,7 @@ Platelets: 250 K/uL
         <div class="dashboard-panel results-panel" id="results-panel">
           <div class="panel-header">
             <div>
-              <h3>🎯 Analysis Results</h3>
+              <h3>Analysis Results</h3>
               <p id="analysis-timestamp">Completed at --:--</p>
             </div>
             <div class="panel-actions">
@@ -220,7 +246,19 @@ Platelets: 250 K/uL
                   <path d="M5 7.5V2.5H15V7.5M5 15H3.75C3.05964 15 2.5 14.4404 2.5 13.75V9.375C2.5 8.68464 3.05964 8.125 3.75 8.125H16.25C16.9404 8.125 17.5 8.68464 17.5 9.375V13.75C17.5 14.4404 16.9404 15 16.25 15H15M5 12.5H15V17.5H5V12.5Z" stroke="currentColor" stroke-width="1.5"/>
                 </svg>
               </button>
-              <button class="btn-secondary" id="export-ward-btn" style="display: none;">Export for Rounds</button>
+              <button class="btn-secondary" id="copy-ward-btn" style="display: none;" title="Copy to Clipboard">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="8" height="10" rx="1"/>
+                  <path d="M4 4V2.5C4 1.67 4.67 1 5.5 1H12.5C13.33 1 14 1.67 14 2.5V11.5"/>
+                </svg>
+                Copy
+              </button>
+              <button class="btn-secondary" id="export-ward-btn" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 11v2h8v-2M8 2v9M5 8l3 3 3-3"/>
+                </svg>
+                Export for Rounds
+              </button>
               <button class="btn-secondary" id="new-analysis-btn">New Analysis</button>
             </div>
           </div>
