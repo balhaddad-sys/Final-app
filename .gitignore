@@ -1,44 +1,23 @@
-# MedWard Master - Git Ignore
-
-# Dependencies
+# Node
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+npm-debug.log
+yarn-error.log
 
-# Environment Variables (Never commit API keys!)
-.env
-.env.local
-.env.production
-*.key
+# Capacitor
+android/.gradle
+android/build
+android/app/build
+android/local.properties
+android/.idea
 
-# IDE & Editor Files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# iOS (if added later)
+ios/Pods
+ios/App/Podfile.lock
+ios/App/build
+
+# Web assets (generated)
+www/
+
+# OS
 .DS_Store
-
-# Build & Dist
-dist/
-build/
-*.log
-
-# Temporary Files
-tmp/
-temp/
-*.tmp
-
-# Secrets (IMPORTANT: Never commit these!)
-secrets.js
-config.local.js
-*.secret
-
-# OS Files
 Thumbs.db
-.DS_Store
-
-# Backup Files
-*.bak
-*.backup

@@ -1,0 +1,21 @@
+{
+  "name": "final-app",
+  "version": "1.0.0",
+  "description": "**Version 4.0** | GitHub Pages + Google Apps Script Backend + Vision AI",
+  "main": "backend-latest.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:48816/git/balhaddad-sys/Final-app"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.0.1",
+    "@capacitor/cli": "^8.0.1",
+    "@capacitor/core": "^8.0.1"
+  }
+}
