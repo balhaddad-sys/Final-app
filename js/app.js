@@ -1833,22 +1833,6 @@ function updateMetricsDisplay() {
   } catch (e) { }
 }
 
-    if (els.total) els.total.textContent = metrics.total;
-    if (els.cache) els.cache.textContent = metrics.cacheHitRate;
-    if (els.localSpeed) els.localSpeed.textContent = metrics.avgLocalMs + 'ms';
-    if (els.apiSpeed) els.apiSpeed.textContent = metrics.avgApiMs + 'ms';
-    if (els.patterns) els.patterns.textContent = metrics.patterns;
-
-    if (els.savings) {
-      const localCalls = parseInt(metrics.cacheHitRate) * metrics.total / 100;
-      const savings = (localCalls * 0.003).toFixed(2);
-      els.savings.textContent = `$${savings}`;
-    }
-  } catch (e) {
-    console.log('Metrics display not available');
-  }
-}
-
 /**
  * Reset metrics
  */
