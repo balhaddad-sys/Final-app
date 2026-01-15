@@ -271,7 +271,13 @@ async function initializeNeuralSystem() {
   } catch (error) {
     console.error('[Neural] Failed to initialize:', error);
     console.error('[Neural] Error details:', error.stack);
-    showToast('Neural system unavailable - using standard mode', 'warning');
+
+    // Show detailed error message to user
+    const errorMsg = error.message || error.toString();
+    showToast(`⚠ Neural system error: ${errorMsg}`, 'warning', 10000);
+
+    // Show error banner on page
+    showNeuralErrorBanner(errorMsg, error.stack);
 
     // Continue without neural system - app will use legacy mode
     neuralParser = null;
@@ -300,6 +306,71 @@ function waitForTensorFlow() {
 
     check();
   });
+}
+
+/**
+ * Show neural system error banner on page
+ */
+function showNeuralErrorBanner(errorMsg, stackTrace) {
+  // Create error banner if it doesn't exist
+  let banner = document.getElementById('neural-error-banner');
+
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'neural-error-banner';
+    banner.style.cssText = `
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 90%;
+      background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      animation: slideDown 0.3s ease;
+    `;
+
+    document.body.appendChild(banner);
+  }
+
+  banner.innerHTML = `
+    <div style="display: flex; align-items: start; gap: 1rem;">
+      <div style="font-size: 1.5rem;">⚠️</div>
+      <div style="flex: 1;">
+        <div style="font-weight: bold; margin-bottom: 0.5rem;">Neural System Error</div>
+        <div style="font-size: 0.85rem; opacity: 0.95; margin-bottom: 0.5rem;">${errorMsg}</div>
+        <button onclick="document.getElementById('neural-error-details').style.display = document.getElementById('neural-error-details').style.display === 'none' ? 'block' : 'none'"
+                style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; margin-right: 0.5rem;">
+          Show Details
+        </button>
+        <button onclick="this.closest('#neural-error-banner').remove()"
+                style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+          Dismiss
+        </button>
+        <div id="neural-error-details" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 6px; font-family: monospace; font-size: 0.75rem; max-height: 200px; overflow-y: auto;">
+          ${stackTrace ? stackTrace.replace(/\n/g, '<br>') : 'No stack trace available'}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add CSS animation
+  if (!document.getElementById('neural-error-animation-style')) {
+    const style = document.createElement('style');
+    style.id = 'neural-error-animation-style';
+    style.textContent = `
+      @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 }
 
 // ==================== Authentication ====================
@@ -1010,7 +1081,7 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', duration = 4000) {
   if (!Elements.toast) return;
 
   Elements.toast.textContent = message;
@@ -1018,7 +1089,7 @@ function showToast(message, type = 'info') {
 
   setTimeout(() => {
     Elements.toast.classList.remove('show');
-  }, 4000);
+  }, duration);
 }
 
 // ==================== Ward Presentation ====================

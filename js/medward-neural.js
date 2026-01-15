@@ -1799,7 +1799,7 @@ class MedWardNeural {
       // Extract problems from abnormalities
       if (backendResult.interpretation.abnormalities) {
         backendResult.interpretation.abnormalities.forEach((abn) => {
-          const match = abn.match(/^(.+?)\s*\((\w+)\)\s*[→->]\s*(.+)$/);
+          const match = abn.match(/^(.+?)\s*\((\w+)\)\s*(?:→|->)\s*(.+)$/);
           if (match) {
             result.problems.push({
               title: match[1],
