@@ -83,8 +83,12 @@ class MedicalDocumentPreProcessor {
   }
 }
 
-// Initialize medical document preprocessor
+// Initialize medical document preprocessor (legacy)
 const medicalPreProcessor = new MedicalDocumentPreProcessor();
+
+// Initialize Neural Intelligence System
+let neuralParser = null;
+let neuralSystem = null;
 
 // ==================== Configuration ====================
 const CONFIG = {
@@ -163,8 +167,11 @@ const Elements = {
 };
 
 // ==================== Initialization ====================
-function init() {
+async function init() {
   console.log('[MedWard] Initializing application...');
+
+  // Initialize Neural Intelligence System
+  await initializeNeuralSystem();
 
   // Event Listeners
   Elements.loginBtn?.addEventListener('click', handleLogin);
@@ -218,7 +225,37 @@ function init() {
     copyBtn.addEventListener('click', copyToClipboard);
   }
 
-  console.log('[MedWard] Application initialized successfully - Clinical Grade');
+  // Metrics panel
+  const resetMetricsBtn = document.getElementById('reset-metrics-btn');
+  if (resetMetricsBtn) {
+    resetMetricsBtn.addEventListener('click', resetMetrics);
+  }
+
+  console.log('[MedWard] Application initialized successfully - Neural Intelligence Edition');
+}
+
+// ==================== Neural System Initialization ====================
+async function initializeNeuralSystem() {
+  try {
+    console.log('[Neural] Initializing neural intelligence system...');
+
+    // Initialize parser and neural system
+    neuralParser = new MedicalDocumentParser({ debug: false });
+    neuralSystem = new MedWardNeural({ debug: true });
+
+    await neuralSystem.initialize();
+
+    // Show metrics panel
+    const metricsPanel = document.getElementById('metrics-panel');
+    if (metricsPanel) metricsPanel.style.display = 'block';
+
+    updateMetricsDisplay();
+
+    console.log('[Neural] Neural system ready!');
+  } catch (error) {
+    console.error('[Neural] Failed to initialize:', error);
+    showToast('Neural system unavailable - using standard mode', 'warning');
+  }
 }
 
 // ==================== Authentication ====================
@@ -558,10 +595,59 @@ async function analyzeText(docType) {
     throw new Error('Please enter medical report text');
   }
 
-  // Pre-process medical text for better AI parsing
+  // Try neural system first
+  if (neuralParser && neuralSystem) {
+    try {
+      updateStep('compress', 'completed', 'Not needed');
+      updateStep('upload', 'completed', 'Not needed');
+      updateProgress(40);
+
+      updateStep('ocr', 'active', 'Parsing medical data...');
+      updateProgress(60);
+
+      // Parse with robust parser
+      const parsed = await neuralParser.parse(text);
+      console.log('[Neural] Parsed:', parsed);
+
+      updateStep('ocr', 'completed', 'Data parsed');
+      updateStep('analyze', 'active', 'Neural analysis...');
+      updateProgress(80);
+
+      // Process with neural system (local or API)
+      const { result, meta } = await neuralSystem.process(parsed, 'lab');
+
+      updateStep('analyze', 'completed', `${meta.source.toUpperCase()} (${meta.time.toFixed(0)}ms)`);
+      updateProgress(100);
+
+      // Store source data
+      State.sourceData = { type: 'text', text: text, documentType: docType };
+
+      // Convert neural result to display format
+      const displayResult = convertNeuralToDisplay(result, parsed, meta);
+      displayResults(displayResult);
+
+      // Update metrics
+      updateMetricsDisplay();
+
+      // Show source indicator
+      if (meta.source === 'local') {
+        showToast(`Analyzed locally in ${meta.time.toFixed(0)}ms (FREE!)`, 'success');
+      } else {
+        showToast(`Analyzed with API in ${meta.time.toFixed(0)}ms`, 'info');
+      }
+
+      return;
+    } catch (neuralError) {
+      console.error('[Neural] Error:', neuralError);
+      showToast('Neural system error - using fallback', 'warning');
+    }
+  }
+
+  // Fallback to legacy system
+  console.log('[Legacy] Using legacy analysis');
   const processedText = medicalPreProcessor.formatForAI(text, docType);
 
-  // Check cache first for instant results (use original text for cache key)
+  // Check cache first
   const cacheKey = generateCacheKey(text, docType);
   const cachedResult = getFromCache(cacheKey);
 
@@ -589,7 +675,7 @@ async function analyzeText(docType) {
   updateProgress(80);
 
   const payload = {
-    text: processedText, // Send enhanced text with structure hints
+    text: processedText,
     documentType: docType,
     username: State.user?.username || 'Guest'
   };
@@ -600,14 +686,7 @@ async function analyzeText(docType) {
     throw new Error(result.error || 'Analysis failed');
   }
 
-  // Store source data for ward presentation reuse (use original text, not processed)
-  State.sourceData = {
-    type: 'text',
-    text: text, // Store original text
-    documentType: docType
-  };
-
-  // Store in cache for future use
+  State.sourceData = { type: 'text', text: text, documentType: docType };
   addToCache(cacheKey, result);
 
   updateStep('ocr', 'completed', 'Text processed');
@@ -1528,6 +1607,142 @@ function convertToPlainText(element) {
   text += 'AI-generated summary. Verify against source documentation.\n';
 
   return text;
+}
+
+// ==================== Neural System Helpers ====================
+/**
+ * Convert neural result to display format
+ */
+function convertNeuralToDisplay(neuralResult, parsedData, meta) {
+  const result = {
+    success: true,
+    interpretation: {
+      summary: '',
+      keyFindings: [],
+      abnormalities: [],
+      normalFindings: []
+    },
+    clinicalPearls: [],
+    potentialQuestions: [],
+    presentation: {
+      patientFriendly: '',
+      recommendations: []
+    },
+    neuralMeta: meta
+  };
+
+  // Build summary
+  const { summary } = parsedData;
+  if (summary) {
+    result.interpretation.summary = `Lab analysis complete. ${summary.total} tests analyzed: ${summary.normal} normal, ${summary.abnormal} abnormal${summary.critical > 0 ? `, ${summary.critical} CRITICAL` : ''}.`;
+  }
+
+  // Add problems as abnormalities
+  if (neuralResult.problems) {
+    neuralResult.problems.forEach(p => {
+      result.interpretation.abnormalities.push(
+        `${p.title} (${p.severity.toUpperCase()}) → ${p.action || 'Review and correlate clinically'}`
+      );
+    });
+  }
+
+  // Add interpretations as key findings
+  if (neuralResult.interpretations) {
+    for (const [test, interp] of Object.entries(neuralResult.interpretations)) {
+      const value = interp.value || parsedData.tests[test]?.values[0]?.value;
+      const status = interp.status || parsedData.tests[test]?.status;
+      const explanation = interp.explanation || '';
+
+      result.interpretation.keyFindings.push(
+        `${test}: ${value !== undefined ? value : '--'} (${status.toUpperCase()}) - ${explanation}`
+      );
+    }
+  }
+
+  // Add normal findings
+  for (const [name, test] of Object.entries(parsedData.tests || {})) {
+    if (test.status === 'normal') {
+      result.interpretation.normalFindings.push(
+        `${name}: ${test.values[0]?.value} (Normal range: ${test.reference?.min}-${test.reference?.max})`
+      );
+    }
+  }
+
+  // Add plan as recommendations
+  if (neuralResult.plan) {
+    neuralResult.plan.forEach(p => {
+      result.presentation.recommendations.push(typeof p === 'string' ? p : p.text);
+    });
+  }
+
+  // Add watch for as clinical pearls
+  if (neuralResult.watchFor) {
+    neuralResult.watchFor.forEach(w => {
+      result.clinicalPearls.push(`Monitor: ${w}`);
+    });
+  }
+
+  // Patient-friendly explanation
+  if (summary && summary.abnormal === 0) {
+    result.presentation.patientFriendly = 'All test results are within normal range. No abnormalities detected.';
+  } else if (summary && summary.critical > 0) {
+    result.presentation.patientFriendly = `Some test results require immediate medical attention. Please consult with your healthcare provider promptly.`;
+  } else {
+    result.presentation.patientFriendly = `Some test results are outside the normal range. Your healthcare provider will review these findings and discuss any necessary follow-up.`;
+  }
+
+  // Add neural metadata to clinical pearls
+  result.clinicalPearls.unshift(
+    `Analysis Source: ${meta.source === 'local' ? 'Local Neural Network (Offline)' : 'API (Learning)'}`,
+    `Analysis Time: ${meta.time.toFixed(0)}ms`,
+    `Confidence: ${(meta.confidence * 100).toFixed(1)}%`
+  );
+
+  return result;
+}
+
+/**
+ * Update metrics display
+ */
+function updateMetricsDisplay() {
+  if (!neuralSystem) return;
+
+  const metrics = neuralSystem.getMetrics();
+
+  // Update metric values
+  document.getElementById('metric-total').textContent = metrics.total;
+  document.getElementById('metric-cache').textContent = metrics.cacheHitRate;
+  document.getElementById('metric-local-speed').textContent = metrics.avgLocalMs + 'ms';
+  document.getElementById('metric-api-speed').textContent = metrics.avgApiMs + 'ms';
+  document.getElementById('metric-patterns').textContent = metrics.patterns;
+
+  // Calculate estimated savings (assume $0.003 per API call)
+  const localCalls = parseInt(metrics.cacheHitRate) * metrics.total / 100;
+  const savings = (localCalls * 0.003).toFixed(2);
+  document.getElementById('metric-savings').textContent = `$${savings}`;
+}
+
+/**
+ * Reset metrics
+ */
+async function resetMetrics() {
+  if (!neuralSystem) return;
+
+  if (confirm('Reset all neural learning data? This will clear learned patterns and metrics.')) {
+    // Reset metrics
+    neuralSystem.metrics = { total: 0, local: 0, api: 0, localTime: 0, apiTime: 0 };
+
+    // Clear pattern store
+    neuralSystem.patternStore = new PatternStore(neuralSystem.config.maxPatterns);
+
+    // Clear persistent storage
+    await neuralSystem.saveKnowledge();
+
+    // Update display
+    updateMetricsDisplay();
+
+    showToast('Neural system reset complete', 'success');
+  }
 }
 
 // ==================== Start App ====================

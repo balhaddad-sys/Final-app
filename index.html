@@ -273,6 +273,89 @@ Platelets: 250 K/uL
             <div class="ward-presentation" id="ward-content"></div>
           </div>
         </div>
+
+        <!-- Neural Metrics Panel -->
+        <div class="dashboard-panel metrics-panel" id="metrics-panel" style="display: none;">
+          <div class="panel-header">
+            <div>
+              <h3>Neural Intelligence Metrics</h3>
+              <p>Self-learning system performance</p>
+            </div>
+            <button class="btn-secondary" id="reset-metrics-btn">Reset</button>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                  <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+              </div>
+              <div class="metric-label">Total Analyses</div>
+              <div class="metric-value" id="metric-total">0</div>
+            </div>
+
+            <div class="metric-card metric-card-success">
+              <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+              </div>
+              <div class="metric-label">Cache Hit Rate</div>
+              <div class="metric-value" id="metric-cache">0%</div>
+              <div class="metric-subtitle">Free & Instant</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="metric-label">Avg Local Speed</div>
+              <div class="metric-value" id="metric-local-speed">0ms</div>
+              <div class="metric-subtitle">Cached Results</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="metric-label">Avg API Speed</div>
+              <div class="metric-value" id="metric-api-speed">0ms</div>
+              <div class="metric-subtitle">New Patterns</div>
+            </div>
+
+            <div class="metric-card metric-card-primary">
+              <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="metric-label">Learned Patterns</div>
+              <div class="metric-value" id="metric-patterns">0</div>
+              <div class="metric-subtitle">Growing Intelligence</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="metric-label">API Cost Saved</div>
+              <div class="metric-value" id="metric-savings">$0.00</div>
+              <div class="metric-subtitle">Estimated</div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -282,6 +365,8 @@ Platelets: 250 K/uL
   <div class="toast" id="toast"></div>
 
   <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+  <script src="js/medward-neural.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
