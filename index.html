@@ -9,946 +9,1131 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <!-- ALL STYLES EMBEDDED - NO EXTERNAL CSS -->
   <style>
-    /* ==================== CSS Variables ==================== */
     :root {
-      --obsidian: #1a1a1f;
-      --charcoal: #2d2d35;
-      --graphite: #3d3d47;
-      --slate: #52525e;
-      --silver: #9898a3;
-      --platinum: #c8c8d0;
-      --pearl: #e8e8ec;
-      --ivory: #f5f5f7;
-      --pure-white: #ffffff;
-      --gold: #c9a962;
-      --gold-light: #dfc078;
-      --gold-dark: #a68b4b;
-      --gold-muted: rgba(201, 169, 98, 0.15);
-      --emerald: #2d8a6e;
-      --emerald-muted: rgba(45, 138, 110, 0.12);
-      --ruby: #c45c5c;
-      --ruby-muted: rgba(196, 92, 92, 0.12);
-      --sapphire: #5c7cc4;
-      --sapphire-muted: rgba(92, 124, 196, 0.12);
-      --font-display: 'Cormorant Garamond', Georgia, serif;
-      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-      --text-xs: 0.75rem;
-      --text-sm: 0.8125rem;
-      --text-base: 0.9375rem;
-      --text-lg: 1.0625rem;
-      --text-xl: 1.25rem;
-      --text-2xl: 1.625rem;
-      --text-3xl: 2.25rem;
-      --text-4xl: 3rem;
-      --space-xs: 0.375rem;
-      --space-sm: 0.75rem;
-      --space-md: 1.25rem;
-      --space-lg: 2rem;
-      --space-xl: 3rem;
-      --space-2xl: 5rem;
-      --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.08);
-      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.06);
-      --shadow-medium: 0 8px 40px rgba(0, 0, 0, 0.08);
-      --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.12);
-      --shadow-gold: 0 4px 20px rgba(201, 169, 98, 0.2);
-      --border-hairline: 1px solid rgba(0, 0, 0, 0.06);
-      --border-subtle: 1px solid rgba(0, 0, 0, 0.08);
-      --radius-sm: 4px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --radius-xl: 20px;
-      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      --bg-primary: #fafafa;
+      --bg-card: #ffffff;
+      --bg-elevated: #f5f5f5;
+      --text-primary: #1a1a1a;
+      --text-secondary: #666666;
+      --text-muted: #999999;
+      --border: #e5e5e5;
+      --border-light: #f0f0f0;
+      --accent: #c9a962;
+      --accent-dark: #a68b4b;
+      --critical: #dc2626;
+      --critical-bg: #fef2f2;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --normal: #059669;
+      --normal-bg: #ecfdf5;
+      --info: #2563eb;
+      --info-bg: #eff6ff;
+      --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     
-    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    html { font-size: 15px; -webkit-font-smoothing: antialiased; }
     
     body {
-      font-family: var(--font-body) !important;
-      font-size: var(--text-base) !important;
-      line-height: 1.6 !important;
-      color: var(--charcoal) !important;
-      background: var(--ivory) !important;
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
       min-height: 100vh;
     }
 
-    ::selection { background: var(--gold-muted); color: var(--obsidian); }
-
-    h1, h2, h3, h4 {
-      font-family: var(--font-display) !important;
-      font-weight: 600 !important;
-      color: var(--obsidian) !important;
-      letter-spacing: -0.01em;
-      line-height: 1.2;
-    }
-
-    p { color: var(--slate); line-height: 1.7; }
-
     /* Navigation */
-    .navbar {
-      background: var(--pure-white) !important;
-      border-bottom: var(--border-hairline) !important;
+    .nav {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(20px);
     }
 
-    .nav-container {
-      max-width: 1400px;
+    .nav-inner {
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 var(--space-lg);
+      padding: 0 1.5rem;
+      height: 64px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
-      height: 72px;
     }
 
-    .nav-brand { display: flex; align-items: center; gap: var(--space-md); }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
 
-    .brand-icon {
-      width: 44px;
-      height: 44px;
-      background: var(--obsidian) !important;
-      border-radius: var(--radius-md);
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--text-primary);
+      border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--gold) !important;
-      transition: var(--transition-smooth);
+      color: var(--accent);
     }
 
-    .brand-icon:hover { background: var(--charcoal) !important; }
-    .brand-icon svg { width: 22px; height: 22px; stroke-width: 1.5; }
-
-    .brand-text, .brand-info { display: flex; flex-direction: column; }
-
-    .brand-name {
-      font-family: var(--font-display) !important;
-      font-size: var(--text-xl) !important;
-      font-weight: 600 !important;
-      color: var(--obsidian) !important;
-      letter-spacing: 0.02em;
-      line-height: 1.2;
-    }
-
-    .brand-tagline {
-      font-size: var(--text-xs) !important;
-      color: var(--silver) !important;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .nav-user { display: flex; align-items: center; gap: var(--space-md); }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%) !important;
-      color: var(--pure-white) !important;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .logo-text {
       font-family: var(--font-display);
+      font-size: 1.25rem;
+      color: var(--text-primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
       font-weight: 600;
-      font-size: var(--text-base);
+      font-size: 0.8rem;
     }
 
-    .user-name { font-size: var(--text-sm); font-weight: 500; color: var(--charcoal); }
-
-    .btn-logout {
-      padding: var(--space-sm) var(--space-md);
-      background: transparent !important;
-      border: var(--border-subtle) !important;
-      border-radius: var(--radius-md);
-      color: var(--slate) !important;
-      font-family: var(--font-body);
-      font-size: var(--text-sm);
+    .username {
+      font-size: 0.875rem;
       font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: var(--transition-fast);
+      transition: all 0.15s ease;
+      border: none;
     }
 
-    .btn-logout:hover {
-      background: var(--pearl) !important;
-      color: var(--charcoal) !important;
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
 
-    /* Main Layout */
-    .main-container { min-height: calc(100vh - 72px); }
+    .btn-ghost:hover {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      background: var(--text-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #333;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Main */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
     .screen { display: none; }
     .screen.active { display: block; }
 
     /* Login */
     .login-wrapper {
-      min-height: calc(100vh - 72px);
+      min-height: calc(100vh - 64px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: var(--space-lg);
-      background: linear-gradient(180deg, var(--ivory) 0%, var(--pearl) 100%) !important;
+      padding: 2rem;
     }
 
     .login-card {
-      background: var(--pure-white) !important;
-      border-radius: var(--radius-xl) !important;
-      box-shadow: var(--shadow-elevated) !important;
-      padding: var(--space-2xl) var(--space-xl);
-      max-width: 440px;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 3rem 2.5rem;
+      max-width: 400px;
       width: 100%;
       text-align: center;
     }
 
     .login-icon {
-      width: 72px;
-      height: 72px;
-      margin: 0 auto var(--space-lg);
-      background: var(--obsidian) !important;
-      border-radius: var(--radius-lg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--gold) !important;
-    }
-
-    .login-icon svg { width: 36px; height: 36px; stroke-width: 1.5; }
-    .login-header h2 { margin-bottom: var(--space-xs); }
-    .login-header p { font-size: var(--text-base); margin-bottom: var(--space-xl); }
-    .login-form { margin-bottom: var(--space-lg); }
-    .login-footer { padding-top: var(--space-lg); border-top: var(--border-hairline); }
-    .login-footer p { font-size: var(--text-sm); color: var(--silver); }
-
-    /* Form Elements */
-    .form-group, .form-field { margin-bottom: var(--space-md); text-align: left; }
-
-    .form-label, .form-field label {
-      display: block;
-      font-size: var(--text-sm) !important;
-      font-weight: 500 !important;
-      color: var(--charcoal) !important;
-      margin-bottom: var(--space-xs);
-    }
-
-    .form-input, .form-select, .form-textarea,
-    input[type="text"], select, textarea {
-      width: 100%;
-      padding: var(--space-sm) var(--space-md) !important;
-      font-family: var(--font-body) !important;
-      font-size: var(--text-base) !important;
-      color: var(--charcoal) !important;
-      background: var(--ivory) !important;
-      border: var(--border-subtle) !important;
-      border-radius: var(--radius-md) !important;
-      transition: var(--transition-fast);
-    }
-
-    .form-input:focus, input[type="text"]:focus, select:focus, textarea:focus {
-      outline: none;
-      background: var(--pure-white) !important;
-      border-color: var(--gold) !important;
-      box-shadow: 0 0 0 3px var(--gold-muted) !important;
-    }
-
-    .form-input::placeholder, input::placeholder { color: var(--silver); }
-    .form-textarea, textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
-
-    /* Buttons */
-    .btn, button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-lg);
-      font-family: var(--font-body) !important;
-      font-size: var(--text-sm) !important;
-      font-weight: 500 !important;
-      border-radius: var(--radius-md) !important;
-      cursor: pointer;
-      transition: var(--transition-smooth);
-      border: none;
-      text-decoration: none;
-    }
-
-    .btn-primary, #login-btn, #analyze-btn, #analyze-text-btn {
-      background: var(--obsidian) !important;
-      color: var(--pure-white) !important;
-      padding: var(--space-md) var(--space-xl) !important;
-    }
-
-    .btn-primary:hover, #login-btn:hover, #analyze-btn:hover, #analyze-text-btn:hover {
-      background: var(--charcoal) !important;
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-medium);
-    }
-
-    .btn-gold {
-      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%) !important;
-      color: var(--pure-white) !important;
-      padding: var(--space-md) var(--space-xl);
-    }
-
-    .btn-gold:hover { box-shadow: var(--shadow-gold); transform: translateY(-1px); }
-
-    .btn-secondary {
-      background: var(--pure-white) !important;
-      color: var(--charcoal) !important;
-      border: var(--border-subtle) !important;
-    }
-
-    .btn-secondary:hover {
-      background: var(--ivory) !important;
-      border-color: var(--platinum) !important;
-    }
-
-    .btn:disabled, button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-block { width: 100%; }
-
-    /* Dashboard */
-    .dashboard-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: var(--space-xl) var(--space-lg);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-lg);
-    }
-
-    .dashboard-panel {
-      background: var(--pure-white) !important;
-      border-radius: var(--radius-lg) !important;
-      box-shadow: var(--shadow-soft) !important;
-      padding: var(--space-lg) !important;
-      border: var(--border-hairline) !important;
-    }
-
-    .panel-header {
-      margin-bottom: var(--space-lg);
-      padding-bottom: var(--space-md);
-      border-bottom: var(--border-hairline);
-    }
-
-    .panel-header-flex { display: flex; align-items: center; gap: var(--space-md); }
-
-    .panel-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--gold-muted) !important;
-      color: var(--gold-dark) !important;
+      width: 56px;
+      height: 56px;
+      background: var(--text-primary);
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
+      margin: 0 auto 1.5rem;
+      color: var(--accent);
     }
 
-    .panel-icon svg { width: 24px; height: 24px; stroke-width: 1.5; }
-
-    .panel-header h3 {
-      font-family: var(--font-display) !important;
-      font-size: var(--text-2xl) !important;
-      font-weight: 600 !important;
-      color: var(--obsidian) !important;
-      margin-bottom: 2px;
+    .login-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      margin-bottom: 0.25rem;
     }
 
-    .panel-header p { font-size: var(--text-sm); color: var(--silver); }
+    .login-subtitle {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
 
-    /* Upload Tabs */
+    .form-group {
+      text-align: left;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      background: white;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.15);
+    }
+
+    .btn-block { width: 100%; justify-content: center; }
+
+    /* Dashboard Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.125rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    /* Upload Area */
     .upload-tabs {
       display: flex;
-      gap: var(--space-xs);
-      margin-bottom: var(--space-lg);
-      background: var(--ivory) !important;
-      padding: 4px;
-      border-radius: var(--radius-md);
+      gap: 0.25rem;
+      background: var(--bg-elevated);
+      padding: 0.25rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.25rem;
     }
 
     .upload-tab {
       flex: 1;
-      padding: var(--space-sm) var(--space-md);
-      background: transparent !important;
-      border: none !important;
-      border-radius: var(--radius-sm);
-      font-family: var(--font-body);
-      font-size: var(--text-sm);
+      padding: 0.625rem;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
       font-weight: 500;
-      color: var(--slate) !important;
+      color: var(--text-secondary);
       cursor: pointer;
-      transition: var(--transition-fast);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-xs);
+      transition: all 0.15s ease;
     }
-
-    .upload-tab:hover { color: var(--charcoal) !important; }
 
     .upload-tab.active {
-      background: var(--pure-white) !important;
-      color: var(--obsidian) !important;
-      box-shadow: var(--shadow-subtle);
+      background: white;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
     }
 
-    .upload-content { display: none; }
-    .upload-content.active { display: block; }
-
-    /* Dropzone */
-    .dropzone, .upload-zone {
-      border: 2px dashed var(--platinum) !important;
-      border-radius: var(--radius-lg) !important;
-      padding: var(--space-2xl) var(--space-lg) !important;
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
       text-align: center;
       cursor: pointer;
-      transition: var(--transition-smooth);
-      background: var(--ivory) !important;
+      transition: all 0.15s ease;
     }
 
-    .dropzone:hover, .upload-zone:hover {
-      border-color: var(--gold) !important;
-      background: var(--gold-muted) !important;
+    .dropzone:hover {
+      border-color: var(--accent);
+      background: rgba(201, 169, 98, 0.04);
     }
 
-    .dropzone-icon, .upload-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto var(--space-md);
-      background: var(--pure-white) !important;
+    .dropzone-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-elevated);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--gold) !important;
-      box-shadow: var(--shadow-soft);
+      margin: 0 auto 0.75rem;
+      color: var(--accent);
     }
 
-    .dropzone h4, .upload-text {
-      font-family: var(--font-display) !important;
-      font-size: var(--text-xl) !important;
-      color: var(--charcoal) !important;
-      margin-bottom: var(--space-xs);
+    .dropzone-title {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
     }
 
-    .dropzone p, .upload-hint { font-size: var(--text-sm); color: var(--silver); }
-
-    /* File List - Uploaded Images */
-    .file-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-      margin-top: var(--space-md);
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .file-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      background: var(--pure-white);
-      border: 1px solid var(--platinum);
-      border-radius: var(--radius-md);
-      padding: var(--space-xs) var(--space-sm);
-      max-width: 100%;
+    .dropzone-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
 
     .file-preview {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--bg-elevated);
       border-radius: var(--radius-sm);
-      flex-shrink: 0;
+      margin-top: 1rem;
+    }
+
+    .file-preview img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
     }
 
     .file-info {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
       flex: 1;
+      min-width: 0;
     }
 
     .file-name {
-      font-size: var(--text-sm);
+      font-size: 0.875rem;
       font-weight: 500;
-      color: var(--charcoal);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 150px;
     }
 
     .file-size {
-      font-size: var(--text-xs);
-      color: var(--silver);
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
     .file-remove {
       background: none;
       border: none;
-      color: var(--silver);
+      padding: 0.25rem;
       cursor: pointer;
-      padding: var(--space-xs);
-      border-radius: var(--radius-sm);
-      transition: var(--transition-smooth);
-      flex-shrink: 0;
+      color: var(--text-muted);
+      border-radius: 4px;
     }
 
     .file-remove:hover {
-      color: var(--error);
-      background: rgba(220, 53, 69, 0.1);
+      background: var(--border);
+      color: var(--text-primary);
     }
 
-    /* Results Panel */
-    .results-panel { display: none; grid-column: 1 / -1; }
-    .results-panel.active { display: block; }
-
-    .results-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-lg);
-      padding-bottom: var(--space-md);
-      border-bottom: var(--border-hairline);
-    }
-
-    .results-header h3 {
-      font-family: var(--font-display) !important;
-      font-size: var(--text-3xl) !important;
-      color: var(--obsidian) !important;
-    }
-
-    .panel-actions { display: flex; align-items: center; gap: var(--space-sm); }
-
-    /* View Toggle */
-    .view-toggle {
-      display: inline-flex;
-      background: var(--ivory) !important;
-      border-radius: var(--radius-md);
-      padding: 4px;
-      gap: 4px;
-    }
-
-    .view-toggle button, .toggle-btn, .view-toggle-btn {
-      padding: var(--space-sm) var(--space-md) !important;
-      background: transparent !important;
-      border: none !important;
-      border-radius: var(--radius-sm) !important;
-      font-family: var(--font-body);
-      font-size: var(--text-sm);
-      font-weight: 500;
-      color: var(--slate) !important;
+    .form-select {
+      width: 100%;
+      padding: 0.625rem 1rem;
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
       cursor: pointer;
     }
 
-    .view-toggle button:hover, .toggle-btn:hover, .view-toggle-btn:hover {
-      color: var(--charcoal) !important;
+    .upload-content { display: none; }
+    .upload-content.active { display: block; }
+
+    .form-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      min-height: 200px;
+      resize: vertical;
+      line-height: 1.6;
     }
 
-    .view-toggle button.active, .toggle-btn.active, .view-toggle-btn.active {
-      background: var(--pure-white) !important;
-      color: var(--obsidian) !important;
-      box-shadow: var(--shadow-subtle);
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
     }
 
-    /* Processing Overlay */
+    /* Results Panel - CLEAN DESIGN */
+    .results-panel {
+      display: none;
+    }
+
+    .results-panel.active {
+      display: block;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .results-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .results-timestamp {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 0.25rem;
+      background: var(--bg-elevated);
+      padding: 0.25rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .view-btn {
+      padding: 0.5rem 0.875rem;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .view-btn.active {
+      background: white;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Analysis Content */
+    .analysis-content {
+      padding: 1.5rem;
+      display: none;
+    }
+
+    .analysis-content.active {
+      display: block;
+    }
+
+    /* Summary Box - TOP PRIORITY */
+    .summary-box {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      color: white;
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .summary-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* Alert Banner - For Urgent Items */
+    .alert-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.25rem;
+    }
+
+    .alert-banner.critical {
+      background: var(--critical-bg);
+      border-left: 3px solid var(--critical);
+    }
+
+    .alert-banner.warning {
+      background: var(--warning-bg);
+      border-left: 3px solid var(--warning);
+    }
+
+    .alert-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    .alert-banner.critical .alert-icon { color: var(--critical); }
+    .alert-banner.warning .alert-icon { color: var(--warning); }
+
+    .alert-content {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .alert-banner.critical .alert-title { color: var(--critical); }
+    .alert-banner.warning .alert-title { color: var(--warning); }
+
+    .alert-text {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Section Headers */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .section-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Key Findings - COMPACT TABLE */
+    .findings-table {
+      width: 100%;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      border-collapse: collapse;
+    }
+
+    .findings-table th {
+      text-align: left;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-elevated);
+    }
+
+    .findings-table td {
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .findings-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .param-name {
+      font-weight: 500;
+    }
+
+    .param-value {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .param-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .status-high {
+      background: var(--critical-bg);
+      color: var(--critical);
+    }
+
+    .status-low {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .status-normal {
+      background: var(--normal-bg);
+      color: var(--normal);
+    }
+
+    /* Recommendations - CLEAN LIST */
+    .recommendations {
+      margin-bottom: 1.5rem;
+    }
+
+    .rec-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .rec-item:last-child {
+      border-bottom: none;
+    }
+
+    .rec-number {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      background: var(--text-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .rec-number.urgent {
+      background: var(--critical);
+    }
+
+    .rec-text {
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    /* Clinical Pearls - INLINE */
+    .pearls-section {
+      background: var(--info-bg);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pearls-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--info);
+      margin-bottom: 0.5rem;
+    }
+
+    .pearls-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Patient Explanation - Simple Box */
+    .patient-box {
+      background: var(--bg-elevated);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .patient-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .patient-text {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    /* Discussion Points - Collapsed by Default */
+    .discussion-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-elevated);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .discussion-toggle:hover {
+      background: var(--border-light);
+    }
+
+    .discussion-content {
+      display: none;
+      padding: 1rem;
+      background: var(--bg-elevated);
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+      margin-top: -4px;
+    }
+
+    .discussion-content.show {
+      display: block;
+    }
+
+    .discussion-item {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      padding: 0.5rem 0;
+      padding-left: 1rem;
+      border-left: 2px solid var(--border);
+      margin-bottom: 0.5rem;
+    }
+
+    .discussion-item:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Ward Presentation View */
+    .ward-card {
+      background: white;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--text-primary);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .ward-header {
+      background: var(--text-primary);
+      color: white;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .ward-body {
+      padding: 1rem;
+    }
+
+    .ward-row {
+      display: flex;
+      border-bottom: 1px solid var(--border-light);
+      padding: 0.5rem 0;
+    }
+
+    .ward-row:last-child {
+      border-bottom: none;
+    }
+
+    .ward-label {
+      width: 120px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .ward-value {
+      flex: 1;
+      font-size: 0.85rem;
+    }
+
+    /* Processing */
     .processing-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(26, 26, 31, 0.8) !important;
-      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
       z-index: 1000;
       align-items: center;
       justify-content: center;
     }
 
-    .processing-overlay.active { display: flex; }
+    .processing-overlay.active {
+      display: flex;
+    }
 
     .processing-card {
-      background: var(--pure-white) !important;
-      border-radius: var(--radius-xl);
-      padding: var(--space-2xl);
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 3rem;
       text-align: center;
-      max-width: 400px;
-      box-shadow: var(--shadow-elevated);
     }
 
-    .processing-spinner {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto var(--space-lg);
-      border: 3px solid var(--pearl);
-      border-top-color: var(--gold) !important;
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 1s linear infinite;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .processing-card h3, .processing-title {
-      font-family: var(--font-display) !important;
-      font-size: var(--text-2xl) !important;
-      color: var(--obsidian) !important;
-      margin-bottom: var(--space-xs);
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    .processing-card p, .processing-text { font-size: var(--text-sm); color: var(--silver); }
+    .processing-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .processing-status {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
 
     /* Toast */
     .toast {
       position: fixed;
-      bottom: var(--space-lg);
-      right: var(--space-lg);
-      background: var(--obsidian) !important;
-      color: var(--pure-white) !important;
-      padding: var(--space-md) var(--space-lg);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-elevated);
-      font-size: var(--text-sm);
-      z-index: 1100;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--text-primary);
+      color: white;
+      padding: 0.875rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
       transform: translateX(150%);
-      transition: var(--transition-smooth);
+      transition: transform 0.3s ease;
+      z-index: 1100;
     }
 
-    .toast.show { transform: translateX(0); }
-    .toast.success { border-left: 4px solid var(--emerald); }
-    .toast.error { border-left: 4px solid var(--ruby); }
+    .toast.show {
+      transform: translateX(0);
+    }
 
-    /* Metrics */
+    .toast.success {
+      border-left: 3px solid var(--normal);
+    }
+
+    .toast.error {
+      border-left: 3px solid var(--critical);
+    }
+
+    /* Metrics Panel */
+    .metrics-panel {
+      display: none;
+      grid-column: 1 / -1;
+    }
+
+    .metrics-panel.active {
+      display: block;
+    }
+
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--space-md);
-    }
-
-    .metric-card {
-      background: var(--ivory) !important;
-      border-radius: var(--radius-md);
-      padding: var(--space-lg);
-      text-align: center;
-      border: var(--border-hairline);
-    }
-
-    .metric-icon {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto var(--space-md);
-      background: var(--gold-muted) !important;
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--gold-dark) !important;
-    }
-
-    .metric-value {
-      font-family: var(--font-display) !important;
-      font-size: var(--text-3xl) !important;
-      font-weight: 700;
-      color: var(--obsidian) !important;
-      margin-bottom: var(--space-xs);
-    }
-
-    .metric-label {
-      font-size: var(--text-xs);
-      color: var(--silver);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    /* Status Badges */
-    .status-critical { background: var(--ruby-muted) !important; color: var(--ruby) !important; }
-    .status-warning { background: var(--gold-muted) !important; color: var(--gold-dark) !important; }
-    .status-normal, .status-stable { background: var(--emerald-muted) !important; color: var(--emerald) !important; }
-
-    /* Responsive */
-    @media (max-width: 1024px) {
-      .dashboard-container { grid-template-columns: 1fr; }
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      padding: 1.5rem;
     }
 
     @media (max-width: 768px) {
-      .nav-container { padding: 0 var(--space-md); height: 64px; }
-      .brand-tagline { display: none; }
-      .dashboard-container { padding: var(--space-md); }
-      .dashboard-panel { padding: var(--space-md); }
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
-    @media (max-width: 480px) {
-      .login-card { padding: var(--space-lg); }
+    .metric-box {
+      text-align: center;
+      padding: 1.25rem;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-sm);
     }
 
-    /* Animation */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      color: var(--text-primary);
     }
-    .animate-fade-in-up { animation: fadeInUp 0.5s ease; }
+
+    .metric-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Hidden helper */
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
 
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="nav-container">
-      <div class="nav-brand">
-        <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2L2 7v10c0 5.5 3.8 9.7 10 11 6.2-1.3 10-5.5 10-11V7l-10-5z"/>
             <path d="M12 8v8M8 12h8"/>
           </svg>
         </div>
-        <div class="brand-info">
-          <h1 class="brand-name">MedWard Master</h1>
-          <span class="brand-tagline">Clinical Intelligence</span>
-        </div>
+        <span class="logo-text">MedWard Master</span>
       </div>
-      <div class="nav-user" id="nav-user" style="display: none;">
-        <div class="user-avatar">
-          <span id="user-initial">U</span>
+      <div class="nav-actions" id="nav-user" hidden>
+        <div class="user-badge">
+          <div class="avatar" id="user-initial">U</div>
+          <span class="username" id="user-name">User</span>
         </div>
-        <span class="user-name" id="user-name">User</span>
-        <button class="btn-logout" id="logout-btn">Sign Out</button>
+        <button class="btn btn-ghost" id="logout-btn">Sign Out</button>
       </div>
     </div>
   </nav>
 
-  <!-- Main Container -->
-  <main class="main-container">
+  <!-- Main -->
+  <main class="main">
 
     <!-- Login Screen -->
     <section id="login-screen" class="screen active">
       <div class="login-wrapper">
-        <div class="login-card animate-fade-in-up">
-          <div class="login-header">
-            <div class="login-icon">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 2L2 7v10c0 5.5 3.8 9.7 10 11 6.2-1.3 10-5.5 10-11V7l-10-5z"/>
-                <path d="M12 8v8M8 12h8"/>
-              </svg>
-            </div>
-            <h2>MedWard Master</h2>
-            <p>Clinical-Grade AI Medical Analysis</p>
+        <div class="login-card">
+          <div class="login-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7v10c0 5.5 3.8 9.7 10 11 6.2-1.3 10-5.5 10-11V7l-10-5z"/>
+              <path d="M12 8v8M8 12h8"/>
+            </svg>
           </div>
-          <div class="login-form">
-            <div class="form-field">
-              <label>Username</label>
-              <input type="text" id="username-input" placeholder="Enter your username" autocomplete="off">
-            </div>
-            <button class="btn-primary btn-block" id="login-btn">
-              <span>Sign In</span>
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </button>
+          <h1 class="login-title">MedWard Master</h1>
+          <p class="login-subtitle">AI Medical Analysis</p>
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-input" id="username-input" placeholder="Enter username" autocomplete="off">
           </div>
-          <div class="login-footer">
-            <p>Secure • AI-Powered • Evidence-Based</p>
-          </div>
+          <button class="btn btn-primary btn-block" id="login-btn">
+            Sign In
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+              <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
         </div>
       </div>
     </section>
 
-    <!-- Analysis Dashboard -->
+    <!-- Dashboard -->
     <section id="dashboard-screen" class="screen">
-      <div class="dashboard-container">
+      <div class="dashboard-grid">
 
         <!-- Upload Panel -->
-        <div class="dashboard-panel upload-panel">
-          <div class="panel-header">
-            <div class="panel-header-flex">
-              <div class="panel-icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="2" width="16" height="16" rx="2"/>
-                  <path d="M7 10l3 3 6-6"/>
-                </svg>
-              </div>
-              <div>
-                <h3>New Analysis</h3>
-                <p>Upload medical reports for clinical interpretation</p>
-              </div>
-            </div>
+        <div class="card upload-panel">
+          <div class="card-header">
+            <h2 class="card-title">New Analysis</h2>
+            <p class="card-subtitle">Upload reports for clinical interpretation</p>
           </div>
+          <div class="card-body">
+            <div class="upload-tabs">
+              <button class="upload-tab active" data-tab="image">Image</button>
+              <button class="upload-tab" data-tab="text">Text</button>
+            </div>
 
-          <div class="upload-tabs">
-            <button class="upload-tab active" data-tab="image">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M2.5 13.75L6.25 10L9.375 13.125L13.75 8.75L17.5 12.5" stroke="currentColor" stroke-width="1.5"/>
-                <rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-              <span>Image Upload</span>
-            </button>
-            <button class="upload-tab" data-tab="text">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M5 7.5H15M5 10H15M5 12.5H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              <span>Text Input</span>
-            </button>
-          </div>
-
-          <!-- Image Upload Tab -->
-          <div class="upload-content active" data-content="image">
-            <div class="dropzone" id="dropzone">
-              <input type="file" id="file-input" multiple accept="image/*,.pdf" hidden>
-              <div class="dropzone-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M3 16l5-5 5 5 7-7"/>
-                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                </svg>
+            <!-- Image Upload -->
+            <div class="upload-content active" data-content="image">
+              <div class="dropzone" id="dropzone">
+                <input type="file" id="file-input" multiple accept="image/*,.pdf" hidden>
+                <div class="dropzone-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="M21 15l-5-5L5 21"/>
+                  </svg>
+                </div>
+                <p class="dropzone-title">Drop files or click to browse</p>
+                <p class="dropzone-hint">JPG, PNG, PDF • Max 10MB</p>
               </div>
-              <h4>Drop images here or click to browse</h4>
-              <p>Supports JPG, PNG, PDF • Max 10MB per file</p>
-              <button class="btn-secondary btn-browse">Browse Files</button>
-            </div>
-
-            <div class="file-list" id="file-list"></div>
-
-            <div class="form-field" style="margin-top: 1.5rem;">
-              <label>Report Type</label>
-              <div class="select-wrapper">
-                <select id="report-type" class="form-select">
-                  <option value="lab">Laboratory Results</option>
-                  <option value="imaging">Imaging Report (X-ray, CT, MRI)</option>
-                  <option value="pathology">Pathology Report</option>
-                  <option value="general">General Medical Report</option>
-                </select>
-              </div>
-            </div>
-
-            <button class="btn-primary btn-block btn-analyze" id="analyze-btn" disabled style="margin-top: 1rem;">
-              <span>Analyze with AI</span>
-              <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Text Input Tab -->
-          <div class="upload-content" data-content="text">
-            <div class="form-field">
-              <label>Paste Medical Report Text</label>
-              <textarea id="text-input" class="form-textarea" placeholder="Paste your medical report text here...
-
-Example:
-Hemoglobin: 12.5 g/dL
-WBC: 7.2 K/uL
-Platelets: 250 K/uL
-..." rows="12"></textarea>
-            </div>
-
-            <div class="form-field">
-              <label>Report Type</label>
-              <div class="select-wrapper">
-                <select id="report-type-text" class="form-select">
+              <div id="file-list"></div>
+              <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label">Report Type</label>
+                <select class="form-select" id="report-type">
                   <option value="lab">Laboratory Results</option>
                   <option value="imaging">Imaging Report</option>
                   <option value="pathology">Pathology Report</option>
-                  <option value="general">General Medical Report</option>
+                  <option value="general">General Report</option>
                 </select>
               </div>
+              <button class="btn btn-primary btn-block" id="analyze-btn" disabled style="margin-top: 0.75rem;">
+                Analyze with AI
+              </button>
             </div>
 
-            <button class="btn-primary btn-block" id="analyze-text-btn" style="margin-top: 1rem;">
-              <span>Analyze Text</span>
-              <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Processing State -->
-          <div class="processing-state" id="processing-state" style="display: none;">
-            <div class="processing-spinner"></div>
-            <h4>Analyzing Report</h4>
-            <p id="processing-status">Initializing AI engine...</p>
+            <!-- Text Input -->
+            <div class="upload-content" data-content="text">
+              <div class="form-group">
+                <label class="form-label">Paste Report Text</label>
+                <textarea class="form-textarea" id="text-input" placeholder="Paste medical report text here..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Report Type</label>
+                <select class="form-select" id="report-type-text">
+                  <option value="lab">Laboratory Results</option>
+                  <option value="imaging">Imaging Report</option>
+                  <option value="pathology">Pathology Report</option>
+                  <option value="general">General Report</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-block" id="analyze-text-btn">
+                Analyze Text
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Results Panel -->
-        <div class="dashboard-panel results-panel" id="results-panel">
+        <div class="card results-panel" id="results-panel">
           <div class="results-header">
-            <div>
-              <h3>Analysis Results</h3>
-              <p id="analysis-timestamp">Completed at --:--</p>
+            <div class="results-meta">
+              <h2 class="card-title">Analysis Results</h2>
+              <span class="results-timestamp" id="analysis-timestamp">--:--</span>
             </div>
-            <div class="panel-actions">
+            <div style="display: flex; gap: 0.5rem;">
               <div class="view-toggle">
-                <button class="toggle-btn active" data-view="detailed">Detailed</button>
-                <button class="toggle-btn" data-view="ward">Ward Presentation</button>
+                <button class="view-btn active" data-view="detailed">Detailed</button>
+                <button class="view-btn" data-view="ward">Ward</button>
               </div>
-              <button class="btn-secondary" id="new-analysis-btn">New Analysis</button>
+              <button class="btn btn-ghost" id="new-analysis-btn">New</button>
             </div>
           </div>
 
-          <div class="results-view" id="detailed-view">
-            <div class="results-grid" id="results-content"></div>
+          <!-- Detailed View -->
+          <div class="analysis-content detailed-view active" id="detailed-view">
+            <div id="results-content"></div>
           </div>
 
-          <div class="results-view" id="ward-view" style="display: none;">
-            <div class="ward-presentation" id="ward-content"></div>
+          <!-- Ward View -->
+          <div class="analysis-content ward-view" id="ward-view">
+            <div id="ward-content"></div>
           </div>
         </div>
 
         <!-- Metrics Panel -->
-        <div class="dashboard-panel metrics-panel" id="metrics-panel" style="display: none; grid-column: 1 / -1;">
-          <div class="panel-header">
+        <div class="card metrics-panel" id="metrics-panel">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h3>Neural Intelligence Metrics</h3>
-              <p>Self-learning system performance</p>
+              <h2 class="card-title">System Metrics</h2>
+              <p class="card-subtitle">Performance tracking</p>
             </div>
-            <button class="btn-secondary" id="reset-metrics-btn">Reset</button>
+            <button class="btn btn-ghost" id="reset-metrics-btn">Reset</button>
           </div>
-
           <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                </svg>
-              </div>
-              <div class="metric-label">Total Analyses</div>
+            <div class="metric-box">
               <div class="metric-value" id="metric-total">0</div>
+              <div class="metric-label">Total Analyses</div>
             </div>
-
-            <div class="metric-card">
-              <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                </svg>
-              </div>
-              <div class="metric-label">Cache Hit Rate</div>
+            <div class="metric-box">
               <div class="metric-value" id="metric-cache">0%</div>
+              <div class="metric-label">Cache Rate</div>
             </div>
-
-            <div class="metric-card">
-              <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-              </div>
-              <div class="metric-label">Avg Speed</div>
+            <div class="metric-box">
               <div class="metric-value" id="metric-local-speed">0ms</div>
+              <div class="metric-label">Avg Speed</div>
             </div>
-
-            <div class="metric-card">
-              <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                </svg>
-              </div>
-              <div class="metric-label">Learned Patterns</div>
+            <div class="metric-box">
               <div class="metric-value" id="metric-patterns">0</div>
+              <div class="metric-label">Patterns</div>
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -957,9 +1142,9 @@ Platelets: 250 K/uL
   <!-- Processing Overlay -->
   <div class="processing-overlay" id="processing-overlay">
     <div class="processing-card">
-      <div class="processing-spinner"></div>
-      <h3>Analyzing Report</h3>
-      <p id="overlay-status">Processing with AI...</p>
+      <div class="spinner"></div>
+      <h3 class="processing-title">Analyzing Report</h3>
+      <p class="processing-status" id="overlay-status">Processing...</p>
     </div>
   </div>
 
@@ -973,4 +1158,3 @@ Platelets: 250 K/uL
   <script src="js/app.js"></script>
 </body>
 </html>
-<!-- force deploy v2 -->
