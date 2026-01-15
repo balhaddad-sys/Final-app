@@ -239,6 +239,16 @@ async function initializeNeuralSystem() {
   try {
     console.log('[Neural] Initializing neural intelligence system...');
 
+    // Wait for TensorFlow.js to be fully loaded and ready
+    if (typeof tf === 'undefined') {
+      console.log('[Neural] Waiting for TensorFlow.js to load...');
+      await waitForTensorFlow();
+    }
+
+    // Verify TensorFlow.js is working
+    await tf.ready();
+    console.log('[Neural] TensorFlow.js ready, backend:', tf.getBackend());
+
     // Check for required dependencies
     if (typeof MedicalDocumentParser === 'undefined' || typeof MedWardNeural === 'undefined') {
       throw new Error('Neural modules not loaded. Check that medward-neural.js is included.');
@@ -267,6 +277,29 @@ async function initializeNeuralSystem() {
     neuralParser = null;
     neuralSystem = null;
   }
+}
+
+/**
+ * Wait for TensorFlow.js to load (with timeout)
+ */
+function waitForTensorFlow() {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max
+
+    const check = () => {
+      attempts++;
+      if (typeof tf !== 'undefined') {
+        resolve();
+      } else if (attempts >= maxAttempts) {
+        reject(new Error('TensorFlow.js failed to load after 5 seconds'));
+      } else {
+        setTimeout(check, 100);
+      }
+    };
+
+    check();
+  });
 }
 
 // ==================== Authentication ====================
