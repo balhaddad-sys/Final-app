@@ -296,7 +296,98 @@
     if (elements.analyzeBtn) elements.analyzeBtn.disabled = true;
   }
 
-  // Analysis
+  // Neural system instance
+  let neural = null;
+  
+  // Backend URL - set this to your Google Apps Script deployment URL
+  const BACKEND_URL = window.MEDWARD_BACKEND_URL || localStorage.getItem('medward_backend_url') || '';
+
+  // Initialize neural system
+  async function initNeural() {
+    if (typeof MedWardNeural !== 'undefined' && !neural) {
+      try {
+        neural = new MedWardNeural({
+          debug: true,
+          confidenceThreshold: 0.7,
+          backendUrl: BACKEND_URL
+        });
+        await neural.init();
+        console.log('[App] Neural system initialized');
+      } catch (e) {
+        console.error('[App] Neural init failed:', e);
+      }
+    }
+  }
+
+  // Convert file to base64 data URL
+  async function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Upload image to backend (Google Drive) and get fileId
+  async function uploadImageToBackend(file) {
+    if (!BACKEND_URL) {
+      throw new Error('Backend URL not configured. Set MEDWARD_BACKEND_URL.');
+    }
+
+    if (elements.processingText) elements.processingText.textContent = 'Uploading image...';
+    
+    const base64Data = await fileToBase64(file);
+    
+    const response = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'uploadImage',
+        image: base64Data
+      })
+    });
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Image upload failed');
+    }
+    
+    console.log('[App] Image uploaded, fileId:', result.fileId);
+    return result.fileId;
+  }
+
+  // Analyze image via backend (Claude Vision)
+  async function analyzeImageViaBackend(fileId, documentType = 'lab') {
+    if (!BACKEND_URL) {
+      throw new Error('Backend URL not configured');
+    }
+
+    if (elements.processingText) elements.processingText.textContent = 'Analyzing with Claude Vision...';
+    
+    const response = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'interpret',
+        fileId: fileId,
+        documentType: documentType,
+        username: currentUser?.name || 'User',
+        provider: 'claude'
+      })
+    });
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Analysis failed');
+    }
+    
+    return result;
+  }
+
+  // Analysis - handles both text and images
   async function runAnalysis(type) {
     // Close any open modal first
     closeModal();
@@ -306,34 +397,76 @@
     if (elements.wardView) elements.wardView.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center; padding: 2rem;">Analyzing...</p>';
     
     const startTime = Date.now();
+    let results = null;
+    let inputText = '';
     
     // Show processing
     showProcessing(true);
     
-    // Simulate AI processing with status updates
-    const statuses = [
-      'Initializing neural engine',
-      'Extracting text from image',
-      'Parsing medical values',
-      'Analyzing patterns',
-      'Generating clinical insights',
-      'Preparing recommendations'
-    ];
-    
-    for (let i = 0; i < statuses.length; i++) {
-      if (elements.processingText) elements.processingText.textContent = statuses[i];
-      await sleep(600 + Math.random() * 400);
+    try {
+      if (type === 'image' && uploadedFiles.length > 0) {
+        // IMAGE WORKFLOW: Upload to Drive, then analyze with Claude Vision
+        if (!BACKEND_URL) {
+          showProcessing(false);
+          showToast('Backend not configured. Please set up Google Apps Script backend.', 'error');
+          return;
+        }
+        
+        // Step 1: Upload image to Google Drive
+        const fileId = await uploadImageToBackend(uploadedFiles[0]);
+        
+        // Step 2: Analyze with Claude Vision via backend
+        const backendResult = await analyzeImageViaBackend(fileId);
+        
+        // Convert backend response to display format
+        results = convertBackendToDisplay(backendResult);
+        inputText = backendResult.extractedText || '[Image Analysis]';
+        
+      } else if (type === 'text') {
+        // TEXT WORKFLOW: Use local neural system
+        inputText = elements.textInput ? elements.textInput.value.trim() : '';
+        
+        if (!inputText) {
+          showProcessing(false);
+          showToast('Please enter medical report text to analyze', 'error');
+          return;
+        }
+        
+        // Initialize neural if needed
+        await initNeural();
+        
+        if (neural) {
+          if (elements.processingText) elements.processingText.textContent = 'Processing with Neural AI...';
+          
+          const analysisResult = await neural.analyze(inputText, 'lab');
+          results = convertNeuralToDisplay(analysisResult, inputText);
+          
+          // Update metrics from neural system
+          const neuralMetrics = neural.getMetrics();
+          metrics.total = neuralMetrics.total || metrics.total + 1;
+          metrics.patterns = neuralMetrics.patterns || 0;
+          metrics.cacheHits = neuralMetrics.local || 0;
+          
+        } else {
+          if (elements.processingText) elements.processingText.textContent = 'Parsing medical data...';
+          await sleep(500);
+          results = parseBasicLabResults(inputText);
+          metrics.total++;
+        }
+      } else {
+        showProcessing(false);
+        showToast('Please upload an image or enter text to analyze', 'error');
+        return;
+      }
+      
+      metrics.totalTime += (Date.now() - startTime);
+      
+    } catch (error) {
+      console.error('[App] Analysis error:', error);
+      showProcessing(false);
+      showToast('Analysis failed: ' + error.message, 'error');
+      return;
     }
-    
-    // Generate demo results
-    const results = generateDemoResults();
-    
-    // Calculate metrics
-    const elapsed = Date.now() - startTime;
-    metrics.total++;
-    metrics.totalTime += elapsed;
-    metrics.patterns = Math.min(100, metrics.patterns + Math.floor(Math.random() * 3));
-    if (Math.random() > 0.7) metrics.cacheHits++;
     
     saveMetrics();
     updateMetricsDisplay();
@@ -344,9 +477,11 @@
       timestamp: new Date().toISOString(),
       type: type === 'image' ? 'Image Analysis' : 'Text Analysis',
       summary: results.diagnosis || 'Medical Report Analysis',
+      inputText: inputText.substring(0, 200),
       results: results
     };
     analysisHistory.unshift(historyItem);
+    if (analysisHistory.length > 10) analysisHistory.pop();
     if (analysisHistory.length > 10) analysisHistory.pop();
     
     try {
@@ -360,39 +495,260 @@
     showResults(results);
   }
 
-  function generateDemoResults() {
-    return {
-      summary: "Patient presents with Stage 3b chronic kidney disease (eGFR 30) characterized by significantly elevated creatinine (244 µmol/L) and urea (13.1 mmol/L) indicating moderate renal impairment. Critical electrolyte disturbances include hypokalemia (3.3 mmol/L) and abnormal mineral metabolism with elevated phosphate (1.86 mmol/L) and urate (390 µmol/L), requiring urgent intervention.",
-      diagnosis: "Stage 3b CKD with electrolyte imbalance",
-      severity: "Moderate-Severe",
-      alerts: [
-        {
-          severity: 'critical',
-          title: 'Urgent: Hypokalemia',
-          text: 'Potassium 3.3 mmol/L requires immediate correction. Risk of cardiac arrhythmias.'
-        },
-        {
+  /**
+   * Convert backend (Claude Vision) response to display format
+   */
+  function convertBackendToDisplay(backendResult) {
+    const interpretation = backendResult.interpretation || {};
+    const wardPresentation = backendResult.wardPresentation || {};
+    
+    // Extract findings from interpretation
+    const findings = [];
+    const alerts = [];
+    
+    // Process abnormalities
+    if (interpretation.abnormalities) {
+      interpretation.abnormalities.forEach(item => {
+        const text = typeof item === 'string' ? item : item.finding || item.text || '';
+        findings.push({
+          name: text.split(':')[0] || text.substring(0, 30),
+          value: text.split(':')[1] || '',
+          reference: '-',
+          status: 'Abnormal'
+        });
+        alerts.push({
           severity: 'warning',
-          title: 'Acute-on-Chronic Kidney Injury',
-          text: 'Creatinine trending suggests AKI superimposed on CKD. Investigate precipitants.'
+          title: 'Abnormal Finding',
+          text: text
+        });
+      });
+    }
+    
+    // Process key findings
+    if (interpretation.keyFindings) {
+      interpretation.keyFindings.forEach(item => {
+        const text = typeof item === 'string' ? item : item.finding || item.text || '';
+        if (!findings.find(f => f.name.includes(text.substring(0, 15)))) {
+          findings.push({
+            name: text.split(':')[0] || text.substring(0, 30),
+            value: text.split(':')[1] || '',
+            reference: '-',
+            status: 'See details'
+          });
         }
+      });
+    }
+    
+    // Process critical alerts from ward presentation
+    if (wardPresentation.status) {
+      wardPresentation.status.forEach(s => {
+        if (s.indicator === 'red') {
+          alerts.unshift({
+            severity: 'critical',
+            title: s.domain,
+            text: s.value
+          });
+        } else if (s.indicator === 'yellow') {
+          alerts.push({
+            severity: 'warning',
+            title: s.domain,
+            text: s.value
+          });
+        }
+      });
+    }
+    
+    // Build recommendations from ward presentation
+    const recommendations = [];
+    if (wardPresentation.todaysPlan) {
+      wardPresentation.todaysPlan.forEach((item, i) => {
+        recommendations.push({
+          text: typeof item === 'string' ? item : item.text || item,
+          urgent: i === 0
+        });
+      });
+    }
+    
+    // Add active issues as recommendations if no plan
+    if (recommendations.length === 0 && wardPresentation.activeIssues) {
+      wardPresentation.activeIssues.forEach((issue, i) => {
+        recommendations.push({
+          text: `${issue.issue}: ${issue.action}`,
+          urgent: i === 0
+        });
+      });
+    }
+    
+    // Extract clinical pearls
+    let clinicalPearl = null;
+    if (interpretation.clinicalPearls && interpretation.clinicalPearls.length > 0) {
+      clinicalPearl = interpretation.clinicalPearls[0];
+      if (typeof clinicalPearl === 'object') {
+        clinicalPearl = clinicalPearl.pearl || clinicalPearl.text || JSON.stringify(clinicalPearl);
+      }
+    }
+    
+    return {
+      summary: interpretation.summary || wardPresentation.header || 'Analysis complete',
+      diagnosis: interpretation.primaryDiagnosis || 
+                 (wardPresentation.activeIssues?.[0]?.issue) || 
+                 'See findings below',
+      severity: alerts.some(a => a.severity === 'critical') ? 'Critical' : 
+                alerts.length > 0 ? 'Abnormal' : 'Normal',
+      alerts: alerts.slice(0, 5),
+      findings: findings,
+      recommendations: recommendations.length > 0 ? recommendations : [
+        { text: 'Review findings with clinical context', urgent: false },
+        { text: 'Correlate with patient history', urgent: false }
       ],
-      findings: [
-        { name: 'Creatinine', value: '244 µmol/L', reference: '59-104', status: 'High' },
-        { name: 'eGFR', value: '30 mL/min', reference: '>90', status: 'Low' },
-        { name: 'Potassium', value: '3.3 mmol/L', reference: '3.5-5.0', status: 'Low' },
-        { name: 'Urea', value: '13.1 mmol/L', reference: '2.5-6.4', status: 'High' },
-        { name: 'Phosphate', value: '1.86 mmol/L', reference: '0.8-1.5', status: 'High' },
-        { name: 'Sodium', value: '137 mmol/L', reference: '136-145', status: 'Normal' }
+      clinicalPearl: clinicalPearl,
+      patientExplanation: interpretation.presentation?.patientFriendly || 
+                          'Your test results have been analyzed. Please discuss with your healthcare provider.',
+      watchFor: wardPresentation.watchFor || [],
+      source: 'backend-claude',
+      rawResponse: backendResult
+    };
+  }
+
+  /**
+   * Convert neural system output to display format
+   */
+  function convertNeuralToDisplay(neuralResult, inputText) {
+    if (!neuralResult) {
+      return parseBasicLabResults(inputText);
+    }
+    
+    const findings = [];
+    const alerts = [];
+    const recommendations = [];
+    
+    // Extract findings from neural result
+    if (neuralResult.findings) {
+      for (const [name, data] of Object.entries(neuralResult.findings)) {
+        findings.push({
+          name: name,
+          value: data.value + ' ' + (data.unit || ''),
+          reference: data.reference || '-',
+          status: data.flag || 'Normal'
+        });
+        
+        // Add alerts for critical values
+        if (data.flag === 'Critical High' || data.flag === 'Critical Low') {
+          alerts.push({
+            severity: 'critical',
+            title: `Critical: ${name}`,
+            text: `${name} is ${data.value} ${data.unit || ''} (${data.flag})`
+          });
+        } else if (data.flag === 'High' || data.flag === 'Low') {
+          alerts.push({
+            severity: 'warning',
+            title: `Abnormal: ${name}`,
+            text: `${name} is ${data.value} ${data.unit || ''} (${data.flag})`
+          });
+        }
+      }
+    }
+    
+    // Extract recommendations
+    if (neuralResult.recommendations) {
+      neuralResult.recommendations.forEach((rec, i) => {
+        recommendations.push({
+          text: typeof rec === 'string' ? rec : rec.text || rec,
+          urgent: i === 0
+        });
+      });
+    }
+    
+    return {
+      summary: neuralResult.summary || neuralResult.interpretation || 'Analysis complete',
+      diagnosis: neuralResult.diagnosis || neuralResult.primaryDiagnosis || 'See findings below',
+      severity: neuralResult.severity || 'See individual values',
+      alerts: alerts.slice(0, 5),
+      findings: findings,
+      recommendations: recommendations.length > 0 ? recommendations : [
+        { text: 'Review abnormal values with clinical context', urgent: false },
+        { text: 'Correlate with patient symptoms and history', urgent: false },
+        { text: 'Consider repeat testing if values unexpected', urgent: false }
       ],
+      clinicalPearl: neuralResult.clinicalPearl || null,
+      patientExplanation: neuralResult.patientExplanation || 'Your test results have been analyzed. Please discuss any abnormal values with your healthcare provider.',
+      source: neuralResult.source || 'neural'
+    };
+  }
+
+  /**
+   * Basic lab result parser (fallback when neural not available)
+   */
+  function parseBasicLabResults(text) {
+    const findings = [];
+    const alerts = [];
+    
+    // Common lab patterns
+    const patterns = [
+      { regex: /K\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(mmol\/L)?/i, name: 'Potassium', unit: 'mmol/L', min: 3.5, max: 5.0 },
+      { regex: /Na\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(mmol\/L)?/i, name: 'Sodium', unit: 'mmol/L', min: 136, max: 145 },
+      { regex: /Cl\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(mmol\/L)?/i, name: 'Chloride', unit: 'mmol/L', min: 98, max: 106 },
+      { regex: /CO2\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(mmol\/L)?/i, name: 'CO2', unit: 'mmol/L', min: 22, max: 29 },
+      { regex: /Cr\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(μmol\/L|umol\/L)?/i, name: 'Creatinine', unit: 'μmol/L', min: 60, max: 110 },
+      { regex: /BUN\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(mmol\/L)?/i, name: 'BUN', unit: 'mmol/L', min: 2.5, max: 7.1 },
+      { regex: /Hb\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(g\/L)?/i, name: 'Hemoglobin', unit: 'g/L', min: 120, max: 170 },
+      { regex: /WBC\s*[:\s]+(\d+\.?\d*)\s*(H|L)?/i, name: 'WBC', unit: '×10⁹/L', min: 4.0, max: 11.0 },
+      { regex: /Plt\s*[:\s]+(\d+\.?\d*)\s*(H|L)?/i, name: 'Platelets', unit: '×10⁹/L', min: 150, max: 400 },
+      { regex: /Glucose\s*[:\s]+(\d+\.?\d*)\s*(H|L)?\s*(mmol\/L)?/i, name: 'Glucose', unit: 'mmol/L', min: 3.9, max: 5.6 },
+      { regex: /eGFR\s*[:\s]+(\d+\.?\d*)/i, name: 'eGFR', unit: 'mL/min', min: 90, max: 999 },
+    ];
+    
+    patterns.forEach(p => {
+      const match = text.match(p.regex);
+      if (match) {
+        const value = parseFloat(match[1]);
+        const flag = match[2] ? match[2].toUpperCase() : null;
+        
+        let status = 'Normal';
+        if (flag === 'H' || value > p.max) status = 'High';
+        else if (flag === 'L' || value < p.min) status = 'Low';
+        
+        findings.push({
+          name: p.name,
+          value: `${value} ${p.unit}`,
+          reference: `${p.min}-${p.max}`,
+          status: status
+        });
+        
+        if (status !== 'Normal') {
+          alerts.push({
+            severity: status === 'High' && value > p.max * 1.5 ? 'critical' : 'warning',
+            title: `${status}: ${p.name}`,
+            text: `${p.name} is ${value} ${p.unit} (Reference: ${p.min}-${p.max})`
+          });
+        }
+      }
+    });
+    
+    // Generate summary based on findings
+    const abnormalCount = findings.filter(f => f.status !== 'Normal').length;
+    let summary = `Analysis identified ${findings.length} parameters. `;
+    if (abnormalCount > 0) {
+      summary += `${abnormalCount} value(s) outside normal range require attention.`;
+    } else {
+      summary += 'All values within normal limits.';
+    }
+    
+    return {
+      summary: summary,
+      diagnosis: abnormalCount > 0 ? 'Abnormal lab values detected' : 'Lab values within normal limits',
+      severity: abnormalCount > 3 ? 'Moderate' : abnormalCount > 0 ? 'Mild' : 'Normal',
+      alerts: alerts.slice(0, 5),
+      findings: findings,
       recommendations: [
-        { text: 'Obtain ECG immediately to assess for hypokalemic changes', urgent: true },
-        { text: 'Initiate potassium replacement therapy' },
-        { text: 'Review medication list for nephrotoxins' },
-        { text: 'Assess volume status' },
-        { text: 'Nephrology referral for CKD management' }
+        { text: 'Review abnormal values in clinical context', urgent: abnormalCount > 0 },
+        { text: 'Correlate with patient symptoms and examination', urgent: false },
+        { text: 'Consider repeat testing if results unexpected', urgent: false }
       ],
-      patientExplanation: "Your kidneys are not filtering waste as well as they should. Blood tests show elevated waste products that your kidneys should be clearing. Your potassium level is low, which needs prompt treatment."
+      patientExplanation: abnormalCount > 0 
+        ? 'Some of your test results are outside the normal range. Please discuss these with your healthcare provider.'
+        : 'Your test results are within normal limits.',
+      source: 'basic-parser'
     };
   }
 
