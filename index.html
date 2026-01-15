@@ -1700,6 +1700,21 @@
     @media (max-width: 768px) {
       html { font-size: 14px; }
       
+      /* PERFORMANCE: Reduce heavy effects on mobile */
+      .bg-wrapper { display: none; } /* Hide animated background */
+      body { background: linear-gradient(135deg, #0a0a0f 0%, #12121a 100%); }
+      .floating-orb { display: none; }
+      .nav { backdrop-filter: none; background: rgba(10, 10, 15, 0.95); }
+      .modal-overlay { backdrop-filter: none; background: rgba(0, 0, 0, 0.9); }
+      .processing-overlay { backdrop-filter: none; }
+      
+      /* GPU acceleration for smooth scrolling */
+      .modal-body, .container, .card-body, .activity-list {
+        -webkit-overflow-scrolling: touch;
+        transform: translateZ(0);
+        will-change: scroll-position;
+      }
+      
       /* Navigation */
       .nav { padding: 0.75rem 1rem; }
       .nav-inner { gap: 0.5rem; }
