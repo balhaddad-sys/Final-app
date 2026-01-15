@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MedWard Bug Analysis Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #0a0e27;
+      color: #e0e0e0;
+      padding: 1rem;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    .header .status {
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    .status.checking { background: #ff9800; color: #000; }
+    .status.pass { background: #4caf50; color: #fff; }
+    .status.fail { background: #f44336; color: #fff; }
+
+    .section {
+      background: #1a1f3a;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #2a3f5f;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #2a3f5f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .test-item {
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border-left: 4px solid;
+      background: #0f1729;
+    }
+
+    .test-item.pass {
+      border-left-color: #4caf50;
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    .test-item.fail {
+      border-left-color: #f44336;
+      background: rgba(244, 67, 54, 0.1);
+    }
+
+    .test-item.warn {
+      border-left-color: #ff9800;
+      background: rgba(255, 152, 0, 0.1);
+    }
+
+    .test-item.info {
+      border-left-color: #2196f3;
+      background: rgba(33, 150, 243, 0.1);
+    }
+
+    .test-label {
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .test-icon {
+      margin-right: 0.5rem;
+      font-size: 1.2rem;
+    }
+
+    .test-details {
+      font-size: 0.9rem;
+      color: #b0b0b0;
+      margin-top: 0.25rem;
+      font-family: 'Courier New', monospace;
+      word-wrap: break-word;
+    }
+
+    .log-container {
+      max-height: 300px;
+      overflow-y: auto;
+      background: #000;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .log-entry {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .log-entry.error { color: #ff5252; }
+    .log-entry.warn { color: #ffa726; }
+    .log-entry.info { color: #64b5f6; }
+    .log-entry.log { color: #81c784; }
+
+    .buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1976d2 0%, #2196f3 100%);
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #388e3c 0%, #4caf50 100%);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #5e35b1 0%, #673ab7 100%);
+      color: white;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #2a3f5f;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .summary-card {
+      background: #0f1729;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 2px solid #2a3f5f;
+    }
+
+    .summary-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .summary-value.pass { color: #4caf50; }
+    .summary-value.fail { color: #f44336; }
+    .summary-value.warn { color: #ff9800; }
+
+    .summary-label {
+      font-size: 0.85rem;
+      color: #b0b0b0;
+      text-transform: uppercase;
+    }
+
+    .copy-notice {
+      background: #4caf50;
+      color: white;
+      padding: 0.75rem;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 1rem;
+      display: none;
+      animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .collapsible {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .collapsible:after {
+      content: '▼';
+      float: right;
+      transition: transform 0.3s;
+    }
+
+    .collapsible.collapsed:after {
+      transform: rotate(-90deg);
+    }
+
+    .collapse-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s;
+    }
+
+    .collapse-content.hidden {
+      max-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔬 MedWard Bug Analysis</h1>
+    <div class="status checking" id="overall-status">
+      <span class="spinner"></span> Running Diagnostics...
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="summary" id="summary">
+      <div class="summary-card">
+        <div class="summary-value pass" id="pass-count">0</div>
+        <div class="summary-label">Passed</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-value fail" id="fail-count">0</div>
+        <div class="summary-label">Failed</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-value warn" id="warn-count">0</div>
+        <div class="summary-label">Warnings</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title collapsible" onclick="toggleSection('tests')">
+      📋 Test Results
+    </div>
+    <div class="collapse-content" id="tests-content">
+      <div id="test-results"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title collapsible" onclick="toggleSection('console')">
+      💬 Console Logs
+    </div>
+    <div class="collapse-content" id="console-content">
+      <div class="log-container" id="console-logs"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title collapsible" onclick="toggleSection('system')">
+      ⚙️ System Info
+    </div>
+    <div class="collapse-content" id="system-content">
+      <div id="system-info"></div>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn btn-primary" onclick="runTests()">🔄 Re-run Tests</button>
+    <button class="btn btn-success" onclick="copyReport()">📋 Copy Report</button>
+    <button class="btn btn-secondary" onclick="testNeural()">🧠 Test Neural</button>
+    <button class="btn btn-danger" onclick="clearLogs()">🗑️ Clear Logs</button>
+  </div>
+
+  <div class="copy-notice" id="copy-notice">✓ Report copied to clipboard!</div>
+
+  <!-- Load TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+  <script src="js/medward-neural.js"></script>
+
+  <script>
+    // ==================== Console Capture ====================
+    const consoleLogs = [];
+    const originalConsole = {
+      log: console.log,
+      error: console.error,
+      warn: console.warn,
+      info: console.info
+    };
+
+    function captureConsole() {
+      ['log', 'error', 'warn', 'info'].forEach(method => {
+        console[method] = function(...args) {
+          const message = args.map(arg =>
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+
+          consoleLogs.push({
+            type: method,
+            message: message,
+            timestamp: new Date().toISOString()
+          });
+
+          updateConsoleDisplay();
+          originalConsole[method].apply(console, args);
+        };
+      });
+    }
+
+    function updateConsoleDisplay() {
+      const container = document.getElementById('console-logs');
+      container.innerHTML = consoleLogs.slice(-50).map(log =>
+        `<div class="log-entry ${log.type}">
+          <strong>[${log.type.toUpperCase()}]</strong> ${escapeHtml(log.message)}
+        </div>`
+      ).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function clearLogs() {
+      consoleLogs.length = 0;
+      updateConsoleDisplay();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==================== Test Framework ====================
+    let testResults = [];
+    let passCount = 0, failCount = 0, warnCount = 0;
+
+    function addTest(name, status, details = '') {
+      testResults.push({ name, status, details });
+
+      if (status === 'pass') passCount++;
+      else if (status === 'fail') failCount++;
+      else if (status === 'warn') warnCount++;
+
+      updateTestDisplay();
+      updateSummary();
+    }
+
+    function updateTestDisplay() {
+      const container = document.getElementById('test-results');
+      const icons = {
+        pass: '✓',
+        fail: '✗',
+        warn: '⚠',
+        info: 'ℹ'
+      };
+
+      container.innerHTML = testResults.map(test => `
+        <div class="test-item ${test.status}">
+          <div class="test-label">
+            <span class="test-icon">${icons[test.status]}</span>
+            ${test.name}
+          </div>
+          ${test.details ? `<div class="test-details">${escapeHtml(test.details)}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function updateSummary() {
+      document.getElementById('pass-count').textContent = passCount;
+      document.getElementById('fail-count').textContent = failCount;
+      document.getElementById('warn-count').textContent = warnCount;
+    }
+
+    function updateProgress(percent) {
+      document.getElementById('progress').style.width = percent + '%';
+    }
+
+    function setOverallStatus(status, message) {
+      const statusEl = document.getElementById('overall-status');
+      statusEl.className = 'status ' + status;
+      statusEl.innerHTML = message;
+    }
+
+    // ==================== System Info ====================
+    function collectSystemInfo() {
+      const info = {
+        'User Agent': navigator.userAgent,
+        'Platform': navigator.platform,
+        'Language': navigator.language,
+        'Screen Size': `${screen.width}x${screen.height}`,
+        'Viewport': `${window.innerWidth}x${window.innerHeight}`,
+        'Online': navigator.onLine ? 'Yes' : 'No',
+        'Cookies Enabled': navigator.cookieEnabled ? 'Yes' : 'No',
+        'Local Storage': typeof(Storage) !== 'undefined' ? 'Available' : 'Not Available',
+        'IndexedDB': typeof(indexedDB) !== 'undefined' ? 'Available' : 'Not Available',
+        'WebGL': checkWebGL() ? 'Available' : 'Not Available',
+        'Current Time': new Date().toLocaleString()
+      };
+
+      const container = document.getElementById('system-info');
+      container.innerHTML = Object.entries(info).map(([key, value]) => `
+        <div class="test-item info">
+          <div class="test-label">${key}</div>
+          <div class="test-details">${value}</div>
+        </div>
+      `).join('');
+    }
+
+    function checkWebGL() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+      } catch(e) {
+        return false;
+      }
+    }
+
+    // ==================== Tests ====================
+    async function runTests() {
+      testResults = [];
+      passCount = failCount = warnCount = 0;
+      updateProgress(0);
+      setOverallStatus('checking', '<span class="spinner"></span> Running Tests...');
+
+      try {
+        // Test 1: Basic Environment
+        updateProgress(10);
+        addTest(
+          'Browser Environment',
+          'pass',
+          `Running on ${navigator.userAgent.match(/Chrome|Firefox|Safari|Edge/)?.[0] || 'Unknown Browser'}`
+        );
+
+        // Test 2: TensorFlow.js Loading
+        updateProgress(20);
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        if (typeof tf !== 'undefined') {
+          addTest(
+            'TensorFlow.js Library',
+            'pass',
+            `Version ${tf.version.tfjs} loaded successfully`
+          );
+
+          // Test 3: TensorFlow.js Backend
+          updateProgress(30);
+          try {
+            await tf.ready();
+            const backend = tf.getBackend();
+            addTest(
+              'TensorFlow.js Backend',
+              'pass',
+              `Backend: ${backend}, Memory: ${tf.memory().numTensors} tensors`
+            );
+          } catch (e) {
+            addTest('TensorFlow.js Backend', 'fail', e.toString());
+          }
+
+          // Test 4: Simple Model Creation
+          updateProgress(40);
+          try {
+            const testModel = tf.sequential();
+            testModel.add(tf.layers.dense({ units: 10, inputShape: [5] }));
+            const testTensor = tf.tensor2d([[1, 2, 3, 4, 5]]);
+            const prediction = testModel.predict(testTensor);
+            testTensor.dispose();
+            prediction.dispose();
+            testModel.dispose();
+            addTest('TensorFlow Model Creation', 'pass', 'Successfully created test model');
+          } catch (e) {
+            addTest('TensorFlow Model Creation', 'fail', e.toString());
+          }
+        } else {
+          addTest('TensorFlow.js Library', 'fail', 'TensorFlow.js not loaded from CDN');
+        }
+
+        // Test 5: Neural Classes
+        updateProgress(50);
+        const classes = [
+          'MedicalDocumentParser',
+          'PatternStore',
+          'MedWardNeural'
+        ];
+
+        classes.forEach(className => {
+          if (typeof window[className] !== 'undefined') {
+            addTest(`${className} Class`, 'pass', 'Class loaded successfully');
+          } else {
+            addTest(`${className} Class`, 'fail', 'Class not found - check medward-neural.js');
+          }
+        });
+
+        // Test 6: IndexedDB
+        updateProgress(60);
+        try {
+          const testDB = indexedDB.open('BugAnalysisTest', 1);
+          await new Promise((resolve, reject) => {
+            testDB.onsuccess = () => {
+              testDB.result.close();
+              indexedDB.deleteDatabase('BugAnalysisTest');
+              resolve();
+            };
+            testDB.onerror = reject;
+            testDB.onupgradeneeded = e => {
+              e.target.result.createObjectStore('test', { keyPath: 'id' });
+            };
+          });
+          addTest('IndexedDB', 'pass', 'IndexedDB working correctly');
+        } catch (e) {
+          addTest('IndexedDB', 'fail', e.toString());
+        }
+
+        // Test 7: Parser Instantiation
+        updateProgress(70);
+        if (typeof MedicalDocumentParser !== 'undefined') {
+          try {
+            const parser = new MedicalDocumentParser({ debug: false });
+            addTest('Parser Instantiation', 'pass', 'MedicalDocumentParser created');
+          } catch (e) {
+            addTest('Parser Instantiation', 'fail', e.toString());
+          }
+        }
+
+        // Test 8: Pattern Store
+        updateProgress(80);
+        if (typeof PatternStore !== 'undefined') {
+          try {
+            const store = new PatternStore(100);
+            addTest('Pattern Store', 'pass', 'PatternStore created successfully');
+          } catch (e) {
+            addTest('Pattern Store', 'fail', e.toString());
+          }
+        }
+
+        updateProgress(100);
+
+        // Final Status
+        if (failCount === 0) {
+          setOverallStatus('pass', '✓ All Tests Passed!');
+        } else {
+          setOverallStatus('fail', `✗ ${failCount} Test(s) Failed`);
+        }
+
+      } catch (error) {
+        addTest('Test Suite', 'fail', error.toString() + '\n' + error.stack);
+        setOverallStatus('fail', '✗ Test Suite Error');
+      }
+    }
+
+    // ==================== Neural System Test ====================
+    async function testNeural() {
+      setOverallStatus('checking', '<span class="spinner"></span> Testing Neural System...');
+
+      try {
+        if (typeof MedWardNeural === 'undefined') {
+          addTest('Neural System', 'fail', 'MedWardNeural class not loaded');
+          return;
+        }
+
+        addTest('Neural Test', 'info', 'Creating neural system instance...');
+        const neural = new MedWardNeural({ debug: true });
+
+        addTest('Neural Test', 'info', 'Calling initialize()...');
+        await neural.initialize();
+
+        const metrics = neural.getMetrics();
+        addTest(
+          'Neural System Initialization',
+          'pass',
+          `Successfully initialized!\nPatterns: ${metrics.patterns}\nCache: ${metrics.cacheHitRate}`
+        );
+
+        setOverallStatus('pass', '✓ Neural System Working!');
+
+      } catch (error) {
+        addTest(
+          'Neural System Initialization',
+          'fail',
+          error.toString() + '\n\nStack:\n' + error.stack
+        );
+        setOverallStatus('fail', '✗ Neural System Failed');
+      }
+    }
+
+    // ==================== Report Generation ====================
+    async function copyReport() {
+      const report = generateReport();
+
+      try {
+        await navigator.clipboard.writeText(report);
+        showCopyNotice();
+      } catch (e) {
+        // Fallback for browsers that don't support clipboard API
+        const textarea = document.createElement('textarea');
+        textarea.value = report;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showCopyNotice();
+      }
+    }
+
+    function showCopyNotice() {
+      const notice = document.getElementById('copy-notice');
+      notice.style.display = 'block';
+      setTimeout(() => {
+        notice.style.display = 'none';
+      }, 3000);
+    }
+
+    function generateReport() {
+      let report = '='.repeat(60) + '\n';
+      report += 'MEDWARD BUG ANALYSIS REPORT\n';
+      report += '='.repeat(60) + '\n\n';
+
+      report += `Generated: ${new Date().toLocaleString()}\n`;
+      report += `Tests: ${passCount} passed, ${failCount} failed, ${warnCount} warnings\n\n`;
+
+      report += '-'.repeat(60) + '\n';
+      report += 'SYSTEM INFORMATION\n';
+      report += '-'.repeat(60) + '\n';
+      report += `User Agent: ${navigator.userAgent}\n`;
+      report += `Platform: ${navigator.platform}\n`;
+      report += `Screen: ${screen.width}x${screen.height}\n`;
+      report += `Viewport: ${window.innerWidth}x${window.innerHeight}\n`;
+      report += `Online: ${navigator.onLine}\n\n`;
+
+      report += '-'.repeat(60) + '\n';
+      report += 'TEST RESULTS\n';
+      report += '-'.repeat(60) + '\n';
+      testResults.forEach(test => {
+        const icon = test.status === 'pass' ? '✓' : test.status === 'fail' ? '✗' : '⚠';
+        report += `${icon} [${test.status.toUpperCase()}] ${test.name}\n`;
+        if (test.details) {
+          report += `  ${test.details.replace(/\n/g, '\n  ')}\n`;
+        }
+        report += '\n';
+      });
+
+      if (consoleLogs.length > 0) {
+        report += '-'.repeat(60) + '\n';
+        report += 'CONSOLE LOGS (Last 20)\n';
+        report += '-'.repeat(60) + '\n';
+        consoleLogs.slice(-20).forEach(log => {
+          report += `[${log.type.toUpperCase()}] ${log.message}\n`;
+        });
+      }
+
+      report += '\n' + '='.repeat(60) + '\n';
+      return report;
+    }
+
+    // ==================== UI Helpers ====================
+    function toggleSection(section) {
+      const content = document.getElementById(section + '-content');
+      const title = content.previousElementSibling;
+
+      content.classList.toggle('hidden');
+      title.classList.toggle('collapsed');
+    }
+
+    // ==================== Initialize ====================
+    captureConsole();
+    collectSystemInfo();
+
+    window.addEventListener('load', async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      runTests();
+    });
+
+    // Capture any errors
+    window.addEventListener('error', (e) => {
+      addTest(
+        'Runtime Error',
+        'fail',
+        `${e.message}\nFile: ${e.filename}:${e.lineno}:${e.colno}`
+      );
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      addTest(
+        'Unhandled Promise Rejection',
+        'fail',
+        e.reason?.toString() || 'Unknown error'
+      );
+    });
+  </script>
+</body>
+</html>
