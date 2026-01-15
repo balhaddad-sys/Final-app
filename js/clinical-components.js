@@ -10,7 +10,12 @@ const ClinicalComponents = {
    */
   renderDetailedView(data) {
     const container = document.getElementById('detailed-view');
-    if (!container) return;
+    if (!container) {
+      console.error('Detailed view container not found');
+      return;
+    }
+    
+    console.log('Rendering detailed view with data:', data);
     
     let html = '';
     let delay = 0;
@@ -213,9 +218,14 @@ const ClinicalComponents = {
    */
   renderWardView(data) {
     const container = document.getElementById('ward-view');
-    if (!container) return;
+    if (!container) {
+      console.error('Ward view container not found');
+      return;
+    }
     
-    let html = '<div class="ward-grid">';
+    console.log('Rendering ward view with data:', data);
+    
+    let html = '<div class="ward-grid" style="display: grid; gap: 1rem;">';
     
     // Assessment Card
     html += `
