@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedWard Neural System Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    h1 { color: #1565C0; }
+    .test-section {
+      background: white;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-input {
+      width: 100%;
+      min-height: 200px;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .btn {
+      background: #1565C0;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 0.5rem 0.5rem 0 0;
+    }
+    .btn:hover { background: #0D47A1; }
+    .btn-secondary {
+      background: #6C757D;
+    }
+    .btn-secondary:hover { background: #495057; }
+    .results {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #E3F2FD;
+      border-left: 4px solid #1565C0;
+      border-radius: 4px;
+    }
+    .metric {
+      display: inline-block;
+      margin: 0.5rem 1rem 0.5rem 0;
+      padding: 0.5rem 1rem;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1565C0;
+    }
+    .status {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+    }
+    .status-success { background: #E8F5E9; color: #2E7D32; }
+    .status-info { background: #E3F2FD; color: #1565C0; }
+    .status-warning { background: #FFF3E0; color: #E65100; }
+    pre {
+      background: #f5f5f5;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>MedWard Neural Intelligence System - Test Suite</h1>
+
+  <div class="test-section">
+    <h2>System Status</h2>
+    <div id="system-status">Initializing...</div>
+    <div id="metrics-display" style="margin-top: 1rem;"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 1: Parse Cumulative Lab Report</h2>
+    <p>Paste a cumulative lab report with multiple date columns (or use the sample below):</p>
+    <textarea class="test-input" id="test1-input">TEST NAME                    05/01/2024 10:30:00    05/08/2024 09:15:00    REFERENCE RANGE
+WBC                          4.5                     8.2H                    3.7-10
+RBC                          4.8                     4.6L                    4.5-5.5
+Hb                           145                     128L                    130-170
+Hct                          0.42                    0.38L                   0.40-0.50
+Plt                          250                     420H                    130-430
+Neutrophils                  3.2                     6.5H                    1.7-6.0
+Lymphocytes                  1.8                     1.2                     0.9-2.9</textarea>
+    <button class="btn" onclick="runTest1()">Parse Report</button>
+    <div id="test1-results"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 2: Neural Analysis (First Time - API)</h2>
+    <p>First analysis will use API and learn the pattern:</p>
+    <button class="btn" onclick="runTest2()">Analyze with Neural System</button>
+    <div id="test2-results"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 3: Neural Analysis (Second Time - Local)</h2>
+    <p>Second analysis of similar data should use local inference (fast & free!):</p>
+    <textarea class="test-input" id="test3-input">TEST NAME                    05/15/2024 11:00:00    REFERENCE RANGE
+WBC                          7.8                     3.7-10
+RBC                          4.7                     4.5-5.5
+Hb                           132L                    130-170
+Plt                          380H                    130-430</textarea>
+    <button class="btn" onclick="runTest3()">Analyze Again (Should Use Local)</button>
+    <div id="test3-results"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 4: Metrics & Performance</h2>
+    <button class="btn" onclick="showMetrics()">Show Current Metrics</button>
+    <button class="btn btn-secondary" onclick="resetSystem()">Reset Neural System</button>
+    <div id="test4-results"></div>
+  </div>
+
+  <!-- Load TensorFlow.js and MedWard Neural -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+  <script src="js/medward-neural.js"></script>
+
+  <script>
+    let parser, neural;
+    let parsedData = null;
+
+    async function initSystem() {
+      const statusDiv = document.getElementById('system-status');
+      try {
+        statusDiv.innerHTML = '<div class="status status-info">Initializing neural system...</div>';
+
+        parser = new MedicalDocumentParser({ debug: true });
+        neural = new MedWardNeural({ debug: true });
+
+        await neural.initialize();
+
+        statusDiv.innerHTML = '<div class="status status-success">✓ Neural system ready!</div>';
+        updateMetricsDisplay();
+      } catch (error) {
+        statusDiv.innerHTML = `<div class="status status-warning">⚠ Error: ${error.message}</div>`;
+        console.error(error);
+      }
+    }
+
+    async function runTest1() {
+      const input = document.getElementById('test1-input').value;
+      const resultsDiv = document.getElementById('test1-results');
+
+      try {
+        resultsDiv.innerHTML = '<div class="status status-info">Parsing...</div>';
+
+        parsedData = await parser.parse(input);
+
+        resultsDiv.innerHTML = `
+          <div class="status status-success">✓ Parsing complete!</div>
+          <div class="results">
+            <strong>Document Type:</strong> ${parsedData.type}<br>
+            <strong>Dates Found:</strong> ${parsedData.dates.length}<br>
+            <strong>Tests Parsed:</strong> ${Object.keys(parsedData.tests).length}<br>
+            <strong>Summary:</strong> ${parsedData.summary.normal} normal, ${parsedData.summary.abnormal} abnormal, ${parsedData.summary.critical} critical<br>
+            <strong>Parse Time:</strong> ${parsedData.metadata.parseTime.toFixed(2)}ms
+          </div>
+          <h3>Parsed Tests:</h3>
+          <pre>${JSON.stringify(parsedData.tests, null, 2)}</pre>
+        `;
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status status-warning">⚠ Error: ${error.message}</div>`;
+      }
+    }
+
+    async function runTest2() {
+      if (!parsedData) {
+        alert('Please run Test 1 first to parse data');
+        return;
+      }
+
+      const resultsDiv = document.getElementById('test2-results');
+
+      try {
+        resultsDiv.innerHTML = '<div class="status status-info">Analyzing with neural system...</div>';
+
+        const { result, meta } = await neural.process(parsedData, 'lab');
+
+        const sourceColor = meta.source === 'local' ? 'status-success' : 'status-info';
+        resultsDiv.innerHTML = `
+          <div class="status ${sourceColor}">
+            ${meta.source === 'local' ? '⚡' : '🌐'} Source: ${meta.source.toUpperCase()}
+          </div>
+          <div class="results">
+            <strong>Analysis Time:</strong> ${meta.time.toFixed(0)}ms<br>
+            <strong>Confidence:</strong> ${(meta.confidence * 100).toFixed(1)}%<br>
+            <strong>Problems Found:</strong> ${result.problems?.length || 0}<br>
+            <strong>Patterns Learned:</strong> After this analysis, neural system will recognize similar patterns
+          </div>
+          <h3>Analysis Results:</h3>
+          <pre>${JSON.stringify(result, null, 2)}</pre>
+        `;
+
+        updateMetricsDisplay();
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status status-warning">⚠ Error: ${error.message}</div>`;
+        console.error(error);
+      }
+    }
+
+    async function runTest3() {
+      const input = document.getElementById('test3-input').value;
+      const resultsDiv = document.getElementById('test3-results');
+
+      try {
+        resultsDiv.innerHTML = '<div class="status status-info">Parsing & analyzing...</div>';
+
+        const parsed = await parser.parse(input);
+        const { result, meta } = await neural.process(parsed, 'lab');
+
+        const sourceColor = meta.source === 'local' ? 'status-success' : 'status-info';
+        resultsDiv.innerHTML = `
+          <div class="status ${sourceColor}">
+            ${meta.source === 'local' ? '⚡ LOCAL (FREE!)' : '🌐 API'}
+          </div>
+          <div class="results">
+            <strong>Source:</strong> ${meta.source.toUpperCase()} - ${meta.source === 'local' ? 'Using learned patterns!' : 'Learning new pattern'}<br>
+            <strong>Analysis Time:</strong> ${meta.time.toFixed(0)}ms<br>
+            <strong>Confidence:</strong> ${(meta.confidence * 100).toFixed(1)}%<br>
+            <strong>Speed Improvement:</strong> ${meta.source === 'local' ? '~30x faster than API!' : 'Normal API speed'}
+          </div>
+          <h3>Analysis Results:</h3>
+          <pre>${JSON.stringify(result, null, 2)}</pre>
+        `;
+
+        updateMetricsDisplay();
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status status-warning">⚠ Error: ${error.message}</div>`;
+        console.error(error);
+      }
+    }
+
+    function showMetrics() {
+      const resultsDiv = document.getElementById('test4-results');
+      const metrics = neural.getMetrics();
+
+      resultsDiv.innerHTML = `
+        <div class="results">
+          <h3>Neural System Performance</h3>
+          <div class="metric">
+            <div class="metric-label">Total Analyses</div>
+            <div class="metric-value">${metrics.total}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Cache Hit Rate</div>
+            <div class="metric-value">${metrics.cacheHitRate}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Avg Local Speed</div>
+            <div class="metric-value">${metrics.avgLocalMs}ms</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Avg API Speed</div>
+            <div class="metric-value">${metrics.avgApiMs}ms</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Learned Patterns</div>
+            <div class="metric-value">${metrics.patterns}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function resetSystem() {
+      if (confirm('Reset neural system? This will clear all learned patterns.')) {
+        neural.metrics = { total: 0, local: 0, api: 0, localTime: 0, apiTime: 0 };
+        neural.patternStore = new PatternStore(neural.config.maxPatterns);
+        await neural.saveKnowledge();
+        updateMetricsDisplay();
+        alert('Neural system reset complete!');
+      }
+    }
+
+    function updateMetricsDisplay() {
+      if (!neural) return;
+      const metrics = neural.getMetrics();
+      document.getElementById('metrics-display').innerHTML = `
+        <div class="metric">
+          <div class="metric-label">Total</div>
+          <div class="metric-value">${metrics.total}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Cache Rate</div>
+          <div class="metric-value">${metrics.cacheHitRate}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Patterns</div>
+          <div class="metric-value">${metrics.patterns}</div>
+        </div>
+      `;
+    }
+
+    // Initialize on load
+    window.addEventListener('load', initSystem);
+  </script>
+</body>
+</html>

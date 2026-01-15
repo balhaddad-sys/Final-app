@@ -1699,6 +1699,86 @@ body {
   transform: none;
 }
 
+/* ==================== Neural Metrics Dashboard ==================== */
+.metrics-panel {
+  grid-column: 1 / -1;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.metric-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  transition: var(--transition);
+  animation: fadeInUp 0.5s ease backwards;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-primary);
+}
+
+.metric-card-success {
+  background: var(--status-normal-bg);
+  border-color: var(--status-normal);
+}
+
+.metric-card-primary {
+  background: var(--status-pending-bg);
+  border-color: var(--status-pending);
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  background: white;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+}
+
+.metric-card-success .metric-icon {
+  color: var(--status-normal);
+}
+
+.metric-card-primary .metric-icon {
+  color: var(--status-pending);
+}
+
+.metric-label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  margin-bottom: 0.25rem;
+}
+
+.metric-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
 /* ==================== Responsive Design ==================== */
 @media (max-width: 1024px) {
   .dashboard-container {
