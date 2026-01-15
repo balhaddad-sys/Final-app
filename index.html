@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="MedWard Master - Professional AI-Powered Medical Report Analysis">
   <title>MedWard Master | AI Medical Analysis Platform</title>
+  
+  <!-- Only load the prestigious styles -->
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/clinical-design-system.css">
-  <link rel="stylesheet" href="css/clinical-components.css">
+  
+  <!-- Fonts are imported in CSS, but preconnect for speed -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -19,21 +20,24 @@
     <div class="nav-container">
       <div class="nav-brand">
         <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M12 2L2 7v10c0 5.5 3.8 9.7 10 11 6.2-1.3 10-5.5 10-11V7l-10-5z"/>
             <path d="M12 8v8M8 12h8"/>
           </svg>
         </div>
-        <div class="brand-info">
-          <h1 class="brand-name">MedWard Master</h1>
-          <span class="brand-tagline">Clinical Analysis Platform</span>
+        <div class="brand-text">
+          <span class="brand-name">MedWard Master</span>
+          <span class="brand-tagline">Clinical Intelligence</span>
         </div>
       </div>
       <div class="nav-user" id="nav-user" style="display: none;">
+        <div class="user-info">
+          <span class="user-name" id="user-name">User</span>
+          <span class="user-role">Physician</span>
+        </div>
         <div class="user-avatar">
           <span id="user-initial">U</span>
         </div>
-        <span class="user-name" id="user-name">User</span>
         <button class="btn-logout" id="logout-btn">Sign Out</button>
       </div>
     </div>
@@ -45,25 +49,25 @@
     <!-- Login Screen -->
     <section id="login-screen" class="screen active">
       <div class="login-wrapper">
-        <div class="login-card">
+        <div class="login-card animate-fade-in-up">
           <div class="login-header">
             <div class="login-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M12 2L2 7v10c0 5.5 3.8 9.7 10 11 6.2-1.3 10-5.5 10-11V7l-10-5z"/>
                 <path d="M12 8v8M8 12h8"/>
               </svg>
             </div>
-            <h2>Welcome to MedWard Master</h2>
-            <p>Clinical-Grade AI Medical Report Analysis</p>
+            <h2>MedWard Master</h2>
+            <p>Clinical-Grade AI Medical Analysis</p>
           </div>
           <div class="login-form">
-            <div class="form-field">
-              <label>Username</label>
-              <input type="text" id="username-input" placeholder="Enter your username" autocomplete="off">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input type="text" id="username-input" class="form-input" placeholder="Enter your username" autocomplete="off">
             </div>
-            <button class="btn-primary btn-block" id="login-btn">
-              <span>Sign In</span>
-              <svg class="btn-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <button class="btn btn-gold btn-block" id="login-btn" style="width: 100%; margin-top: 1rem;">
+              Sign In
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                 <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </button>
@@ -84,287 +88,266 @@
           <div class="panel-header">
             <div class="panel-header-flex">
               <div class="panel-icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="2" width="16" height="16" rx="2"/>
-                  <path d="M7 10l3 3 6-6"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M9 12l2 2 4-4"/>
                 </svg>
               </div>
               <div>
-                <h3>New Analysis</h3>
-                <p>Upload medical reports for clinical interpretation</p>
+                <h3 class="panel-title">New Analysis</h3>
+                <p class="panel-subtitle">Upload medical reports for AI interpretation</p>
               </div>
             </div>
           </div>
 
           <div class="upload-tabs">
             <button class="upload-tab active" data-tab="image">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M2.5 13.75L6.25 10L9.375 13.125L13.75 8.75L17.5 12.5" stroke="currentColor" stroke-width="1.5"/>
-                <rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2.5" y="2.5" width="15" height="15" rx="2"/>
+                <path d="M2.5 13.75L6.25 10L9.375 13.125L13.75 8.75L17.5 12.5"/>
+                <circle cx="7" cy="7" r="1.5"/>
               </svg>
-              <span>Image Upload</span>
+              <span>Image</span>
             </button>
             <button class="upload-tab" data-tab="text">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M5 7.5H15M5 10H15M5 12.5H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M5 7.5H15M5 10H15M5 12.5H11" stroke-linecap="round"/>
               </svg>
-              <span>Text Input</span>
+              <span>Text</span>
             </button>
           </div>
 
           <!-- Image Upload Tab -->
           <div class="upload-content active" data-content="image">
-            <div class="dropzone" id="dropzone">
+            <div class="upload-zone" id="dropzone">
               <input type="file" id="file-input" multiple accept="image/*,.pdf" hidden>
-              <div class="dropzone-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M3 16l5-5 5 5 7-7"/>
-                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+              <div class="upload-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
               </div>
-              <h4>Drop images here or click to browse</h4>
-              <p>Supports JPG, PNG, PDF • Max 10MB per file</p>
-              <button class="btn-secondary btn-browse">Browse Files</button>
+              <p class="upload-text">Drop files here or click to browse</p>
+              <p class="upload-hint">Supports JPG, PNG, PDF • Max 10MB</p>
+            </div>
+
+            <div class="upload-preview" id="upload-preview">
+              <img id="preview-image" class="preview-image" src="" alt="Preview">
+              <p id="preview-name" class="preview-name"></p>
             </div>
 
             <div class="file-list" id="file-list"></div>
 
-            <div class="form-field">
-              <label>Report Type</label>
-              <div class="select-wrapper">
-                <select id="report-type" class="form-select">
-                  <option value="lab">Laboratory Results</option>
-                  <option value="imaging">Imaging Report (X-ray, CT, MRI)</option>
-                  <option value="pathology">Pathology Report</option>
-                  <option value="general">General Medical Report</option>
-                </select>
-              </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+              <label class="form-label">Report Type</label>
+              <select id="report-type" class="form-input">
+                <option value="lab">Laboratory Results</option>
+                <option value="imaging">Imaging Report</option>
+                <option value="pathology">Pathology Report</option>
+                <option value="general">General Medical Report</option>
+              </select>
             </div>
 
-            <button class="btn-primary btn-block btn-analyze" id="analyze-btn" disabled>
-              <span>Analyze with AI</span>
-              <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <button class="btn btn-primary" id="analyze-btn" disabled style="width: 100%; margin-top: 1rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
               </svg>
+              Analyze with AI
             </button>
           </div>
 
           <!-- Text Input Tab -->
           <div class="upload-content" data-content="text">
-            <div class="form-field">
-              <label>Paste Medical Report Text</label>
-              <textarea id="text-input" class="form-textarea" placeholder="Paste your medical report text here...
+            <div class="form-group">
+              <label class="form-label">Paste Medical Report</label>
+              <textarea id="text-input" class="form-input form-textarea" placeholder="Paste your medical report text here...
 
 Example:
-Hemoglobin: 12.5 g/dL
+Hemoglobin: 12.5 g/dL (L)
 WBC: 7.2 K/uL
-Platelets: 250 K/uL
-..." rows="12"></textarea>
+Creatinine: 1.8 mg/dL (H)
+..." rows="10"></textarea>
             </div>
 
-            <div class="form-field">
-              <label>Report Type</label>
-              <div class="select-wrapper">
-                <select id="report-type-text" class="form-select">
-                  <option value="lab">Laboratory Results</option>
-                  <option value="imaging">Imaging Report</option>
-                  <option value="pathology">Pathology Report</option>
-                  <option value="general">General Medical Report</option>
-                </select>
-              </div>
+            <div class="form-group">
+              <label class="form-label">Report Type</label>
+              <select id="report-type-text" class="form-input">
+                <option value="lab">Laboratory Results</option>
+                <option value="imaging">Imaging Report</option>
+                <option value="pathology">Pathology Report</option>
+                <option value="general">General Medical Report</option>
+              </select>
             </div>
 
-            <button class="btn-primary btn-block btn-analyze" id="analyze-text-btn" disabled>
-              <span>Analyze Text</span>
-              <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <button class="btn btn-primary" id="analyze-text-btn" style="width: 100%; margin-top: 1rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
               </svg>
+              Analyze Text
             </button>
           </div>
         </div>
 
-        <!-- Processing Overlay -->
-        <div class="processing-overlay" id="processing-overlay">
-          <div class="processing-card">
-            <div class="processing-spinner"></div>
-            <h3 id="processing-title">Processing Report</h3>
-            <p id="processing-message">Initializing AI analysis...</p>
-
-            <div class="progress-container">
-              <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
+        <!-- Quick Actions Panel -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div class="panel-header-flex">
+              <div class="panel-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
               </div>
-              <span class="progress-text" id="progress-text">0%</span>
+              <div>
+                <h3 class="panel-title">Quick Actions</h3>
+                <p class="panel-subtitle">Common analysis templates</p>
+              </div>
             </div>
+          </div>
 
-            <div class="processing-steps">
-              <div class="process-step" data-step="compress">
-                <div class="step-indicator"></div>
-                <div class="step-content">
-                  <div class="step-label">Compressing Images</div>
-                  <div class="step-status">Pending</div>
-                </div>
-              </div>
-              <div class="process-step" data-step="upload">
-                <div class="step-indicator"></div>
-                <div class="step-content">
-                  <div class="step-label">Uploading to Cloud</div>
-                  <div class="step-status">Pending</div>
-                </div>
-              </div>
-              <div class="process-step" data-step="ocr">
-                <div class="step-indicator"></div>
-                <div class="step-content">
-                  <div class="step-label">OCR Text Extraction</div>
-                  <div class="step-status">Pending</div>
-                </div>
-              </div>
-              <div class="process-step" data-step="analyze">
-                <div class="step-indicator"></div>
-                <div class="step-content">
-                  <div class="step-label">AI Analysis</div>
-                  <div class="step-status">Pending</div>
-                </div>
-              </div>
+          <div class="doc-type-grid">
+            <div class="doc-type-option" data-type="lab">
+              <div class="doc-type-icon">🧪</div>
+              <div class="doc-type-label">Lab Panel</div>
+            </div>
+            <div class="doc-type-option" data-type="imaging">
+              <div class="doc-type-icon">📷</div>
+              <div class="doc-type-label">Imaging</div>
+            </div>
+            <div class="doc-type-option" data-type="pathology">
+              <div class="doc-type-icon">🔬</div>
+              <div class="doc-type-label">Pathology</div>
+            </div>
+            <div class="doc-type-option" data-type="general">
+              <div class="doc-type-icon">📋</div>
+              <div class="doc-type-label">General</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.06);">
+            <p class="panel-subtitle" style="margin-bottom: 0.75rem;">Analysis Modes</p>
+            <div class="view-toggle" style="width: 100%;">
+              <button class="view-toggle-btn active" data-mode="detailed">Detailed Report</button>
+              <button class="view-toggle-btn" data-mode="ward">Ward Presentation</button>
             </div>
           </div>
         </div>
 
         <!-- Results Panel -->
         <div class="dashboard-panel results-panel" id="results-panel">
-          <div class="panel-header">
+          <div class="results-header">
             <div>
-              <h3>Analysis Results</h3>
-              <p id="analysis-timestamp">Completed at --:--</p>
+              <h3 class="results-title">Analysis Results</h3>
+              <p class="results-meta" id="analysis-timestamp">Completed at --:--</p>
             </div>
             <div class="panel-actions">
               <div class="view-toggle">
-                <button class="toggle-btn active" data-view="detailed">Detailed</button>
-                <button class="toggle-btn" data-view="ward">Ward Presentation</button>
+                <button class="view-toggle-btn active" data-view="detailed">Detailed</button>
+                <button class="view-toggle-btn" data-view="ward">Ward</button>
               </div>
-              <button class="btn-icon" id="print-btn" title="Print Report">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M5 7.5V2.5H15V7.5M5 15H3.75C3.05964 15 2.5 14.4404 2.5 13.75V9.375C2.5 8.68464 3.05964 8.125 3.75 8.125H16.25C16.9404 8.125 17.5 8.68464 17.5 9.375V13.75C17.5 14.4404 16.9404 15 16.25 15H15M5 12.5H15V17.5H5V12.5Z" stroke="currentColor" stroke-width="1.5"/>
+              <button class="btn btn-icon" id="print-btn" title="Print">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                  <rect x="6" y="14" width="12" height="8"/>
                 </svg>
               </button>
-              <button class="btn-secondary" id="copy-ward-btn" style="display: none;" title="Copy to Clipboard">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="4" y="4" width="8" height="10" rx="1"/>
-                  <path d="M4 4V2.5C4 1.67 4.67 1 5.5 1H12.5C13.33 1 14 1.67 14 2.5V11.5"/>
-                </svg>
-                Copy
-              </button>
-              <button class="btn-secondary" id="export-ward-btn" style="display: none;">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M4 11v2h8v-2M8 2v9M5 8l3 3 3-3"/>
-                </svg>
-                Export for Rounds
-              </button>
-              <button class="btn-secondary" id="new-analysis-btn">New Analysis</button>
+              <button class="btn btn-secondary" id="new-analysis-btn">New Analysis</button>
             </div>
           </div>
 
-          <!-- Detailed View (Original) -->
+          <!-- Detailed View -->
           <div class="results-view" id="detailed-view">
             <div class="results-grid" id="results-content"></div>
           </div>
 
           <!-- Ward Presentation View -->
           <div class="results-view" id="ward-view" style="display: none;">
-            <div class="ward-presentation" id="ward-content"></div>
+            <div class="ward-document" id="ward-content"></div>
           </div>
         </div>
 
-        <!-- Neural Metrics Panel -->
-        <div class="dashboard-panel metrics-panel" id="metrics-panel" style="display: none;">
+        <!-- Metrics Panel -->
+        <div class="dashboard-panel" id="metrics-panel" style="display: none; grid-column: 1 / -1;">
           <div class="panel-header">
-            <div>
-              <h3>Neural Intelligence Metrics</h3>
-              <p>Self-learning system performance</p>
-            </div>
-            <button class="btn-secondary" id="reset-metrics-btn">Reset</button>
-          </div>
-
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="panel-header-flex">
+              <div class="panel-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                   <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
                   <line x1="12" y1="22.08" x2="12" y2="12"/>
                 </svg>
               </div>
-              <div class="metric-label">Total Analyses</div>
-              <div class="metric-value" id="metric-total">0</div>
+              <div>
+                <h3 class="panel-title">Neural Intelligence</h3>
+                <p class="panel-subtitle">Self-learning system metrics</p>
+              </div>
             </div>
+            <button class="btn btn-secondary" id="reset-metrics-btn">Reset</button>
+          </div>
 
-            <div class="metric-card metric-card-success">
+          <div class="metrics-grid" style="margin-top: 1.5rem;">
+            <div class="metric-card">
               <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M9 12l2 2 4-4"/>
                 </svg>
               </div>
-              <div class="metric-label">Cache Hit Rate</div>
-              <div class="metric-value" id="metric-cache">0%</div>
-              <div class="metric-subtitle">Free & Instant</div>
+              <div class="metric-value" id="metric-total">0</div>
+              <div class="metric-label">Total Analyses</div>
             </div>
 
             <div class="metric-card">
               <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+              </div>
+              <div class="metric-value" id="metric-cache">0%</div>
+              <div class="metric-label">Cache Hit Rate</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12 6 12 12 16 14"/>
                 </svg>
               </div>
-              <div class="metric-label">Avg Local Speed</div>
               <div class="metric-value" id="metric-local-speed">0ms</div>
-              <div class="metric-subtitle">Cached Results</div>
+              <div class="metric-label">Avg Speed</div>
             </div>
 
             <div class="metric-card">
               <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-              </div>
-              <div class="metric-label">Avg API Speed</div>
-              <div class="metric-value" id="metric-api-speed">0ms</div>
-              <div class="metric-subtitle">New Patterns</div>
-            </div>
-
-            <div class="metric-card metric-card-primary">
-              <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                 </svg>
               </div>
-              <div class="metric-label">Learned Patterns</div>
               <div class="metric-value" id="metric-patterns">0</div>
-              <div class="metric-subtitle">Growing Intelligence</div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="1" x2="12" y2="23"/>
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                </svg>
-              </div>
-              <div class="metric-label">API Cost Saved</div>
-              <div class="metric-value" id="metric-savings">$0.00</div>
-              <div class="metric-subtitle">Estimated</div>
+              <div class="metric-label">Patterns Learned</div>
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
   </main>
 
-  <!-- Toast Notification -->
-  <div class="toast" id="toast"></div>
+  <!-- Processing Overlay -->
+  <div class="processing-overlay" id="processing-overlay">
+    <div class="processing-card">
+      <div class="processing-spinner"></div>
+      <h3 class="processing-title">Analyzing Report</h3>
+      <p class="processing-text" id="processing-status">Initializing AI engine...</p>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
