@@ -2,6 +2,7 @@
  * MedWard Master - Frontend Application
  * Professional Medical Analysis Platform
  * With Image Compression & Advanced Error Handling
+ * FIXED VERSION - with proper null checks for metrics
  */
 
 // ==================== Medical Document Pre-Processor ====================
@@ -235,6 +236,7 @@ async function init() {
 }
 
 // ==================== Neural System Initialization ====================
+// FIXED: Added proper error handling and delayed metrics update
 async function initializeNeuralSystem() {
   try {
     console.log('[Neural] Initializing neural intelligence system...');
@@ -260,11 +262,14 @@ async function initializeNeuralSystem() {
 
     await neuralSystem.initialize();
 
-    // Show metrics panel
+    // Show metrics panel ONLY after successful initialization
     const metricsPanel = document.getElementById('metrics-panel');
     if (metricsPanel) metricsPanel.style.display = 'block';
 
-    updateMetricsDisplay();
+    // FIXED: Delayed metrics update to ensure system is fully ready
+    setTimeout(function() {
+      updateMetricsDisplay();
+    }, 100);
 
     console.log('[Neural] Neural system ready!');
     showToast('Neural Intelligence System activated!', 'success');
@@ -272,16 +277,16 @@ async function initializeNeuralSystem() {
     console.error('[Neural] Failed to initialize:', error);
     console.error('[Neural] Error details:', error.stack);
 
-    // Show detailed error message to user
-    const errorMsg = error.message || error.toString();
-    showToast(`⚠ Neural system error: ${errorMsg}`, 'warning', 10000);
-
-    // Show error banner on page
-    showNeuralErrorBanner(errorMsg, error.stack);
+    // Show user-friendly error message
+    showToast('Neural system using fallback mode', 'warning', 5000);
 
     // Continue without neural system - app will use legacy mode
     neuralParser = null;
     neuralSystem = null;
+    
+    // Hide metrics panel on error
+    var metricsPanel = document.getElementById('metrics-panel');
+    if (metricsPanel) metricsPanel.style.display = 'none';
   }
 }
 
@@ -1817,42 +1822,102 @@ function convertNeuralToDisplay(neuralResult, parsedData, meta) {
 }
 
 /**
- * Update metrics display
+ * FIXED: Update metrics display with proper null checks
  */
 function updateMetricsDisplay() {
   try {
-    if (!neuralSystem) return;
-    const metrics = neuralSystem.getMetrics();
-    const el = (id) => document.getElementById(id);
-    if (el('metric-total')) el('metric-total').textContent = metrics.total;
-    if (el('metric-cache')) el('metric-cache').textContent = metrics.cacheHitRate;
-    if (el('metric-local-speed')) el('metric-local-speed').textContent = metrics.avgLocalMs + 'ms';
-    if (el('metric-api-speed')) el('metric-api-speed').textContent = metrics.avgApiMs + 'ms';
-    if (el('metric-patterns')) el('metric-patterns').textContent = metrics.patterns;
-    if (el('metric-savings')) el('metric-savings').textContent = '$0.00';
-  } catch (e) { }
+    // Safety check - exit if neural system not ready
+    if (!neuralSystem) {
+      console.log('[Metrics] Neural system not available');
+      return;
+    }
+    
+    // Check if getMetrics exists
+    if (typeof neuralSystem.getMetrics !== 'function') {
+      console.log('[Metrics] getMetrics not available');
+      return;
+    }
+    
+    var metrics = neuralSystem.getMetrics();
+    
+    // Safety check for metrics object
+    if (!metrics) {
+      console.log('[Metrics] No metrics returned');
+      return;
+    }
+    
+    // Helper to safely get element
+    var el = function(id) { 
+      return document.getElementById(id); 
+    };
+    
+    // Safe updates with fallback values
+    var totalEl = el('metric-total');
+    if (totalEl) totalEl.textContent = metrics.total || 0;
+    
+    var cacheEl = el('metric-cache');
+    if (cacheEl) cacheEl.textContent = metrics.cacheHitRate || '0%';
+    
+    var localSpeedEl = el('metric-local-speed');
+    if (localSpeedEl) localSpeedEl.textContent = (metrics.avgLocalMs || 0) + 'ms';
+    
+    var apiSpeedEl = el('metric-api-speed');
+    if (apiSpeedEl) apiSpeedEl.textContent = (metrics.avgApiMs || 0) + 'ms';
+    
+    var patternsEl = el('metric-patterns');
+    if (patternsEl) patternsEl.textContent = metrics.patterns || 0;
+    
+    var savingsEl = el('metric-savings');
+    if (savingsEl) savingsEl.textContent = metrics.estimatedSavings || '$0.00';
+    
+    console.log('[Metrics] Display updated:', metrics.total, 'analyses');
+    
+  } catch (e) {
+    console.warn('[Metrics] Update failed:', e.message);
+  }
 }
 
 /**
- * Reset metrics
+ * FIXED: Reset metrics with proper error handling
  */
 async function resetMetrics() {
-  if (!neuralSystem) return;
+  if (!neuralSystem) {
+    showToast('Neural system not available', 'error');
+    return;
+  }
 
   if (confirm('Reset all neural learning data? This will clear learned patterns and metrics.')) {
-    // Reset metrics
-    neuralSystem.metrics = { total: 0, local: 0, api: 0, localTime: 0, apiTime: 0 };
+    try {
+      // Reset metrics object
+      neuralSystem.metrics = { 
+        total: 0, 
+        local: 0, 
+        api: 0, 
+        localTime: 0, 
+        apiTime: 0, 
+        errors: 0,
+        lastAnalysis: null
+      };
 
-    // Clear pattern store
-    neuralSystem.patternStore = new PatternStore(neuralSystem.config.maxPatterns);
+      // Clear pattern store safely
+      if (neuralSystem.patternStore && typeof PatternStore !== 'undefined') {
+        var maxPatterns = (neuralSystem.config && neuralSystem.config.maxPatterns) || 10000;
+        neuralSystem.patternStore = new PatternStore(maxPatterns);
+      }
 
-    // Clear persistent storage
-    await neuralSystem.saveKnowledge();
+      // Clear persistent storage
+      if (typeof neuralSystem.saveKnowledge === 'function') {
+        await neuralSystem.saveKnowledge();
+      }
 
-    // Update display
-    updateMetricsDisplay();
+      // Update display
+      updateMetricsDisplay();
 
-    showToast('Neural system reset complete', 'success');
+      showToast('Neural system reset complete', 'success');
+    } catch (e) {
+      console.error('[Metrics] Reset failed:', e);
+      showToast('Reset failed: ' + e.message, 'error');
+    }
   }
 }
 
