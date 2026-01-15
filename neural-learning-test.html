@@ -533,6 +533,7 @@
 
         <div class="button-group" style="margin-top: 20px;">
           <button class="secondary" onclick="refreshMetrics()">🔄 Refresh Metrics</button>
+          <button class="secondary" onclick="debugPatternMatching()">🔍 Debug Patterns</button>
           <button class="danger" onclick="resetLearning()">🗑️ Reset Learning</button>
         </div>
       </div>
@@ -562,6 +563,9 @@
       </div>
     </div>
   </div>
+
+  <!-- TensorFlow.js for embeddings -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
 
   <script src="js/medward-neural.js"></script>
   <script>
@@ -606,8 +610,8 @@ BUN 15.2 H mmol/L`
       try {
         neuralSystem = new MedWardNeural({
           debug: true,
-          confidenceThreshold: 0.75,
-          criticalThreshold: 0.90
+          confidenceThreshold: 0.50,  // Lower threshold for better cache hits
+          criticalThreshold: 0.85
         });
 
         await neuralSystem.initialize();
@@ -698,10 +702,15 @@ BUN 15.2 H mmol/L`
 
       let sourceClass = source === 'local' ? 'local' : source === 'api' ? 'api' : 'error';
       let sourceText = source === 'local'
-        ? `LOCAL INFERENCE (Cached Pattern) - ${elapsed}ms`
+        ? `⚡ LOCAL INFERENCE (Cached Pattern) - ${elapsed}ms`
         : source === 'api'
-        ? `API INFERENCE (Learning New Pattern) - ${elapsed}ms`
+        ? `🌐 API INFERENCE (Learning New Pattern) - ${elapsed}ms`
+        : source === 'local_generated'
+        ? `💡 LOCAL GENERATION (No Backend) - ${elapsed}ms`
         : 'ERROR';
+
+      // Log for debugging
+      console.log('Analysis Result:', { source, confidence, elapsed, learned: result.meta?.learned });
 
       let html = `
         <div class="response-box">
@@ -870,6 +879,54 @@ BUN 15.2 H mmol/L`
       });
 
       listEl.innerHTML = html;
+    }
+
+    // Debug pattern matching
+    async function debugPatternMatching() {
+      if (!neuralSystem) {
+        alert('Neural system not initialized');
+        return;
+      }
+
+      const input = document.getElementById('testInput').value.trim();
+      if (!input) {
+        alert('Please enter some lab data first');
+        return;
+      }
+
+      console.log('=== DEBUG PATTERN MATCHING ===');
+
+      // Parse the data
+      const parsed = await neuralSystem.parser.parse(input);
+      console.log('Parsed data:', parsed);
+
+      // Generate signature
+      const signature = neuralSystem.generateSignature(parsed);
+      console.log('Signature:', signature);
+
+      // Generate embedding
+      const embedding = await neuralSystem.embed(signature);
+      console.log('Embedding length:', embedding.length);
+
+      // Find matches
+      const matches = await neuralSystem.findMatches(parsed, 'lab');
+      console.log('Pattern matches:', matches);
+      console.log('Best match confidence:', matches.bestMatch?.confidence || 0);
+      console.log('Threshold:', neuralSystem.config.confidenceThreshold);
+
+      // Show all patterns
+      const allPatterns = neuralSystem.patternStore.getAll();
+      console.log('Total patterns stored:', allPatterns.length);
+      allPatterns.forEach((p, i) => {
+        console.log(`Pattern ${i}:`, {
+          id: p.id,
+          signature: p.signature,
+          successRate: p.successRate,
+          usageCount: p.usageCount
+        });
+      });
+
+      alert(`Debug info logged to console.\n\nPatterns: ${allPatterns.length}\nBest match: ${matches.bestMatch?.confidence.toFixed(3) || 'none'}\nThreshold: ${neuralSystem.config.confidenceThreshold}`);
     }
 
     // Reset learning
