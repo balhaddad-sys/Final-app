@@ -981,7 +981,8 @@ function parseAIResponse(aiResponse) {
 
 /**
  * Download image from Google Drive and convert to base64 data URL
- * Optimized with minimal logging
+ * WITH AUTOMATIC COMPRESSION for large images (>4MB)
+ * Uses Drive thumbnail API to resize images that exceed Claude's 5MB limit
  * @param {string} fileId - Google Drive file ID
  * @return {string} Base64 data URL or null if error
  */
@@ -998,28 +999,59 @@ function downloadImageFromDrive(fileId) {
       return null;
     }
 
-    const blob = file.getBlob();
+    let blob = file.getBlob();
+    let fileSize = blob.getBytes().length;
     const mimeType = blob.getContentType();
-    const fileSize = blob.getBytes().length;
 
-    // Check size limits (10MB max for most Vision APIs)
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-    if (fileSize > MAX_SIZE) {
-      Logger.log('File too large: ' + fileSize + ' bytes');
-      throw new Error('Image file too large. Maximum size is 10MB.');
+    Logger.log('Original: ' + file.getName() + ' (' + fileSize + ' bytes, ' + mimeType + ')');
+
+    // Claude's API limit is 5MB for base64 images
+    // Target 4MB to leave room for base64 encoding overhead (~33% increase)
+    const MAX_SIZE = 4 * 1024 * 1024; // 4MB
+
+    if (fileSize <= MAX_SIZE) {
+      // Image is small enough, use original
+      const base64 = Utilities.base64Encode(blob.getBytes());
+      return 'data:' + mimeType + ';base64,' + base64;
     }
 
-    // Convert to base64 and create data URL in one step
-    const base64 = Utilities.base64Encode(blob.getBytes());
-    const dataUrl = 'data:' + mimeType + ';base64,' + base64;
+    // Image too large - compress using Drive thumbnail API
+    Logger.log('File too large (' + (fileSize/1024/1024).toFixed(2) + 'MB), fetching compressed thumbnail...');
+    
+    const driveFile = Drive.Files.get(fileId, { fields: 'thumbnailLink' });
+    
+    if (driveFile.thumbnailLink) {
+      // Request largest thumbnail (1600px) - usually sufficient for medical reports
+      const thumbnailUrl = driveFile.thumbnailLink.replace(/=s\d+/, '=s1600');
+      
+      const response = UrlFetchApp.fetch(thumbnailUrl, {
+        headers: { 'Authorization': 'Bearer ' + ScriptApp.getOAuthToken() },
+        muteHttpExceptions: true
+      });
+      
+      if (response.getResponseCode() === 200) {
+        blob = response.getBlob();
+        fileSize = blob.getBytes().length;
+        Logger.log('Compressed to: ' + (fileSize/1024/1024).toFixed(2) + 'MB');
+        
+        // Verify it's now under limit
+        if (fileSize > 5 * 1024 * 1024) {
+          throw new Error('Image still too large after compression (' + (fileSize/1024/1024).toFixed(1) + 'MB). Please upload a smaller image.');
+        }
+        
+        const base64 = Utilities.base64Encode(blob.getBytes());
+        return 'data:' + blob.getContentType() + ';base64,' + base64;
+      } else {
+        Logger.log('Thumbnail fetch failed: ' + response.getResponseCode());
+      }
+    }
 
-    Logger.log('Drive download: ' + file.getName() + ' (' + fileSize + ' bytes)');
-
-    return dataUrl;
+    // Fallback error if compression failed
+    throw new Error('Image too large (' + (fileSize/1024/1024).toFixed(1) + 'MB > 4MB limit). Please upload a smaller image or take a lower resolution photo.');
 
   } catch (error) {
     Logger.log('Drive download error: ' + error.toString());
-    return null;
+    throw error; // Re-throw to show user the actual error
   }
 }
 
