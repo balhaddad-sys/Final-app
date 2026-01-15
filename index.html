@@ -6,12 +6,624 @@
   <meta name="description" content="MedWard Master - Professional AI-Powered Medical Report Analysis">
   <title>MedWard Master | AI Medical Analysis Platform</title>
   
-  <!-- Only load the prestigious styles -->
-  <link rel="stylesheet" href="css/styles.css">
-  
-  <!-- Fonts are imported in CSS, but preconnect for speed -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- ALL STYLES EMBEDDED - NO EXTERNAL CSS -->
+  <style>
+    /* ==================== CSS Variables ==================== */
+    :root {
+      --obsidian: #1a1a1f;
+      --charcoal: #2d2d35;
+      --graphite: #3d3d47;
+      --slate: #52525e;
+      --silver: #9898a3;
+      --platinum: #c8c8d0;
+      --pearl: #e8e8ec;
+      --ivory: #f5f5f7;
+      --pure-white: #ffffff;
+      --gold: #c9a962;
+      --gold-light: #dfc078;
+      --gold-dark: #a68b4b;
+      --gold-muted: rgba(201, 169, 98, 0.15);
+      --emerald: #2d8a6e;
+      --emerald-muted: rgba(45, 138, 110, 0.12);
+      --ruby: #c45c5c;
+      --ruby-muted: rgba(196, 92, 92, 0.12);
+      --sapphire: #5c7cc4;
+      --sapphire-muted: rgba(92, 124, 196, 0.12);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+      --text-xs: 0.75rem;
+      --text-sm: 0.8125rem;
+      --text-base: 0.9375rem;
+      --text-lg: 1.0625rem;
+      --text-xl: 1.25rem;
+      --text-2xl: 1.625rem;
+      --text-3xl: 2.25rem;
+      --text-4xl: 3rem;
+      --space-xs: 0.375rem;
+      --space-sm: 0.75rem;
+      --space-md: 1.25rem;
+      --space-lg: 2rem;
+      --space-xl: 3rem;
+      --space-2xl: 5rem;
+      --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.06);
+      --shadow-medium: 0 8px 40px rgba(0, 0, 0, 0.08);
+      --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.12);
+      --shadow-gold: 0 4px 20px rgba(201, 169, 98, 0.2);
+      --border-hairline: 1px solid rgba(0, 0, 0, 0.06);
+      --border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 20px;
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    
+    body {
+      font-family: var(--font-body) !important;
+      font-size: var(--text-base) !important;
+      line-height: 1.6 !important;
+      color: var(--charcoal) !important;
+      background: var(--ivory) !important;
+      min-height: 100vh;
+    }
+
+    ::selection { background: var(--gold-muted); color: var(--obsidian); }
+
+    h1, h2, h3, h4 {
+      font-family: var(--font-display) !important;
+      font-weight: 600 !important;
+      color: var(--obsidian) !important;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    p { color: var(--slate); line-height: 1.7; }
+
+    /* Navigation */
+    .navbar {
+      background: var(--pure-white) !important;
+      border-bottom: var(--border-hairline) !important;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 72px;
+    }
+
+    .nav-brand { display: flex; align-items: center; gap: var(--space-md); }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--obsidian) !important;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold) !important;
+      transition: var(--transition-smooth);
+    }
+
+    .brand-icon:hover { background: var(--charcoal) !important; }
+    .brand-icon svg { width: 22px; height: 22px; stroke-width: 1.5; }
+
+    .brand-text, .brand-info { display: flex; flex-direction: column; }
+
+    .brand-name {
+      font-family: var(--font-display) !important;
+      font-size: var(--text-xl) !important;
+      font-weight: 600 !important;
+      color: var(--obsidian) !important;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+
+    .brand-tagline {
+      font-size: var(--text-xs) !important;
+      color: var(--silver) !important;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .nav-user { display: flex; align-items: center; gap: var(--space-md); }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%) !important;
+      color: var(--pure-white) !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: var(--text-base);
+    }
+
+    .user-name { font-size: var(--text-sm); font-weight: 500; color: var(--charcoal); }
+
+    .btn-logout {
+      padding: var(--space-sm) var(--space-md);
+      background: transparent !important;
+      border: var(--border-subtle) !important;
+      border-radius: var(--radius-md);
+      color: var(--slate) !important;
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .btn-logout:hover {
+      background: var(--pearl) !important;
+      color: var(--charcoal) !important;
+    }
+
+    /* Main Layout */
+    .main-container { min-height: calc(100vh - 72px); }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* Login */
+    .login-wrapper {
+      min-height: calc(100vh - 72px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+      background: linear-gradient(180deg, var(--ivory) 0%, var(--pearl) 100%) !important;
+    }
+
+    .login-card {
+      background: var(--pure-white) !important;
+      border-radius: var(--radius-xl) !important;
+      box-shadow: var(--shadow-elevated) !important;
+      padding: var(--space-2xl) var(--space-xl);
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .login-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto var(--space-lg);
+      background: var(--obsidian) !important;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold) !important;
+    }
+
+    .login-icon svg { width: 36px; height: 36px; stroke-width: 1.5; }
+    .login-header h2 { margin-bottom: var(--space-xs); }
+    .login-header p { font-size: var(--text-base); margin-bottom: var(--space-xl); }
+    .login-form { margin-bottom: var(--space-lg); }
+    .login-footer { padding-top: var(--space-lg); border-top: var(--border-hairline); }
+    .login-footer p { font-size: var(--text-sm); color: var(--silver); }
+
+    /* Form Elements */
+    .form-group, .form-field { margin-bottom: var(--space-md); text-align: left; }
+
+    .form-label, .form-field label {
+      display: block;
+      font-size: var(--text-sm) !important;
+      font-weight: 500 !important;
+      color: var(--charcoal) !important;
+      margin-bottom: var(--space-xs);
+    }
+
+    .form-input, .form-select, .form-textarea,
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: var(--space-sm) var(--space-md) !important;
+      font-family: var(--font-body) !important;
+      font-size: var(--text-base) !important;
+      color: var(--charcoal) !important;
+      background: var(--ivory) !important;
+      border: var(--border-subtle) !important;
+      border-radius: var(--radius-md) !important;
+      transition: var(--transition-fast);
+    }
+
+    .form-input:focus, input[type="text"]:focus, select:focus, textarea:focus {
+      outline: none;
+      background: var(--pure-white) !important;
+      border-color: var(--gold) !important;
+      box-shadow: 0 0 0 3px var(--gold-muted) !important;
+    }
+
+    .form-input::placeholder, input::placeholder { color: var(--silver); }
+    .form-textarea, textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+
+    /* Buttons */
+    .btn, button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
+      font-family: var(--font-body) !important;
+      font-size: var(--text-sm) !important;
+      font-weight: 500 !important;
+      border-radius: var(--radius-md) !important;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary, #login-btn, #analyze-btn, #analyze-text-btn {
+      background: var(--obsidian) !important;
+      color: var(--pure-white) !important;
+      padding: var(--space-md) var(--space-xl) !important;
+    }
+
+    .btn-primary:hover, #login-btn:hover, #analyze-btn:hover, #analyze-text-btn:hover {
+      background: var(--charcoal) !important;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%) !important;
+      color: var(--pure-white) !important;
+      padding: var(--space-md) var(--space-xl);
+    }
+
+    .btn-gold:hover { box-shadow: var(--shadow-gold); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: var(--pure-white) !important;
+      color: var(--charcoal) !important;
+      border: var(--border-subtle) !important;
+    }
+
+    .btn-secondary:hover {
+      background: var(--ivory) !important;
+      border-color: var(--platinum) !important;
+    }
+
+    .btn:disabled, button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-block { width: 100%; }
+
+    /* Dashboard */
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-xl) var(--space-lg);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+    }
+
+    .dashboard-panel {
+      background: var(--pure-white) !important;
+      border-radius: var(--radius-lg) !important;
+      box-shadow: var(--shadow-soft) !important;
+      padding: var(--space-lg) !important;
+      border: var(--border-hairline) !important;
+    }
+
+    .panel-header {
+      margin-bottom: var(--space-lg);
+      padding-bottom: var(--space-md);
+      border-bottom: var(--border-hairline);
+    }
+
+    .panel-header-flex { display: flex; align-items: center; gap: var(--space-md); }
+
+    .panel-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gold-muted) !important;
+      color: var(--gold-dark) !important;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .panel-icon svg { width: 24px; height: 24px; stroke-width: 1.5; }
+
+    .panel-header h3 {
+      font-family: var(--font-display) !important;
+      font-size: var(--text-2xl) !important;
+      font-weight: 600 !important;
+      color: var(--obsidian) !important;
+      margin-bottom: 2px;
+    }
+
+    .panel-header p { font-size: var(--text-sm); color: var(--silver); }
+
+    /* Upload Tabs */
+    .upload-tabs {
+      display: flex;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-lg);
+      background: var(--ivory) !important;
+      padding: 4px;
+      border-radius: var(--radius-md);
+    }
+
+    .upload-tab {
+      flex: 1;
+      padding: var(--space-sm) var(--space-md);
+      background: transparent !important;
+      border: none !important;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--slate) !important;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+    }
+
+    .upload-tab:hover { color: var(--charcoal) !important; }
+
+    .upload-tab.active {
+      background: var(--pure-white) !important;
+      color: var(--obsidian) !important;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .upload-content { display: none; }
+    .upload-content.active { display: block; }
+
+    /* Dropzone */
+    .dropzone, .upload-zone {
+      border: 2px dashed var(--platinum) !important;
+      border-radius: var(--radius-lg) !important;
+      padding: var(--space-2xl) var(--space-lg) !important;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      background: var(--ivory) !important;
+    }
+
+    .dropzone:hover, .upload-zone:hover {
+      border-color: var(--gold) !important;
+      background: var(--gold-muted) !important;
+    }
+
+    .dropzone-icon, .upload-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-md);
+      background: var(--pure-white) !important;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold) !important;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .dropzone h4, .upload-text {
+      font-family: var(--font-display) !important;
+      font-size: var(--text-xl) !important;
+      color: var(--charcoal) !important;
+      margin-bottom: var(--space-xs);
+    }
+
+    .dropzone p, .upload-hint { font-size: var(--text-sm); color: var(--silver); }
+
+    /* Results Panel */
+    .results-panel { display: none; grid-column: 1 / -1; }
+    .results-panel.active { display: block; }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-lg);
+      padding-bottom: var(--space-md);
+      border-bottom: var(--border-hairline);
+    }
+
+    .results-header h3 {
+      font-family: var(--font-display) !important;
+      font-size: var(--text-3xl) !important;
+      color: var(--obsidian) !important;
+    }
+
+    .panel-actions { display: flex; align-items: center; gap: var(--space-sm); }
+
+    /* View Toggle */
+    .view-toggle {
+      display: inline-flex;
+      background: var(--ivory) !important;
+      border-radius: var(--radius-md);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .view-toggle button, .toggle-btn, .view-toggle-btn {
+      padding: var(--space-sm) var(--space-md) !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: var(--radius-sm) !important;
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--slate) !important;
+      cursor: pointer;
+    }
+
+    .view-toggle button:hover, .toggle-btn:hover, .view-toggle-btn:hover {
+      color: var(--charcoal) !important;
+    }
+
+    .view-toggle button.active, .toggle-btn.active, .view-toggle-btn.active {
+      background: var(--pure-white) !important;
+      color: var(--obsidian) !important;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    /* Processing Overlay */
+    .processing-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 26, 31, 0.8) !important;
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .processing-overlay.active { display: flex; }
+
+    .processing-card {
+      background: var(--pure-white) !important;
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+      text-align: center;
+      max-width: 400px;
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .processing-spinner {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-lg);
+      border: 3px solid var(--pearl);
+      border-top-color: var(--gold) !important;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .processing-card h3, .processing-title {
+      font-family: var(--font-display) !important;
+      font-size: var(--text-2xl) !important;
+      color: var(--obsidian) !important;
+      margin-bottom: var(--space-xs);
+    }
+
+    .processing-card p, .processing-text { font-size: var(--text-sm); color: var(--silver); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      background: var(--obsidian) !important;
+      color: var(--pure-white) !important;
+      padding: var(--space-md) var(--space-lg);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-elevated);
+      font-size: var(--text-sm);
+      z-index: 1100;
+      transform: translateX(150%);
+      transition: var(--transition-smooth);
+    }
+
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left: 4px solid var(--emerald); }
+    .toast.error { border-left: 4px solid var(--ruby); }
+
+    /* Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .metric-card {
+      background: var(--ivory) !important;
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      text-align: center;
+      border: var(--border-hairline);
+    }
+
+    .metric-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto var(--space-md);
+      background: var(--gold-muted) !important;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-dark) !important;
+    }
+
+    .metric-value {
+      font-family: var(--font-display) !important;
+      font-size: var(--text-3xl) !important;
+      font-weight: 700;
+      color: var(--obsidian) !important;
+      margin-bottom: var(--space-xs);
+    }
+
+    .metric-label {
+      font-size: var(--text-xs);
+      color: var(--silver);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Status Badges */
+    .status-critical { background: var(--ruby-muted) !important; color: var(--ruby) !important; }
+    .status-warning { background: var(--gold-muted) !important; color: var(--gold-dark) !important; }
+    .status-normal, .status-stable { background: var(--emerald-muted) !important; color: var(--emerald) !important; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .dashboard-container { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-container { padding: 0 var(--space-md); height: 64px; }
+      .brand-tagline { display: none; }
+      .dashboard-container { padding: var(--space-md); }
+      .dashboard-panel { padding: var(--space-md); }
+    }
+
+    @media (max-width: 480px) {
+      .login-card { padding: var(--space-lg); }
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up { animation: fadeInUp 0.5s ease; }
+  </style>
 </head>
 <body>
 
@@ -25,19 +637,16 @@
             <path d="M12 8v8M8 12h8"/>
           </svg>
         </div>
-        <div class="brand-text">
-          <span class="brand-name">MedWard Master</span>
+        <div class="brand-info">
+          <h1 class="brand-name">MedWard Master</h1>
           <span class="brand-tagline">Clinical Intelligence</span>
         </div>
       </div>
       <div class="nav-user" id="nav-user" style="display: none;">
-        <div class="user-info">
-          <span class="user-name" id="user-name">User</span>
-          <span class="user-role">Physician</span>
-        </div>
         <div class="user-avatar">
           <span id="user-initial">U</span>
         </div>
+        <span class="user-name" id="user-name">User</span>
         <button class="btn-logout" id="logout-btn">Sign Out</button>
       </div>
     </div>
@@ -61,12 +670,12 @@
             <p>Clinical-Grade AI Medical Analysis</p>
           </div>
           <div class="login-form">
-            <div class="form-group">
-              <label class="form-label">Username</label>
-              <input type="text" id="username-input" class="form-input" placeholder="Enter your username" autocomplete="off">
+            <div class="form-field">
+              <label>Username</label>
+              <input type="text" id="username-input" placeholder="Enter your username" autocomplete="off">
             </div>
-            <button class="btn btn-gold btn-block" id="login-btn" style="width: 100%; margin-top: 1rem;">
-              Sign In
+            <button class="btn-primary btn-block" id="login-btn">
+              <span>Sign In</span>
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                 <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
@@ -88,150 +697,110 @@
           <div class="panel-header">
             <div class="panel-header-flex">
               <div class="panel-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M9 12l2 2 4-4"/>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="16" height="16" rx="2"/>
+                  <path d="M7 10l3 3 6-6"/>
                 </svg>
               </div>
               <div>
-                <h3 class="panel-title">New Analysis</h3>
-                <p class="panel-subtitle">Upload medical reports for AI interpretation</p>
+                <h3>New Analysis</h3>
+                <p>Upload medical reports for clinical interpretation</p>
               </div>
             </div>
           </div>
 
           <div class="upload-tabs">
             <button class="upload-tab active" data-tab="image">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="2.5" y="2.5" width="15" height="15" rx="2"/>
-                <path d="M2.5 13.75L6.25 10L9.375 13.125L13.75 8.75L17.5 12.5"/>
-                <circle cx="7" cy="7" r="1.5"/>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M2.5 13.75L6.25 10L9.375 13.125L13.75 8.75L17.5 12.5" stroke="currentColor" stroke-width="1.5"/>
+                <rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/>
               </svg>
-              <span>Image</span>
+              <span>Image Upload</span>
             </button>
             <button class="upload-tab" data-tab="text">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M5 7.5H15M5 10H15M5 12.5H11" stroke-linecap="round"/>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M5 7.5H15M5 10H15M5 12.5H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
-              <span>Text</span>
+              <span>Text Input</span>
             </button>
           </div>
 
           <!-- Image Upload Tab -->
           <div class="upload-content active" data-content="image">
-            <div class="upload-zone" id="dropzone">
+            <div class="dropzone" id="dropzone">
               <input type="file" id="file-input" multiple accept="image/*,.pdf" hidden>
-              <div class="upload-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
+              <div class="dropzone-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M3 16l5-5 5 5 7-7"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
                 </svg>
               </div>
-              <p class="upload-text">Drop files here or click to browse</p>
-              <p class="upload-hint">Supports JPG, PNG, PDF • Max 10MB</p>
-            </div>
-
-            <div class="upload-preview" id="upload-preview">
-              <img id="preview-image" class="preview-image" src="" alt="Preview">
-              <p id="preview-name" class="preview-name"></p>
+              <h4>Drop images here or click to browse</h4>
+              <p>Supports JPG, PNG, PDF • Max 10MB per file</p>
+              <button class="btn-secondary btn-browse">Browse Files</button>
             </div>
 
             <div class="file-list" id="file-list"></div>
 
-            <div class="form-group" style="margin-top: 1.5rem;">
-              <label class="form-label">Report Type</label>
-              <select id="report-type" class="form-input">
-                <option value="lab">Laboratory Results</option>
-                <option value="imaging">Imaging Report</option>
-                <option value="pathology">Pathology Report</option>
-                <option value="general">General Medical Report</option>
-              </select>
+            <div class="form-field" style="margin-top: 1.5rem;">
+              <label>Report Type</label>
+              <div class="select-wrapper">
+                <select id="report-type" class="form-select">
+                  <option value="lab">Laboratory Results</option>
+                  <option value="imaging">Imaging Report (X-ray, CT, MRI)</option>
+                  <option value="pathology">Pathology Report</option>
+                  <option value="general">General Medical Report</option>
+                </select>
+              </div>
             </div>
 
-            <button class="btn btn-primary" id="analyze-btn" disabled style="width: 100%; margin-top: 1rem;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
+            <button class="btn-primary btn-block btn-analyze" id="analyze-btn" disabled style="margin-top: 1rem;">
+              <span>Analyze with AI</span>
+              <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
-              Analyze with AI
             </button>
           </div>
 
           <!-- Text Input Tab -->
           <div class="upload-content" data-content="text">
-            <div class="form-group">
-              <label class="form-label">Paste Medical Report</label>
-              <textarea id="text-input" class="form-input form-textarea" placeholder="Paste your medical report text here...
+            <div class="form-field">
+              <label>Paste Medical Report Text</label>
+              <textarea id="text-input" class="form-textarea" placeholder="Paste your medical report text here...
 
 Example:
-Hemoglobin: 12.5 g/dL (L)
+Hemoglobin: 12.5 g/dL
 WBC: 7.2 K/uL
-Creatinine: 1.8 mg/dL (H)
-..." rows="10"></textarea>
+Platelets: 250 K/uL
+..." rows="12"></textarea>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Report Type</label>
-              <select id="report-type-text" class="form-input">
-                <option value="lab">Laboratory Results</option>
-                <option value="imaging">Imaging Report</option>
-                <option value="pathology">Pathology Report</option>
-                <option value="general">General Medical Report</option>
-              </select>
+            <div class="form-field">
+              <label>Report Type</label>
+              <div class="select-wrapper">
+                <select id="report-type-text" class="form-select">
+                  <option value="lab">Laboratory Results</option>
+                  <option value="imaging">Imaging Report</option>
+                  <option value="pathology">Pathology Report</option>
+                  <option value="general">General Medical Report</option>
+                </select>
+              </div>
             </div>
 
-            <button class="btn btn-primary" id="analyze-text-btn" style="width: 100%; margin-top: 1rem;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
+            <button class="btn-primary btn-block" id="analyze-text-btn" style="margin-top: 1rem;">
+              <span>Analyze Text</span>
+              <svg class="btn-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
-              Analyze Text
             </button>
           </div>
-        </div>
 
-        <!-- Quick Actions Panel -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <div class="panel-header-flex">
-              <div class="panel-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="panel-title">Quick Actions</h3>
-                <p class="panel-subtitle">Common analysis templates</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="doc-type-grid">
-            <div class="doc-type-option" data-type="lab">
-              <div class="doc-type-icon">🧪</div>
-              <div class="doc-type-label">Lab Panel</div>
-            </div>
-            <div class="doc-type-option" data-type="imaging">
-              <div class="doc-type-icon">📷</div>
-              <div class="doc-type-label">Imaging</div>
-            </div>
-            <div class="doc-type-option" data-type="pathology">
-              <div class="doc-type-icon">🔬</div>
-              <div class="doc-type-label">Pathology</div>
-            </div>
-            <div class="doc-type-option" data-type="general">
-              <div class="doc-type-icon">📋</div>
-              <div class="doc-type-label">General</div>
-            </div>
-          </div>
-
-          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.06);">
-            <p class="panel-subtitle" style="margin-bottom: 0.75rem;">Analysis Modes</p>
-            <div class="view-toggle" style="width: 100%;">
-              <button class="view-toggle-btn active" data-mode="detailed">Detailed Report</button>
-              <button class="view-toggle-btn" data-mode="ward">Ward Presentation</button>
-            </div>
+          <!-- Processing State -->
+          <div class="processing-state" id="processing-state" style="display: none;">
+            <div class="processing-spinner"></div>
+            <h4>Analyzing Report</h4>
+            <p id="processing-status">Initializing AI engine...</p>
           </div>
         </div>
 
@@ -239,99 +808,80 @@ Creatinine: 1.8 mg/dL (H)
         <div class="dashboard-panel results-panel" id="results-panel">
           <div class="results-header">
             <div>
-              <h3 class="results-title">Analysis Results</h3>
-              <p class="results-meta" id="analysis-timestamp">Completed at --:--</p>
+              <h3>Analysis Results</h3>
+              <p id="analysis-timestamp">Completed at --:--</p>
             </div>
             <div class="panel-actions">
               <div class="view-toggle">
-                <button class="view-toggle-btn active" data-view="detailed">Detailed</button>
-                <button class="view-toggle-btn" data-view="ward">Ward</button>
+                <button class="toggle-btn active" data-view="detailed">Detailed</button>
+                <button class="toggle-btn" data-view="ward">Ward Presentation</button>
               </div>
-              <button class="btn btn-icon" id="print-btn" title="Print">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                  <rect x="6" y="14" width="12" height="8"/>
-                </svg>
-              </button>
-              <button class="btn btn-secondary" id="new-analysis-btn">New Analysis</button>
+              <button class="btn-secondary" id="new-analysis-btn">New Analysis</button>
             </div>
           </div>
 
-          <!-- Detailed View -->
           <div class="results-view" id="detailed-view">
             <div class="results-grid" id="results-content"></div>
           </div>
 
-          <!-- Ward Presentation View -->
           <div class="results-view" id="ward-view" style="display: none;">
-            <div class="ward-document" id="ward-content"></div>
+            <div class="ward-presentation" id="ward-content"></div>
           </div>
         </div>
 
         <!-- Metrics Panel -->
-        <div class="dashboard-panel" id="metrics-panel" style="display: none; grid-column: 1 / -1;">
+        <div class="dashboard-panel metrics-panel" id="metrics-panel" style="display: none; grid-column: 1 / -1;">
           <div class="panel-header">
-            <div class="panel-header-flex">
-              <div class="panel-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                  <line x1="12" y1="22.08" x2="12" y2="12"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="panel-title">Neural Intelligence</h3>
-                <p class="panel-subtitle">Self-learning system metrics</p>
-              </div>
+            <div>
+              <h3>Neural Intelligence Metrics</h3>
+              <p>Self-learning system performance</p>
             </div>
-            <button class="btn btn-secondary" id="reset-metrics-btn">Reset</button>
+            <button class="btn-secondary" id="reset-metrics-btn">Reset</button>
           </div>
 
-          <div class="metrics-grid" style="margin-top: 1.5rem;">
+          <div class="metrics-grid">
             <div class="metric-card">
               <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M9 12l2 2 4-4"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                 </svg>
               </div>
-              <div class="metric-value" id="metric-total">0</div>
               <div class="metric-label">Total Analyses</div>
+              <div class="metric-value" id="metric-total">0</div>
             </div>
 
             <div class="metric-card">
               <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                 </svg>
               </div>
-              <div class="metric-value" id="metric-cache">0%</div>
               <div class="metric-label">Cache Hit Rate</div>
+              <div class="metric-value" id="metric-cache">0%</div>
             </div>
 
             <div class="metric-card">
               <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12 6 12 12 16 14"/>
                 </svg>
               </div>
-              <div class="metric-value" id="metric-local-speed">0ms</div>
               <div class="metric-label">Avg Speed</div>
+              <div class="metric-value" id="metric-local-speed">0ms</div>
             </div>
 
             <div class="metric-card">
               <div class="metric-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                 </svg>
               </div>
+              <div class="metric-label">Learned Patterns</div>
               <div class="metric-value" id="metric-patterns">0</div>
-              <div class="metric-label">Patterns Learned</div>
             </div>
           </div>
         </div>
-
       </div>
     </section>
 
@@ -341,13 +891,13 @@ Creatinine: 1.8 mg/dL (H)
   <div class="processing-overlay" id="processing-overlay">
     <div class="processing-card">
       <div class="processing-spinner"></div>
-      <h3 class="processing-title">Analyzing Report</h3>
-      <p class="processing-text" id="processing-status">Initializing AI engine...</p>
+      <h3>Analyzing Report</h3>
+      <p id="overlay-status">Processing with AI...</p>
     </div>
   </div>
 
-  <!-- Toast Container -->
-  <div class="toast-container" id="toast-container"></div>
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
