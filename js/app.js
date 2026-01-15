@@ -1820,21 +1820,35 @@ function convertNeuralToDisplay(neuralResult, parsedData, meta) {
  * Update metrics display
  */
 function updateMetricsDisplay() {
-  if (!neuralSystem) return;
+  try {
+    if (!neuralSystem) return;
 
-  const metrics = neuralSystem.getMetrics();
+    const metrics = neuralSystem.getMetrics();
 
-  // Update metric values
-  document.getElementById('metric-total').textContent = metrics.total;
-  document.getElementById('metric-cache').textContent = metrics.cacheHitRate;
-  document.getElementById('metric-local-speed').textContent = metrics.avgLocalMs + 'ms';
-  document.getElementById('metric-api-speed').textContent = metrics.avgApiMs + 'ms';
-  document.getElementById('metric-patterns').textContent = metrics.patterns;
+    // Update metric values with null checks
+    const els = {
+      total: document.getElementById('metric-total'),
+      cache: document.getElementById('metric-cache'),
+      localSpeed: document.getElementById('metric-local-speed'),
+      apiSpeed: document.getElementById('metric-api-speed'),
+      patterns: document.getElementById('metric-patterns'),
+      savings: document.getElementById('metric-savings')
+    };
 
-  // Calculate estimated savings (assume $0.003 per API call)
-  const localCalls = parseInt(metrics.cacheHitRate) * metrics.total / 100;
-  const savings = (localCalls * 0.003).toFixed(2);
-  document.getElementById('metric-savings').textContent = `$${savings}`;
+    if (els.total) els.total.textContent = metrics.total;
+    if (els.cache) els.cache.textContent = metrics.cacheHitRate;
+    if (els.localSpeed) els.localSpeed.textContent = metrics.avgLocalMs + 'ms';
+    if (els.apiSpeed) els.apiSpeed.textContent = metrics.avgApiMs + 'ms';
+    if (els.patterns) els.patterns.textContent = metrics.patterns;
+
+    if (els.savings) {
+      const localCalls = parseInt(metrics.cacheHitRate) * metrics.total / 100;
+      const savings = (localCalls * 0.003).toFixed(2);
+      els.savings.textContent = `$${savings}`;
+    }
+  } catch (e) {
+    console.log('Metrics display not available');
+  }
 }
 
 /**
