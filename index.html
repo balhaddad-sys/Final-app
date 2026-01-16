@@ -962,77 +962,70 @@
 
     .modal-tabs {
       display: flex;
-      gap: 0;
-      padding: 0 1rem;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border-subtle);
+      gap: 0.25rem;
+      padding: 0.75rem 1rem;
+      background: rgba(10, 10, 15, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       flex-shrink: 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      backdrop-filter: blur(10px);
     }
 
     @media (min-width: 768px) {
       .modal-tabs {
-        padding: 0 2rem;
+        padding: 0.75rem 1.5rem;
+        gap: 0.5rem;
       }
     }
 
     .modal-tab {
-      padding: 0.875rem 1rem;
+      padding: 0.6rem 1rem;
       background: transparent;
       border: none;
-      border-bottom: 2px solid transparent;
+      border-radius: 8px;
       color: var(--text-muted);
       font-family: var(--font-body);
       font-size: 0.8rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s ease;
       position: relative;
       white-space: nowrap;
       flex-shrink: 0;
+      letter-spacing: 0.01em;
     }
 
     @media (min-width: 768px) {
       .modal-tab {
-        padding: 1rem 1.5rem;
-        font-size: 0.9rem;
+        padding: 0.7rem 1.25rem;
+        font-size: 0.85rem;
       }
     }
 
     .modal-tab.active {
-      color: var(--accent-gold);
-      border-bottom-color: var(--accent-gold);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
     .modal-tab:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.04);
       color: var(--text-secondary);
     }
 
-    /* Lab tab special styling */
+    /* Remove lab tab special styling dot - cleaner look */
     .modal-tab[data-view="labs"]::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0.5rem;
-      transform: translateY(-50%);
-      width: 6px;
-      height: 6px;
-      background: var(--accent-teal);
-      border-radius: 50%;
-      opacity: 0.7;
+      display: none;
     }
 
     .modal-tab[data-view="labs"] {
-      padding-left: 1.25rem;
+      padding-left: 1rem;
     }
 
     @media (min-width: 768px) {
-      .modal-tab[data-view="labs"]::before {
-        left: 0.75rem;
-      }
       .modal-tab[data-view="labs"] {
-        padding-left: 1.75rem;
+        padding-left: 1.25rem;
       }
     }
 
