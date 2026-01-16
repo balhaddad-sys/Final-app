@@ -1,6 +1,7 @@
 /**
- * MedWard Patient Manager v2.0
+ * MedWard Patient Manager v2.1
  * Professional ward patient management with Google Sheets integration
+ * Now with Patient Presentation modal support
  */
 
 (function() {
@@ -28,6 +29,7 @@
     }
 
     setupEventListeners();
+    setupPresentationModal();
 
     // Load data when patients tab is clicked
     const patientsTab = $('patients-tab');
@@ -69,6 +71,66 @@
         loadPatients();
       });
     });
+  }
+
+  // ========== PRESENTATION MODAL ==========
+  
+  function setupPresentationModal() {
+    // Close presentation modal
+    $('pres-modal-close')?.addEventListener('click', closePresentation);
+    
+    // Close on overlay click
+    $('pres-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'pres-modal') closePresentation();
+    });
+    
+    // Copy presentation text
+    $('pres-copy-btn')?.addEventListener('click', () => {
+      const container = $('pres-container');
+      if (container) {
+        navigator.clipboard.writeText(container.innerText).then(() => {
+          showToast('Copied to clipboard!', 'success');
+        }).catch(() => {
+          showToast('Failed to copy', 'error');
+        });
+      }
+    });
+  }
+
+  function openPresentation(patient) {
+    const modal = $('pres-modal');
+    const container = $('pres-container');
+    const nameEl = $('pres-patient-name');
+    
+    if (!modal || !container) return;
+    
+    // Set patient name in header
+    if (nameEl) nameEl.textContent = patient.patientName || 'Patient';
+    
+    // Parse and render using PatientPresentation
+    if (window.PatientPresentation) {
+      const parsed = PatientPresentation.parse(patient.diagnosis || '');
+      PatientPresentation.render(parsed, container);
+    } else {
+      container.innerHTML = `
+        <div class="pres-empty">
+          <p>Patient Presentation module not loaded</p>
+          <pre style="text-align: left; margin-top: 1rem; padding: 1rem; background: var(--surface); border-radius: 8px; white-space: pre-wrap;">${escapeHtml(patient.diagnosis || 'No clinical data')}</pre>
+        </div>
+      `;
+    }
+    
+    // Show modal
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePresentation() {
+    const modal = $('pres-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
   }
 
   // API Calls
@@ -234,132 +296,80 @@
         if (p) confirmDischarge(p);
       });
     });
+
+    // View Presentation buttons
+    grid.querySelectorAll('.btn-view').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = patients.find(x => x.rowIndex === parseInt(btn.dataset.row));
+        if (p) openPresentation(p);
+      });
+    });
   }
 
   function renderPatientCard(p) {
     const statusClass = p.section === 'chronic' ? 'chronic' : 'active';
-
-    // Parse the diagnosis field for clinical data
-    const clinicalData = window.ClinicalParser ?
-      ClinicalParser.parse(p.diagnosis + ' ' + (p.notes || '')) : null;
-
-    let clinicalSections = '';
-
-    if (clinicalData && clinicalData.hasData) {
-      // Medications section
-      if (clinicalData.medications.length > 0) {
-        const medsByCategory = {};
-        clinicalData.medications.forEach(med => {
-          if (!medsByCategory[med.category]) {
-            medsByCategory[med.category] = {
-              info: med.categoryInfo,
-              meds: []
-            };
-          }
-          medsByCategory[med.category].meds.push(med);
+    
+    // Quick preview of key data from diagnosis
+    let quickPreview = '';
+    if (p.diagnosis && window.PatientPresentation) {
+      const parsed = PatientPresentation.parse(p.diagnosis);
+      
+      // Show PMH badges
+      if (parsed.pmh && parsed.pmh.conditions.length > 0) {
+        const icons = { DM: '🩸', HTN: '💉', IHD: '❤️', HF: '💔', CKD: '🫘', AF: '💗', CVA: '🧠', COPD: '🫁' };
+        quickPreview += '<div class="quick-pmh">';
+        parsed.pmh.conditions.slice(0, 5).forEach(c => {
+          quickPreview += `<span class="pmh-badge" title="${c}">${icons[c] || '•'}</span>`;
         });
-
-        clinicalSections += `
-          <div class="clinical-section meds-section">
-            <div class="section-label">
-              <span class="section-icon">💊</span>
-              Medications (${clinicalData.medications.length})
-            </div>
-            <div class="meds-grid">
-              ${Object.entries(medsByCategory).map(([cat, data]) => `
-                <div class="med-category" style="border-left-color: ${data.info.color}">
-                  <span class="med-category-label">${data.info.icon} ${cat}</span>
-                  <div class="med-list">
-                    ${data.meds.map(m => `
-                      <span class="med-pill" style="background: ${data.info.color}20; color: ${data.info.color}">
-                        ${m.name}${m.dose ? ` <small>${m.dose}</small>` : ''}
-                      </span>
-                    `).join('')}
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
+        quickPreview += '</div>';
       }
-
-      // Labs section
-      if (Object.keys(clinicalData.labs).length > 0) {
-        clinicalSections += `
-          <div class="clinical-section labs-section">
-            <div class="section-label">
-              <span class="section-icon">🔬</span>
-              Lab Results
-            </div>
-            <div class="labs-grid">
-              ${Object.entries(clinicalData.labs).map(([key, category]) => `
-                <div class="lab-category">
-                  <div class="lab-category-header" style="color: ${category.color}">
-                    ${category.icon} ${category.shortName}
-                  </div>
-                  <div class="lab-values">
-                    ${category.results.map(lab => `
-                      <div class="lab-item ${lab.status}">
-                        <span class="lab-name">${lab.name}</span>
-                        <span class="lab-value">${lab.value}${lab.unit ? ` ${lab.unit}` : ''}</span>
-                        ${lab.flag ? `<span class="lab-flag ${lab.status}">${lab.flag}</span>` : ''}
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
+      
+      // Show critical vitals
+      if (parsed.vitals && Object.keys(parsed.vitals).length > 0) {
+        quickPreview += '<div class="quick-vitals">';
+        if (parsed.vitals.bp) {
+          const bpClass = parsed.vitals.bp.status !== 'normal' ? parsed.vitals.bp.status : '';
+          quickPreview += `<span class="qv-item ${bpClass}">BP ${parsed.vitals.bp.value}</span>`;
+        }
+        if (parsed.vitals.hr) {
+          const hrClass = parsed.vitals.hr.status !== 'normal' ? parsed.vitals.hr.status : '';
+          quickPreview += `<span class="qv-item ${hrClass}">HR ${parsed.vitals.hr.value}</span>`;
+        }
+        if (parsed.vitals.spo2) {
+          const spClass = parsed.vitals.spo2.status !== 'normal' ? parsed.vitals.spo2.status : '';
+          quickPreview += `<span class="qv-item ${spClass}">SpO2 ${parsed.vitals.spo2.value}%</span>`;
+        }
+        quickPreview += '</div>';
       }
-
-      // Vitals section
-      if (Object.keys(clinicalData.vitals).length > 0) {
-        clinicalSections += `
-          <div class="clinical-section vitals-section">
-            <div class="section-label">
-              <span class="section-icon">📊</span>
-              Vitals
-            </div>
-            <div class="vitals-row">
-              ${clinicalData.vitals.bp ? `
-                <div class="vital-item">
-                  <span class="vital-label">BP</span>
-                  <span class="vital-value">${clinicalData.vitals.bp.display}</span>
-                </div>
-              ` : ''}
-              ${clinicalData.vitals.hr ? `
-                <div class="vital-item">
-                  <span class="vital-label">HR</span>
-                  <span class="vital-value">${clinicalData.vitals.hr.display}</span>
-                </div>
-              ` : ''}
-              ${clinicalData.vitals.rr ? `
-                <div class="vital-item">
-                  <span class="vital-label">RR</span>
-                  <span class="vital-value">${clinicalData.vitals.rr.display}</span>
-                </div>
-              ` : ''}
-              ${clinicalData.vitals.temp ? `
-                <div class="vital-item">
-                  <span class="vital-label">Temp</span>
-                  <span class="vital-value">${clinicalData.vitals.temp.display}</span>
-                </div>
-              ` : ''}
-              ${clinicalData.vitals.spo2 ? `
-                <div class="vital-item">
-                  <span class="vital-label">SpO2</span>
-                  <span class="vital-value">${clinicalData.vitals.spo2.display}</span>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        `;
+      
+      // Show critical labs
+      if (parsed.labs) {
+        const criticalLabs = [];
+        for (const cat of Object.values(parsed.labs)) {
+          for (const lab of Object.values(cat)) {
+            if (lab.status === 'high' || lab.status === 'low') {
+              criticalLabs.push({ name: lab.name, value: lab.value, status: lab.status });
+            }
+          }
+        }
+        if (criticalLabs.length > 0) {
+          quickPreview += '<div class="quick-labs">';
+          criticalLabs.slice(0, 4).forEach(lab => {
+            quickPreview += `<span class="ql-item ${lab.status}">${lab.name} ${lab.value}</span>`;
+          });
+          quickPreview += '</div>';
+        }
       }
     }
 
+    // Truncate diagnosis for display
+    let diagnosisDisplay = p.diagnosis || '';
+    if (diagnosisDisplay.length > 100) {
+      diagnosisDisplay = diagnosisDisplay.substring(0, 100) + '...';
+    }
+
     return `
-      <div class="patient-card ${clinicalData?.hasData ? 'has-clinical-data' : ''}">
+      <div class="patient-card">
         <div class="patient-header">
           <div class="patient-info">
             ${p.roomBed ? `<span class="patient-room">${escapeHtml(p.roomBed)}</span>` : ''}
@@ -368,9 +378,9 @@
           <span class="patient-status ${statusClass}">${p.section === 'chronic' ? 'Chronic' : 'Active'}</span>
         </div>
 
-        ${p.diagnosis ? `<div class="patient-diagnosis">${escapeHtml(p.diagnosis)}</div>` : ''}
+        ${diagnosisDisplay ? `<div class="patient-diagnosis">${escapeHtml(diagnosisDisplay)}</div>` : ''}
 
-        ${clinicalSections}
+        ${quickPreview}
 
         <div class="patient-footer">
           <div class="patient-doctor">
@@ -381,6 +391,12 @@
             <span>${p.assignedDoctor || 'Unassigned'}</span>
           </div>
           <div class="patient-actions">
+            <button class="btn-icon btn-view" data-row="${p.rowIndex}" title="View Presentation">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
             <button class="btn-icon btn-edit" data-row="${p.rowIndex}" title="Edit">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -455,23 +471,11 @@
   async function handleSave(e) {
     e.preventDefault();
 
-    // Collect all clinical data
-    const diagnosisBase = $('patient-diagnosis')?.value || '';
-    const meds = $('patient-meds')?.value || '';
-    const labs = $('patient-labs')?.value || '';
-    const vitals = $('patient-vitals')?.value || '';
-
-    // Combine into diagnosis field for storage and parsing
-    let fullDiagnosis = diagnosisBase;
-    if (meds) fullDiagnosis += '. ' + meds;
-    if (labs) fullDiagnosis += '. ' + labs;
-    if (vitals) fullDiagnosis += '. ' + vitals;
-
     const data = {
       ward: $('patient-ward')?.value,
       roomBed: $('patient-room')?.value,
       patientName: $('patient-name')?.value,
-      diagnosis: fullDiagnosis.trim(),
+      diagnosis: $('patient-diagnosis')?.value?.trim() || '',
       assignedDoctor: $('patient-doctor')?.value,
       section: $('patient-section')?.value || 'active'
     };
@@ -578,6 +582,10 @@
   }
 
   // Expose
-  window.PatientManager = { refresh: loadAllData, openSheet: openGoogleSheet };
+  window.PatientManager = { 
+    refresh: loadAllData, 
+    openSheet: openGoogleSheet,
+    openPresentation: openPresentation
+  };
 
 })();
