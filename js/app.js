@@ -81,6 +81,18 @@
     // Logout
     addEvent(elements.logoutBtn, 'click', handleLogout);
     
+    // Navigation Tabs
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const screen = tab.dataset.screen;
+        if (screen) {
+          document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          showScreen(screen);
+        }
+      });
+    });
+
     // Upload Tabs
     document.querySelectorAll('.upload-tab').forEach(tab => {
       tab.addEventListener('click', () => switchUploadTab(tab.dataset.tab));
