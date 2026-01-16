@@ -115,6 +115,17 @@
       tab.addEventListener('click', () => switchModalView(tab.dataset.view));
     });
     
+    // Add Labs tab click handler
+    const labsTab = document.querySelector('.modal-tab[data-view="labs"]');
+    if (labsTab) {
+      labsTab.addEventListener('click', () => {
+        // Trigger re-render of labs view if needed
+        if (typeof ClinicalComponents !== 'undefined' && ClinicalComponents.currentLabValues) {
+          ClinicalComponents.renderLabsView(ClinicalComponents.currentLabValues);
+        }
+      });
+    }
+    
     // Keyboard
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && elements.resultsModal && elements.resultsModal.classList.contains('active')) {
@@ -762,10 +773,14 @@
       elements.modalTimestamp.textContent = new Date().toLocaleTimeString();
     }
     
+    // Determine if this was from an image upload
+    const isImage = uploadedFiles.length > 0;
+    
     // Render views
     if (typeof ClinicalComponents !== 'undefined') {
-      ClinicalComponents.renderDetailedView(results);
+      ClinicalComponents.renderDetailedView(results, isImage);
       ClinicalComponents.renderWardView(results);
+      // Labs view is rendered inside renderDetailedView
     } else {
       renderFallbackContent(results);
     }
@@ -775,6 +790,9 @@
       elements.resultsModal.classList.add('active');
       document.body.style.overflow = 'hidden';
     }
+    
+    // Activate detailed tab by default
+    switchModalView('detailed');
   }
 
   function renderFallbackContent(results) {
