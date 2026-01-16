@@ -239,8 +239,127 @@
   function renderPatientCard(p) {
     const statusClass = p.section === 'chronic' ? 'chronic' : 'active';
 
+    // Parse the diagnosis field for clinical data
+    const clinicalData = window.ClinicalParser ?
+      ClinicalParser.parse(p.diagnosis + ' ' + (p.notes || '')) : null;
+
+    let clinicalSections = '';
+
+    if (clinicalData && clinicalData.hasData) {
+      // Medications section
+      if (clinicalData.medications.length > 0) {
+        const medsByCategory = {};
+        clinicalData.medications.forEach(med => {
+          if (!medsByCategory[med.category]) {
+            medsByCategory[med.category] = {
+              info: med.categoryInfo,
+              meds: []
+            };
+          }
+          medsByCategory[med.category].meds.push(med);
+        });
+
+        clinicalSections += `
+          <div class="clinical-section meds-section">
+            <div class="section-label">
+              <span class="section-icon">💊</span>
+              Medications (${clinicalData.medications.length})
+            </div>
+            <div class="meds-grid">
+              ${Object.entries(medsByCategory).map(([cat, data]) => `
+                <div class="med-category" style="border-left-color: ${data.info.color}">
+                  <span class="med-category-label">${data.info.icon} ${cat}</span>
+                  <div class="med-list">
+                    ${data.meds.map(m => `
+                      <span class="med-pill" style="background: ${data.info.color}20; color: ${data.info.color}">
+                        ${m.name}${m.dose ? ` <small>${m.dose}</small>` : ''}
+                      </span>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // Labs section
+      if (Object.keys(clinicalData.labs).length > 0) {
+        clinicalSections += `
+          <div class="clinical-section labs-section">
+            <div class="section-label">
+              <span class="section-icon">🔬</span>
+              Lab Results
+            </div>
+            <div class="labs-grid">
+              ${Object.entries(clinicalData.labs).map(([key, category]) => `
+                <div class="lab-category">
+                  <div class="lab-category-header" style="color: ${category.color}">
+                    ${category.icon} ${category.shortName}
+                  </div>
+                  <div class="lab-values">
+                    ${category.results.map(lab => `
+                      <div class="lab-item ${lab.status}">
+                        <span class="lab-name">${lab.name}</span>
+                        <span class="lab-value">${lab.value}${lab.unit ? ` ${lab.unit}` : ''}</span>
+                        ${lab.flag ? `<span class="lab-flag ${lab.status}">${lab.flag}</span>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // Vitals section
+      if (Object.keys(clinicalData.vitals).length > 0) {
+        clinicalSections += `
+          <div class="clinical-section vitals-section">
+            <div class="section-label">
+              <span class="section-icon">📊</span>
+              Vitals
+            </div>
+            <div class="vitals-row">
+              ${clinicalData.vitals.bp ? `
+                <div class="vital-item">
+                  <span class="vital-label">BP</span>
+                  <span class="vital-value">${clinicalData.vitals.bp.display}</span>
+                </div>
+              ` : ''}
+              ${clinicalData.vitals.hr ? `
+                <div class="vital-item">
+                  <span class="vital-label">HR</span>
+                  <span class="vital-value">${clinicalData.vitals.hr.display}</span>
+                </div>
+              ` : ''}
+              ${clinicalData.vitals.rr ? `
+                <div class="vital-item">
+                  <span class="vital-label">RR</span>
+                  <span class="vital-value">${clinicalData.vitals.rr.display}</span>
+                </div>
+              ` : ''}
+              ${clinicalData.vitals.temp ? `
+                <div class="vital-item">
+                  <span class="vital-label">Temp</span>
+                  <span class="vital-value">${clinicalData.vitals.temp.display}</span>
+                </div>
+              ` : ''}
+              ${clinicalData.vitals.spo2 ? `
+                <div class="vital-item">
+                  <span class="vital-label">SpO2</span>
+                  <span class="vital-value">${clinicalData.vitals.spo2.display}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }
+    }
+
     return `
-      <div class="patient-card">
+      <div class="patient-card ${clinicalData?.hasData ? 'has-clinical-data' : ''}">
         <div class="patient-header">
           <div class="patient-info">
             ${p.roomBed ? `<span class="patient-room">${escapeHtml(p.roomBed)}</span>` : ''}
@@ -250,6 +369,8 @@
         </div>
 
         ${p.diagnosis ? `<div class="patient-diagnosis">${escapeHtml(p.diagnosis)}</div>` : ''}
+
+        ${clinicalSections}
 
         <div class="patient-footer">
           <div class="patient-doctor">
@@ -334,11 +455,23 @@
   async function handleSave(e) {
     e.preventDefault();
 
+    // Collect all clinical data
+    const diagnosisBase = $('patient-diagnosis')?.value || '';
+    const meds = $('patient-meds')?.value || '';
+    const labs = $('patient-labs')?.value || '';
+    const vitals = $('patient-vitals')?.value || '';
+
+    // Combine into diagnosis field for storage and parsing
+    let fullDiagnosis = diagnosisBase;
+    if (meds) fullDiagnosis += '. ' + meds;
+    if (labs) fullDiagnosis += '. ' + labs;
+    if (vitals) fullDiagnosis += '. ' + vitals;
+
     const data = {
       ward: $('patient-ward')?.value,
       roomBed: $('patient-room')?.value,
       patientName: $('patient-name')?.value,
-      diagnosis: $('patient-diagnosis')?.value,
+      diagnosis: fullDiagnosis.trim(),
       assignedDoctor: $('patient-doctor')?.value,
       section: $('patient-section')?.value || 'active'
     };
