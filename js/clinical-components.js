@@ -1,6 +1,6 @@
 /**
- * MedWard Clinical Components v5.5 - Fixed JSON Display Bug
- * Properly extracts interpretation data from backend response
+ * MedWard Clinical Components v6.0 - Lab Differentiation Edition
+ * Enhanced rendering with lab vs clinical data separation
  */
 
 const ClinicalComponents = {
@@ -16,15 +16,12 @@ const ClinicalComponents = {
     calcium: { name: 'Calcium', min: 2.1, max: 2.6, unit: 'mmol/L', category: 'Electrolytes' },
     magnesium: { name: 'Magnesium', min: 0.73, max: 1.06, unit: 'mmol/L', category: 'Electrolytes' },
     phosphate: { name: 'Phosphate', min: 0.81, max: 1.45, unit: 'mmol/L', category: 'Electrolytes' },
-    urate: { name: 'Urate', min: 208, max: 428, unit: 'μmol/L', category: 'Metabolic' },
     alt: { name: 'ALT', min: 0, max: 41, unit: 'IU/L', category: 'Liver Function', critical: 500 },
     ast: { name: 'AST', min: 0, max: 40, unit: 'IU/L', category: 'Liver Function', critical: 500 },
     ggt: { name: 'GGT', min: 8, max: 61, unit: 'IU/L', category: 'Liver Function' },
     alkphos: { name: 'Alk Phos', min: 40, max: 129, unit: 'IU/L', category: 'Liver Function' },
     tbilirubin: { name: 'T. Bilirubin', min: 5, max: 21, unit: 'μmol/L', category: 'Liver Function' },
-    dbilirubin: { name: 'D. Bilirubin', min: 0, max: 3.4, unit: 'μmol/L', category: 'Liver Function' },
     albumin: { name: 'Albumin', min: 35, max: 52, unit: 'g/L', category: 'Liver Function' },
-    protein: { name: 'T. Protein', min: 66, max: 83, unit: 'g/L', category: 'Liver Function' },
     wbc: { name: 'WBC', min: 4.5, max: 11.0, unit: '×10⁹/L', category: 'Hematology' },
     hemoglobin: { name: 'Hemoglobin', min: 130, max: 170, unit: 'g/L', category: 'Hematology' },
     platelets: { name: 'Platelets', min: 150, max: 400, unit: '×10⁹/L', category: 'Hematology' },
@@ -32,152 +29,200 @@ const ClinicalComponents = {
     inr: { name: 'INR', min: 0.85, max: 1.15, unit: '', category: 'Coagulation' },
     aptt: { name: 'APTT', min: 25, max: 37, unit: 'sec', category: 'Coagulation' },
     troponin: { name: 'Troponin', min: 0, max: 19.8, unit: 'ng/L', category: 'Cardiac Markers', critical: 50 },
-    probnp: { name: 'NT-proBNP', min: 0, max: 125, unit: 'pg/ml', category: 'Cardiac Markers' },
     egfr: { name: 'eGFR', min: 60, max: 999, unit: 'mL/min', category: 'Renal Function' },
-    aniongap: { name: 'Anion Gap', min: 8, max: 16, unit: 'mmol/L', category: 'Electrolytes' },
     ph: { name: 'pH', min: 7.35, max: 7.45, unit: '', category: 'Blood Gas' },
     pco2: { name: 'pCO2', min: 35, max: 45, unit: 'mmHg', category: 'Blood Gas' },
     hco3: { name: 'HCO3', min: 22, max: 26, unit: 'mmol/L', category: 'Blood Gas' },
     lactate: { name: 'Lactate', min: 0.5, max: 2.2, unit: 'mmol/L', category: 'Blood Gas', critical: 4 }
   },
 
-  /**
-   * Extract clean text - removes JSON artifacts if present
-   */
+  currentLabValues: [],
+  currentDataClassification: null,
+
   cleanText(text) {
     if (!text || typeof text !== 'string') return '';
-    // If it looks like raw JSON, try to extract meaningful text
     if (text.trim().startsWith('```json') || text.trim().startsWith('{')) {
       try {
-        // Try to parse and extract summary
         const jsonStr = text.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(jsonStr);
         if (parsed.interpretation?.summary) return parsed.interpretation.summary;
         if (parsed.summary) return parsed.summary;
-      } catch (e) {
-        // Not valid JSON, return as-is but clean up
-      }
+      } catch (e) {}
     }
     return text;
   },
 
-  /**
-   * Get interpretation object from results - handles various response structures
-   */
   getInterpretation(results) {
-    // Direct interpretation object
-    if (results.interpretation && typeof results.interpretation === 'object') {
-      return results.interpretation;
-    }
-    // Nested in rawResponse
-    if (results.rawResponse?.interpretation && typeof results.rawResponse.interpretation === 'object') {
-      return results.rawResponse.interpretation;
-    }
-    // Try to parse if it's a string
+    if (results.interpretation && typeof results.interpretation === 'object') return results.interpretation;
+    if (results.rawResponse?.interpretation && typeof results.rawResponse.interpretation === 'object') return results.rawResponse.interpretation;
     if (typeof results.interpretation === 'string') {
-      try {
-        return JSON.parse(results.interpretation);
-      } catch (e) {}
+      try { return JSON.parse(results.interpretation); } catch (e) {}
     }
     return {};
   },
 
-  renderDetailedView(results) {
+  renderDetailedView(results, isImage = false) {
     const container = document.getElementById('detailed-view');
     if (!container) return;
     if (!results) { container.innerHTML = this.renderEmpty(); return; }
 
-    console.log('[MedWard v5.5] Full results:', results);
+    console.log('[MedWard v6.0] Rendering with data classification');
     this.injectStyles();
     
-    // Get interpretation object properly
+    const extractedText = results.extractedText || results.rawResponse?.extractedText || '';
+    
+    if (typeof MedWardDataClassifier !== 'undefined') {
+      this.currentDataClassification = MedWardDataClassifier.classify(extractedText, isImage);
+      console.log('[MedWard v6.0] Data classification:', this.currentDataClassification);
+    }
+
     const interp = this.getInterpretation(results);
-    console.log('[MedWard v5.5] Interpretation:', interp);
-    
-    // Get extractedText for lab parsing
-    const extractedText = results.extractedText || 
-                          results.rawResponse?.extractedText || '';
-    console.log('[MedWard v5.5] extractedText:', extractedText ? extractedText.length + ' chars' : 'NONE');
-    
-    // Extract labs from OCR text
     const aggressiveLabValues = this.aggressiveLabExtraction(extractedText);
     const { clinicalFindings, aiLabValues } = this.separateAIInterpretation(results, interp);
     const finalLabValues = this.mergeLabValues(aggressiveLabValues, aiLabValues);
     
-    console.log('[MedWard v5.5] Labs:', finalLabValues.length, 'Clinical:', clinicalFindings.length);
-    
+    this.currentLabValues = finalLabValues;
+    this.renderLabsView(finalLabValues);
+    this.updateLabsTabBadge(finalLabValues);
+
     let html = '<div class="elite-report">';
     
-    // HEADER - get clean text
+    if (this.currentDataClassification) {
+      html += this.renderDataTypeIndicator(this.currentDataClassification);
+    }
+    
     const severity = this.determineSeverity(results, finalLabValues, interp);
-    const header = this.cleanText(interp.header) || 
-                   this.cleanText(interp.summary)?.substring(0, 80) ||
-                   'Clinical Analysis';
+    const header = this.cleanText(interp.header) || this.cleanText(interp.summary)?.substring(0, 80) || 'Clinical Analysis';
     html += this.renderSeverityHeader(severity, header);
     
-    // SUMMARY
     const summary = this.cleanText(interp.summary);
     if (summary) html += this.renderExecutiveSummary(summary);
     
-    // ALERTS from interpretation
     const alerts = this.buildAlerts(interp, finalLabValues);
     if (alerts.length > 0) html += this.renderCriticalAlerts(alerts);
     
-    // CLINICAL FINDINGS
     if (clinicalFindings.length > 0) html += this.renderClinicalFindings(clinicalFindings);
     
-    // LAB VALUES
-    if (finalLabValues.length > 0) html += this.renderLabValues(finalLabValues);
+    if (finalLabValues.length > 0) html += this.renderLabSummaryCard(finalLabValues);
     
-    // MANAGEMENT PLAN
-    const recs = interp.presentation?.recommendations || 
-                 results.presentation?.recommendations || 
-                 results.recommendations || [];
+    const recs = interp.presentation?.recommendations || results.presentation?.recommendations || results.recommendations || [];
     if (recs.length > 0) html += this.renderManagementPlan(recs);
     
-    // CLINICAL PEARLS
     const pearls = results.clinicalPearls || [];
     if (pearls.length > 0) html += this.renderClinicalPearl(pearls[0]);
     
-    // PATIENT COMMUNICATION
-    const patientExp = interp.presentation?.patientFriendly || 
-                       results.presentation?.patientFriendly;
+    const patientExp = interp.presentation?.patientFriendly || results.presentation?.patientFriendly;
     if (patientExp) html += this.renderPatientCommunication(patientExp);
     
-    // SOURCE DATA
     if (extractedText) html += this.renderExtractedData(extractedText);
     
     html += this.renderReportFooter();
     html += '</div>';
     
     container.innerHTML = html;
-    this.setupInteractions(container);
+  },
+
+  renderLabsView(labValues) {
+    const container = document.getElementById('labs-view');
+    if (!container) return;
+    
+    if (typeof LabTrendsPanel !== 'undefined') {
+      container.innerHTML = LabTrendsPanel.render(labValues, []);
+    } else {
+      container.innerHTML = this.renderLabValues(labValues);
+    }
+  },
+
+  updateLabsTabBadge(labValues) {
+    const labsTab = document.querySelector('.modal-tab[data-view="labs"]');
+    if (!labsTab) return;
+    
+    const abnormalCount = labValues.filter(l => l.isAbnormal).length;
+    const criticalCount = labValues.filter(l => l.status === 'critical').length;
+    
+    let badgeText = `${labValues.length}`;
+    let badgeClass = '';
+    
+    if (criticalCount > 0) {
+      badgeText = `${criticalCount} critical`;
+      badgeClass = 'critical';
+    } else if (abnormalCount > 0) {
+      badgeText = `${abnormalCount} abnl`;
+      badgeClass = 'abnormal';
+    }
+    
+    labsTab.innerHTML = `Labs & Trends <span class="pres-tab-badge ${badgeClass}">${badgeText}</span>`;
+  },
+
+  renderDataTypeIndicator(classification) {
+    if (!classification || classification.type === 'unknown') return '';
+    
+    const badges = {
+      lab: { label: 'Lab Report', icon: '🧪', class: 'lab' },
+      clinical: { label: 'Clinical Note', icon: '📋', class: 'clinical' },
+      imaging: { label: 'Imaging Report', icon: '🔬', class: 'imaging' },
+      mixed: { label: 'Mixed Data', icon: '📊', class: 'lab' }
+    };
+    
+    const badge = badges[classification.type] || badges.mixed;
+    
+    return `
+      <div class="data-type-indicator">
+        <span class="data-type-badge ${badge.class}">${badge.icon} ${badge.label}</span>
+        <span class="data-type-confidence">${classification.confidence}% confidence</span>
+      </div>
+    `;
+  },
+
+  renderLabSummaryCard(labs) {
+    const total = labs.length;
+    const abnormal = labs.filter(l => l.isAbnormal).length;
+    const critical = labs.filter(l => l.status === 'critical').length;
+    const topAbnormal = labs.filter(l => l.isAbnormal).slice(0, 4);
+    
+    return `
+      <div class="lab-summary-card">
+        <div class="lab-summary-header">
+          <div class="lab-summary-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Laboratory Values
+          </div>
+          <button class="lab-summary-btn" onclick="document.querySelector('.modal-tab[data-view=\\'labs\\']').click()">View All →</button>
+        </div>
+        <div class="lab-summary-stats">
+          <div class="lab-stat"><span class="lab-stat-value total">${total}</span><span class="lab-stat-label">Total</span></div>
+          ${critical > 0 ? `<div class="lab-stat"><span class="lab-stat-value critical">${critical}</span><span class="lab-stat-label">Critical</span></div>` : ''}
+          ${abnormal > 0 ? `<div class="lab-stat"><span class="lab-stat-value abnormal">${abnormal}</span><span class="lab-stat-label">Abnormal</span></div>` : ''}
+          <div class="lab-stat"><span class="lab-stat-value normal">${total - abnormal}</span><span class="lab-stat-label">Normal</span></div>
+        </div>
+        ${topAbnormal.length > 0 ? `
+        <div class="lab-summary-abnormal">
+          ${topAbnormal.map(l => `
+            <div class="lab-summary-item ${l.status}">
+              <span class="lab-item-name">${this.esc(l.name)}</span>
+              <span class="lab-item-value">${this.esc(l.value)}</span>
+            </div>
+          `).join('')}
+        </div>
+        ` : `<div class="lab-summary-normal"><span>✓ All values within normal limits</span></div>`}
+      </div>
+    `;
   },
 
   buildAlerts(interp, labs) {
     const alerts = [];
-    
-    // Add critical labs as alerts
     labs.filter(l => l.status === 'critical').forEach(l => {
-      alerts.push({
-        severity: 'critical',
-        title: `Critical: ${l.name}`,
-        text: `${l.value} (Reference: ${l.reference})`
-      });
+      alerts.push({ severity: 'critical', title: `Critical: ${l.name}`, text: `${l.value} (Reference: ${l.reference})` });
     });
-    
-    // Add abnormalities from interpretation
     (interp.abnormalities || []).forEach(item => {
       const text = typeof item === 'string' ? item : (item.finding || item.text || '');
       if (text && !alerts.find(a => a.text.includes(text.substring(0, 20)))) {
-        alerts.push({
-          severity: 'warning',
-          title: 'Abnormal Finding',
-          text: text
-        });
+        alerts.push({ severity: 'warning', title: 'Abnormal Finding', text: text });
       }
     });
-    
     return alerts.slice(0, 5);
   },
 
@@ -198,15 +243,12 @@ const ClinicalComponents = {
       { key: 'calcium', regex: /\bca(?:lcium)?\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'magnesium', regex: /\bmg\s*\*?\s*[:\s]*(0\.\d+|\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'phosphate', regex: /phos(?:phate)?\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
-      { key: 'urate', regex: /urate\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'alt', regex: /\balt\s*\*?\s*[:\s]*([>]?\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'ast', regex: /\bast\s*\*?\s*[:\s]*([>]?\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'ggt', regex: /\bggt\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'alkphos', regex: /alk\.?\s*phos\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'tbilirubin', regex: /t\.?\s*bil(?:irubin)?\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
-      { key: 'dbilirubin', regex: /d\.?\s*bil(?:irubin)?\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'albumin', regex: /albumin\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
-      { key: 'protein', regex: /t\.?\s*protein\s*\*?\s*[:\s]*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'wbc', regex: /\bwbc\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi },
       { key: 'hemoglobin', regex: /\b(?:hb|hgb|hemoglobin)\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi },
       { key: 'platelets', regex: /\b(?:plt|platelet)s?\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi },
@@ -215,7 +257,10 @@ const ClinicalComponents = {
       { key: 'aptt', regex: /\baptt\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi },
       { key: 'troponin', regex: /troponin\s*[I1]?\s*[:\*]?\s*(\d+(?:\.\d+)?)\s*(H|HH|L|LL)?/gi },
       { key: 'egfr', regex: /egfr\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi },
-      { key: 'lactate', regex: /\b(?:lac|lactate)\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi }
+      { key: 'lactate', regex: /\b(?:lac|lactate)\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi },
+      { key: 'ph', regex: /\bph\s*[:\*]?\s*(7\.\d+)/gi },
+      { key: 'pco2', regex: /pco2\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi },
+      { key: 'hco3', regex: /hco3\s*[:\*]?\s*(\d+(?:\.\d+)?)/gi }
     ];
     
     patterns.forEach(p => {
@@ -235,11 +280,10 @@ const ClinicalComponents = {
         
         foundLabs.add(p.key);
         labs.push({
-          name: ref.name,
-          value: valueStr + ' ' + ref.unit,
-          reference: ref.min + '-' + ref.max + ' ' + ref.unit,
+          name: ref.name, value: valueStr + ' ' + ref.unit, valueDisplay: valueStr + ' ' + ref.unit,
+          reference: ref.min + '-' + ref.max + ' ' + ref.unit, referenceDisplay: ref.min + '-' + ref.max + ' ' + ref.unit,
           status, statusLabel: status.charAt(0).toUpperCase() + status.slice(1),
-          category: ref.category, isAbnormal: status !== 'normal'
+          category: ref.category, isAbnormal: status !== 'normal', isCritical: status === 'critical'
         });
       }
     });
@@ -249,21 +293,14 @@ const ClinicalComponents = {
   separateAIInterpretation(results, interp) {
     const clinicalFindings = [];
     const aiLabValues = [];
-    
-    // Get key findings
     (interp.keyFindings || []).forEach(item => {
       const text = typeof item === 'string' ? item : (item.finding || item.text || '');
       if (text) clinicalFindings.push({ finding: text, type: this.classifyClinicalFinding(text) });
     });
-    
-    // Get abnormalities that look clinical (not lab values)
     (interp.abnormalities || []).forEach(item => {
       const text = typeof item === 'string' ? item : (item.finding || item.text || '');
-      if (text && text.length > 50) {
-        clinicalFindings.push({ finding: text, type: this.classifyClinicalFinding(text) });
-      }
+      if (text && text.length > 50) clinicalFindings.push({ finding: text, type: this.classifyClinicalFinding(text) });
     });
-    
     return { clinicalFindings, aiLabValues };
   },
 
@@ -276,19 +313,19 @@ const ClinicalComponents = {
 
   classifyClinicalFinding(text) {
     const t = text.toLowerCase();
-    if (t.includes('liver') || t.includes('hepat') || t.includes('transamin') || t.includes('ast') || t.includes('alt')) return 'hepatic';
-    if (t.includes('kidney') || t.includes('renal') || t.includes('creatinin') || t.includes('egfr')) return 'renal';
-    if (t.includes('electrolyte') || t.includes('sodium') || t.includes('potassium') || t.includes('hyponat') || t.includes('hyperk')) return 'electrolytes';
-    if (t.includes('cardiac') || t.includes('heart') || t.includes('troponin')) return 'cardiovascular';
-    if (t.includes('glucose') || t.includes('diabete') || t.includes('hyperglycemia')) return 'metabolic';
-    if (t.includes('emergency') || t.includes('critical') || t.includes('immediate')) return 'critical';
+    if (t.includes('liver') || t.includes('hepat')) return 'hepatic';
+    if (t.includes('kidney') || t.includes('renal')) return 'renal';
+    if (t.includes('electrolyte') || t.includes('sodium') || t.includes('potassium')) return 'electrolytes';
+    if (t.includes('cardiac') || t.includes('heart')) return 'cardiovascular';
+    if (t.includes('glucose') || t.includes('diabete')) return 'metabolic';
+    if (t.includes('emergency') || t.includes('critical')) return 'critical';
     return 'general';
   },
 
   determineSeverity(results, labs, interp) {
     if (labs.some(l => l.status === 'critical')) return 'critical';
     const summaryText = (interp.summary || '').toLowerCase();
-    if (summaryText.includes('critical') || summaryText.includes('emergency') || summaryText.includes('immediate')) return 'critical';
+    if (summaryText.includes('critical') || summaryText.includes('emergency')) return 'critical';
     if (labs.some(l => l.isAbnormal)) return 'abnormal';
     if (summaryText.includes('abnormal') || summaryText.includes('elevated')) return 'abnormal';
     return 'normal';
@@ -365,7 +402,7 @@ const ClinicalComponents = {
   },
 
   renderReportFooter() {
-    return `<div class="report-footer"><span>🛡️ MedWard v5.5</span><span>${new Date().toLocaleString()}</span></div>`;
+    return `<div class="report-footer"><span>🛡️ MedWard v6.0</span><span>${new Date().toLocaleString()}</span></div>`;
   },
 
   renderEmpty() {
@@ -378,8 +415,6 @@ const ClinicalComponents = {
     d.textContent = String(str);
     return d.innerHTML;
   },
-
-  setupInteractions(container) {},
 
   renderWardView(results) {
     const container = document.getElementById('ward-view');
@@ -413,11 +448,13 @@ const ClinicalComponents = {
   },
 
   injectStyles() {
-    if (document.getElementById('elite-styles-v55')) return;
+    if (document.getElementById('elite-styles-v60')) return;
     const s = document.createElement('style');
-    s.id = 'elite-styles-v55';
+    s.id = 'elite-styles-v60';
     s.textContent = `
 .elite-report{font-family:'Outfit',-apple-system,sans-serif;color:rgba(255,255,255,0.9);line-height:1.6}
+.data-type-indicator{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;padding:0.5rem 0}
+.data-type-confidence{font-size:0.7rem;color:rgba(255,255,255,0.4)}
 .severity-header{padding:1.25rem 1.5rem;border-radius:14px;margin-bottom:1.25rem}
 .severity-header.critical{background:linear-gradient(135deg,rgba(220,38,38,0.15),rgba(185,28,28,0.08));border:1px solid rgba(220,38,38,0.3);color:#fca5a5}
 .severity-header.abnormal{background:linear-gradient(135deg,rgba(217,119,6,0.12),rgba(180,83,9,0.06));border:1px solid rgba(217,119,6,0.3);color:#fcd34d}
@@ -446,6 +483,27 @@ const ClinicalComponents = {
 .finding-category-header{display:flex;align-items:center;gap:0.4rem;margin-bottom:0.6rem;font-size:0.7rem;font-weight:700;text-transform:uppercase}
 .finding-list{list-style:none;margin:0;padding:0}
 .finding-item{padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem;color:rgba(255,255,255,0.85)}
+.lab-summary-card{background:linear-gradient(180deg,rgba(59,130,246,0.08),rgba(30,58,95,0.15));border:1px solid rgba(59,130,246,0.2);border-radius:14px;padding:1.25rem;margin-bottom:1.25rem}
+.lab-summary-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.lab-summary-title{display:flex;align-items:center;gap:0.5rem;font-family:'Playfair Display',Georgia,serif;font-size:1rem;font-weight:600}
+.lab-summary-title svg{stroke:#60a5fa}
+.lab-summary-btn{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;padding:0.4rem 0.8rem;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.lab-summary-btn:hover{background:rgba(59,130,246,0.25);color:#60a5fa}
+.lab-summary-stats{display:flex;gap:1rem;margin-bottom:1rem}
+.lab-stat{text-align:center;flex:1;padding:0.75rem;background:rgba(0,0,0,0.2);border-radius:8px}
+.lab-stat-value{font-family:'IBM Plex Mono',monospace;font-size:1.25rem;font-weight:700;display:block}
+.lab-stat-value.total{color:#f0c674}
+.lab-stat-value.critical{color:#ef4444}
+.lab-stat-value.abnormal{color:#fca5a5}
+.lab-stat-value.normal{color:#6ee7b7}
+.lab-stat-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.5)}
+.lab-summary-abnormal{display:grid;gap:0.35rem}
+.lab-summary-item{display:flex;justify-content:space-between;padding:0.5rem 0.75rem;background:rgba(0,0,0,0.15);border-radius:6px;border-left:2px solid}
+.lab-summary-item.high,.lab-summary-item.critical{border-left-color:#ef4444}
+.lab-summary-item.low{border-left-color:#3b82f6}
+.lab-item-name{font-size:0.8rem;color:rgba(255,255,255,0.85)}
+.lab-item-value{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;font-weight:600;color:#fca5a5}
+.lab-summary-normal{text-align:center;padding:1rem;color:#6ee7b7;font-size:0.85rem}
 .lab-category-section{background:rgba(15,23,42,0.5);border:1px solid rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;margin-bottom:1rem}
 .lab-category-header{display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1.25rem;background:linear-gradient(180deg,rgba(255,255,255,0.03),transparent);border-bottom:1px solid rgba(255,255,255,0.06)}
 .lab-category-header h3{font-family:'Playfair Display',Georgia,serif;font-size:0.95rem;font-weight:600;margin:0}
@@ -456,7 +514,7 @@ const ClinicalComponents = {
 .lab-table tbody tr:hover{background:rgba(255,255,255,0.02)}
 .lab-table tbody tr.abnormal-row{background:rgba(239,68,68,0.04)}
 .lab-table tbody td{padding:0.55rem 0.875rem;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.8rem}
-.lab-value{font-family:'JetBrains Mono',monospace;font-weight:600}
+.lab-value{font-family:'IBM Plex Mono',monospace;font-weight:600}
 .lab-value.high,.lab-value.critical{color:#fca5a5}
 .lab-value.low{color:#93c5fd}
 .lab-value.normal{color:#6ee7b7}
@@ -487,6 +545,9 @@ const ClinicalComponents = {
 .extracted-content.show{display:block}
 .extracted-pre{font-family:monospace;font-size:0.65rem;line-height:1.5;color:rgba(255,255,255,0.6);white-space:pre-wrap;max-height:250px;overflow-y:auto;margin:0}
 .report-footer{display:flex;align-items:center;justify-content:space-between;padding:0.875rem 0;border-top:1px solid rgba(255,255,255,0.06);margin-top:0.875rem;font-size:0.65rem;color:rgba(255,255,255,0.4)}
+.pres-tab-badge{font-size:0.6rem;padding:0.15rem 0.4rem;border-radius:100px;margin-left:0.35rem;background:rgba(78,205,196,0.2);color:#4ecdc4}
+.pres-tab-badge.critical{background:rgba(239,68,68,0.2);color:#fca5a5}
+.pres-tab-badge.abnormal{background:rgba(245,158,11,0.2);color:#fcd34d}
 `;
     document.head.appendChild(s);
   }
