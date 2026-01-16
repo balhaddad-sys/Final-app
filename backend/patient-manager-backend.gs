@@ -1,29 +1,20 @@
 /**
- * MedWard Patient Manager - Google Apps Script Backend
- * Connects to Google Sheets for ward patient management
+ * MedWard Patient Manager - Backend v2.0
+ * Fixed parsing for the actual sheet structure
  *
- * SETUP INSTRUCTIONS:
- * 1. Create this as a NEW Apps Script project at script.google.com
- * 2. Copy this entire code to Code.gs
- * 3. Go to Project Settings (gear icon)
- * 4. Add Script Property: SHEET_ID = [Your Google Sheet ID]
- *    - Find your Sheet ID in the URL: https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit
- * 5. Deploy as Web App:
- *    - Click Deploy → New deployment
- *    - Select type: Web app
- *    - Execute as: Me
- *    - Who has access: Anyone
- *    - Click Deploy
- * 6. Copy the deployment URL
- * 7. Paste it in index.html: window.MEDWARD_PATIENT_API_URL = 'YOUR_URL_HERE';
+ * SHEET STRUCTURE:
+ * Row 1: Date header (Thursday, 15th January 2026)
+ * Row 3: "Male list (active)" section header
+ * Row 4: Column headers (Room/Ward, Patient name, Diagnosis, Assigned Doctor, Status)
+ * Row 5+: Ward sections with patients
+ *
+ * Ward sections start with "Ward X" or "ICU" or "ER" in column A
+ * Chronic section starts with "(Chronic list)"
  */
 
-// Get Sheet ID from Script Properties
-function getSheetId() {
-  return PropertiesService.getScriptProperties().getProperty('SHEET_ID');
-}
+const SHEET_ID = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+const SHEET_NAME = 'Unit e'; // Change if your sheet has a different name
 
-// Main entry point for POST requests
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
@@ -46,8 +37,17 @@ function doPost(e) {
       case 'deletePatient':
         response = deletePatient(data);
         break;
+      case 'dischargePatient':
+        response = dischargePatient(data);
+        break;
       case 'getDoctors':
         response = getDoctors();
+        break;
+      case 'getSheetUrl':
+        response = getSheetUrl();
+        break;
+      case 'updateDateHeader':
+        response = updateDateHeader();
         break;
       default:
         response = { success: false, error: 'Unknown action: ' + action };
@@ -57,6 +57,7 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
+    Logger.log('Error: ' + error.toString());
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
@@ -64,148 +65,272 @@ function doPost(e) {
   }
 }
 
-// Test endpoint for GET requests
 function doGet(e) {
+  // Auto-update date header on any GET request
+  try {
+    updateDateHeader();
+  } catch(e) {}
+
   return ContentService.createTextOutput(JSON.stringify({
-    status: 'MedWard Patient Manager API is running',
-    version: '1.0.0',
-    timestamp: new Date().toISOString()
+    status: 'MedWard Patient Manager API v2.0',
+    sheetId: SHEET_ID ? 'configured' : 'missing'
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
- * Get all patients, optionally filtered by ward, doctor, or status
+ * Get the Google Sheet URL for direct access
+ */
+function getSheetUrl() {
+  return {
+    success: true,
+    url: 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/edit'
+  };
+}
+
+/**
+ * Update the date header to today's date
+ */
+function updateDateHeader() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+
+  const today = new Date();
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const dayName = days[today.getDay()];
+  const day = today.getDate();
+  const month = months[today.getMonth()];
+  const year = today.getFullYear();
+
+  // Add ordinal suffix
+  const ordinal = (d) => {
+    if (d > 3 && d < 21) return 'th';
+    switch (d % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+
+  const dateString = `${dayName}, ${day}${ordinal(day)} ${month} ${year}`;
+
+  // Update cell B1 (or wherever your date is)
+  sheet.getRange('B1').setValue(dateString);
+
+  return {
+    success: true,
+    date: dateString
+  };
+}
+
+/**
+ * Parse the sheet and get all patients with proper structure
  */
 function getPatients(data) {
-  const ss = SpreadsheetApp.openById(getSheetId());
-  const sheet = ss.getSheetByName('Unit e') || ss.getSheets()[0];
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
   const values = sheet.getDataRange().getValues();
 
   const patients = [];
   let currentWard = '';
-  let isChronicSection = false;
+  let currentSection = 'active'; // 'active' or 'chronic'
+  let inDataSection = false;
+
+  // Skip patterns - these are NOT patients
+  const skipPatterns = [
+    /^male list/i,
+    /^female list/i,
+    /^\(chronic/i,
+    /^chronic list/i,
+    /^room\s*\/?\s*ward/i,
+    /^patient\s*name/i,
+    /^diagnosis/i,
+    /^assigned/i,
+    /^status/i,
+    /^er\/unassigned/i,
+    /^unassigned/i,
+    /monday|tuesday|wednesday|thursday|friday|saturday|sunday/i,
+    /january|february|march|april|may|june|july|august|september|october|november|december/i
+  ];
+
+  // Ward patterns
+  const wardPatterns = [
+    /^ward\s*\d+/i,
+    /^icu$/i,
+    /^er$/i,
+    /^ER\/Unassigned$/i
+  ];
 
   for (let i = 0; i < values.length; i++) {
     const row = values[i];
+    const colA = row[0] ? row[0].toString().trim() : '';
+    const colB = row[1] ? row[1].toString().trim() : '';
 
-    // Detect section headers
-    if (row[0] && typeof row[0] === 'string') {
-      const cellValue = row[0].toString().toLowerCase();
-
-      // Check for chronic section marker
-      if (cellValue.includes('chronic')) {
-        isChronicSection = true;
-        continue;
-      }
-
-      // Check for ward headers (Ward A, Ward B, ICU, ER, etc.)
-      if (cellValue.includes('ward') || cellValue === 'icu' || cellValue === 'er') {
-        currentWard = row[0].toString().trim();
-        isChronicSection = false; // Reset chronic flag when entering new ward
-        continue;
-      }
+    // Check for chronic section
+    if (colA.toLowerCase().includes('chronic') || colB.toLowerCase().includes('chronic')) {
+      currentSection = 'chronic';
+      continue;
     }
 
-    // Skip header rows
-    if (row[1] === 'Patient name' || row[1] === 'Patient Name' || !row[1]) continue;
+    // Check for ward header
+    let isWardHeader = false;
+    for (const pattern of wardPatterns) {
+      if (pattern.test(colA)) {
+        currentWard = colA;
+        inDataSection = true;
+        isWardHeader = true;
+        break;
+      }
+    }
+    if (isWardHeader) continue;
 
-    // Parse patient row
-    const roomBed = row[0] ? row[0].toString().trim() : '';
-    const patientName = row[1] ? row[1].toString().trim() : '';
+    // Check for ER/Unassigned section
+    if (colA.toLowerCase().includes('er/unassigned') || colA.toLowerCase() === 'er') {
+      currentWard = 'ER/Unassigned';
+      inDataSection = true;
+      continue;
+    }
+
+    // Skip non-data rows
+    let shouldSkip = false;
+    for (const pattern of skipPatterns) {
+      if (pattern.test(colA) || pattern.test(colB)) {
+        shouldSkip = true;
+        break;
+      }
+    }
+    if (shouldSkip) continue;
+
+    // Skip empty rows
+    if (!colB) continue;
+
+    // Skip if no ward assigned yet
+    if (!currentWard) continue;
+
+    // This is a patient row
+    const roomBed = colA;
+    const patientName = colB;
     const diagnosis = row[2] ? row[2].toString().trim() : '';
     const assignedDoctor = row[3] ? row[3].toString().trim() : '';
-    const status = row[4] ? row[4].toString().trim() : (isChronicSection ? 'Chronic' : 'Non-Chronic');
+    const statusFromSheet = row[4] ? row[4].toString().trim() : '';
 
-    // Only add rows with patient names
-    if (patientName && patientName !== 'Patient name' && patientName !== 'Patient Name') {
-      patients.push({
-        rowIndex: i + 1, // 1-indexed for Sheets API
-        ward: currentWard || 'Unassigned',
-        roomBed: roomBed,
-        patientName: patientName,
-        diagnosis: diagnosis,
-        assignedDoctor: assignedDoctor,
-        status: status,
-        isChronicSection: isChronicSection
-      });
-    }
+    // Determine status
+    let status = statusFromSheet || (currentSection === 'chronic' ? 'Chronic' : 'Non-Chronic');
+
+    patients.push({
+      rowIndex: i + 1, // 1-indexed for Sheets API
+      ward: currentWard,
+      roomBed: roomBed,
+      patientName: patientName,
+      diagnosis: diagnosis,
+      assignedDoctor: assignedDoctor,
+      status: status,
+      section: currentSection
+    });
   }
 
-  // Apply filters if provided
+  // Apply filters
   let filtered = patients;
 
-  if (data.ward) {
+  if (data.ward && data.ward !== '') {
     filtered = filtered.filter(p =>
       p.ward.toLowerCase().includes(data.ward.toLowerCase())
     );
   }
 
-  if (data.doctor) {
+  if (data.doctor && data.doctor !== '') {
     filtered = filtered.filter(p =>
       p.assignedDoctor.toLowerCase().includes(data.doctor.toLowerCase())
     );
   }
 
-  if (data.status) {
-    filtered = filtered.filter(p =>
-      p.status.toLowerCase() === data.status.toLowerCase()
-    );
+  if (data.status && data.status !== '') {
+    if (data.status.toLowerCase() === 'chronic') {
+      filtered = filtered.filter(p => p.section === 'chronic');
+    } else if (data.status.toLowerCase() === 'active' || data.status.toLowerCase() === 'non-chronic') {
+      filtered = filtered.filter(p => p.section === 'active');
+    }
   }
+
+  // Group by ward for frontend
+  const byWard = {};
+  filtered.forEach(p => {
+    if (!byWard[p.ward]) byWard[p.ward] = [];
+    byWard[p.ward].push(p);
+  });
 
   return {
     success: true,
     patients: filtered,
+    patientsByWard: byWard,
     totalCount: filtered.length,
+    activeCount: filtered.filter(p => p.section === 'active').length,
+    chronicCount: filtered.filter(p => p.section === 'chronic').length,
     lastUpdated: new Date().toISOString()
   };
 }
 
 /**
- * Get list of unique wards from the sheet
+ * Get unique wards from the sheet
  */
 function getWards() {
-  const ss = SpreadsheetApp.openById(getSheetId());
-  const sheet = ss.getSheetByName('Unit e') || ss.getSheets()[0];
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
   const values = sheet.getDataRange().getValues();
 
-  const wards = new Set();
+  const wards = [];
+  const wardPatterns = [/^ward\s*\d+/i, /^icu$/i, /^er$/i];
 
   for (let i = 0; i < values.length; i++) {
     const cell = values[i][0];
     if (cell && typeof cell === 'string') {
       const val = cell.trim();
-      const lowerVal = val.toLowerCase();
-
-      // Look for ward identifiers
-      if (lowerVal.includes('ward') || lowerVal === 'icu' || lowerVal === 'er') {
-        wards.add(val);
+      for (const pattern of wardPatterns) {
+        if (pattern.test(val) && !wards.includes(val)) {
+          wards.push(val);
+          break;
+        }
       }
     }
   }
 
+  // Sort wards: Ward 5, Ward 10, Ward 14, etc., then ICU, ER
+  wards.sort((a, b) => {
+    const numA = parseInt(a.match(/\d+/)?.[0] || '999');
+    const numB = parseInt(b.match(/\d+/)?.[0] || '999');
+    if (numA !== numB) return numA - numB;
+    return a.localeCompare(b);
+  });
+
   return {
     success: true,
-    wards: Array.from(wards).sort()
+    wards: wards
   };
 }
 
 /**
- * Get list of unique doctors from the sheet
+ * Get unique doctors
  */
 function getDoctors() {
-  const ss = SpreadsheetApp.openById(getSheetId());
-  const sheet = ss.getSheetByName('Unit e') || ss.getSheets()[0];
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
   const values = sheet.getDataRange().getValues();
 
   const doctors = new Set();
 
   for (let i = 0; i < values.length; i++) {
-    const doctor = values[i][3]; // Column D (index 3)
+    const doctor = values[i][3]; // Column D
     if (doctor && typeof doctor === 'string') {
-      const trimmed = doctor.trim();
-      // Exclude header text
-      if (trimmed && trimmed !== 'Assigned Doctor' && trimmed !== 'Doctor') {
-        doctors.add(trimmed);
+      const name = doctor.trim();
+      // Skip headers and empty
+      if (name &&
+          !name.toLowerCase().includes('assigned') &&
+          !name.toLowerCase().includes('doctor') &&
+          name.length > 1) {
+        doctors.add(name);
       }
     }
   }
@@ -217,158 +342,182 @@ function getDoctors() {
 }
 
 /**
- * Add a new patient to the appropriate ward section
+ * Add a new patient to a ward
  */
 function addPatient(data) {
-  if (!data.patientName || !data.ward) {
-    return { success: false, error: 'Patient name and ward are required' };
+  if (!data.patientName) {
+    return { success: false, error: 'Patient name is required' };
+  }
+  if (!data.ward) {
+    return { success: false, error: 'Ward is required' };
   }
 
-  const ss = SpreadsheetApp.openById(getSheetId());
-  const sheet = ss.getSheetByName('Unit e') || ss.getSheets()[0];
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
   const values = sheet.getDataRange().getValues();
 
-  // Find the correct ward section to insert into
+  // Determine if this is chronic or active
+  const isChronicPatient = data.section === 'chronic' || data.status?.toLowerCase() === 'chronic';
+
+  // Find the correct position to insert
   let insertRow = -1;
-  let foundWard = false;
+  let foundTargetWard = false;
+  let inChronicSection = false;
 
   for (let i = 0; i < values.length; i++) {
-    const cell = values[i][0];
-    if (cell && typeof cell === 'string') {
-      const val = cell.trim().toLowerCase();
-      const targetWard = data.ward.toLowerCase();
+    const colA = values[i][0] ? values[i][0].toString().trim().toLowerCase() : '';
 
-      // Found our target ward
-      if (val === targetWard || val.includes(targetWard)) {
-        foundWard = true;
+    // Track chronic section
+    if (colA.includes('chronic')) {
+      inChronicSection = true;
+    }
+
+    // Looking for active patient position
+    if (!isChronicPatient && !inChronicSection) {
+      if (colA === data.ward.toLowerCase() || colA.includes(data.ward.toLowerCase())) {
+        foundTargetWard = true;
         continue;
       }
 
-      // Found next section (ward or chronic) - insert before this
-      if (foundWard && (val.includes('ward') || val === 'icu' || val === 'er' || val.includes('chronic'))) {
-        insertRow = i + 1; // 1-indexed
-        break;
+      // If we found our ward and hit next ward or chronic section, insert before
+      if (foundTargetWard) {
+        if (colA.includes('ward') || colA === 'icu' || colA === 'er' || colA.includes('chronic')) {
+          insertRow = i + 1;
+          break;
+        }
+        // If empty row in our ward section, use it
+        if (!values[i][1]) {
+          insertRow = i + 1;
+          break;
+        }
       }
     }
 
-    // If we're in the right ward and this is an empty row, use it
-    if (foundWard && !values[i][1]) {
-      insertRow = i + 1;
-      break;
+    // Looking for chronic patient position
+    if (isChronicPatient && inChronicSection) {
+      if (colA === data.ward.toLowerCase() || colA.includes(data.ward.toLowerCase())) {
+        foundTargetWard = true;
+        continue;
+      }
+
+      if (foundTargetWard) {
+        if (colA.includes('ward') || colA === 'icu' || colA === 'er') {
+          insertRow = i + 1;
+          break;
+        }
+        if (!values[i][1]) {
+          insertRow = i + 1;
+          break;
+        }
+      }
     }
   }
 
-  // If no insert position found, append at end
+  // If no position found, append at end
   if (insertRow === -1) {
     insertRow = sheet.getLastRow() + 1;
   }
 
-  // Insert the new patient row
+  // Insert new row and data
   sheet.insertRowBefore(insertRow);
+
+  const status = isChronicPatient ? 'Chronic' : (data.status || 'Non-Chronic');
+
   sheet.getRange(insertRow, 1, 1, 5).setValues([[
     data.roomBed || '',
     data.patientName,
     data.diagnosis || '',
     data.assignedDoctor || '',
-    data.status || 'Non-Chronic'
+    status
   ]]);
 
   return {
     success: true,
     message: 'Patient added successfully',
-    rowIndex: insertRow,
-    patient: {
-      roomBed: data.roomBed || '',
-      patientName: data.patientName,
-      diagnosis: data.diagnosis || '',
-      assignedDoctor: data.assignedDoctor || '',
-      status: data.status || 'Non-Chronic',
-      ward: data.ward
-    }
+    rowIndex: insertRow
   };
 }
 
 /**
- * Update existing patient information
+ * Update existing patient
  */
 function updatePatient(data) {
   if (!data.rowIndex) {
-    return { success: false, error: 'Row index is required for update' };
+    return { success: false, error: 'Row index required' };
   }
 
-  const ss = SpreadsheetApp.openById(getSheetId());
-  const sheet = ss.getSheetByName('Unit e') || ss.getSheets()[0];
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
 
-  const row = data.rowIndex;
+  const row = parseInt(data.rowIndex);
 
-  // Update only provided fields
-  if (data.roomBed !== undefined) {
-    sheet.getRange(row, 1).setValue(data.roomBed);
+  // If ward changed, we need to move the patient
+  if (data.newWard && data.oldWard && data.newWard !== data.oldWard) {
+    // Get current patient data
+    const currentData = sheet.getRange(row, 1, 1, 5).getValues()[0];
+
+    // Delete from current location
+    sheet.deleteRow(row);
+
+    // Add to new ward
+    return addPatient({
+      ward: data.newWard,
+      roomBed: data.roomBed !== undefined ? data.roomBed : currentData[0],
+      patientName: data.patientName !== undefined ? data.patientName : currentData[1],
+      diagnosis: data.diagnosis !== undefined ? data.diagnosis : currentData[2],
+      assignedDoctor: data.assignedDoctor !== undefined ? data.assignedDoctor : currentData[3],
+      status: data.status !== undefined ? data.status : currentData[4],
+      section: data.section
+    });
   }
-  if (data.patientName !== undefined) {
-    sheet.getRange(row, 2).setValue(data.patientName);
-  }
-  if (data.diagnosis !== undefined) {
-    sheet.getRange(row, 3).setValue(data.diagnosis);
-  }
-  if (data.assignedDoctor !== undefined) {
-    sheet.getRange(row, 4).setValue(data.assignedDoctor);
-  }
-  if (data.status !== undefined) {
-    sheet.getRange(row, 5).setValue(data.status);
-  }
+
+  // Simple update without ward change
+  if (data.roomBed !== undefined) sheet.getRange(row, 1).setValue(data.roomBed);
+  if (data.patientName !== undefined) sheet.getRange(row, 2).setValue(data.patientName);
+  if (data.diagnosis !== undefined) sheet.getRange(row, 3).setValue(data.diagnosis);
+  if (data.assignedDoctor !== undefined) sheet.getRange(row, 4).setValue(data.assignedDoctor);
+  if (data.status !== undefined) sheet.getRange(row, 5).setValue(data.status);
 
   return {
     success: true,
-    message: 'Patient updated successfully',
-    rowIndex: row
+    message: 'Patient updated'
   };
 }
 
 /**
- * Delete/discharge a patient (removes the row from the sheet)
+ * Delete patient (remove row)
  */
 function deletePatient(data) {
   if (!data.rowIndex) {
-    return { success: false, error: 'Row index is required for deletion' };
+    return { success: false, error: 'Row index required' };
   }
 
-  const ss = SpreadsheetApp.openById(getSheetId());
-  const sheet = ss.getSheetByName('Unit e') || ss.getSheets()[0];
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
 
-  // Option 1: Clear the row (keeps structure)
-  // sheet.getRange(data.rowIndex, 1, 1, 5).clearContent();
-
-  // Option 2: Delete the row entirely (recommended)
-  sheet.deleteRow(data.rowIndex);
+  sheet.deleteRow(parseInt(data.rowIndex));
 
   return {
     success: true,
-    message: 'Patient removed successfully'
+    message: 'Patient removed'
   };
 }
 
 /**
- * Test function - Run this to test the getPatients function
- * View results in Execution log
+ * Discharge patient (move to discharged or just delete)
  */
+function dischargePatient(data) {
+  // For now, same as delete. Could move to a "Discharged" sheet later
+  return deletePatient(data);
+}
+
+// Test function
 function testGetPatients() {
   const result = getPatients({});
   Logger.log(JSON.stringify(result, null, 2));
 }
 
-/**
- * Test function - Get wards
- */
 function testGetWards() {
   const result = getWards();
-  Logger.log(JSON.stringify(result, null, 2));
-}
-
-/**
- * Test function - Get doctors
- */
-function testGetDoctors() {
-  const result = getDoctors();
   Logger.log(JSON.stringify(result, null, 2));
 }

@@ -2164,6 +2164,335 @@
         font-size: 0.85rem;
       }
     }
+
+    /* Patient Management Styles */
+    .patients-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header-title h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .header-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Stats */
+    .patient-stats {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      text-align: center;
+    }
+
+    .stat-card.active {
+      border-color: var(--accent-gold);
+      background: var(--accent-gold-dim);
+    }
+
+    .stat-card.chronic {
+      border-color: var(--accent-teal);
+      background: var(--accent-teal-dim);
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-card.active .stat-value { color: var(--accent-gold); }
+    .stat-card.chronic .stat-value { color: var(--accent-teal); }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Filters */
+    .filters-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    /* Ward Groups */
+    .ward-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .ward-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, var(--accent-gold-dim) 0%, transparent 100%);
+      border-left: 3px solid var(--accent-gold);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+    }
+
+    .ward-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-gold);
+    }
+
+    .ward-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .ward-patients {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+
+    /* Patient Cards */
+    .patient-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .patient-card:hover {
+      border-color: rgba(240, 198, 116, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .patient-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+
+    .patient-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .patient-room {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent-gold);
+      font-family: var(--font-mono);
+    }
+
+    .patient-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .patient-status {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .patient-status.active {
+      background: var(--accent-gold-dim);
+      color: var(--accent-gold);
+    }
+
+    .patient-status.chronic {
+      background: var(--accent-teal-dim);
+      color: var(--accent-teal);
+    }
+
+    .patient-diagnosis {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .patient-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .patient-doctor {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .patient-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--surface-2);
+      color: var(--accent-gold);
+      border-color: var(--accent-gold);
+    }
+
+    .btn-icon.btn-discharge:hover {
+      color: var(--critical);
+      border-color: var(--critical);
+    }
+
+    /* Loading & Empty States */
+    .loading-state, .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--surface-2);
+      border-top-color: var(--accent-gold);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state svg {
+      opacity: 0.3;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    /* Modal */
+    .modal-sm {
+      max-width: 480px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* Mobile Responsiveness for Patient Management */
+    @media (max-width: 640px) {
+      .patients-header {
+        flex-direction: column;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+
+      .header-actions .btn {
+        flex: 1;
+      }
+
+      .patient-stats {
+        flex-direction: column;
+      }
+
+      .filters-row {
+        flex-direction: column;
+      }
+
+      .filter-select {
+        width: 100%;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .ward-patients {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2432,18 +2761,19 @@
 
       <!-- Patient Management Screen -->
       <section class="screen" id="patients-screen">
-        <div class="section-header">
-          <div>
-            <h1 class="dashboard-title">Ward Patient Management</h1>
-            <p class="dashboard-subtitle">Manage patients across hospital wards</p>
+        <div class="patients-header">
+          <div class="header-title">
+            <h1>Ward Patients</h1>
+            <p class="header-subtitle">Manage patients across hospital wards</p>
           </div>
           <div class="header-actions">
-            <button class="btn btn-primary" id="add-patient-btn">
+            <button class="btn btn-secondary" id="open-sheet-btn" title="Open Google Sheet">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
               </svg>
-              Add Patient
+              Open Sheet
             </button>
             <button class="btn btn-secondary" id="refresh-patients-btn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2453,27 +2783,53 @@
               </svg>
               Refresh
             </button>
+            <button class="btn btn-primary" id="add-patient-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Patient
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="patient-stats">
+          <div class="stat-card">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">Total Patients</span>
+          </div>
+          <div class="stat-card active">
+            <span class="stat-value" id="stat-active">0</span>
+            <span class="stat-label">Active</span>
+          </div>
+          <div class="stat-card chronic">
+            <span class="stat-value" id="stat-chronic">0</span>
+            <span class="stat-label">Chronic</span>
           </div>
         </div>
 
         <!-- Filters -->
-        <div class="filters-bar">
-          <select id="ward-filter" class="form-select">
+        <div class="filters-row">
+          <select id="ward-filter" class="filter-select">
             <option value="">All Wards</option>
           </select>
-          <select id="doctor-filter" class="form-select">
+          <select id="doctor-filter" class="filter-select">
             <option value="">All Doctors</option>
           </select>
-          <select id="status-filter" class="form-select">
-            <option value="">All Status</option>
-            <option value="chronic">Chronic</option>
-            <option value="non-chronic">Non-Chronic</option>
+          <select id="status-filter" class="filter-select">
+            <option value="">All Patients</option>
+            <option value="active">Active Only</option>
+            <option value="chronic">Chronic Only</option>
           </select>
         </div>
 
-        <!-- Patient Cards Grid -->
+        <!-- Patient Grid -->
         <div class="patients-grid" id="patients-grid">
-          <p class="loading-text">Click "Refresh" to load patients...</p>
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading patients...</p>
+          </div>
         </div>
       </section>
 
@@ -2529,17 +2885,9 @@
 
   <!-- Add/Edit Patient Modal -->
   <div class="modal-overlay" id="patient-modal">
-    <div class="modal-container" style="max-width: 500px;">
+    <div class="modal-container modal-sm">
       <div class="modal-header">
-        <div class="modal-title-group">
-          <div class="modal-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-            </svg>
-          </div>
-          <h2 class="modal-title" id="patient-modal-title">Add New Patient</h2>
-        </div>
+        <h2 id="patient-modal-title">Add Patient</h2>
         <button class="modal-close" id="patient-modal-close">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -2547,53 +2895,51 @@
           </svg>
         </button>
       </div>
-      <div class="modal-body">
-        <form id="patient-form">
-          <input type="hidden" id="patient-row-index">
-
+      <form id="patient-form" class="modal-body">
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label">Ward *</label>
             <select id="patient-ward" class="form-select" required>
               <option value="">Select Ward</option>
             </select>
           </div>
-
           <div class="form-group">
-            <label class="form-label">Room / Bed</label>
+            <label class="form-label">Room/Bed</label>
             <input type="text" id="patient-room" class="form-input" placeholder="e.g., 12-2">
           </div>
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Patient Name *</label>
-            <input type="text" id="patient-name" class="form-input" required placeholder="Enter patient name">
-          </div>
+        <div class="form-group">
+          <label class="form-label">Patient Name *</label>
+          <input type="text" id="patient-name" class="form-input" required placeholder="Enter patient name">
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Diagnosis</label>
-            <input type="text" id="patient-diagnosis" class="form-input" placeholder="e.g., CAP, AKI">
-          </div>
+        <div class="form-group">
+          <label class="form-label">Diagnosis</label>
+          <input type="text" id="patient-diagnosis" class="form-input" placeholder="e.g., CAP, AKI on CKD">
+        </div>
 
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label">Assigned Doctor</label>
             <select id="patient-doctor" class="form-select">
-              <option value="">Select Doctor</option>
+              <option value="">Unassigned</option>
             </select>
           </div>
-
           <div class="form-group">
-            <label class="form-label">Status</label>
-            <select id="patient-status" class="form-select">
-              <option value="Non-Chronic">Non-Chronic</option>
-              <option value="Chronic">Chronic</option>
+            <label class="form-label">Category</label>
+            <select id="patient-section" class="form-select">
+              <option value="active">Active</option>
+              <option value="chronic">Chronic</option>
             </select>
           </div>
+        </div>
 
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" id="cancel-patient-btn">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="save-patient-btn">Save Patient</button>
-          </div>
-        </form>
-      </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-patient-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Patient</button>
+        </div>
+      </form>
     </div>
   </div>
 
