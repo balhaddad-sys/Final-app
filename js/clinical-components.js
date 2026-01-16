@@ -574,6 +574,23 @@ const ClinicalComponents = {
 .pres-tab-badge{font-size:0.6rem;padding:0.15rem 0.4rem;border-radius:100px;margin-left:0.35rem;background:rgba(78,205,196,0.2);color:#4ecdc4}
 .pres-tab-badge.critical{background:rgba(239,68,68,0.2);color:#fca5a5}
 .pres-tab-badge.abnormal{background:rgba(245,158,11,0.2);color:#fcd34d}
+/* Lab vs Clinical Visual Differentiation */
+.lab-section{background:linear-gradient(180deg,rgba(59,130,246,0.08),rgba(30,58,95,0.15));border:1px solid rgba(59,130,246,0.2);border-radius:14px;margin-bottom:1.5rem;overflow:hidden}
+.clinical-section{background:linear-gradient(180deg,rgba(16,185,129,0.08),rgba(6,78,59,0.15));border:1px solid rgba(16,185,129,0.2);border-radius:14px;margin-bottom:1.5rem;overflow:hidden}
+.section-header{display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2)}
+.section-icon{font-size:1.25rem}
+.section-badge{font-size:0.65rem;padding:0.2rem 0.5rem;border-radius:100px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);margin-left:auto}
+.lab-header{color:#60a5fa}
+.lab-header .section-badge{background:rgba(59,130,246,0.2);color:#93c5fd}
+.clinical-header{color:#34d399}
+.clinical-header .section-badge{background:rgba(16,185,129,0.2);color:#6ee7b7}
+.separated-analysis{margin-top:1rem}
+.data-type-badge{display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.75rem;border-radius:100px;font-size:0.7rem;font-weight:600;background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3)}
+.data-type-badge.lab svg{stroke:#60a5fa}
+.data-type-badge.clinical{background:rgba(16,185,129,0.15);color:#6ee7b7;border-color:rgba(16,185,129,0.3)}
+.data-type-badge.clinical svg{stroke:#34d399}
+.data-type-badge.imaging{background:rgba(168,85,247,0.15);color:#c4b5fd;border-color:rgba(168,85,247,0.3)}
+.data-type-badge.imaging svg{stroke:#a78bfa}
 `;
     document.head.appendChild(s);
   }
