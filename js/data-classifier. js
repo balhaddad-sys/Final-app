@@ -303,6 +303,134 @@ const MedWardDataClassifier = {
   },
 
   /**
+   * Separate lab values from clinical narrative
+   * Returns explicitly separated lab data and clinical data
+   */
+  separateLabFromClinical(text, aiResponse = null) {
+    const result = {
+      labData: { values: [], rawText: '' },
+      clinicalData: { history: [], examination: [], assessment: [], rawText: '' }
+    };
+
+    if (!text) return result;
+
+    // Extract structured lab values first
+    result.labData.values = this.extractLabValues(text);
+
+    // Build lab pattern strings to remove from clinical text
+    const labPatternStrings = [];
+    for (const pattern of Object.values(this.labPatterns)) {
+      const matches = text.match(pattern);
+      if (matches) {
+        matches.forEach(m => labPatternStrings.push(m));
+      }
+    }
+
+    // Build clinical text by removing lab matches
+    let remainingText = text;
+    labPatternStrings.forEach(labStr => {
+      remainingText = remainingText.replace(labStr, '');
+    });
+
+    result.clinicalData.rawText = remainingText.trim();
+
+    // Parse clinical patterns from remaining text
+    this.parseClinicalFromText(remainingText, result.clinicalData);
+
+    // If AI provided structured response, merge it
+    if (aiResponse?.labValues) {
+      result.labData.values = this.mergeLabArrays(
+        result.labData.values,
+        aiResponse.labValues
+      );
+    }
+
+    if (aiResponse?.clinicalData) {
+      result.clinicalData = this.mergeClinicalData(
+        result.clinicalData,
+        aiResponse.clinicalData
+      );
+    }
+
+    // Set raw text for lab data
+    result.labData.rawText = labPatternStrings.join('\n');
+
+    return result;
+  },
+
+  /**
+   * Parse clinical information from text
+   */
+  parseClinicalFromText(text, clinicalData) {
+    // History patterns
+    const historyPatterns = [
+      /(?:h\/o|history of|pmh|past medical)[:\s]+([^\n.]+)/gi,
+      /(?:c\/c|chief complaint|presented? with)[:\s]+([^\n.]+)/gi,
+      /(?:dx|diagnosis|assessment)[:\s]+([^\n.]+)/gi
+    ];
+
+    historyPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        clinicalData.history.push(match[1].trim());
+      }
+    });
+
+    // Examination patterns
+    const examPatterns = [
+      /(?:o\/e|on examination|exam)[:\s]+([^\n.]+)/gi,
+      /(?:vitals?|bp|hr|rr|temp)[:\s]*[^\n]+/gi
+    ];
+
+    examPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        clinicalData.examination.push(match[0].trim());
+      }
+    });
+
+    // Assessment patterns
+    const assessmentPatterns = [
+      /(?:impression|assessment|plan)[:\s]+([^\n.]+)/gi
+    ];
+
+    assessmentPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        clinicalData.assessment.push(match[1].trim());
+      }
+    });
+  },
+
+  /**
+   * Merge lab value arrays, avoiding duplicates
+   */
+  mergeLabArrays(arr1, arr2) {
+    const merged = [...arr1];
+    const names = new Set(arr1.map(l => l.name.toLowerCase()));
+
+    arr2.forEach(lab => {
+      if (!names.has(lab.name.toLowerCase())) {
+        merged.push(lab);
+      }
+    });
+
+    return merged;
+  },
+
+  /**
+   * Merge clinical data objects
+   */
+  mergeClinicalData(data1, data2) {
+    return {
+      history: [...(data1.history || []), ...(data2.history || [])],
+      examination: [...(data1.examination || []), ...(data2.examination || [])],
+      assessment: [...(data1.assessment || []), ...(data2.assessment || [])],
+      rawText: data1.rawText || data2.rawText || ''
+    };
+  },
+
+  /**
    * Get badge HTML for data type
    */
   getTypeBadge(type) {
