@@ -2678,6 +2678,540 @@
         justify-content: space-between;
       }
     }
+
+    /* ============================================
+       Patient Presentation Styles
+       ============================================ */
+
+    /* Modal adjustments */
+    .modal-container.modal-pres {
+      max-width: 1000px;
+      width: 95%;
+    }
+
+    .modal-container.modal-pres .modal-body {
+      max-height: 75vh;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .modal-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .pres-icon-wrap {
+      background: var(--accent-teal-dim) !important;
+    }
+
+    .pres-icon-wrap svg {
+      stroke: var(--accent-teal);
+    }
+
+    /* Container */
+    .pres-container { max-width: 1000px; margin: 0 auto; }
+    .pres-empty { color: var(--text-muted); text-align: center; padding: 2rem; }
+
+    /* Header */
+    .pres-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1rem;
+    }
+
+    .pres-patient-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .pres-avatar {
+      font-size: 2rem;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-gold-dim);
+      border-radius: 50%;
+    }
+
+    .pres-age, .pres-gender {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    .pres-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: var(--surface-2);
+    }
+
+    .pres-tag.warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+    .pres-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Grid */
+    .pres-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 768px) {
+      .pres-grid { grid-template-columns: 1fr; }
+    }
+
+    .pres-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* Boxes */
+    .pres-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .pres-box-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 0.9rem;
+      background: linear-gradient(90deg, var(--accent-gold-dim) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .pres-icon { font-size: 1rem; }
+
+    .pres-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pres-box-content {
+      padding: 0.75rem 0.9rem;
+    }
+
+    /* Chief Complaint */
+    .pres-cc {
+      font-size: 1rem;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* HPI */
+    .pres-duration {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .pres-symptoms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pres-symptom {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--accent-rose-dim);
+      color: var(--accent-rose);
+      border-radius: 4px;
+    }
+
+    .pres-negatives {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* PMH */
+    .pres-conditions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pres-condition {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    .pres-surgeries {
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .pres-surgery {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      background: var(--accent-purple-dim);
+      color: var(--accent-purple);
+      border-radius: 4px;
+      margin-right: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+
+    /* Medications */
+    .pres-med-cat {
+      margin-bottom: 0.6rem;
+    }
+
+    .pres-med-cat:last-child { margin-bottom: 0; }
+
+    .pres-med-cat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .pres-med-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+
+    .pres-med {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--surface);
+      border-radius: 4px;
+      color: var(--text-primary);
+    }
+
+    .pres-med em {
+      color: var(--accent-gold);
+      font-style: normal;
+      margin-left: 0.25rem;
+    }
+
+    .pres-med small {
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      margin-left: 0.2rem;
+    }
+
+    /* Vitals */
+    .pres-vitals-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .pres-vital {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .pres-vital.high {
+      border-color: var(--critical);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .pres-vital.low {
+      border-color: var(--accent-blue);
+      background: rgba(96, 165, 250, 0.1);
+    }
+
+    .pres-vital.critical {
+      border-color: var(--critical);
+      background: rgba(239, 68, 68, 0.2);
+      animation: pulse-critical 1s infinite;
+    }
+
+    @keyframes pulse-critical {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+    }
+
+    .pres-vital-icon { font-size: 1.1rem; }
+    .pres-vital-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; }
+    .pres-vital-value { font-size: 0.95rem; font-weight: 700; font-family: var(--font-mono); }
+
+    .pres-vital.high .pres-vital-value { color: var(--critical); }
+    .pres-vital.low .pres-vital-value { color: var(--accent-blue); }
+    .pres-vital.critical .pres-vital-value { color: var(--critical); }
+
+    /* Labs */
+    .pres-labs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .pres-lab-cat {
+      border-left: 3px solid var(--cat-color, var(--accent-gold));
+      padding-left: 0.6rem;
+    }
+
+    .pres-lab-cat-header {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--cat-color, var(--accent-gold));
+      margin-bottom: 0.3rem;
+    }
+
+    .pres-lab-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .pres-lab-row {
+      display: flex;
+      align-items: center;
+      padding: 0.25rem 0.4rem;
+      background: var(--surface);
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+
+    .pres-lab-row.high { background: rgba(239, 68, 68, 0.15); }
+    .pres-lab-row.low { background: rgba(96, 165, 250, 0.15); }
+
+    .pres-lab-name {
+      flex: 1;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+    }
+
+    .pres-lab-value {
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+      margin-right: 0.3rem;
+    }
+
+    .pres-lab-row.high .pres-lab-value { color: var(--critical); }
+    .pres-lab-row.low .pres-lab-value { color: var(--accent-blue); }
+
+    .pres-lab-flag {
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 0.1rem 0.25rem;
+      background: var(--critical);
+      color: white;
+      border-radius: 2px;
+      margin-left: 0.2rem;
+    }
+
+    .pres-lab-unit {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      min-width: 45px;
+      text-align: right;
+    }
+
+    /* ABG */
+    .pres-abg-values {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pres-abg-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.4rem 0.6rem;
+      background: var(--surface);
+      border-radius: 4px;
+      min-width: 50px;
+    }
+
+    .pres-abg-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .pres-abg-val {
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .pres-abg-interp {
+      padding: 0.5rem 0.6rem;
+      background: var(--accent-gold-dim);
+      border-radius: 4px;
+      border-left: 3px solid var(--accent-gold);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* Imaging */
+    .pres-imaging-study {
+      background: var(--surface);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .pres-imaging-study:last-child { margin-bottom: 0; }
+
+    .pres-imaging-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.6rem;
+      background: var(--surface-2);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .pres-ef-badge {
+      margin-left: auto;
+      padding: 0.15rem 0.4rem;
+      background: var(--accent-gold);
+      color: var(--bg-deep);
+      border-radius: 3px;
+      font-size: 0.7rem;
+    }
+
+    .pres-imaging-findings {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    /* Examination */
+    .pres-exam-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .pres-exam-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+    }
+
+    .pres-exam-icon { font-size: 0.9rem; }
+    .pres-exam-sys { font-weight: 600; color: var(--accent-gold); }
+
+    /* Assessment */
+    .pres-dx-primary {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.6rem;
+      background: var(--accent-gold-dim);
+      border-radius: 4px;
+      border-left: 3px solid var(--accent-gold);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .pres-dx-badge {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-gold);
+      color: var(--bg-deep);
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .pres-dx-badge.sec {
+      background: var(--surface-2);
+      color: var(--text-muted);
+    }
+
+    .pres-dx-secondary {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .pres-dx-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      background: var(--surface);
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Plan */
+    .pres-plan-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .pres-plan-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.3rem 0;
+      font-size: 0.85rem;
+    }
+
+    .pres-plan-num {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-teal);
+      color: var(--bg-deep);
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Patient card view button */
+    .btn-icon.btn-view {
+      background: var(--accent-teal-dim);
+    }
+
+    .btn-icon.btn-view:hover {
+      background: var(--accent-teal);
+      color: var(--bg-deep);
+    }
   </style>
 </head>
 <body>
@@ -3100,26 +3634,16 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Diagnosis</label>
-          <input type="text" id="patient-diagnosis" class="form-input" placeholder="e.g., CAP, AKI on CKD">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Medications</label>
-          <textarea id="patient-meds" class="form-textarea" rows="2"
-            placeholder="e.g., Metoprolol 50mg BD, Aspirin 100mg OD, Omeprazole 40mg OD"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Latest Labs</label>
-          <textarea id="patient-labs" class="form-textarea" rows="2"
-            placeholder="e.g., WBC 12.5, Hb 10.2 L, Cr 150 H, K 4.2"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Vitals</label>
-          <input type="text" id="patient-vitals" class="form-input"
-            placeholder="e.g., BP 130/80, HR 88, Temp 37.2, SpO2 96%">
+          <label class="form-label">Clinical Info (Diagnosis, PMH, Meds, Labs, Vitals, Plan)</label>
+          <textarea id="patient-diagnosis" class="form-textarea" rows="6" 
+            placeholder="Paste all clinical info here - the app will automatically detect and organize:
+• Demographics: 71 yo male, smoker
+• PMH: DM, HTN, IHD, HF, CKD
+• Meds: Aspirin 100mg OD, Lasix 40mg OD
+• Labs: WBC 12, Hb 10 L, Cr 180 H, K 5.5 H
+• Vitals: BP 130/80, HR 92, SpO2 96%
+• ABG: pH 7.32, pCO2 28, HCO3 18
+• Assessment & Plan"></textarea>
         </div>
 
         <div class="form-row">
@@ -3143,6 +3667,44 @@
           <button type="submit" class="btn btn-primary">Save Patient</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Patient Presentation Modal -->
+  <div class="modal-overlay" id="pres-modal">
+    <div class="modal-container modal-pres">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon pres-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title">Patient Presentation</h2>
+            <p class="modal-subtitle" id="pres-patient-name">--</p>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="pres-copy-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy
+          </button>
+          <button class="modal-close" id="pres-modal-close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body" id="pres-container">
+        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Select a patient to view presentation</p>
+      </div>
     </div>
   </div>
 
@@ -3193,7 +3755,7 @@
     // Patient Manager Backend URL
     window.MEDWARD_PATIENT_API_URL = 'https://script.google.com/macros/s/AKfycbx-l2xdsAHTZu7bcueN83Yz8xbCwtKbHfUSJuhIgtWVR5XyeJYh9TrfMgzznTYX4Z0kww/exec';
   </script>
-  <script src="js/clinical-parser.js"></script>
+  <script src="js/patient-presentation.js"></script>
   <script src="js/patient-manager.js"></script>
 
   <!-- Service Worker Registration -->
