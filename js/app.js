@@ -400,7 +400,6 @@
     if (elements.textInput) elements.textInput.value = '';
     updateAnalyzeButton();
   }
-  }
 
   // Neural system instance
   let neural = null;

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedWard Login Debug</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      background: #0a0a0f;
+      color: #fff;
+    }
+    .debug-section {
+      background: rgba(255,255,255,0.05);
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    input {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    .log {
+      background: #000;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .error { color: #ef4444; }
+    .success { color: #10b981; }
+    .info { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <h1>🔧 MedWard Login Debug</h1>
+
+  <div class="debug-section">
+    <h3>Test Login</h3>
+    <input type="text" id="test-username" placeholder="Enter username">
+    <button onclick="testLogin()">Test Login</button>
+  </div>
+
+  <div class="debug-section">
+    <h3>System Checks</h3>
+    <button onclick="runChecks()">Run All Checks</button>
+  </div>
+
+  <div class="debug-section">
+    <h3>Debug Log</h3>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    const log = document.getElementById('log');
+
+    function addLog(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      log.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function testLogin() {
+      const username = document.getElementById('test-username').value.trim();
+
+      if (!username) {
+        addLog('❌ Username is empty', 'error');
+        return;
+      }
+
+      addLog(`🔄 Attempting login with username: ${username}`, 'info');
+
+      try {
+        const user = { name: username, initial: username[0].toUpperCase() };
+        localStorage.setItem('medward_user', JSON.stringify(user));
+        addLog('✅ User saved to localStorage', 'success');
+
+        // Verify it was saved
+        const saved = localStorage.getItem('medward_user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          addLog(`✅ Verified: ${JSON.stringify(parsed)}`, 'success');
+          addLog('🎉 Login would succeed! You can now try the main app.', 'success');
+        } else {
+          addLog('❌ Failed to verify saved data', 'error');
+        }
+      } catch (e) {
+        addLog(`❌ Error: ${e.message}`, 'error');
+        addLog(`Stack: ${e.stack}`, 'error');
+      }
+    }
+
+    function runChecks() {
+      addLog('🔍 Starting system checks...', 'info');
+
+      // Check 1: localStorage availability
+      try {
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+        addLog('✅ localStorage is available', 'success');
+      } catch (e) {
+        addLog(`❌ localStorage error: ${e.message}`, 'error');
+        addLog('This might be why login is failing!', 'error');
+      }
+
+      // Check 2: DOM elements
+      addLog('Checking if main app elements exist...', 'info');
+      const elements = [
+        'login-screen',
+        'dashboard-screen',
+        'username-input',
+        'login-btn'
+      ];
+
+      elements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          addLog(`✅ Found #${id}`, 'success');
+        } else {
+          addLog(`❌ Missing #${id}`, 'error');
+        }
+      });
+
+      // Check 3: Check if app.js is loaded
+      if (typeof window.MedWard !== 'undefined') {
+        addLog('✅ MedWard app is loaded', 'success');
+      } else {
+        addLog('❌ MedWard app not loaded', 'error');
+      }
+
+      // Check 4: Check existing session
+      try {
+        const existing = localStorage.getItem('medward_user');
+        if (existing) {
+          addLog(`ℹ️  Existing session found: ${existing}`, 'info');
+          addLog('Try clearing localStorage and reloading', 'info');
+        } else {
+          addLog('ℹ️  No existing session', 'info');
+        }
+      } catch (e) {
+        addLog(`❌ Can't check existing session: ${e.message}`, 'error');
+      }
+
+      // Check 5: JavaScript errors
+      addLog('ℹ️  Check browser console (F12) for JavaScript errors', 'info');
+
+      addLog('🏁 Checks complete', 'info');
+    }
+
+    // Auto-run checks on load
+    window.addEventListener('load', () => {
+      addLog('🚀 Debug tool loaded', 'success');
+      addLog('Click "Run All Checks" to diagnose issues', 'info');
+    });
+
+    // Capture console errors
+    window.addEventListener('error', (e) => {
+      addLog(`🔴 JavaScript Error: ${e.message}`, 'error');
+      addLog(`  at ${e.filename}:${e.lineno}:${e.colno}`, 'error');
+    });
+  </script>
+</body>
+</html>
