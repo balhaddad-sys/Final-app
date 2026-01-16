@@ -128,6 +128,7 @@ function updateDateHeader() {
 
 /**
  * Parse the sheet and get all patients with proper structure
+ * FIXED: Handles date values in Room column
  */
 function getPatients(data) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
@@ -137,7 +138,6 @@ function getPatients(data) {
   const patients = [];
   let currentWard = '';
   let currentSection = 'active'; // 'active' or 'chronic'
-  let inDataSection = false;
 
   // Skip patterns - these are NOT patients
   const skipPatterns = [
@@ -151,7 +151,6 @@ function getPatients(data) {
     /^assigned/i,
     /^status/i,
     /^er\/unassigned/i,
-    /^unassigned/i,
     /monday|tuesday|wednesday|thursday|friday|saturday|sunday/i,
     /january|february|march|april|may|june|july|august|september|october|november|december/i
   ];
@@ -160,17 +159,44 @@ function getPatients(data) {
   const wardPatterns = [
     /^ward\s*\d+/i,
     /^icu$/i,
-    /^er$/i,
-    /^ER\/Unassigned$/i
+    /^er$/i
   ];
+
+  // Date detection helper
+  function isDateValue(val) {
+    if (!val) return false;
+    if (val instanceof Date) return true;
+
+    const str = val.toString();
+
+    // Check for month names
+    if (/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(str)) return true;
+
+    // Check for day names
+    if (/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i.test(str)) return true;
+
+    // Check for GMT/UTC
+    if (/GMT|UTC/i.test(str)) return true;
+
+    // Check for ISO date format
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) return true;
+
+    // Check for date-like number (Google Sheets date serial)
+    if (typeof val === 'number' && val > 40000 && val < 50000) return true;
+
+    return false;
+  }
 
   for (let i = 0; i < values.length; i++) {
     const row = values[i];
-    const colA = row[0] ? row[0].toString().trim() : '';
-    const colB = row[1] ? row[1].toString().trim() : '';
+    const colA = row[0];
+    const colB = row[1];
+
+    const colAStr = colA ? colA.toString().trim() : '';
+    const colBStr = colB ? colB.toString().trim() : '';
 
     // Check for chronic section
-    if (colA.toLowerCase().includes('chronic') || colB.toLowerCase().includes('chronic')) {
+    if (colAStr.toLowerCase().includes('chronic') || colBStr.toLowerCase().includes('chronic')) {
       currentSection = 'chronic';
       continue;
     }
@@ -178,9 +204,8 @@ function getPatients(data) {
     // Check for ward header
     let isWardHeader = false;
     for (const pattern of wardPatterns) {
-      if (pattern.test(colA)) {
-        currentWard = colA;
-        inDataSection = true;
+      if (pattern.test(colAStr)) {
+        currentWard = colAStr;
         isWardHeader = true;
         break;
       }
@@ -188,40 +213,49 @@ function getPatients(data) {
     if (isWardHeader) continue;
 
     // Check for ER/Unassigned section
-    if (colA.toLowerCase().includes('er/unassigned') || colA.toLowerCase() === 'er') {
+    if (colAStr.toLowerCase().includes('er/unassigned') || colAStr.toLowerCase() === 'er') {
       currentWard = 'ER/Unassigned';
-      inDataSection = true;
       continue;
     }
 
     // Skip non-data rows
     let shouldSkip = false;
     for (const pattern of skipPatterns) {
-      if (pattern.test(colA) || pattern.test(colB)) {
+      if (pattern.test(colAStr) || pattern.test(colBStr)) {
         shouldSkip = true;
         break;
       }
     }
     if (shouldSkip) continue;
 
-    // Skip empty rows
-    if (!colB) continue;
+    // Skip empty patient name
+    if (!colBStr) continue;
+
+    // Skip if patient name looks like a date
+    if (isDateValue(colB)) continue;
 
     // Skip if no ward assigned yet
     if (!currentWard) continue;
 
-    // This is a patient row
-    const roomBed = colA;
-    const patientName = colB;
+    // Get room/bed - but clear if it's a date
+    let roomBed = '';
+    if (colA && !isDateValue(colA)) {
+      roomBed = colAStr;
+    }
+
+    const patientName = colBStr;
     const diagnosis = row[2] ? row[2].toString().trim() : '';
     const assignedDoctor = row[3] ? row[3].toString().trim() : '';
     const statusFromSheet = row[4] ? row[4].toString().trim() : '';
+
+    // Skip if diagnosis looks like header
+    if (diagnosis.toLowerCase() === 'diagnosis') continue;
 
     // Determine status
     let status = statusFromSheet || (currentSection === 'chronic' ? 'Chronic' : 'Non-Chronic');
 
     patients.push({
-      rowIndex: i + 1, // 1-indexed for Sheets API
+      rowIndex: i + 1,
       ward: currentWard,
       roomBed: roomBed,
       patientName: patientName,
