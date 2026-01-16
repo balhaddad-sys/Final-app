@@ -157,19 +157,29 @@
   async function loadAllData() {
     showLoading(true);
 
-    // Update date header automatically
-    api('updateDateHeader');
+    // Use optimized single API call to get everything at once
+    const result = await api('getAllData', currentFilter);
 
-    // Load sheet URL
-    const urlResult = await api('getSheetUrl');
-    if (urlResult) sheetUrl = urlResult.url;
+    if (!result) {
+      showLoading(false);
+      return;
+    }
 
-    await Promise.all([
-      loadWards(),
-      loadDoctors()
-    ]);
+    // Extract all data from single response
+    patients = result.patients || [];
+    patientsByWard = result.patientsByWard || {};
+    wards = result.wards || [];
+    doctors = result.doctors || [];
+    sheetUrl = result.sheetUrl || '';
 
-    await loadPatients();
+    // Populate dropdowns
+    populateWardDropdowns();
+    populateDoctorDropdowns();
+
+    // Update UI
+    updateStats(result);
+    renderPatients();
+
     showLoading(false);
   }
 
@@ -184,12 +194,7 @@
     renderPatients();
   }
 
-  async function loadWards() {
-    const result = await api('getWards');
-    if (!result) return;
-
-    wards = result.wards || [];
-
+  function populateWardDropdowns() {
     // Populate filter dropdown
     const wardFilter = $('ward-filter');
     if (wardFilter) {
@@ -205,12 +210,7 @@
     }
   }
 
-  async function loadDoctors() {
-    const result = await api('getDoctors');
-    if (!result) return;
-
-    doctors = result.doctors || [];
-
+  function populateDoctorDropdowns() {
     // Populate filter
     const doctorFilter = $('doctor-filter');
     if (doctorFilter) {

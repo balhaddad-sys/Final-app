@@ -22,6 +22,9 @@ function doPost(e) {
 
     let response;
     switch(action) {
+      case 'getAllData':
+        response = getAllData(data);
+        break;
       case 'getPatients':
         response = getPatients(data);
         break;
@@ -78,6 +81,48 @@ function doGet(e) {
 }
 
 /**
+ * Get all data in a single call for performance optimization
+ * Returns patients, wards, doctors, and sheet URL all at once
+ */
+function getAllData(data) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+
+  // Read sheet data only once
+  const values = sheet.getDataRange().getValues();
+
+  // Update date header in background (non-blocking)
+  try {
+    updateDateHeaderInternal(sheet);
+  } catch(e) {
+    Logger.log('Date header update failed: ' + e.toString());
+  }
+
+  // Parse patients from the cached values
+  const patientsResult = parsePatientsFromValues(values, data);
+
+  // Extract wards from the cached values
+  const wards = extractWardsFromValues(values);
+
+  // Extract doctors from the cached values
+  const doctors = extractDoctorsFromValues(values);
+
+  // Return everything in one response
+  return {
+    success: true,
+    patients: patientsResult.patients,
+    patientsByWard: patientsResult.patientsByWard,
+    totalCount: patientsResult.totalCount,
+    activeCount: patientsResult.activeCount,
+    chronicCount: patientsResult.chronicCount,
+    wards: wards,
+    doctors: doctors,
+    sheetUrl: 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/edit',
+    lastUpdated: new Date().toISOString()
+  };
+}
+
+/**
  * Get the Google Sheet URL for direct access
  */
 function getSheetUrl() {
@@ -88,12 +133,9 @@ function getSheetUrl() {
 }
 
 /**
- * Update the date header to today's date
+ * Update the date header to today's date (internal version with sheet object)
  */
-function updateDateHeader() {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
-
+function updateDateHeaderInternal(sheet) {
   const today = new Date();
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -120,6 +162,18 @@ function updateDateHeader() {
   // Update cell B1 (or wherever your date is)
   sheet.getRange('B1').setValue(dateString);
 
+  return dateString;
+}
+
+/**
+ * Update the date header to today's date (public API)
+ */
+function updateDateHeader() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+
+  const dateString = updateDateHeaderInternal(sheet);
+
   return {
     success: true,
     date: dateString
@@ -127,14 +181,64 @@ function updateDateHeader() {
 }
 
 /**
- * Parse the sheet and get all patients with proper structure
- * FIXED: Handles date values in Room column
+ * Helper: Extract wards from pre-loaded values
  */
-function getPatients(data) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
-  const values = sheet.getDataRange().getValues();
+function extractWardsFromValues(values) {
+  const wards = [];
+  const wardPatterns = [/^ward\s*\d+/i, /^icu$/i, /^er$/i];
 
+  for (let i = 0; i < values.length; i++) {
+    const cell = values[i][0];
+    if (cell && typeof cell === 'string') {
+      const val = cell.trim();
+      for (const pattern of wardPatterns) {
+        if (pattern.test(val) && !wards.includes(val)) {
+          wards.push(val);
+          break;
+        }
+      }
+    }
+  }
+
+  // Sort wards: Ward 5, Ward 10, Ward 14, etc., then ICU, ER
+  wards.sort((a, b) => {
+    const numA = parseInt(a.match(/\d+/)?.[0] || '999');
+    const numB = parseInt(b.match(/\d+/)?.[0] || '999');
+    if (numA !== numB) return numA - numB;
+    return a.localeCompare(b);
+  });
+
+  return wards;
+}
+
+/**
+ * Helper: Extract doctors from pre-loaded values
+ */
+function extractDoctorsFromValues(values) {
+  const doctors = new Set();
+
+  for (let i = 0; i < values.length; i++) {
+    const doctor = values[i][3]; // Column D
+    if (doctor && typeof doctor === 'string') {
+      const name = doctor.trim();
+      // Skip headers and empty
+      if (name &&
+          !name.toLowerCase().includes('assigned') &&
+          !name.toLowerCase().includes('doctor') &&
+          name.length > 1) {
+        doctors.add(name);
+      }
+    }
+  }
+
+  return Array.from(doctors).sort();
+}
+
+/**
+ * Helper: Parse patients from pre-loaded values
+ */
+function parsePatientsFromValues(values, filterData) {
+  filterData = filterData || {};
   const patients = [];
   let currentWard = '';
   let currentSection = 'active'; // 'active' or 'chronic'
@@ -269,22 +373,22 @@ function getPatients(data) {
   // Apply filters
   let filtered = patients;
 
-  if (data.ward && data.ward !== '') {
+  if (filterData.ward && filterData.ward !== '') {
     filtered = filtered.filter(p =>
-      p.ward.toLowerCase().includes(data.ward.toLowerCase())
+      p.ward.toLowerCase().includes(filterData.ward.toLowerCase())
     );
   }
 
-  if (data.doctor && data.doctor !== '') {
+  if (filterData.doctor && filterData.doctor !== '') {
     filtered = filtered.filter(p =>
-      p.assignedDoctor.toLowerCase().includes(data.doctor.toLowerCase())
+      p.assignedDoctor.toLowerCase().includes(filterData.doctor.toLowerCase())
     );
   }
 
-  if (data.status && data.status !== '') {
-    if (data.status.toLowerCase() === 'chronic') {
+  if (filterData.status && filterData.status !== '') {
+    if (filterData.status.toLowerCase() === 'chronic') {
       filtered = filtered.filter(p => p.section === 'chronic');
-    } else if (data.status.toLowerCase() === 'active' || data.status.toLowerCase() === 'non-chronic') {
+    } else if (filterData.status.toLowerCase() === 'active' || filterData.status.toLowerCase() === 'non-chronic') {
       filtered = filtered.filter(p => p.section === 'active');
     }
   }
@@ -297,12 +401,32 @@ function getPatients(data) {
   });
 
   return {
-    success: true,
     patients: filtered,
     patientsByWard: byWard,
     totalCount: filtered.length,
     activeCount: filtered.filter(p => p.section === 'active').length,
-    chronicCount: filtered.filter(p => p.section === 'chronic').length,
+    chronicCount: filtered.filter(p => p.section === 'chronic').length
+  };
+}
+
+/**
+ * Parse the sheet and get all patients with proper structure
+ * FIXED: Handles date values in Room column
+ */
+function getPatients(data) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+  const values = sheet.getDataRange().getValues();
+
+  const result = parsePatientsFromValues(values, data);
+
+  return {
+    success: true,
+    patients: result.patients,
+    patientsByWard: result.patientsByWard,
+    totalCount: result.totalCount,
+    activeCount: result.activeCount,
+    chronicCount: result.chronicCount,
     lastUpdated: new Date().toISOString()
   };
 }
@@ -315,29 +439,7 @@ function getWards() {
   const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
   const values = sheet.getDataRange().getValues();
 
-  const wards = [];
-  const wardPatterns = [/^ward\s*\d+/i, /^icu$/i, /^er$/i];
-
-  for (let i = 0; i < values.length; i++) {
-    const cell = values[i][0];
-    if (cell && typeof cell === 'string') {
-      const val = cell.trim();
-      for (const pattern of wardPatterns) {
-        if (pattern.test(val) && !wards.includes(val)) {
-          wards.push(val);
-          break;
-        }
-      }
-    }
-  }
-
-  // Sort wards: Ward 5, Ward 10, Ward 14, etc., then ICU, ER
-  wards.sort((a, b) => {
-    const numA = parseInt(a.match(/\d+/)?.[0] || '999');
-    const numB = parseInt(b.match(/\d+/)?.[0] || '999');
-    if (numA !== numB) return numA - numB;
-    return a.localeCompare(b);
-  });
+  const wards = extractWardsFromValues(values);
 
   return {
     success: true,
@@ -353,25 +455,11 @@ function getDoctors() {
   const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
   const values = sheet.getDataRange().getValues();
 
-  const doctors = new Set();
-
-  for (let i = 0; i < values.length; i++) {
-    const doctor = values[i][3]; // Column D
-    if (doctor && typeof doctor === 'string') {
-      const name = doctor.trim();
-      // Skip headers and empty
-      if (name &&
-          !name.toLowerCase().includes('assigned') &&
-          !name.toLowerCase().includes('doctor') &&
-          name.length > 1) {
-        doctors.add(name);
-      }
-    }
-  }
+  const doctors = extractDoctorsFromValues(values);
 
   return {
     success: true,
-    doctors: Array.from(doctors).sort()
+    doctors: doctors
   };
 }
 
