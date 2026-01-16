@@ -52,6 +52,113 @@ const ClinicalComponents = {
     return text;
   },
 
+  /**
+   * Strip raw filenames from text (e.g., [IMG_20260116_085213-1.jpg])
+   * This removes meaningless filename references from display
+   */
+  stripFilenames(text) {
+    if (!text || typeof text !== 'string') return '';
+    // Remove patterns like [IMG_...jpg], [filename.png], etc.
+    return text.replace(/\[[\w\-_.]+\.(jpg|jpeg|png|gif|pdf|txt)\]/gi, '').trim();
+  },
+
+  /**
+   * Determine severity level of a finding based on keywords
+   * Returns: 'critical' | 'warning' | 'abnormal' | 'normal'
+   */
+  determineFindingSeverity(text) {
+    if (!text) return 'abnormal';
+    const lowerText = text.toLowerCase();
+
+    // Critical indicators
+    const criticalKeywords = [
+      'shock', 'hypotension', 'acute decompensated', 'critical', 'severe',
+      'emergency', 'life-threatening', 'cardiogenic shock', 'septic shock',
+      'acute mi', 'myocardial infarction', 'stroke', 'hemorrhage', 'acute kidney injury'
+    ];
+
+    if (criticalKeywords.some(keyword => lowerText.includes(keyword))) {
+      return 'critical';
+    }
+
+    // Warning indicators
+    const warningKeywords = [
+      'moderate', 'elevated', 'low ', 'dysfunction', 'failure',
+      'decreased', 'reduced', 'impaired', 'concerning', 'significant'
+    ];
+
+    if (warningKeywords.some(keyword => lowerText.includes(keyword))) {
+      return 'warning';
+    }
+
+    // Normal indicators
+    const normalKeywords = [
+      'normal', 'stable', 'excellent', 'good', 'adequate', 'appropriate',
+      'within normal limits', 'wnl', 'unremarkable', 'no acute'
+    ];
+
+    if (normalKeywords.some(keyword => lowerText.includes(keyword))) {
+      return 'normal';
+    }
+
+    return 'abnormal';
+  },
+
+  /**
+   * Categorize finding by medical system/category
+   */
+  categorizeFinding(text) {
+    if (!text) return 'General';
+    const lowerText = text.toLowerCase();
+
+    // Cardiac / Cardiovascular
+    if (lowerText.match(/cardiac|ventricular|heart|valve|ef |echo|cardiomyopathy|atrial|myocardial|coronary/)) {
+      return 'Cardiac';
+    }
+
+    // Respiratory / Pulmonary
+    if (lowerText.match(/pulmonary|lung|respiratory|spo2|oxygen|ventilation|breath|pneumonia|copd|asthma/)) {
+      return 'Respiratory';
+    }
+
+    // Renal / Kidney
+    if (lowerText.match(/creatinine|bun|renal|kidney|egfr|urea|dialysis|arf/)) {
+      return 'Renal';
+    }
+
+    // Hematology / Blood
+    if (lowerText.match(/hemoglobin|anemia|hematocrit|wbc|platelet|coagulation|bleeding/)) {
+      return 'Hematology';
+    }
+
+    // Neurological / Mental Status
+    if (lowerText.match(/gcs|alert|oriented|mental|neuro|consciousness|seizure|stroke/)) {
+      return 'Neurological';
+    }
+
+    // Vitals / Hemodynamic
+    if (lowerText.match(/\bbp\b|blood pressure|\bhr\b|heart rate|hemodynamic|vital sign|temperature|pulse/)) {
+      return 'Vitals';
+    }
+
+    // Hepatic / Liver
+    if (lowerText.match(/liver|hepat|bilirubin|ast|alt|cirrhosis/)) {
+      return 'Hepatic';
+    }
+
+    // Electrolytes
+    if (lowerText.match(/sodium|potassium|electrolyte|calcium|magnesium|phosphate/)) {
+      return 'Electrolytes';
+    }
+
+    // Metabolic / Endocrine
+    if (lowerText.match(/glucose|diabete|thyroid|metabolic|insulin/)) {
+      return 'Metabolic';
+    }
+
+    return 'General';
+  },
+
   getInterpretation(results) {
     if (results.interpretation && typeof results.interpretation === 'object') return results.interpretation;
     if (results.rawResponse?.interpretation && typeof results.rawResponse.interpretation === 'object') return results.rawResponse.interpretation;
@@ -95,21 +202,26 @@ const ClinicalComponents = {
     console.log('[MedWard v6.0] Labs rendered:', finalLabValues.length);
 
     let html = '<div class="elite-report">';
-    
+
     if (this.currentDataClassification) {
       html += this.renderDataTypeIndicator(this.currentDataClassification);
     }
-    
+
     const severity = this.determineSeverity(results, finalLabValues, interp);
     const header = this.cleanText(interp.header) || this.cleanText(interp.summary)?.substring(0, 80) || 'Clinical Analysis';
     html += this.renderSeverityHeader(severity, header);
-    
+
+    // Add modern summary banner with severity counts
+    if (clinicalFindings.length > 0 || finalLabValues.length > 0) {
+      html += this.renderAnalysisSummaryBanner(clinicalFindings, finalLabValues);
+    }
+
     const summary = this.cleanText(interp.summary);
     if (summary) html += this.renderExecutiveSummary(summary);
-    
+
     const alerts = this.buildAlerts(interp, finalLabValues);
     if (alerts.length > 0) html += this.renderCriticalAlerts(alerts);
-    
+
     if (clinicalFindings.length > 0) html += this.renderClinicalFindings(clinicalFindings);
     
     if (finalLabValues.length > 0) html += this.renderLabSummaryCard(finalLabValues);
@@ -319,14 +431,48 @@ const ClinicalComponents = {
   separateAIInterpretation(results, interp) {
     const clinicalFindings = [];
     const aiLabValues = [];
+    const findingsSet = new Set(); // Avoid duplicates
+
+    // Process keyFindings
     (interp.keyFindings || []).forEach(item => {
-      const text = typeof item === 'string' ? item : (item.finding || item.text || '');
-      if (text) clinicalFindings.push({ finding: text, type: this.classifyClinicalFinding(text) });
+      const rawText = typeof item === 'string' ? item : (item.finding || item.text || '');
+      if (rawText) {
+        const cleanedText = this.stripFilenames(rawText);
+        if (cleanedText && !findingsSet.has(cleanedText)) {
+          findingsSet.add(cleanedText);
+          clinicalFindings.push({
+            id: `finding-${clinicalFindings.length}`,
+            finding: cleanedText,
+            severity: this.determineFindingSeverity(cleanedText),
+            category: this.categorizeFinding(cleanedText),
+            type: this.classifyClinicalFinding(cleanedText) // Keep for backward compatibility
+          });
+        }
+      }
     });
+
+    // Process abnormalities
     (interp.abnormalities || []).forEach(item => {
-      const text = typeof item === 'string' ? item : (item.finding || item.text || '');
-      if (text && text.length > 50) clinicalFindings.push({ finding: text, type: this.classifyClinicalFinding(text) });
+      const rawText = typeof item === 'string' ? item : (item.finding || item.text || '');
+      if (rawText) {
+        const cleanedText = this.stripFilenames(rawText);
+        if (cleanedText && !findingsSet.has(cleanedText)) {
+          findingsSet.add(cleanedText);
+          clinicalFindings.push({
+            id: `finding-${clinicalFindings.length}`,
+            finding: cleanedText,
+            severity: this.determineFindingSeverity(cleanedText),
+            category: this.categorizeFinding(cleanedText),
+            type: this.classifyClinicalFinding(cleanedText)
+          });
+        }
+      }
     });
+
+    // Sort findings: critical first, then by severity
+    const severityOrder = { 'critical': 0, 'warning': 1, 'abnormal': 2, 'normal': 3 };
+    clinicalFindings.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
     return { clinicalFindings, aiLabValues };
   },
 
@@ -358,8 +504,59 @@ const ClinicalComponents = {
   },
 
   renderSeverityHeader(severity, header) {
-    const icons = { critical: '⚠️', abnormal: '⚡', normal: '✓' };
-    return `<div class="severity-header ${severity}"><div class="severity-badge">${icons[severity]} ${severity.toUpperCase()}</div><h2 class="severity-title">${this.esc(header)}</h2></div>`;
+    const config = {
+      critical: { icon: '🔴', label: 'Critical', gradient: 'from-red-950 to-red-900', border: 'border-red-800', text: 'text-red-200' },
+      abnormal: { icon: '🟡', label: 'Abnormal', gradient: 'from-yellow-950/50 to-yellow-900/30', border: 'border-yellow-700', text: 'text-yellow-200' },
+      warning: { icon: '🟠', label: 'Warning', gradient: 'from-amber-950 to-amber-900', border: 'border-amber-700', text: 'text-amber-200' },
+      normal: { icon: '🟢', label: 'Normal', gradient: 'from-slate-900 to-slate-800', border: 'border-slate-700', text: 'text-slate-200' }
+    };
+    const cfg = config[severity] || config.normal;
+
+    return `
+      <div class="severity-header-v7 ${severity}" style="background: linear-gradient(135deg, var(--${severity}-bg-start), var(--${severity}-bg-end)); border: 1px solid var(--${severity}-border);">
+        <div class="severity-badge-v7">
+          <span class="severity-icon">${cfg.icon}</span>
+          <span class="severity-text">${cfg.label.toUpperCase()}</span>
+        </div>
+        <h2 class="severity-title-v7">${this.esc(header)}</h2>
+      </div>
+    `;
+  },
+
+  /**
+   * Render modern summary banner with severity counts
+   */
+  renderAnalysisSummaryBanner(findings, labs) {
+    const counts = {
+      critical: findings.filter(f => f.severity === 'critical').length + labs.filter(l => l.status === 'critical').length,
+      warning: findings.filter(f => f.severity === 'warning').length,
+      abnormal: findings.filter(f => f.severity === 'abnormal').length,
+      normal: findings.filter(f => f.severity === 'normal').length
+    };
+
+    const hasCritical = counts.critical > 0;
+    const totalAbnormal = counts.critical + counts.warning + counts.abnormal;
+
+    return `
+      <div class="analysis-summary-banner ${hasCritical ? 'critical-banner' : 'normal-banner'}">
+        <div class="banner-content">
+          <div class="banner-left">
+            <h3 class="banner-title">
+              ${hasCritical ? '⚠️ Immediate Attention Required' : '✓ Analysis Complete'}
+            </h3>
+            <p class="banner-subtitle">
+              ${totalAbnormal > 0 ? `${totalAbnormal} abnormalit${totalAbnormal === 1 ? 'y' : 'ies'} detected` : 'No significant abnormalities'}
+            </p>
+          </div>
+          <div class="banner-right">
+            ${counts.critical > 0 ? `<div class="count-badge critical-badge"><span class="badge-count">${counts.critical}</span><span class="badge-label">Critical</span></div>` : ''}
+            ${counts.warning > 0 ? `<div class="count-badge warning-badge"><span class="badge-count">${counts.warning}</span><span class="badge-label">Warning</span></div>` : ''}
+            ${counts.abnormal > 0 ? `<div class="count-badge abnormal-badge"><span class="badge-count">${counts.abnormal}</span><span class="badge-label">Abnormal</span></div>` : ''}
+            ${counts.normal > 0 ? `<div class="count-badge normal-badge"><span class="badge-count">${counts.normal}</span><span class="badge-label">Normal</span></div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
   },
 
   renderExecutiveSummary(summary) {
@@ -370,27 +567,121 @@ const ClinicalComponents = {
     return `<div class="alert-section">${alerts.map(a => `<div class="elite-alert ${a.severity}"><div class="alert-body"><div class="alert-title">${this.esc(a.title)}</div><div class="alert-desc">${this.esc(a.text)}</div></div></div>`).join('')}</div>`;
   },
 
-  renderClinicalFindings(findings) {
-    const grouped = {};
-    findings.forEach(f => { const t = f.type || 'general'; if (!grouped[t]) grouped[t] = []; grouped[t].push(f); });
-    const cfg = {
-      critical: { label: 'Critical', icon: '🚨', color: '#ef4444' },
-      hepatic: { label: 'Hepatic', icon: '🫁', color: '#f59e0b' },
-      renal: { label: 'Renal', icon: '💧', color: '#3b82f6' },
-      electrolytes: { label: 'Electrolytes', icon: '⚡', color: '#8b5cf6' },
-      cardiovascular: { label: 'Cardiovascular', icon: '❤️', color: '#ef4444' },
-      metabolic: { label: 'Metabolic', icon: '🔥', color: '#22c55e' },
-      general: { label: 'General', icon: '📝', color: '#6b7280' }
+  /**
+   * Render individual finding card with severity styling
+   */
+  renderFindingCard(finding) {
+    const severityConfig = {
+      critical: {
+        bg: 'rgba(127, 29, 29, 0.3)',
+        border: '#ef4444',
+        badgeBg: '#dc2626',
+        textColor: '#fca5a5',
+        icon: '🔴'
+      },
+      warning: {
+        bg: 'rgba(120, 53, 15, 0.3)',
+        border: '#f59e0b',
+        badgeBg: '#d97706',
+        textColor: '#fcd34d',
+        icon: '🟠'
+      },
+      abnormal: {
+        bg: 'rgba(113, 113, 23, 0.2)',
+        border: '#eab308',
+        badgeBg: '#ca8a04',
+        textColor: '#fef08a',
+        icon: '🟡'
+      },
+      normal: {
+        bg: 'rgba(15, 23, 42, 0.4)',
+        border: '#64748b',
+        badgeBg: '#475569',
+        textColor: '#cbd5e1',
+        icon: '🟢'
+      }
     };
-    const order = ['critical','hepatic','renal','electrolytes','cardiovascular','metabolic','general'];
-    let html = `<div class="clinical-findings-section"><div class="section-header-bar"><h3>🏥 Clinical Assessment</h3></div><div class="findings-grid">`;
-    for (const type of order) {
-      const items = grouped[type];
-      if (!items) continue;
-      const c = cfg[type] || cfg.general;
-      html += `<div class="finding-category" style="border-left-color:${c.color}"><div class="finding-category-header"><span>${c.icon}</span><span style="color:${c.color}">${c.label}</span></div><ul class="finding-list">${items.map(i => `<li class="finding-item">• ${this.esc(i.finding)}</li>`).join('')}</ul></div>`;
+
+    const config = severityConfig[finding.severity] || severityConfig.abnormal;
+
+    return `
+      <div class="finding-card-v7" style="background: ${config.bg}; border-left: 4px solid ${config.border};">
+        <div class="finding-card-header">
+          <span class="finding-severity-badge" style="background: ${config.badgeBg};">
+            ${config.icon} ${finding.severity.toUpperCase()}
+          </span>
+          <span class="finding-category-label">${this.esc(finding.category)}</span>
+        </div>
+        <p class="finding-text" style="color: ${config.textColor};">${this.esc(finding.finding)}</p>
+      </div>
+    `;
+  },
+
+  /**
+   * Render clinical findings with modern card-based layout grouped by category
+   */
+  renderClinicalFindings(findings) {
+    if (!findings || findings.length === 0) return '';
+
+    // Group by category
+    const grouped = {};
+    findings.forEach(f => {
+      const cat = f.category || 'General';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(f);
+    });
+
+    // Sort each category by severity
+    const severityOrder = { 'critical': 0, 'warning': 1, 'abnormal': 2, 'normal': 3 };
+    Object.values(grouped).forEach(group => {
+      group.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+    });
+
+    // Critical findings - always display first if present
+    const criticalFindings = findings.filter(f => f.severity === 'critical');
+
+    let html = `<div class="clinical-findings-section-v7">`;
+
+    // Critical section (if any)
+    if (criticalFindings.length > 0) {
+      html += `
+        <div class="critical-findings-section">
+          <h2 class="findings-section-header critical-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:0.5rem;">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Critical Findings (${criticalFindings.length})
+          </h2>
+          <div class="findings-cards-grid">
+            ${criticalFindings.map(f => this.renderFindingCard(f)).join('')}
+          </div>
+        </div>
+      `;
     }
-    html += '</div></div>';
+
+    // Category sections
+    const categoryOrder = ['Cardiac', 'Respiratory', 'Renal', 'Neurological', 'Vitals', 'Hepatic', 'Hematology', 'Electrolytes', 'Metabolic', 'General'];
+    for (const category of categoryOrder) {
+      const items = grouped[category];
+      if (!items || items.length === 0) continue;
+
+      // Skip critical items in category sections (already shown above)
+      const nonCriticalItems = items.filter(f => f.severity !== 'critical');
+      if (nonCriticalItems.length === 0) continue;
+
+      html += `
+        <div class="category-findings-section">
+          <h3 class="findings-category-header">${category}</h3>
+          <div class="findings-cards-grid">
+            ${nonCriticalItems.map(f => this.renderFindingCard(f)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
     return html;
   },
 
@@ -474,10 +765,934 @@ const ClinicalComponents = {
   },
 
   injectStyles() {
-    if (document.getElementById('elite-styles-v60')) return;
+    if (document.getElementById('elite-styles-v70')) return;
     const s = document.createElement('style');
-    s.id = 'elite-styles-v60';
+    s.id = 'elite-styles-v70';
     s.textContent = `
+/* ===============================================
+   MedWard Analysis Results v7.0 - Modern UI
+   Clinical Precision meets Dashboard Clarity
+   =============================================== */
+
+/* CSS Variables */
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a24;
+  --bg-card-hover: #22222e;
+  --border-subtle: #2a2a38;
+  --border-default: #3a3a4a;
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b0;
+  --text-muted: #606075;
+
+  /* Severity Colors */
+  --critical-bg-start: rgba(127, 29, 29, 0.4);
+  --critical-bg-end: rgba(127, 29, 29, 0.2);
+  --critical-border: #ef4444;
+  --critical-text: #fca5a5;
+
+  --warning-bg-start: rgba(120, 53, 15, 0.35);
+  --warning-bg-end: rgba(120, 53, 15, 0.15);
+  --warning-border: #f59e0b;
+  --warning-text: #fcd34d;
+
+  --abnormal-bg-start: rgba(113, 113, 23, 0.3);
+  --abnormal-bg-end: rgba(113, 113, 23, 0.1);
+  --abnormal-border: #eab308;
+  --abnormal-text: #fef08a;
+
+  --normal-bg-start: rgba(15, 23, 42, 0.6);
+  --normal-bg-end: rgba(15, 23, 42, 0.3);
+  --normal-border: #64748b;
+  --normal-text: #cbd5e1;
+}
+
+/* Base Report Container */
+.elite-report {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text-primary);
+  line-height: 1.6;
+  max-width: 100%;
+}
+
+/* ===============================================
+   Severity Header v7
+   =============================================== */
+.severity-header-v7 {
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.severity-badge-v7 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.severity-icon {
+  font-size: 0.9rem;
+}
+
+.severity-title-v7 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+/* ===============================================
+   Analysis Summary Banner
+   =============================================== */
+.analysis-summary-banner {
+  margin: 0 0 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-default);
+  transition: all 0.3s ease;
+}
+
+.critical-banner {
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.25), rgba(127, 29, 29, 0.1));
+  border-color: var(--critical-border);
+}
+
+.normal-banner {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.2));
+  border-color: var(--normal-border);
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.banner-left {
+  flex: 1;
+  min-width: 200px;
+}
+
+.banner-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.4rem 0;
+  color: var(--text-primary);
+}
+
+.critical-banner .banner-title {
+  color: var(--critical-text);
+}
+
+.banner-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.banner-right {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.count-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  min-width: 60px;
+  transition: all 0.2s ease;
+}
+
+.count-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.badge-count {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.badge-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.critical-badge {
+  border: 1px solid var(--critical-border);
+}
+
+.critical-badge .badge-count {
+  color: #ef4444;
+}
+
+.warning-badge {
+  border: 1px solid var(--warning-border);
+}
+
+.warning-badge .badge-count {
+  color: #f59e0b;
+}
+
+.abnormal-badge {
+  border: 1px solid var(--abnormal-border);
+}
+
+.abnormal-badge .badge-count {
+  color: #eab308;
+}
+
+.normal-badge {
+  border: 1px solid var(--normal-border);
+}
+
+.normal-badge .badge-count {
+  color: #22c55e;
+}
+
+/* ===============================================
+   Clinical Findings Section v7
+   =============================================== */
+.clinical-findings-section-v7 {
+  margin-bottom: 1.5rem;
+}
+
+.critical-findings-section {
+  margin-bottom: 2rem;
+}
+
+.findings-section-header {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+}
+
+.critical-header {
+  color: var(--critical-text);
+}
+
+.category-findings-section {
+  margin-bottom: 1.5rem;
+}
+
+.findings-category-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+}
+
+.findings-cards-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* ===============================================
+   Finding Card v7
+   =============================================== */
+.finding-card-v7 {
+  padding: 1rem;
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.finding-card-v7:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.finding-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.finding-severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: white;
+}
+
+.finding-category-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.finding-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ===============================================
+   Executive Summary
+   =============================================== */
+.exec-summary {
+  background: linear-gradient(180deg, rgba(30, 58, 95, 0.25), rgba(30, 58, 95, 0.1));
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.75rem;
+}
+
+.exec-summary-text {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+/* ===============================================
+   Alert Section
+   =============================================== */
+.alert-section {
+  margin-bottom: 1.5rem;
+}
+
+.elite-alert {
+  display: flex;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
+  border-left: 3px solid;
+  backdrop-filter: blur(5px);
+  transition: all 0.2s ease;
+}
+
+.elite-alert:hover {
+  transform: translateX(4px);
+}
+
+.elite-alert.critical {
+  background: rgba(220, 38, 38, 0.1);
+  border-left-color: #dc2626;
+}
+
+.elite-alert.warning {
+  background: rgba(217, 119, 6, 0.1);
+  border-left-color: #d97706;
+}
+
+.alert-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+.elite-alert.critical .alert-title {
+  color: #fca5a5;
+}
+
+.elite-alert.warning .alert-title {
+  color: #fcd34d;
+}
+
+.alert-desc {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* ===============================================
+   Lab Summary Card
+   =============================================== */
+.lab-summary-card {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.08), rgba(30, 58, 95, 0.15));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.lab-summary-card:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.lab-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.lab-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.lab-summary-title svg {
+  stroke: #60a5fa;
+}
+
+.lab-summary-btn {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lab-summary-btn:hover {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  transform: translateY(-2px);
+}
+
+.lab-summary-stats {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.lab-stat {
+  text-align: center;
+  flex: 1;
+  min-width: 70px;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.lab-stat:hover {
+  background: rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+.lab-stat-value {
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: block;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.lab-stat-value.total {
+  color: #f0c674;
+}
+
+.lab-stat-value.critical {
+  color: #ef4444;
+}
+
+.lab-stat-value.abnormal {
+  color: #fca5a5;
+}
+
+.lab-stat-value.normal {
+  color: #6ee7b7;
+}
+
+.lab-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.lab-summary-abnormal {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.lab-summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.6rem 0.9rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border-left: 3px solid;
+  transition: all 0.2s ease;
+}
+
+.lab-summary-item:hover {
+  background: rgba(0, 0, 0, 0.25);
+  transform: translateX(4px);
+}
+
+.lab-summary-item.high,
+.lab-summary-item.critical {
+  border-left-color: #ef4444;
+}
+
+.lab-summary-item.low {
+  border-left-color: #3b82f6;
+}
+
+.lab-item-name {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.lab-item-value {
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fca5a5;
+}
+
+.lab-summary-normal {
+  text-align: center;
+  padding: 1rem;
+  color: #6ee7b7;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ===============================================
+   Lab Category Sections
+   =============================================== */
+.lab-category-section {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.lab-category-section:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.lab-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lab-category-header h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.lab-count {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.lab-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lab-table thead th {
+  padding: 0.7rem 0.875rem;
+  text-align: left;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.lab-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.lab-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lab-table tbody tr.abnormal-row {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.lab-table tbody td {
+  padding: 0.65rem 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.8rem;
+}
+
+.lab-value {
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+  font-weight: 600;
+}
+
+.lab-value.high,
+.lab-value.critical {
+  color: #fca5a5;
+}
+
+.lab-value.low {
+  color: #93c5fd;
+}
+
+.lab-value.normal {
+  color: #6ee7b7;
+}
+
+.lab-ref {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+.lab-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lab-status.high,
+.lab-status.critical {
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+}
+
+.lab-status.low {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.lab-status.normal {
+  background: rgba(5, 150, 105, 0.12);
+  color: #6ee7b7;
+}
+
+/* ===============================================
+   Management Section
+   =============================================== */
+.management-section {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.management-header {
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.management-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.management-list {
+  padding: 0.5rem;
+}
+
+.management-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.3rem;
+  transition: all 0.2s ease;
+}
+
+.management-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateX(4px);
+}
+
+.management-item.priority {
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.management-num {
+  width: 26px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.management-item.priority .management-num {
+  background: #dc2626;
+  color: white;
+}
+
+/* ===============================================
+   Clinical Pearl & Patient Communication
+   =============================================== */
+.pearl-section {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(245, 158, 11, 0.04));
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.pearl-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #fbbf24;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.pearl-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  font-style: italic;
+  margin: 0;
+}
+
+.patient-section {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(8, 145, 178, 0.04));
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.patient-header {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #22d3ee;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.patient-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* ===============================================
+   Data Type Indicator & Other Components
+   =============================================== */
+.data-type-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+}
+
+.data-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.data-type-badge.lab svg {
+  stroke: #60a5fa;
+}
+
+.data-type-badge.clinical {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.data-type-badge.imaging {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c4b5fd;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.data-type-confidence {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.extracted-section {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.extracted-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.extracted-trigger:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.extracted-content {
+  display: none;
+  padding: 0.875rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.extracted-content.show {
+  display: block;
+}
+
+.extracted-pre {
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.report-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 1rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ===============================================
+   Tab Badge Styles
+   =============================================== */
+.pres-tab-badge {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 50px;
+  margin-left: 0.4rem;
+  background: rgba(78, 205, 196, 0.2);
+  color: #4ecdc4;
+  font-weight: 600;
+}
+
+.pres-tab-badge.critical {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.pres-tab-badge.abnormal {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+/* ===============================================
+   Labs Panel (empty state)
+   =============================================== */
+.labs-panel {
+  padding: 2rem;
+}
+
+.labs-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ===============================================
+   Backward Compatibility Styles
+   (Legacy class names for smooth transition)
+   =============================================== */
 .elite-report{font-family:'Outfit',-apple-system,sans-serif;color:rgba(255,255,255,0.9);line-height:1.6}
 .data-type-indicator{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;padding:0.5rem 0}
 .data-type-confidence{font-size:0.7rem;color:rgba(255,255,255,0.4)}
