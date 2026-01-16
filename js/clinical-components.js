@@ -63,8 +63,14 @@ const ClinicalComponents = {
 
   renderDetailedView(results, isImage = false) {
     const container = document.getElementById('detailed-view');
+    const labsContainer = document.getElementById('labs-view');
+    
     if (!container) return;
-    if (!results) { container.innerHTML = this.renderEmpty(); return; }
+    if (!results) { 
+      container.innerHTML = this.renderEmpty(); 
+      if (labsContainer) labsContainer.innerHTML = this.renderEmpty();
+      return; 
+    }
 
     console.log('[MedWard v6.0] Rendering with data classification');
     this.injectStyles();
@@ -81,9 +87,12 @@ const ClinicalComponents = {
     const { clinicalFindings, aiLabValues } = this.separateAIInterpretation(results, interp);
     const finalLabValues = this.mergeLabValues(aggressiveLabValues, aiLabValues);
     
+    // Store labs and render Labs tab IMMEDIATELY
     this.currentLabValues = finalLabValues;
     this.renderLabsView(finalLabValues);
     this.updateLabsTabBadge(finalLabValues);
+    
+    console.log('[MedWard v6.0] Labs rendered:', finalLabValues.length);
 
     let html = '<div class="elite-report">';
     
@@ -125,6 +134,23 @@ const ClinicalComponents = {
   renderLabsView(labValues) {
     const container = document.getElementById('labs-view');
     if (!container) return;
+    
+    // Render immediately - no delay
+    if (!labValues || labValues.length === 0) {
+      container.innerHTML = `
+        <div class="labs-panel">
+          <div class="labs-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;margin-bottom:1rem;opacity:0.4">
+              <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <h4 style="font-size:1rem;margin-bottom:0.5rem;color:rgba(255,255,255,0.7)">No Lab Values Detected</h4>
+            <p style="font-size:0.85rem;color:rgba(255,255,255,0.4)">Upload a lab report image or paste lab values to see analysis</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
     
     if (typeof LabTrendsPanel !== 'undefined') {
       container.innerHTML = LabTrendsPanel.render(labValues, []);
