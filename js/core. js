@@ -326,6 +326,8 @@ const MedWard = (() => {
   // AUTH
   // ============================================
   function login(username) {
+    console.log('[MedWard] Login attempt with username:', username);
+    
     if (!username?.trim()) {
       UI.showToast('Please enter a username', 'error');
       return false;
@@ -337,6 +339,7 @@ const MedWard = (() => {
     };
     Storage.set(STORAGE_KEYS.USER, state.user);
     
+    console.log('[MedWard] Login successful, showing dashboard');
     showDashboard();
     UI.showToast(`Welcome, ${state.user.name}!`);
     return true;
@@ -496,9 +499,17 @@ const MedWard = (() => {
   // ============================================
   function setupEventListeners() {
     // Login
-    dom.loginBtn?.addEventListener('click', () => login(dom.usernameInput?.value));
+    console.log('[MedWard] Setting up login listeners, loginBtn:', dom.loginBtn, 'usernameInput:', dom.usernameInput);
+    
+    dom.loginBtn?.addEventListener('click', () => {
+      console.log('[MedWard] Login button clicked');
+      login(dom.usernameInput?.value);
+    });
     dom.usernameInput?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') login(dom.usernameInput?.value);
+      if (e.key === 'Enter') {
+        console.log('[MedWard] Enter pressed in username input');
+        login(dom.usernameInput?.value);
+      }
     });
     
     // Logout
