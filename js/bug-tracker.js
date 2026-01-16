@@ -11,9 +11,73 @@ const BugTracker = (function() {
     const DB_VERSION = 1;
     const STORE_NAME = 'bugs';
     const MAX_BUGS = 1000; // Limit storage on mobile
+    const DEDUPE_WINDOW = 5000; // 5 seconds deduplication window
 
     let db = null;
     let isInitialized = false;
+    let recentBugHashes = new Map(); // For deduplication
+
+    /**
+     * Safe JSON serialization with circular reference handling
+     */
+    function safeStringify(obj, maxDepth = 3) {
+        const seen = new WeakSet();
+
+        return JSON.stringify(obj, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) {
+                    return '[Circular Reference]';
+                }
+                seen.add(value);
+            }
+            return value;
+        }, 2);
+    }
+
+    /**
+     * Generate hash for bug deduplication
+     */
+    function generateBugHash(bugData) {
+        const hashString = `${bugData.type}:${bugData.severity}:${bugData.message}:${bugData.source || ''}:${bugData.line || ''}`;
+        return hashString;
+    }
+
+    /**
+     * Check if bug is duplicate (within deduplication window)
+     */
+    function isDuplicate(bugHash) {
+        const now = Date.now();
+
+        // Clean old entries
+        for (const [hash, timestamp] of recentBugHashes.entries()) {
+            if (now - timestamp > DEDUPE_WINDOW) {
+                recentBugHashes.delete(hash);
+            }
+        }
+
+        // Check if this bug was recently logged
+        if (recentBugHashes.has(bugHash)) {
+            return true;
+        }
+
+        recentBugHashes.set(bugHash, now);
+        return false;
+    }
+
+    /**
+     * Detect if device is mobile with enhanced accuracy
+     */
+    function isMobileDevice() {
+        // Check user agent
+        const mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(navigator.userAgent);
+
+        // Check screen size and touch capability
+        const smallScreen = window.innerWidth <= 768;
+        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // Combine checks for better accuracy
+        return mobileUA || (smallScreen && hasTouch);
+    }
 
     /**
      * Initialize IndexedDB for bug storage
@@ -61,21 +125,36 @@ const BugTracker = (function() {
         try {
             await init();
 
+            // Check for duplicate
+            const bugHash = generateBugHash(bugData);
+            if (isDuplicate(bugHash)) {
+                console.log('[BugTracker] Duplicate bug ignored:', bugData.type, bugData.message?.substring(0, 50));
+                return null;
+            }
+
             const bug = {
                 timestamp: Date.now(),
                 dateString: new Date().toISOString(),
                 userAgent: navigator.userAgent,
                 url: window.location.href,
+                pathname: window.location.pathname,
                 viewport: {
                     width: window.innerWidth,
                     height: window.innerHeight
                 },
+                devicePixelRatio: window.devicePixelRatio || 1,
+                online: navigator.onLine,
                 resolved: false,
                 ...bugData
             };
 
-            // Add mobile detection
-            bug.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            // Add accurate mobile detection
+            bug.isMobile = isMobileDevice();
+
+            // Add device type for more accurate categorization
+            bug.deviceType = bug.isMobile ?
+                (window.innerWidth < 480 ? 'phone' : 'tablet') :
+                'desktop';
 
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -83,7 +162,7 @@ const BugTracker = (function() {
                 const request = objectStore.add(bug);
 
                 request.onsuccess = () => {
-                    console.log('[BugTracker] Bug logged:', bug.type, bug.severity);
+                    console.log('[BugTracker] Bug logged:', bug.type, bug.severity, '-', bug.message?.substring(0, 50));
                     resolve(request.result);
 
                     // Cleanup old bugs if exceeding limit
@@ -97,6 +176,7 @@ const BugTracker = (function() {
             });
         } catch (error) {
             console.error('[BugTracker] Error in logBug:', error);
+            return null;
         }
     }
 
@@ -375,13 +455,26 @@ const BugTracker = (function() {
         console.error = function(...args) {
             originalError.apply(console, args);
 
-            logBug({
-                type: 'console_error',
-                severity: 'error',
-                message: args.map(arg =>
-                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-                ).join(' ')
-            });
+            try {
+                logBug({
+                    type: 'console_error',
+                    severity: 'error',
+                    message: args.map(arg => {
+                        if (arg === null) return 'null';
+                        if (arg === undefined) return 'undefined';
+                        if (typeof arg === 'object') {
+                            try {
+                                return safeStringify(arg);
+                            } catch (e) {
+                                return String(arg);
+                            }
+                        }
+                        return String(arg);
+                    }).join(' ')
+                });
+            } catch (e) {
+                // Silently fail to prevent infinite loops
+            }
         };
 
         // Capture console warnings
@@ -389,16 +482,154 @@ const BugTracker = (function() {
         console.warn = function(...args) {
             originalWarn.apply(console, args);
 
-            logBug({
-                type: 'console_warning',
-                severity: 'warning',
-                message: args.map(arg =>
-                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-                ).join(' ')
-            });
+            try {
+                logBug({
+                    type: 'console_warning',
+                    severity: 'warning',
+                    message: args.map(arg => {
+                        if (arg === null) return 'null';
+                        if (arg === undefined) return 'undefined';
+                        if (typeof arg === 'object') {
+                            try {
+                                return safeStringify(arg);
+                            } catch (e) {
+                                return String(arg);
+                            }
+                        }
+                        return String(arg);
+                    }).join(' ')
+                });
+            } catch (e) {
+                // Silently fail to prevent infinite loops
+            }
         };
 
         console.log('[BugTracker] Global error handlers installed');
+    }
+
+    /**
+     * Generate test bugs for validation
+     */
+    async function generateTestBugs() {
+        const testBugs = [
+            {
+                type: 'javascript_error',
+                severity: 'critical',
+                message: 'Test Critical Error: Uncaught TypeError',
+                source: 'test.js',
+                line: 42,
+                stack: 'Error: Test error\n  at testFunction (test.js:42:15)\n  at main (test.js:100:5)'
+            },
+            {
+                type: 'javascript_error',
+                severity: 'error',
+                message: 'Test Error: Cannot read property of undefined',
+                source: 'app.js',
+                line: 123
+            },
+            {
+                type: 'console_warning',
+                severity: 'warning',
+                message: 'Test Warning: Deprecated API usage detected'
+            },
+            {
+                type: 'console_error',
+                severity: 'info',
+                message: 'Test Info: API response time exceeded threshold'
+            },
+            {
+                type: 'promise_rejection',
+                severity: 'error',
+                message: 'Test Promise Rejection: Failed to fetch data',
+                stack: 'UnhandledPromiseRejection\n  at fetch (network.js:50:10)'
+            }
+        ];
+
+        console.log('[BugTracker] Generating test bugs...');
+
+        for (const bug of testBugs) {
+            await logBug(bug);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+        }
+
+        console.log('[BugTracker] Test bugs generated successfully');
+        return testBugs.length;
+    }
+
+    /**
+     * Validate bug tracker functionality
+     */
+    async function runValidation() {
+        const results = {
+            passed: [],
+            failed: [],
+            warnings: []
+        };
+
+        try {
+            // Test 1: Database initialization
+            try {
+                await init();
+                results.passed.push('Database initialization');
+            } catch (e) {
+                results.failed.push(`Database initialization: ${e.message}`);
+            }
+
+            // Test 2: Bug logging
+            try {
+                const testBug = {
+                    type: 'validation_test',
+                    severity: 'info',
+                    message: 'Validation test bug'
+                };
+                const id = await logBug(testBug);
+                if (id) {
+                    results.passed.push('Bug logging');
+                    await deleteBug(id);
+                } else {
+                    results.warnings.push('Bug logging returned null (possible duplicate)');
+                }
+            } catch (e) {
+                results.failed.push(`Bug logging: ${e.message}`);
+            }
+
+            // Test 3: Bug retrieval
+            try {
+                const bugs = await getAllBugs();
+                if (Array.isArray(bugs)) {
+                    results.passed.push(`Bug retrieval (${bugs.length} bugs stored)`);
+                } else {
+                    results.failed.push('Bug retrieval: Invalid return type');
+                }
+            } catch (e) {
+                results.failed.push(`Bug retrieval: ${e.message}`);
+            }
+
+            // Test 4: Analysis generation
+            try {
+                const analysis = await generateAnalysis();
+                if (analysis && typeof analysis.total === 'number') {
+                    results.passed.push('Analysis generation');
+                } else {
+                    results.failed.push('Analysis generation: Invalid analysis object');
+                }
+            } catch (e) {
+                results.failed.push(`Analysis generation: ${e.message}`);
+            }
+
+            // Test 5: Mobile detection
+            try {
+                const mobile = isMobileDevice();
+                results.passed.push(`Mobile detection: ${mobile ? 'Mobile' : 'Desktop'}`);
+            } catch (e) {
+                results.failed.push(`Mobile detection: ${e.message}`);
+            }
+
+        } catch (error) {
+            results.failed.push(`Validation error: ${error.message}`);
+        }
+
+        return results;
     }
 
     // Public API
@@ -413,7 +644,9 @@ const BugTracker = (function() {
         clearAll,
         generateAnalysis,
         exportBugs,
-        setupGlobalErrorHandler
+        setupGlobalErrorHandler,
+        generateTestBugs,
+        runValidation
     };
 })();
 

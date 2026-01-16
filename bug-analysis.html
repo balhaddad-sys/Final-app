@@ -451,6 +451,14 @@
 
         <!-- Main Content (hidden until loaded) -->
         <div id="main-content" class="hidden">
+            <!-- System Info -->
+            <div class="filter-section" style="margin-bottom: 15px;">
+                <div class="filter-title">📊 System Information</div>
+                <div id="system-info" style="font-size: 0.85rem; color: #ccc; line-height: 1.8;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
             <!-- Stats Grid -->
             <div class="stats-grid" id="stats-grid">
                 <!-- Stats populated by JS -->
@@ -490,6 +498,22 @@
                 </button>
             </div>
 
+            <!-- Test & Validation Section -->
+            <div class="filter-section">
+                <div class="filter-title">🧪 Testing & Validation</div>
+                <div class="action-buttons" style="margin-top: 10px;">
+                    <button class="action-btn btn-refresh" id="test-btn" style="background: #9b59b6;">
+                        🧪 Generate Test Bugs
+                    </button>
+                    <button class="action-btn btn-refresh" id="validate-btn" style="background: #3498db;">
+                        ✓ Run Validation
+                    </button>
+                </div>
+                <div id="validation-results" class="hidden" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                    <!-- Validation results will appear here -->
+                </div>
+            </div>
+
             <!-- Bug List -->
             <div class="bug-list">
                 <div class="bug-list-header">
@@ -525,8 +549,25 @@
             status: 'all'
         };
 
+        // Display system information
+        function displaySystemInfo() {
+            const systemInfo = document.getElementById('system-info');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(navigator.userAgent);
+            const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const deviceType = isMobile ? (window.innerWidth < 480 ? 'Phone' : 'Tablet') : 'Desktop';
+
+            systemInfo.innerHTML = `
+                <strong>Device:</strong> ${deviceType} ${isMobile ? '📱' : '💻'} |
+                <strong>Viewport:</strong> ${window.innerWidth}x${window.innerHeight}@${window.devicePixelRatio || 1}x |
+                <strong>Touch:</strong> ${hasTouch ? 'Yes' : 'No'} |
+                <strong>Online:</strong> ${navigator.onLine ? '🌐 Yes' : '📡 No'} |
+                <strong>Storage:</strong> ${typeof indexedDB !== 'undefined' ? '✅ Available' : '❌ Unavailable'}
+            `;
+        }
+
         // Initialize on load
         document.addEventListener('DOMContentLoaded', async () => {
+            displaySystemInfo();
             await loadBugs();
             setupEventListeners();
         });
@@ -564,29 +605,45 @@
                     <div class="stat-value">${analysis.bySeverity.critical || 0}</div>
                     <div class="stat-label">Critical</div>
                 </div>
+                <div class="stat-card error">
+                    <div class="stat-value">${analysis.bySeverity.error || 0}</div>
+                    <div class="stat-label">Errors</div>
+                </div>
                 <div class="stat-card warning">
                     <div class="stat-value">${analysis.bySeverity.warning || 0}</div>
                     <div class="stat-label">Warnings</div>
                 </div>
+                <div class="stat-card info">
+                    <div class="stat-value">${analysis.bySeverity.info || 0}</div>
+                    <div class="stat-label">Info</div>
+                </div>
                 <div class="stat-card resolved">
                     <div class="stat-value">${analysis.resolved}</div>
                     <div class="stat-label">Resolved</div>
+                </div>
+                <div class="stat-card error">
+                    <div class="stat-value">${analysis.unresolved}</div>
+                    <div class="stat-label">Unresolved</div>
                 </div>
                 <div class="stat-card mobile">
                     <div class="stat-value">${analysis.mobileIssues}</div>
                     <div class="stat-label">Mobile</div>
                 </div>
                 <div class="stat-card info">
-                    <div class="stat-value">${analysis.unresolved}</div>
-                    <div class="stat-label">Unresolved</div>
+                    <div class="stat-value">${analysis.desktopIssues}</div>
+                    <div class="stat-label">Desktop</div>
                 </div>
-                <div class="stat-card error">
+                <div class="stat-card warning">
                     <div class="stat-value">${analysis.recentBugs.length}</div>
                     <div class="stat-label">Last 24h</div>
                 </div>
-                <div class="stat-card warning">
+                <div class="stat-card info">
                     <div class="stat-value">${Object.keys(analysis.byType).length}</div>
                     <div class="stat-label">Bug Types</div>
+                </div>
+                <div class="stat-card error">
+                    <div class="stat-value">${analysis.topErrorsList?.length || 0}</div>
+                    <div class="stat-label">Unique Errors</div>
                 </div>
             `;
         }
@@ -681,11 +738,23 @@
                 </div>
                 <div class="detail-group">
                     <div class="detail-label">Platform</div>
-                    <div class="detail-value">${bug.isMobile ? '📱 Mobile' : '💻 Desktop'} (${bug.viewport.width}x${bug.viewport.height})</div>
+                    <div class="detail-value">${bug.isMobile ? '📱 Mobile' : '💻 Desktop'}${bug.deviceType ? ` (${bug.deviceType})` : ''}</div>
                 </div>
                 <div class="detail-group">
-                    <div class="detail-label">URL</div>
-                    <div class="detail-value">${escapeHtml(bug.url)}</div>
+                    <div class="detail-label">Viewport</div>
+                    <div class="detail-value">${bug.viewport.width}x${bug.viewport.height}${bug.devicePixelRatio ? ` @${bug.devicePixelRatio}x` : ''}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Connection</div>
+                    <div class="detail-value">${bug.online === false ? '📡 Offline' : '🌐 Online'}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Page</div>
+                    <div class="detail-value">${escapeHtml(bug.pathname || bug.url)}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Full URL</div>
+                    <div class="detail-value code" style="word-break: break-all;">${escapeHtml(bug.url)}</div>
                 </div>
                 ${bug.source ? `
                 <div class="detail-group">
@@ -788,6 +857,76 @@
 
             document.getElementById('back-btn').addEventListener('click', () => {
                 window.location.href = 'index.html';
+            });
+
+            // Test bugs button
+            document.getElementById('test-btn').addEventListener('click', async () => {
+                const btn = document.getElementById('test-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '⏳ Generating...';
+                btn.disabled = true;
+
+                try {
+                    const count = await BugTracker.generateTestBugs();
+                    alert(`✅ Generated ${count} test bugs successfully!`);
+                    await loadBugs();
+                } catch (error) {
+                    alert('❌ Failed to generate test bugs: ' + error.message);
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            });
+
+            // Validation button
+            document.getElementById('validate-btn').addEventListener('click', async () => {
+                const btn = document.getElementById('validate-btn');
+                const resultsDiv = document.getElementById('validation-results');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '⏳ Validating...';
+                btn.disabled = true;
+
+                try {
+                    const results = await BugTracker.runValidation();
+
+                    let html = '<div style="font-size: 0.9rem;">';
+                    html += '<div style="font-weight: bold; margin-bottom: 10px; font-size: 1rem;">Validation Results</div>';
+
+                    if (results.passed.length > 0) {
+                        html += '<div style="color: #27ae60; margin-bottom: 10px;"><strong>✅ Passed (${results.passed.length}):</strong><ul style="margin: 5px 0 0 20px;">';
+                        results.passed.forEach(test => {
+                            html += `<li>${test}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+
+                    if (results.warnings.length > 0) {
+                        html += '<div style="color: #f39c12; margin-bottom: 10px;"><strong>⚠️ Warnings (${results.warnings.length}):</strong><ul style="margin: 5px 0 0 20px;">';
+                        results.warnings.forEach(test => {
+                            html += `<li>${test}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+
+                    if (results.failed.length > 0) {
+                        html += '<div style="color: #e74c3c;"><strong>❌ Failed (${results.failed.length}):</strong><ul style="margin: 5px 0 0 20px;">';
+                        results.failed.forEach(test => {
+                            html += `<li>${test}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+
+                    html += '</div>';
+
+                    resultsDiv.innerHTML = html;
+                    resultsDiv.classList.remove('hidden');
+                } catch (error) {
+                    resultsDiv.innerHTML = `<div style="color: #e74c3c;">❌ Validation error: ${error.message}</div>`;
+                    resultsDiv.classList.remove('hidden');
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
             });
 
             // Modal close
