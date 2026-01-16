@@ -1,0 +1,479 @@
+/**
+ * MedWard Lab Trends v1.0
+ * Professional lab value visualization with trends, sparklines, and reference ranges
+ * 
+ * Features:
+ * - Categorized lab display with expandable sections
+ * - SVG sparklines showing value trends
+ * - Visual reference range indicators
+ * - Critical value highlighting
+ * - Historical trend analysis
+ */
+
+const LabTrendsPanel = {
+
+  // Category configuration with colors and icons
+  categoryConfig: {
+    'Electrolytes': { color: '#8b5cf6', icon: '⚡', order: 1 },
+    'Renal Function': { color: '#3b82f6', icon: '💧', order: 2 },
+    'Liver Function': { color: '#f59e0b', icon: '🫁', order: 3 },
+    'Hematology': { color: '#ec4899', icon: '🩸', order: 4 },
+    'Cardiac Markers': { color: '#ef4444', icon: '❤️', order: 5 },
+    'Coagulation': { color: '#14b8a6', icon: '🩹', order: 6 },
+    'Blood Gas': { color: '#06b6d4', icon: '💨', order: 7 },
+    'Metabolic': { color: '#22c55e', icon: '🔥', order: 8 },
+    'Inflammatory': { color: '#f97316', icon: '🌡️', order: 9 },
+    'Thyroid': { color: '#a855f7', icon: '🦋', order: 10 },
+    'Other': { color: '#6b7280', icon: '📋', order: 99 }
+  },
+
+  /**
+   * Render the complete labs panel
+   * @param {Array} labValues - Array of lab value objects
+   * @param {Array} historicalData - Optional historical values for trends
+   * @returns {string} HTML string
+   */
+  render(labValues, historicalData = []) {
+    if (!labValues || labValues.length === 0) {
+      return this.renderEmpty();
+    }
+
+    // Group labs by category
+    const grouped = this.groupByCategory(labValues);
+    
+    // Calculate summary stats
+    const stats = this.calculateStats(labValues);
+    
+    let html = '<div class="labs-panel">';
+    
+    // Header
+    html += `
+      <div class="labs-header">
+        <h3 class="labs-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          Laboratory Values
+        </h3>
+        <span class="labs-count">${labValues.length} parameters</span>
+      </div>
+    `;
+
+    // Summary cards
+    html += this.renderSummary(stats);
+
+    // Render each category
+    const sortedCategories = Object.entries(grouped)
+      .sort((a, b) => (this.categoryConfig[a[0]]?.order || 99) - (this.categoryConfig[b[0]]?.order || 99));
+
+    for (const [category, labs] of sortedCategories) {
+      html += this.renderCategory(category, labs, historicalData);
+    }
+
+    html += '</div>';
+    return html;
+  },
+
+  /**
+   * Render summary statistics cards
+   */
+  renderSummary(stats) {
+    return `
+      <div class="labs-summary">
+        <div class="labs-summary-card total">
+          <div class="labs-summary-value">${stats.total}</div>
+          <div class="labs-summary-label">Total Tests</div>
+        </div>
+        <div class="labs-summary-card abnormal">
+          <div class="labs-summary-value">${stats.abnormal}</div>
+          <div class="labs-summary-label">Abnormal</div>
+        </div>
+        <div class="labs-summary-card critical">
+          <div class="labs-summary-value">${stats.critical}</div>
+          <div class="labs-summary-label">Critical</div>
+        </div>
+        <div class="labs-summary-card normal">
+          <div class="labs-summary-value">${stats.normal}</div>
+          <div class="labs-summary-label">Normal</div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Render a single category section
+   */
+  renderCategory(category, labs, historicalData) {
+    const config = this.categoryConfig[category] || this.categoryConfig['Other'];
+    const abnormalCount = labs.filter(l => l.isAbnormal).length;
+    const criticalCount = labs.filter(l => l.isCritical).length;
+
+    let countText = `${labs.length} tests`;
+    if (criticalCount > 0) {
+      countText += ` · <span style="color:#ef4444;font-weight:700">${criticalCount} critical</span>`;
+    } else if (abnormalCount > 0) {
+      countText += ` · <span class="abnormal">${abnormalCount} abnormal</span>`;
+    }
+
+    return `
+      <div class="labs-category" data-category="${category}">
+        <div class="labs-category-header" onclick="LabTrendsPanel.toggleCategory(this)">
+          <div class="labs-category-name">
+            <span class="dot" style="background:${config.color}"></span>
+            <span>${config.icon} ${category}</span>
+          </div>
+          <span class="labs-category-count">${countText}</span>
+        </div>
+        <table class="labs-table">
+          <thead>
+            <tr>
+              <th style="width:30%">Parameter</th>
+              <th style="width:20%">Result</th>
+              <th style="width:20%">Reference</th>
+              <th style="width:15%">Trend</th>
+              <th style="width:15%">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${labs.map(lab => this.renderLabRow(lab, historicalData, config.color)).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  /**
+   * Render a single lab value row
+   */
+  renderLabRow(lab, historicalData, categoryColor) {
+    const historical = this.getHistoricalValues(lab.name, historicalData);
+    const trend = this.calculateTrend(lab.value, historical);
+    const sparkline = this.generateSparkline(lab, historical, categoryColor);
+
+    return `
+      <tr class="${lab.isAbnormal ? 'abnormal' : ''}">
+        <td>
+          <span class="lab-name">${this.escapeHtml(lab.name)}</span>
+        </td>
+        <td>
+          <span class="lab-value ${lab.status}">${this.escapeHtml(lab.valueDisplay || String(lab.value))}</span>
+        </td>
+        <td>
+          <span class="lab-reference">${this.escapeHtml(lab.referenceDisplay || lab.reference)}</span>
+        </td>
+        <td>
+          <div class="lab-trend">
+            ${sparkline}
+            ${this.renderTrendArrow(trend)}
+          </div>
+        </td>
+        <td>
+          ${this.renderStatusBadge(lab.status)}
+        </td>
+      </tr>
+    `;
+  },
+
+  /**
+   * Generate SVG sparkline for a lab value
+   */
+  generateSparkline(lab, historical, color) {
+    // Create data points including current value
+    const values = [...historical.map(h => h.value), lab.value];
+    
+    if (values.length < 2) {
+      // Not enough data for sparkline, show single dot
+      return `
+        <div class="trend-sparkline">
+          <svg viewBox="0 0 60 24">
+            <circle cx="30" cy="12" r="3" fill="${color}" opacity="0.7"/>
+          </svg>
+        </div>
+      `;
+    }
+
+    const min = Math.min(...values) * 0.9;
+    const max = Math.max(...values) * 1.1;
+    const range = max - min || 1;
+    
+    const width = 60;
+    const height = 24;
+    const padding = 4;
+    const innerWidth = width - padding * 2;
+    const innerHeight = height - padding * 2;
+
+    // Generate points
+    const points = values.map((v, i) => {
+      const x = padding + (i / (values.length - 1)) * innerWidth;
+      const y = padding + innerHeight - ((v - min) / range) * innerHeight;
+      return `${x},${y}`;
+    }).join(' ');
+
+    // Determine line color based on status
+    let lineColor = color;
+    if (lab.status === 'critical') lineColor = '#ef4444';
+    else if (lab.status === 'high') lineColor = '#fca5a5';
+    else if (lab.status === 'low') lineColor = '#93c5fd';
+    else if (lab.status === 'normal') lineColor = '#6ee7b7';
+
+    // Reference range area (if available)
+    let refArea = '';
+    if (lab.reference) {
+      const [refMin, refMax] = lab.reference.split('-').map(parseFloat);
+      if (!isNaN(refMin) && !isNaN(refMax)) {
+        const refMinY = padding + innerHeight - ((refMin - min) / range) * innerHeight;
+        const refMaxY = padding + innerHeight - ((refMax - min) / range) * innerHeight;
+        refArea = `<rect x="${padding}" y="${Math.min(refMinY, refMaxY)}" width="${innerWidth}" height="${Math.abs(refMaxY - refMinY)}" fill="${color}" opacity="0.1" rx="2"/>`;
+      }
+    }
+
+    return `
+      <div class="trend-sparkline">
+        <svg viewBox="0 0 ${width} ${height}">
+          ${refArea}
+          <polyline 
+            points="${points}" 
+            fill="none" 
+            stroke="${lineColor}" 
+            stroke-width="1.5" 
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0.8"
+          />
+          <circle 
+            cx="${padding + innerWidth}" 
+            cy="${padding + innerHeight - ((lab.value - min) / range) * innerHeight}" 
+            r="2.5" 
+            fill="${lineColor}"
+          />
+        </svg>
+      </div>
+    `;
+  },
+
+  /**
+   * Render trend arrow indicator
+   */
+  renderTrendArrow(trend) {
+    if (trend === 'up') {
+      return '<span class="trend-arrow up">↑</span>';
+    } else if (trend === 'down') {
+      return '<span class="trend-arrow down">↓</span>';
+    } else {
+      return '<span class="trend-arrow stable">→</span>';
+    }
+  },
+
+  /**
+   * Render status badge
+   */
+  renderStatusBadge(status) {
+    const badges = {
+      critical: '<span class="lab-status-badge critical">⚠ Critical</span>',
+      high: '<span class="lab-status-badge high">↑ High</span>',
+      low: '<span class="lab-status-badge low">↓ Low</span>',
+      normal: '<span class="lab-status-badge normal">✓ Normal</span>'
+    };
+    return badges[status] || badges.normal;
+  },
+
+  /**
+   * Render empty state
+   */
+  renderEmpty() {
+    return `
+      <div class="labs-panel">
+        <div class="labs-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <h4 class="labs-empty-title">No Lab Values Detected</h4>
+          <p class="labs-empty-text">Upload a lab report image or paste lab values to see analysis</p>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Group lab values by category
+   */
+  groupByCategory(labValues) {
+    const grouped = {};
+    labValues.forEach(lab => {
+      const cat = lab.category || 'Other';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(lab);
+    });
+    return grouped;
+  },
+
+  /**
+   * Calculate summary statistics
+   */
+  calculateStats(labValues) {
+    return {
+      total: labValues.length,
+      normal: labValues.filter(l => l.status === 'normal').length,
+      abnormal: labValues.filter(l => l.isAbnormal).length,
+      critical: labValues.filter(l => l.isCritical).length
+    };
+  },
+
+  /**
+   * Get historical values for a specific test
+   */
+  getHistoricalValues(testName, historicalData) {
+    if (!historicalData || !Array.isArray(historicalData)) return [];
+    return historicalData
+      .filter(h => h.name === testName)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .slice(-5); // Last 5 values
+  },
+
+  /**
+   * Calculate trend from historical data
+   */
+  calculateTrend(currentValue, historical) {
+    if (!historical || historical.length === 0) return 'stable';
+    
+    const lastValue = historical[historical.length - 1]?.value;
+    if (lastValue === undefined) return 'stable';
+    
+    const change = ((currentValue - lastValue) / lastValue) * 100;
+    
+    if (change > 5) return 'up';
+    if (change < -5) return 'down';
+    return 'stable';
+  },
+
+  /**
+   * Toggle category expansion
+   */
+  toggleCategory(header) {
+    const category = header.closest('.labs-category');
+    const table = category.querySelector('.labs-table');
+    
+    if (table.style.display === 'none') {
+      table.style.display = 'table';
+      header.classList.remove('collapsed');
+    } else {
+      table.style.display = 'none';
+      header.classList.add('collapsed');
+    }
+  },
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  },
+
+  /**
+   * Render into a container
+   */
+  renderInto(containerId, labValues, historicalData = []) {
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = this.render(labValues, historicalData);
+    }
+  },
+
+  /**
+   * Create a mini lab summary widget
+   */
+  renderMiniSummary(labValues) {
+    if (!labValues || labValues.length === 0) return '';
+
+    const stats = this.calculateStats(labValues);
+    const criticalLabs = labValues.filter(l => l.isCritical).slice(0, 3);
+    const abnormalLabs = labValues.filter(l => l.isAbnormal && !l.isCritical).slice(0, 3);
+
+    let html = `
+      <div class="labs-mini-summary">
+        <div class="labs-mini-header">
+          <span class="labs-mini-title">Labs Overview</span>
+          <span class="labs-mini-count">${stats.total} tests</span>
+        </div>
+    `;
+
+    if (criticalLabs.length > 0) {
+      html += `
+        <div class="labs-mini-critical">
+          <span class="mini-label critical">Critical (${stats.critical})</span>
+          ${criticalLabs.map(l => `
+            <div class="mini-lab critical">
+              <span class="mini-lab-name">${this.escapeHtml(l.name)}</span>
+              <span class="mini-lab-value">${this.escapeHtml(l.valueDisplay || String(l.value))}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (abnormalLabs.length > 0) {
+      html += `
+        <div class="labs-mini-abnormal">
+          <span class="mini-label abnormal">Abnormal (${stats.abnormal - stats.critical})</span>
+          ${abnormalLabs.map(l => `
+            <div class="mini-lab abnormal">
+              <span class="mini-lab-name">${this.escapeHtml(l.name)}</span>
+              <span class="mini-lab-value ${l.status}">${this.escapeHtml(l.valueDisplay || String(l.value))}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (stats.critical === 0 && stats.abnormal === 0) {
+      html += `
+        <div class="labs-mini-normal">
+          <span class="mini-label normal">✓ All values within normal limits</span>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    return html;
+  }
+};
+
+// Additional styles for mini summary (injected dynamically)
+const miniStyles = `
+.labs-mini-summary{background:rgba(15,23,42,0.5);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.labs-mini-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem}
+.labs-mini-title{font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.9)}
+.labs-mini-count{font-size:0.7rem;color:rgba(255,255,255,0.5)}
+.mini-label{display:block;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem}
+.mini-label.critical{color:#ef4444}
+.mini-label.abnormal{color:#fcd34d}
+.mini-label.normal{color:#6ee7b7}
+.mini-lab{display:flex;justify-content:space-between;padding:0.35rem 0.5rem;background:rgba(0,0,0,0.2);border-radius:6px;margin-bottom:0.25rem}
+.mini-lab.critical{border-left:2px solid #ef4444}
+.mini-lab.abnormal{border-left:2px solid #f59e0b}
+.mini-lab-name{font-size:0.8rem;color:rgba(255,255,255,0.85)}
+.mini-lab-value{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;font-weight:600}
+.mini-lab-value.high,.mini-lab-value.critical{color:#fca5a5}
+.mini-lab-value.low{color:#93c5fd}
+.labs-mini-critical,.labs-mini-abnormal,.labs-mini-normal{margin-bottom:0.75rem}
+.labs-mini-critical:last-child,.labs-mini-abnormal:last-child,.labs-mini-normal:last-child{margin-bottom:0}
+`;
+
+// Inject mini styles
+if (typeof document !== 'undefined' && !document.getElementById('lab-trends-mini-styles')) {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'lab-trends-mini-styles';
+  styleEl.textContent = miniStyles;
+  document.head.appendChild(styleEl);
+}
+
+// Export
+if (typeof window !== 'undefined') window.LabTrendsPanel = LabTrendsPanel;
+if (typeof module !== 'undefined') module.exports = LabTrendsPanel;
