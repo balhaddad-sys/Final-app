@@ -1,8 +1,23 @@
 importScripts("https://progressier.app/0IpCHZYvGyBKyFwHmGj2/sw.js");
 
+// ============================================
+// API BYPASS - Let API calls go directly to network
+// ============================================
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  
+  // Don't intercept Google Apps Script API calls
+  if (url.hostname.includes('script.google.com') || 
+      url.hostname.includes('googleapis.com') ||
+      url.hostname.includes('script.googleusercontent.com')) {
+    // Return without calling event.respondWith() - browser handles it directly
+    return;
+  }
+});
+
 /**
  * MedWard Master - Service Worker
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * Professional PWA service worker with:
  * - Multi-strategy caching
