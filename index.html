@@ -1822,6 +1822,59 @@
       font-size: 0.65rem;
       color: var(--text-muted);
     }
+
+    /* === FLOATING BUG ANALYSIS BUTTON === */
+    .floating-bug-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0.7);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: white;
+      transition: all 0.3s ease;
+      z-index: 999;
+      animation: pulse-bug 2s infinite;
+    }
+
+    .floating-bug-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+    }
+
+    .floating-bug-btn:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes pulse-bug {
+      0% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0.7);
+      }
+      50% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4), 0 0 0 10px rgba(102, 126, 234, 0);
+      }
+      100% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .floating-bug-btn {
+        width: 55px;
+        height: 55px;
+        bottom: 15px;
+        right: 15px;
+        font-size: 1.6rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2207,11 +2260,17 @@ Or paste clinical notes, history, examination findings..."></textarea>
     <span class="toast-message" id="toast-message">Success!</span>
   </div>
 
+  <!-- Floating Bug Analysis Button -->
+  <button class="floating-bug-btn" id="floating-bug-btn" title="Bug Analysis" onclick="window.location.href='bug-analysis.html'">
+    🐛
+  </button>
+
   <!-- Scripts -->
   <script>
     // MedWard Backend Configuration
     window.MEDWARD_BACKEND_URL = 'https://script.google.com/macros/s/AKfycby-3iNSD4CquZiyg0inXQ_sGs3IxNrSx1WzRREIv2ABKnyPP5GjvSYZdzClkZqWZ9M7Og/exec';
   </script>
+  <script src="js/bug-tracker.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
   <script src="js/medward-neural.js"></script>
   <script src="js/clinical-components.js"></script>
