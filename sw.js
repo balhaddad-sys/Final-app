@@ -1,4 +1,4 @@
-importScripts("https://progressier.app/bzedaNn1n4Otlh0BMPkZ/sw.js" );
+importScripts("https://progressier.app/bzedaNn1n4OtlhOBMPkZ/sw.js");
 
 /**
  * MedWard Master - Service Worker
