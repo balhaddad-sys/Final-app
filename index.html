@@ -2493,6 +2493,191 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* === CLINICAL DATA SECTIONS === */
+    .clinical-section {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-icon {
+      font-size: 0.9rem;
+    }
+
+    /* Medications Grid */
+    .meds-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .med-category {
+      padding-left: 0.75rem;
+      border-left: 2px solid;
+    }
+
+    .med-category-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .med-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+
+    .med-pill {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .med-pill small {
+      opacity: 0.7;
+      font-weight: 400;
+    }
+
+    /* Labs Grid */
+    .labs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .lab-category {
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem;
+    }
+
+    .lab-category-header {
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .lab-values {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .lab-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      padding: 0.15rem 0;
+    }
+
+    .lab-item.high {
+      color: var(--critical);
+    }
+
+    .lab-item.low {
+      color: var(--accent-blue);
+    }
+
+    .lab-name {
+      color: var(--text-muted);
+    }
+
+    .lab-value {
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .lab-flag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.1rem 0.25rem;
+      border-radius: 2px;
+    }
+
+    .lab-flag.high {
+      background: var(--critical);
+      color: white;
+    }
+
+    .lab-flag.low {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    /* Vitals Row */
+    .vitals-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .vital-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      min-width: 50px;
+    }
+
+    .vital-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .vital-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+    }
+
+    /* Expanded Card State */
+    .patient-card.has-clinical-data {
+      border-color: rgba(240, 198, 116, 0.2);
+    }
+
+    .patient-card.expanded {
+      grid-column: 1 / -1;
+    }
+
+    .patient-card.expanded .clinical-section {
+      display: block;
+    }
+
+    /* Compact mode - hide clinical sections by default on small cards */
+    @media (max-width: 640px) {
+      .labs-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .vitals-row {
+        justify-content: space-between;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2919,6 +3104,24 @@
           <input type="text" id="patient-diagnosis" class="form-input" placeholder="e.g., CAP, AKI on CKD">
         </div>
 
+        <div class="form-group">
+          <label class="form-label">Medications</label>
+          <textarea id="patient-meds" class="form-textarea" rows="2"
+            placeholder="e.g., Metoprolol 50mg BD, Aspirin 100mg OD, Omeprazole 40mg OD"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Latest Labs</label>
+          <textarea id="patient-labs" class="form-textarea" rows="2"
+            placeholder="e.g., WBC 12.5, Hb 10.2 L, Cr 150 H, K 4.2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vitals</label>
+          <input type="text" id="patient-vitals" class="form-input"
+            placeholder="e.g., BP 130/80, HR 88, Temp 37.2, SpO2 96%">
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Assigned Doctor</label>
@@ -2990,6 +3193,7 @@
     // Patient Manager Backend URL
     window.MEDWARD_PATIENT_API_URL = 'https://script.google.com/macros/s/AKfycbx-l2xdsAHTZu7bcueN83Yz8xbCwtKbHfUSJuhIgtWVR5XyeJYh9TrfMgzznTYX4Z0kww/exec';
   </script>
+  <script src="js/clinical-parser.js"></script>
   <script src="js/patient-manager.js"></script>
 
   <!-- Service Worker Registration -->
