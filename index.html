@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
   <meta name="theme-color" content="#060a13">
-  <title>MedWard | Clinical Intelligence Platform</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>MedWard Enterprise | Clinical Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -22,199 +22,166 @@
     body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:var(--text-primary);line-height:1.5;min-height:100vh}
     .ambient{position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 20% 20%,var(--gold-glow),transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(20,184,166,0.08),transparent 50%)}
 
-    /* Header */
-    .header{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(10,15,26,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100}
-    .logo{display:flex;align-items:center;gap:12px}
-    .logo-mark{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:12px;display:grid;place-items:center;box-shadow:0 4px 20px rgba(212,164,55,0.25)}
-    .logo-mark svg{width:22px;height:22px;stroke:var(--bg-deep);stroke-width:2.5;fill:none}
-    .logo-text{font-size:1.25rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--gold-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .user-btn{display:none;align-items:center;gap:10px;padding:6px 14px 6px 6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:100px}
-    .user-btn.show{display:flex}
-    .user-avatar{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:0.8rem;color:var(--bg-deep)}
-    .user-name{font-size:0.85rem;font-weight:500}
-
-    /* Screens */
-    .screen{display:none;min-height:100vh;padding:80px 16px 32px}
-    .screen.active{display:block}
-    #login.active{display:flex;align-items:center;justify-content:center;padding:20px}
-
-    /* Login */
-    .login-card{width:100%;max-width:420px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:40px 32px;box-shadow:var(--shadow-lg);position:relative}
-    .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal));border-radius:var(--radius-xl) var(--radius-xl) 0 0}
-    .login-header{text-align:center;margin-bottom:32px}
-    .login-logo{width:64px;height:64px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:16px;display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 8px 32px rgba(212,164,55,0.3)}
-    .login-logo svg{width:36px;height:36px;stroke:var(--bg-deep);stroke-width:2.5;fill:none}
-    .login-title{font-size:1.5rem;font-weight:700;margin-bottom:4px}
-    .login-sub{color:var(--text-muted);font-size:0.9rem}
-    
-    /* Forms */
-    .form-group{margin-bottom:20px}
-    .form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
-    .form-input,.form-select,.form-textarea{width:100%;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:0.95rem;transition:0.2s;-webkit-appearance:none}
-    .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
-    .form-textarea{min-height:100px;resize:vertical}
-    .form-select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
-    
     /* Buttons */
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius-md);font-family:inherit;font-size:0.95rem;font-weight:600;cursor:pointer;transition:0.2s;touch-action:manipulation}
     .btn:active{transform:scale(0.98)}
     .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--bg-deep);box-shadow:0 4px 16px rgba(212,164,55,0.3)}
+    .btn-primary:hover{box-shadow:0 6px 24px rgba(212,164,55,0.4);transform:translateY(-2px)}
     .btn-secondary{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-primary)}
+    .btn-secondary:hover{border-color:var(--gold)}
     .btn-danger{background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.3);color:var(--rose)}
     .btn-sm{padding:8px 14px;font-size:0.8rem}
+    .btn-lg{padding:16px 28px;font-size:1rem}
     .btn-full{width:100%}
+    .btn-icon{width:40px;height:40px;padding:0;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;display:grid;place-items:center;transition:0.2s}
+    .btn-icon:hover{border-color:var(--gold);color:var(--gold)}
+    .btn-icon svg{width:18px;height:18px}
 
-    /* Layout */
-    .container{max-width:1200px;margin:0 auto}
-    .page-header{margin-bottom:24px}
-    .page-title{font-size:1.4rem;font-weight:700;margin-bottom:2px}
-    .page-sub{color:var(--text-muted);font-size:0.9rem}
+    /* Forms */
+    .form-group{margin-bottom:20px}
+    .form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .form-input,.form-select,.form-textarea{width:100%;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:0.95rem;transition:0.2s}
+    .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
+    .form-textarea{min-height:100px;resize:vertical}
 
-    /* Tabs - Professional Navigation */
-    .tabs{display:flex;gap:0;background:transparent;border:none;border-bottom:1px solid var(--border);padding:0;margin-bottom:24px;overflow-x:auto}
-    .tab{flex:none;padding:14px 24px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:inherit;font-size:0.9rem;font-weight:500;cursor:pointer;transition:0.2s;white-space:nowrap;position:relative}
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000;overflow-y:auto}
+    .modal.active{display:flex}
+    .modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+    .modal-header{padding:24px;border-bottom:1px solid var(--border);text-align:center}
+    .modal-icon{width:64px;height:64px;background:var(--bg-elevated);border-radius:16px;display:grid;place-items:center;font-size:2rem;margin:0 auto 16px}
+    .modal-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
+    .modal-subtitle{color:var(--text-muted);font-size:0.85rem}
+    .modal-body{padding:24px}
+    .modal-footer{padding:16px 24px 24px;display:flex;gap:12px}
+    .modal-footer .btn{flex:1}
+
+    /* ═══════════════════ LANDING PAGE ═══════════════════ */
+    #landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at top,var(--bg-primary),var(--bg-deep))}
+    #landing.hidden{display:none}
+    .landing-logo{width:88px;height:88px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:22px;display:grid;place-items:center;margin-bottom:28px;box-shadow:0 12px 40px rgba(212,164,55,0.3)}
+    .landing-logo svg{width:48px;height:48px;stroke:var(--bg-deep);stroke-width:2.5;fill:none}
+    .landing-title{font-size:2.25rem;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .landing-subtitle{color:var(--text-secondary);margin-bottom:48px}
+    .units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;width:100%;max-width:880px}
+    .unit-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:0.3s;position:relative;overflow:hidden}
+    .unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--unit-color,var(--gold))}
+    .unit-card:hover{border-color:var(--unit-color,var(--gold));transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.3)}
+    .unit-card-icon{width:52px;height:52px;background:var(--bg-elevated);border-radius:14px;display:grid;place-items:center;font-size:1.6rem;margin-bottom:14px}
+    .unit-card-name{font-size:1.15rem;font-weight:600;margin-bottom:4px}
+    .unit-card-desc{color:var(--text-muted);font-size:0.8rem;margin-bottom:16px}
+    .unit-card-lock{position:absolute;top:16px;right:16px;width:28px;height:28px;background:var(--bg-elevated);border-radius:8px;display:grid;place-items:center;color:var(--text-muted)}
+    .unit-card-lock svg{width:14px;height:14px}
+    .admin-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:var(--bg-card);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:0.3s;color:var(--text-muted)}
+    .admin-fab:hover{border-color:var(--gold);color:var(--gold);transform:scale(1.1)}
+    .admin-fab svg{width:22px;height:22px}
+
+    /* Code Input */
+    .code-inputs{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+    .code-digit{width:52px;height:60px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:var(--radius-md);font-family:'JetBrains Mono',monospace;font-size:1.75rem;font-weight:600;text-align:center;color:var(--text-primary);transition:0.2s}
+    .code-digit:focus{outline:none;border-color:var(--gold);background:var(--gold-glow)}
+    .code-digit.error{border-color:var(--rose);animation:shake 0.4s}
+    .code-digit.success{border-color:var(--emerald);background:rgba(16,185,129,0.1)}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+    .code-error{color:var(--rose);font-size:0.85rem;text-align:center;margin-top:12px;display:none}
+    .code-error.show{display:block}
+
+    /* ═══════════════════ DASHBOARD ═══════════════════ */
+    #dashboard{display:none;min-height:100vh;background:var(--bg-primary)}
+    #dashboard.active{display:block}
+    .dash-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .dash-logo{display:flex;align-items:center;gap:12px}
+    .dash-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:10px;display:grid;place-items:center}
+    .dash-logo-icon svg{width:22px;height:22px;stroke:var(--bg-deep);fill:none}
+    .dash-unit-badge{padding:6px 14px;border-radius:100px;font-size:0.8rem;font-weight:600}
+    .dash-user{display:flex;align-items:center;gap:12px}
+    .dash-user-info{text-align:right}
+    .dash-user-name{font-weight:600;font-size:0.9rem}
+    .dash-user-role{font-size:0.7rem;color:var(--text-muted);text-transform:capitalize}
+    .dash-avatar{width:40px;height:40px;background:linear-gradient(135deg,var(--teal),var(--emerald));border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:0.85rem}
+    .dash-content{max-width:1200px;margin:0 auto;padding:20px}
+    .dash-welcome{margin-bottom:24px}
+    .dash-welcome h1{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+    .dash-welcome p{color:var(--text-muted)}
+
+    /* Tabs */
+    .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto}
+    .tab{padding:14px 20px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:0.2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
     .tab:hover{color:var(--text-primary)}
     .tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:600}
-    .tab svg{width:18px;height:18px;margin-right:8px;vertical-align:middle}
-    .panel{display:none}
-    .panel.active{display:block;animation:fadeUp 0.3s ease}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .tab svg{width:18px;height:18px}
+    .panel{display:none;animation:fadeIn 0.3s}
+    .panel.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
     /* Stats */
-    .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-    .stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;text-align:center}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
+    .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;text-align:center}
     .stat-value{font-size:1.75rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .stat-label{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px}
+    .stat-label{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-top:4px}
 
-    /* Card */
-    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
-    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-    .card-title{display:flex;align-items:center;gap:10px;font-size:0.95rem;font-weight:600}
-    .card-title svg{width:18px;height:18px;stroke:var(--gold)}
-    .card-body{padding:20px}
-
-    /* Patient Grid */
-    .patients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
-    .patient-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;transition:0.2s;position:relative;overflow:hidden}
+    /* Patients */
+    .patients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+    .patient-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:0.2s;position:relative;overflow:hidden}
     .patient-card:hover{border-color:var(--gold);transform:translateY(-2px)}
     .patient-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--teal)}
     .patient-card.critical::before{background:var(--rose)}
     .patient-card.chronic::before{background:var(--purple)}
-    .patient-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
-    .patient-main{display:flex;align-items:center;gap:14px}
+    .patient-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
     .patient-avatar{width:48px;height:48px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:1rem;color:var(--bg-deep)}
-    .patient-info h3{font-size:1rem;font-weight:600;margin-bottom:2px}
-    .patient-info p{font-size:0.8rem;color:var(--text-muted)}
-    .patient-badge{padding:4px 10px;border-radius:100px;font-size:0.7rem;font-weight:600;text-transform:uppercase}
-    .badge-active{background:rgba(20,184,166,0.15);color:var(--teal)}
-    .badge-critical{background:rgba(244,63,94,0.15);color:var(--rose)}
-    .badge-chronic{background:rgba(139,92,246,0.15);color:var(--purple)}
-    .patient-details{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-    .patient-detail{background:var(--bg-card);border-radius:var(--radius-sm);padding:10px 12px}
-    .patient-detail-label{font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px}
-    .patient-detail-value{font-size:0.85rem;font-weight:500}
-    .patient-diagnosis{background:var(--bg-card);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px}
-    .patient-diagnosis-label{font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px}
-    .patient-diagnosis-text{font-size:0.85rem;color:var(--text-secondary)}
+    .patient-name{font-weight:600}
+    .patient-meta{font-size:0.75rem;color:var(--text-muted)}
+    .patient-status{margin-left:auto;padding:4px 10px;border-radius:100px;font-size:0.65rem;font-weight:600;text-transform:uppercase}
+    .patient-status.active{background:rgba(20,184,166,0.15);color:var(--teal)}
+    .patient-status.critical{background:rgba(244,63,94,0.15);color:var(--rose)}
+    .patient-status.chronic{background:rgba(139,92,246,0.15);color:var(--purple)}
+    .patient-diagnosis{font-size:0.85rem;color:var(--text-secondary);padding:12px;background:var(--bg-card);border-radius:8px;margin-bottom:14px}
     .patient-actions{display:flex;gap:8px}
-    .patient-actions .btn{flex:1}
+    .patient-actions .btn{flex:1;padding:10px;font-size:0.8rem}
 
-    /* Analysis Section - Enhanced */
-    .analysis-hero{background:linear-gradient(135deg,rgba(212,164,55,0.1),rgba(20,184,166,0.1));border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;margin-bottom:24px;text-align:center}
-    .analysis-hero-icon{width:80px;height:80px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:20px;display:grid;place-items:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(212,164,55,0.25)}
-    .analysis-hero-icon svg{width:40px;height:40px;stroke:#fff;stroke-width:2}
-    .analysis-hero h2{font-size:1.5rem;font-weight:700;margin-bottom:8px}
-    .analysis-hero p{color:var(--text-secondary);margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto}
-    
-    .upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:48px 24px;text-align:center;cursor:pointer;transition:0.2s;background:var(--bg-card)}
+    /* Card */
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .card-title{font-size:0.95rem;font-weight:600;display:flex;align-items:center;gap:10px}
+    .card-title svg{width:18px;height:18px;stroke:var(--gold)}
+    .card-body{padding:20px}
+
+    /* Upload */
+    .upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:40px 24px;text-align:center;cursor:pointer;transition:0.2s}
     .upload-zone:hover,.upload-zone.dragover{border-color:var(--gold);background:var(--gold-glow)}
-    .upload-zone.has-file{border-style:solid;border-color:var(--teal)}
-    .upload-icon{width:64px;height:64px;background:var(--bg-elevated);border-radius:50%;display:grid;place-items:center;margin:0 auto 16px}
-    .upload-icon svg{width:32px;height:32px;stroke:var(--gold)}
-    .upload-title{font-weight:600;font-size:1.1rem;margin-bottom:4px}
-    .upload-sub{font-size:0.85rem;color:var(--text-muted);margin-bottom:16px}
-    .upload-formats{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-    .upload-format{padding:4px 12px;background:var(--bg-elevated);border-radius:100px;font-size:0.75rem;color:var(--text-secondary)}
+    .upload-zone.has-file{border-style:solid;border-color:var(--teal);background:rgba(20,184,166,0.05)}
+    .upload-icon{width:56px;height:56px;background:var(--bg-elevated);border-radius:14px;display:grid;place-items:center;margin:0 auto 16px}
+    .upload-icon svg{width:28px;height:28px;stroke:var(--gold)}
     .upload-input{display:none}
-
-    /* Preview Area */
-    .preview-area{margin-top:20px;display:none;padding:16px;background:var(--bg-elevated);border-radius:var(--radius-md)}
-    .preview-area.show{display:block}
-    .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;margin-bottom:12px}
-    .preview-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid var(--border);transition:0.2s}
+    .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;margin-top:16px}
+    .preview-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid var(--border)}
     .preview-thumb img{width:100%;height:100%;object-fit:cover}
     .preview-thumb:hover{border-color:var(--rose)}
-    .preview-thumb::after{content:'✕';position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(239,68,68,0.9);border-radius:50%;display:grid;place-items:center;font-size:10px;color:#fff;opacity:0;transition:0.2s}
+    .preview-thumb::after{content:'✕';position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(244,63,94,0.9);border-radius:50%;display:grid;place-items:center;font-size:10px;color:#fff;opacity:0;transition:0.2s}
     .preview-thumb:hover::after{opacity:1}
-    .preview-image{max-width:100%;max-height:300px;border-radius:var(--radius-md);margin-bottom:16px;border:1px solid var(--border)}
-    .preview-info{background:var(--bg-elevated);border-radius:var(--radius-md);padding:16px;margin-bottom:16px}
-    .preview-filename{font-weight:600;margin-bottom:4px}
-    .preview-meta{font-size:0.8rem;color:var(--text-muted)}
 
     /* Analysis Types */
-    .analysis-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
-    .analysis-type{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;text-align:center;cursor:pointer;transition:0.2s}
+    .analysis-types{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+    .analysis-type{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 12px;text-align:center;cursor:pointer;transition:0.2s}
     .analysis-type:hover{border-color:var(--gold)}
     .analysis-type.active{border-color:var(--gold);background:var(--gold-glow)}
-    .analysis-type-icon{font-size:1.5rem;margin-bottom:8px}
-    .analysis-type-name{font-weight:600;font-size:0.85rem;margin-bottom:2px}
-    .analysis-type-desc{font-size:0.7rem;color:var(--text-muted)}
+    .analysis-type-icon{font-size:1.5rem;margin-bottom:6px}
+    .analysis-type-name{font-size:0.8rem;font-weight:600}
 
-    /* Context Input */
-    .context-section{margin-bottom:24px}
-    .context-section h4{font-size:0.9rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-    .context-section h4 svg{width:16px;height:16px;stroke:var(--gold)}
-
-    /* Analyze Button */
-    .analyze-btn{width:100%;padding:18px 32px;font-size:1.1rem;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--bg-deep);border:none;border-radius:var(--radius-md);font-weight:700;cursor:pointer;transition:0.2s;display:flex;align-items:center;justify-content:center;gap:12px}
-    .analyze-btn:hover{box-shadow:0 8px 32px rgba(212,164,55,0.4)}
-    .analyze-btn:disabled{opacity:0.5;cursor:not-allowed}
-    .analyze-btn svg{width:24px;height:24px}
-
-    /* Progress */
+    /* Progress & Results */
     .analysis-progress{display:none;text-align:center;padding:40px}
     .analysis-progress.show{display:block}
-    .progress-spinner{width:64px;height:64px;border:4px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+    .progress-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .progress-text{font-weight:600;margin-bottom:4px}
-    .progress-sub{font-size:0.85rem;color:var(--text-muted)}
-    .progress-steps{display:flex;justify-content:center;gap:8px;margin-top:20px}
-    .progress-step{width:8px;height:8px;background:var(--border);border-radius:50%}
-    .progress-step.active{background:var(--gold);animation:pulse 1s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-
-    /* Results */
     .analysis-results{display:none}
     .analysis-results.show{display:block}
     .result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-    .result-title{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:10px}
-    .result-title svg{width:24px;height:24px;stroke:var(--emerald)}
-    .result-badge{padding:6px 14px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:100px;font-size:0.8rem;font-weight:600;color:var(--emerald)}
-
-    .result-section{background:var(--bg-elevated);border-radius:var(--radius-md);padding:20px;margin-bottom:16px}
-    .result-section-title{font-size:0.9rem;font-weight:600;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-    .result-section-title svg{width:18px;height:18px}
-    .result-content{font-size:0.9rem;line-height:1.8;color:var(--text-secondary)}
-    .result-content p{margin-bottom:12px}
-    .result-content ul{margin:12px 0;padding-left:20px}
-    .result-content li{margin:8px 0}
-    .result-content strong{color:var(--text-primary)}
-
-    .finding-card{background:var(--bg-card);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;border-left:3px solid var(--gold)}
-    .finding-card.critical{border-color:var(--rose)}
-    .finding-card.normal{border-color:var(--emerald)}
-    .finding-title{font-weight:600;margin-bottom:4px}
-    .finding-value{font-size:0.85rem;color:var(--text-secondary)}
-
-    /* History */
-    .history-list{max-height:400px;overflow-y:auto}
-    .history-item{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-elevated);border-radius:var(--radius-md);margin-bottom:10px;cursor:pointer;transition:0.2s}
-    .history-item:hover{background:var(--bg-card);border:1px solid var(--gold)}
-    .history-thumb{width:48px;height:48px;border-radius:var(--radius-sm);object-fit:cover;background:var(--bg-card)}
-    .history-info{flex:1;min-width:0}
-    .history-type{font-weight:600;font-size:0.85rem;margin-bottom:2px}
-    .history-date{font-size:0.75rem;color:var(--text-muted)}
-    .history-badge{padding:4px 8px;border-radius:100px;font-size:0.65rem;font-weight:600;background:rgba(20,184,166,0.15);color:var(--teal)}
+    .result-title{font-size:1.1rem;font-weight:600;display:flex;align-items:center;gap:10px;color:var(--emerald)}
+    .result-badge{padding:6px 14px;background:var(--gold-glow);border:1px solid var(--gold);border-radius:100px;font-size:0.75rem;font-weight:600;color:var(--gold)}
+    .result-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;margin-bottom:14px}
+    .result-section-title{font-size:0.85rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--text-secondary)}
+    .finding-card{background:var(--bg-elevated);border-radius:8px;padding:12px;margin-bottom:8px}
+    .finding-card.critical{border-left:3px solid var(--rose)}
 
     /* Scores */
     .scores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
@@ -224,1295 +191,973 @@
     .score-icon{font-size:1.75rem;margin-bottom:8px}
     .score-name{font-weight:600;font-size:0.9rem}
     .score-desc{font-size:0.7rem;color:var(--text-muted)}
-
     .calc-item{background:var(--bg-elevated);border-radius:var(--radius-md);padding:16px;margin-bottom:12px}
     .calc-item-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
     .calc-item-num{width:28px;height:28px;background:var(--gold);border-radius:8px;display:grid;place-items:center;font-size:0.75rem;font-weight:700;color:var(--bg-deep)}
     .calc-item-name{font-weight:600;font-size:0.9rem}
     .calc-opts{display:flex;flex-wrap:wrap;gap:8px}
-    .calc-opt{flex:1;min-width:70px;padding:12px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:0.15s}
+    .calc-opt{flex:1;min-width:60px;padding:12px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:0.15s}
     .calc-opt:hover{border-color:var(--gold)}
     .calc-opt.sel{background:var(--gold-glow);border-color:var(--gold)}
     .calc-opt input{display:none}
     .calc-opt-score{display:block;font-size:1.1rem;font-weight:700;color:var(--gold)}
-    .calc-opt-label{font-size:0.7rem;color:var(--text-secondary)}
+    .calc-opt-label{font-size:0.65rem;color:var(--text-secondary)}
     .calc-result{background:var(--bg-elevated);border-radius:var(--radius-md);padding:24px;text-align:center;margin-top:16px}
     .calc-result-score{font-size:3rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .calc-result-max{color:var(--text-muted)}
     .severity-pill{display:inline-block;padding:8px 20px;border-radius:100px;font-size:0.85rem;font-weight:600;margin-top:12px}
 
     /* Reference */
     .ref-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
-    .ref-filter{padding:8px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:100px;color:var(--text-secondary);font-size:0.75rem;font-weight:500;cursor:pointer;transition:0.2s;white-space:nowrap}
-    .ref-filter:hover{border-color:var(--gold);color:var(--text-primary)}
+    .ref-filter{padding:8px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:100px;color:var(--text-secondary);font-size:0.75rem;font-weight:500;cursor:pointer;transition:0.2s}
+    .ref-filter:hover{border-color:var(--gold)}
     .ref-filter.active{background:var(--gold-glow);border-color:var(--gold);color:var(--gold)}
-    .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-    .ref-card{background:var(--bg-elevated);border-radius:var(--radius-md);padding:16px;border-left:3px solid var(--gold);transition:0.2s}
-    .ref-card:hover{border-left-color:var(--teal);background:var(--bg-card)}
-    .ref-card h4{font-size:0.95rem;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:6px}
-    .ref-card p{font-size:0.8rem;color:var(--text-secondary);margin:6px 0;line-height:1.5}
+    .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+    .ref-card{background:var(--bg-elevated);border-radius:var(--radius-md);padding:16px;border-left:3px solid var(--gold)}
+    .ref-card h4{font-size:0.9rem;margin-bottom:10px}
+    .ref-card p{font-size:0.78rem;color:var(--text-secondary);margin:5px 0}
     .ref-card b{color:var(--gold)}
-    .ref-card[data-cat="critical"]{border-left-color:var(--rose)}
-    .ref-card[data-cat="cardiac"]{border-left-color:#ef4444}
-    .ref-card[data-cat="respiratory"]{border-left-color:#3b82f6}
-    .ref-card[data-cat="renal"]{border-left-color:#06b6d4}
-    .ref-card[data-cat="neuro"]{border-left-color:#a855f7}
-    .ref-card[data-cat="infection"]{border-left-color:#22c55e}
-    .ref-card[data-cat="gi"]{border-left-color:#f59e0b}
-    .ref-card[data-cat="anticoag"]{border-left-color:#ec4899}
-    .ref-card[data-cat="diabetes"]{border-left-color:#14b8a6}
 
-    /* Modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;padding:16px;z-index:200;overflow-y:auto}
-    .modal.active{display:flex}
-    .modal-box{width:100%;max-width:500px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg)}
-    .modal-header{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-    .modal-title{font-size:1.1rem;font-weight:600}
-    .modal-close{width:36px;height:36px;background:var(--bg-elevated);border:none;border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;display:grid;place-items:center;font-size:1.25rem}
-    .modal-body{padding:20px;max-height:70vh;overflow-y:auto}
-    .modal-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end}
+    /* Admin Panel */
+    #adminPanel{display:none;min-height:100vh;background:var(--bg-primary)}
+    #adminPanel.active{display:block}
+    .admin-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .admin-badge{background:var(--purple);padding:4px 12px;border-radius:100px;font-size:0.7rem;font-weight:600;color:white;margin-left:12px}
+    .admin-content{max-width:900px;margin:0 auto;padding:24px}
+    .admin-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:24px;overflow:hidden}
+    .admin-section-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .admin-section-title{font-size:1rem;font-weight:600;display:flex;align-items:center;gap:10px}
+    .admin-section-body{padding:20px}
+    .units-table{width:100%;border-collapse:collapse}
+    .units-table th,.units-table td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border)}
+    .units-table th{font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase}
+    .units-table tr:last-child td{border-bottom:none}
+    .color-options{display:flex;gap:8px;flex-wrap:wrap}
+    .color-option{width:32px;height:32px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:0.2s}
+    .color-option:hover,.color-option.selected{border-color:white;transform:scale(1.15)}
 
     /* Toast */
-    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 24px;background:var(--bg-elevated);border:1px solid var(--teal);border-radius:var(--radius-md);font-weight:500;opacity:0;transition:0.3s;z-index:300}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--emerald);padding:14px 24px;border-radius:var(--radius-md);font-size:0.9rem;opacity:0;transition:0.3s;z-index:2000}
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
     .toast.error{border-color:var(--rose)}
 
-    /* Loading */
-    .loading{display:flex;flex-direction:column;align-items:center;gap:12px;padding:60px;color:var(--text-muted)}
-    .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
-    .empty-state{text-align:center;padding:60px 20px}
-    .empty-icon{width:64px;height:64px;background:var(--bg-elevated);border-radius:50%;display:grid;place-items:center;margin:0 auto 16px}
-    .empty-icon svg{width:32px;height:32px;stroke:var(--text-muted)}
+    /* Neural Stats */
+    .neural-stats{display:flex;gap:16px;justify-content:center;font-size:0.75rem;color:var(--text-muted);margin-top:12px}
+    .neural-stat{display:flex;align-items:center;gap:4px}
+    .neural-stat.cached{color:var(--emerald)}
 
     @media(max-width:640px){
-      .stats-bar{grid-template-columns:repeat(2,1fr)}
+      .landing-title{font-size:1.75rem}
+      .units-grid{grid-template-columns:1fr}
+      .code-digit{width:48px;height:54px;font-size:1.5rem}
+      .dash-user-info{display:none}
+      .tab span{display:none}
       .patients-grid{grid-template-columns:1fr}
-      .patient-details{grid-template-columns:1fr}
-      .analysis-types{grid-template-columns:repeat(2,1fr)}
-      .scores-grid{grid-template-columns:repeat(2,1fr)}
-      .calc-opts{flex-direction:column}
     }
   </style>
 </head>
 <body>
-  <div class="ambient"></div>
-  
-  <header class="header">
-    <div class="logo">
-      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
-      <span class="logo-text">MedWard</span>
+<div class="ambient"></div>
+
+<!-- ═══════════════════ LANDING PAGE ═══════════════════ -->
+<div id="landing">
+  <div class="landing-logo"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+  <h1 class="landing-title">MedWard Enterprise</h1>
+  <p class="landing-subtitle">Select your unit to continue</p>
+  <div class="units-grid" id="unitsGrid"></div>
+  <div class="admin-fab" id="adminFab" title="Admin Panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+<div class="modal" id="accessModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon" id="accessIcon">🏥</div>
+      <h2 class="modal-title" id="accessTitle">Unit Name</h2>
+      <p class="modal-subtitle">Enter 4-digit access code</p>
     </div>
-    <div class="user-btn" id="userBtn">
-      <div class="user-avatar" id="userAvatar">B</div>
-      <span class="user-name" id="userName">User</span>
+    <div class="modal-body">
+      <div class="code-inputs">
+        <input type="tel" class="code-digit" maxlength="1" data-idx="0" inputmode="numeric" autocomplete="off">
+        <input type="tel" class="code-digit" maxlength="1" data-idx="1" inputmode="numeric" autocomplete="off">
+        <input type="tel" class="code-digit" maxlength="1" data-idx="2" inputmode="numeric" autocomplete="off">
+        <input type="tel" class="code-digit" maxlength="1" data-idx="3" inputmode="numeric" autocomplete="off">
+      </div>
+      <p class="code-error" id="codeError">Invalid access code</p>
+      <div id="userSection" style="display:none;margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+        <div class="form-group"><label class="form-label">Your Name</label><input type="text" id="userName" class="form-input" placeholder="Dr. John Smith"></div>
+        <div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-select"><option value="attending">Attending Physician</option><option value="resident">Resident</option><option value="intern">Intern</option><option value="nurse">Nurse</option><option value="student">Medical Student</option></select></div>
+      </div>
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('accessModal')">Cancel</button>
+      <button class="btn btn-primary" id="enterUnitBtn" style="display:none">Enter Unit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="adminLoginModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon">⚙️</div>
+      <h2 class="modal-title">Admin Access</h2>
+      <p class="modal-subtitle">Enter administrator password</p>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Password</label><input type="password" id="adminPassword" class="form-input" placeholder="Enter password"></div>
+      <p class="code-error" id="adminError">Invalid password</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('adminLoginModal')">Cancel</button>
+      <button class="btn btn-primary" id="adminLoginBtn">Login</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="unitModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header" style="text-align:left">
+      <h2 class="modal-title" id="unitModalTitle">Add Unit</h2>
+      <p class="modal-subtitle">Configure unit settings</p>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Unit Name *</label><input type="text" id="unitName" class="form-input" placeholder="e.g., Neurology Ward"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label class="form-label">Icon (Emoji)</label><input type="text" id="unitIcon" class="form-input" placeholder="🏥" style="font-size:1.5rem;text-align:center"></div>
+        <div class="form-group"><label class="form-label">Access Code *</label><input type="text" id="unitCode" class="form-input" placeholder="1234" maxlength="4" style="text-align:center;letter-spacing:4px;font-family:monospace"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><input type="text" id="unitDesc" class="form-input" placeholder="Brief description"></div>
+      <div class="form-group"><label class="form-label">Google Sheet ID</label><input type="text" id="unitSheetId" class="form-input" placeholder="From spreadsheet URL"></div>
+      <div class="form-group"><label class="form-label">Color Theme</label><div class="color-options" id="colorOptions"><div class="color-option selected" data-color="#d4a437" style="background:#d4a437"></div><div class="color-option" data-color="#14b8a6" style="background:#14b8a6"></div><div class="color-option" data-color="#3b82f6" style="background:#3b82f6"></div><div class="color-option" data-color="#a855f7" style="background:#a855f7"></div><div class="color-option" data-color="#ef4444" style="background:#ef4444"></div><div class="color-option" data-color="#f97316" style="background:#f97316"></div><div class="color-option" data-color="#10b981" style="background:#10b981"></div><div class="color-option" data-color="#ec4899" style="background:#ec4899"></div></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('unitModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveUnitBtn">Save Unit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="patientModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header" style="text-align:left">
+      <h2 class="modal-title">Add Patient</h2>
+      <p class="modal-subtitle">Enter patient details</p>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Patient Name *</label><input type="text" id="patientName" class="form-input" placeholder="Full name"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label class="form-label">Room/Bed</label><input type="text" id="patientRoom" class="form-input" placeholder="e.g., 21-A"></div>
+        <div class="form-group"><label class="form-label">Status</label><select id="patientStatus" class="form-select"><option value="active">Active</option><option value="critical">Critical</option><option value="chronic">Chronic</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Diagnosis</label><textarea id="patientDiagnosis" class="form-textarea" placeholder="Primary diagnosis"></textarea></div>
+      <div class="form-group"><label class="form-label">Assigned Doctor</label><input type="text" id="patientDoctor" class="form-input" placeholder="Dr. Name"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('patientModal')">Cancel</button>
+      <button class="btn btn-primary" id="savePatientBtn">Save Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ADMIN PANEL ═══════════════════ -->
+<div id="adminPanel">
+  <header class="admin-header">
+    <div class="dash-logo"><div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div><span style="font-weight:600">MedWard</span><span class="admin-badge">ADMIN</span></div>
+    <button class="btn btn-secondary btn-sm" id="exitAdminBtn">Exit Admin</button>
   </header>
-
-  <!-- Login -->
-  <main class="screen active" id="login">
-    <div class="login-card">
-      <div class="login-header">
-        <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
-        <h1 class="login-title">MedWard</h1>
-        <p class="login-sub">Clinical Intelligence Platform</p>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Your Name</label>
-        <input type="text" id="loginName" class="form-input" placeholder="Enter your name">
-      </div>
-      <button class="btn btn-primary btn-full" id="loginBtn">Continue to Dashboard</button>
+  <div class="admin-content">
+    <div class="admin-section">
+      <div class="admin-section-header"><h2 class="admin-section-title">🏥 Hospital Units</h2><button class="btn btn-primary btn-sm" id="addUnitBtn">+ Add Unit</button></div>
+      <div class="admin-section-body" style="padding:0;overflow-x:auto"><table class="units-table"><thead><tr><th>Unit</th><th>Code</th><th>Sheet ID</th><th>Actions</th></tr></thead><tbody id="unitsTableBody"></tbody></table></div>
     </div>
-  </main>
-
-  <!-- Dashboard -->
-  <main class="screen" id="dashboard">
-    <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">Clinical Dashboard</h1>
-        <p class="page-sub">Welcome back, <span id="greeting">Doctor</span></p>
-      </div>
-
-      <div class="tabs">
-        <button class="tab active" data-tab="patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Patients</button>
-        <button class="tab" data-tab="analysis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>AI Analysis</button>
-        <button class="tab" data-tab="scores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Scores</button>
-        <button class="tab" data-tab="reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Reference</button>
-      </div>
-
-      <!-- Patients Panel -->
-      <div class="panel active" id="panelPatients">
-        <div class="stats-bar">
-          <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
-          <div class="stat"><div class="stat-value" id="statActive">0</div><div class="stat-label">Active</div></div>
-          <div class="stat"><div class="stat-value" id="statChronic">0</div><div class="stat-label">Chronic</div></div>
-          <div class="stat"><div class="stat-value" id="statWards">0</div><div class="stat-label">Wards</div></div>
+    <div class="admin-section">
+      <div class="admin-section-header"><h2 class="admin-section-title">⚙️ Settings</h2></div>
+      <div class="admin-section-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+          <div class="form-group"><label class="form-label">Admin Password</label><input type="password" id="newAdminPwd" class="form-input" placeholder="New password"></div>
+          <div class="form-group"><label class="form-label">Claude API URL</label><input type="text" id="claudeApiUrl" class="form-input" placeholder="Google Apps Script URL"></div>
         </div>
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ward Patients</h2>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-secondary btn-sm" id="refreshBtn">Refresh</button>
-              <button class="btn btn-primary btn-sm" id="addPatientBtn">+ Add</button>
-            </div>
-          </div>
-          <div class="card-body" id="patientsContainer">
-            <div class="loading"><div class="spinner"></div>Loading patients...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Analysis Panel - Enhanced -->
-      <div class="panel" id="panelAnalysis">
-        <div class="analysis-hero">
-          <div class="analysis-hero-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-          </div>
-          <h2>AI Medical Analysis</h2>
-          <p>Upload medical images, lab results, or clinical documents for instant AI-powered analysis</p>
-          <div id="neuralStats" style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:0.8rem;color:var(--text-secondary)"></div>
-        </div>
-
-        <!-- Upload Section -->
-        <div class="card" id="uploadSection">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Documents</h2>
-          </div>
-          <div class="card-body">
-            <div class="upload-zone" id="uploadZone">
-              <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-              <div class="upload-title">Drop files or tap to upload</div>
-              <div class="upload-sub">Select multiple images at once</div>
-              <div class="upload-formats">
-                <span class="upload-format">PNG</span>
-                <span class="upload-format">JPG</span>
-                <span class="upload-format">WEBP</span>
-              </div>
-              <input type="file" class="upload-input" id="uploadInput" accept="image/*" multiple>
-            </div>
-
-            <div class="preview-area" id="previewArea">
-              <div class="preview-grid" id="previewGrid"></div>
-              <div class="preview-info">
-                <div class="preview-filename" id="previewFilename">0 files selected</div>
-                <div class="preview-meta" id="previewMeta">Tap images to remove</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Analysis Type Selection -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Analysis Type</h2>
-          </div>
-          <div class="card-body">
-            <div class="analysis-types">
-              <div class="analysis-type active" data-type="lab">
-                <div class="analysis-type-icon">🧪</div>
-                <div class="analysis-type-name">Lab Results</div>
-                <div class="analysis-type-desc">Blood work, panels</div>
-              </div>
-              <div class="analysis-type" data-type="auto">
-                <div class="analysis-type-icon">🔍</div>
-                <div class="analysis-type-name">Auto-Detect</div>
-                <div class="analysis-type-desc">AI determines type</div>
-              </div>
-              <div class="analysis-type" data-type="xray">
-                <div class="analysis-type-icon">🩻</div>
-                <div class="analysis-type-name">X-Ray</div>
-                <div class="analysis-type-desc">Radiograph analysis</div>
-              </div>
-              <div class="analysis-type" data-type="ct">
-                <div class="analysis-type-icon">🧠</div>
-                <div class="analysis-type-name">CT/MRI</div>
-                <div class="analysis-type-desc">Cross-sectional imaging</div>
-              </div>
-              <div class="analysis-type" data-type="ecg">
-                <div class="analysis-type-icon">💓</div>
-                <div class="analysis-type-name">ECG/EKG</div>
-                <div class="analysis-type-desc">Cardiac rhythm</div>
-              </div>
-              <div class="analysis-type" data-type="pathology">
-                <div class="analysis-type-icon">🔬</div>
-                <div class="analysis-type-name">Pathology</div>
-                <div class="analysis-type-desc">Histology, cytology</div>
-              </div>
-              <div class="analysis-type" data-type="dermatology">
-                <div class="analysis-type-icon">🩹</div>
-                <div class="analysis-type-name">Dermatology</div>
-                <div class="analysis-type-desc">Skin lesions</div>
-              </div>
-              <div class="analysis-type" data-type="ophthalmology">
-                <div class="analysis-type-icon">👁</div>
-                <div class="analysis-type-name">Ophthalmology</div>
-                <div class="analysis-type-desc">Fundoscopy, OCT</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Analyze Button -->
-        <button class="analyze-btn" id="analyzeBtn" disabled>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
-          Analyze with Claude AI
-        </button>
-
-        <!-- Progress -->
-        <div class="analysis-progress" id="analysisProgress">
-          <div class="progress-spinner"></div>
-          <div class="progress-text">Analyzing...</div>
-          <div class="progress-sub" id="progressStatus">Processing image...</div>
-          <div class="progress-steps">
-            <div class="progress-step active"></div>
-            <div class="progress-step"></div>
-            <div class="progress-step"></div>
-          </div>
-        </div>
-
-        <!-- Results -->
-        <div class="analysis-results" id="analysisResults">
-          <div class="result-header">
-            <h3 class="result-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Analysis Complete</h3>
-            <span class="result-badge" id="resultBadge">AI Verified</span>
-          </div>
-          <div id="resultsContent"></div>
-          <button class="btn btn-secondary btn-full" id="newAnalysisBtn" style="margin-top:20px">New Analysis</button>
-        </div>
-
-        <!-- Analysis History -->
-        <div class="card" style="margin-top:24px">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Recent Analyses</h2>
-          </div>
-          <div class="card-body">
-            <div class="history-list" id="historyList">
-              <div class="empty-state" style="padding:24px"><p style="color:var(--text-muted)">No analyses yet</p></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Scores Panel -->
-      <div class="panel" id="panelScores">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Clinical Scores</h2>
-          </div>
-          <div class="card-body">
-            <div class="scores-grid" id="scoresGrid"></div>
-          </div>
-        </div>
-        <div id="calcArea"></div>
-      </div>
-
-      <!-- Reference Panel -->
-      <div class="panel" id="panelReference">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Ward Quick Reference</h2>
-          </div>
-          <div class="card-body">
-            <div class="ref-filters" id="refFilters">
-              <button class="ref-filter active" data-cat="all">All</button>
-              <button class="ref-filter" data-cat="critical">🚨 Critical</button>
-              <button class="ref-filter" data-cat="cardiac">❤️ Cardiac</button>
-              <button class="ref-filter" data-cat="respiratory">🫁 Respiratory</button>
-              <button class="ref-filter" data-cat="renal">💧 Renal</button>
-              <button class="ref-filter" data-cat="neuro">🧠 Neuro</button>
-              <button class="ref-filter" data-cat="infection">🦠 Infection</button>
-              <button class="ref-filter" data-cat="gi">🩺 GI/Liver</button>
-              <button class="ref-filter" data-cat="anticoag">💉 Anticoag</button>
-              <button class="ref-filter" data-cat="diabetes">📊 Diabetes</button>
-            </div>
-            <div class="ref-grid" id="refGrid"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Patient Modal -->
-  <div class="modal" id="patientModal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h2 class="modal-title" id="patientModalTitle">Add Patient</h2>
-        <button class="modal-close" id="closePatientModal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Patient Name *</label>
-          <input type="text" id="patientName" class="form-input" required>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="form-group">
-            <label class="form-label">Ward *</label>
-            <input type="text" id="patientWard" class="form-input" placeholder="e.g. Ward 21">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Room/Bed</label>
-            <input type="text" id="patientRoom" class="form-input" placeholder="e.g. 5">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Diagnosis</label>
-          <textarea id="patientDiagnosis" class="form-textarea" placeholder="Primary diagnosis..."></textarea>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="form-group">
-            <label class="form-label">Assigned Doctor</label>
-            <input type="text" id="patientDoctor" class="form-input" placeholder="Dr. Name">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Status</label>
-            <select id="patientStatus" class="form-select">
-              <option value="active">Active</option>
-              <option value="chronic">Chronic</option>
-              <option value="critical">Critical</option>
-            </select>
-          </div>
-        </div>
-        <input type="hidden" id="patientRowIndex">
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="cancelPatient">Cancel</button>
-        <button class="btn btn-primary" id="savePatient">Save Patient</button>
+        <button class="btn btn-primary" id="saveSettingsBtn" style="margin-top:16px">Save Settings</button>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<!-- ═══════════════════ MAIN DASHBOARD ═══════════════════ -->
+<div id="dashboard">
+  <header class="dash-header">
+    <div class="dash-logo">
+      <div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div>
+      <span class="dash-unit-badge" id="dashUnitBadge">Unit</span>
+    </div>
+    <div class="dash-user">
+      <div class="dash-user-info"><div class="dash-user-name" id="dashUserName">Doctor</div><div class="dash-user-role" id="dashUserRole">Role</div></div>
+      <div class="dash-avatar" id="dashAvatar">DR</div>
+      <button class="btn-icon" id="logoutBtn" title="Exit Unit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </header>
+  <div class="dash-content">
+    <div class="dash-welcome"><h1 id="dashWelcome">Welcome back</h1><p id="dashDate"></p></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Patients</span></button>
+      <button class="tab" data-tab="analysis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42"/></svg><span>AI Analysis</span></button>
+      <button class="tab" data-tab="scores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Scores</span></button>
+      <button class="tab" data-tab="reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Reference</span></button>
+    </div>
+
+    <!-- PATIENTS PANEL -->
+    <div class="panel active" id="panelPatients">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
+        <div class="stat-card"><div class="stat-value" id="statActive">0</div><div class="stat-label">Active</div></div>
+        <div class="stat-card"><div class="stat-value" id="statCritical">0</div><div class="stat-label">Critical</div></div>
+        <div class="stat-card"><div class="stat-value" id="statChronic">0</div><div class="stat-label">Chronic</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:1.1rem;font-weight:600">Unit Patients</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" id="refreshPatientsBtn">↻ Refresh</button>
+          <button class="btn btn-primary btn-sm" id="addPatientBtn">+ Add Patient</button>
+        </div>
+      </div>
+      <div class="patients-grid" id="patientsGrid"></div>
+    </div>
+
+    <!-- AI ANALYSIS PANEL -->
+    <div class="panel" id="panelAnalysis">
+      <div class="card" id="uploadSection">
+        <div class="card-header"><h3 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Medical Images</h3></div>
+        <div class="card-body">
+          <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div style="font-weight:600;margin-bottom:4px">Drop files or tap to upload</div>
+            <div style="font-size:0.85rem;color:var(--text-muted)">Select multiple images at once</div>
+            <input type="file" class="upload-input" id="uploadInput" accept="image/*" multiple>
+          </div>
+          <div class="preview-grid" id="previewGrid"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">Analysis Type</h3></div>
+        <div class="card-body">
+          <div class="analysis-types" id="analysisTypes">
+            <div class="analysis-type active" data-type="lab"><div class="analysis-type-icon">🧪</div><div class="analysis-type-name">Lab Results</div></div>
+            <div class="analysis-type" data-type="xray"><div class="analysis-type-icon">🩻</div><div class="analysis-type-name">X-Ray</div></div>
+            <div class="analysis-type" data-type="ct"><div class="analysis-type-icon">🧠</div><div class="analysis-type-name">CT/MRI</div></div>
+            <div class="analysis-type" data-type="ecg"><div class="analysis-type-icon">💓</div><div class="analysis-type-name">ECG</div></div>
+            <div class="analysis-type" data-type="auto"><div class="analysis-type-icon">🔍</div><div class="analysis-type-name">Auto</div></div>
+          </div>
+          <div class="neural-stats" id="neuralStats"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-full" id="analyzeBtn" disabled>🤖 Analyze with Claude AI</button>
+      <div class="analysis-progress" id="analysisProgress"><div class="progress-spinner"></div><div style="font-weight:600">Analyzing...</div><div style="color:var(--text-muted);font-size:0.85rem" id="progressStatus">Processing images...</div></div>
+      <div class="analysis-results" id="analysisResults">
+        <div class="result-header"><h3 class="result-title">✓ Analysis Complete</h3><span class="result-badge" id="resultBadge">Claude AI</span></div>
+        <div id="resultsContent"></div>
+        <button class="btn btn-secondary btn-full" id="newAnalysisBtn" style="margin-top:16px">New Analysis</button>
+      </div>
+    </div>
+
+    <!-- SCORES PANEL -->
+    <div class="panel" id="panelScores">
+      <div class="card"><div class="card-header"><h3 class="card-title">Clinical Calculators</h3></div><div class="card-body"><div class="scores-grid" id="scoresGrid"></div></div></div>
+      <div id="calcArea"></div>
+    </div>
+
+    <!-- REFERENCE PANEL -->
+    <div class="panel" id="panelReference">
+      <div class="card"><div class="card-header"><h3 class="card-title">Ward Quick Reference</h3></div><div class="card-body"><div class="ref-filters" id="refFilters"></div><div class="ref-grid" id="refGrid"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
-  var API = {
-    PATIENT: 'https://script.google.com/macros/s/AKfycbx-l2xdsAHTZu7bcueN83Yz8xbCwtKbHfUSJuhIgtWVR5XyeJYh9TrfMgzznTYX4Z0kww/exec',
-    CLAUDE: 'https://script.google.com/macros/s/AKfycbxjp-KDUx_eYvavlEHDciE-fR1V8eFM39vJfAcA7btETL-QUmrwuYU-_92_Pl20gl75kg/exec'
-  };
+'use strict';
 
-  var state = {
-    user: null,
-    patients: [],
-    editing: null,
-    analysisType: 'lab',
-    uploadedFiles: [],
-    uploadedBase64s: [],
-    history: [],
-    activeScore: null,
-    scores: {}
-  };
+// ═══════════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════
+const CONFIG = {
+  STORAGE_KEY: 'medward_enterprise_v3',
+  DEFAULT_ADMIN_PWD: 'admin123',
+  DEFAULT_API: 'https://script.google.com/macros/s/AKfycbxjp-KDUx_eYvavlEHDciE-fR1V8eFM39vJfAcA7btETL-QUmrwuYU-_92_Pl20gl75kg/exec'
+};
 
-  var $ = function(id) { return document.getElementById(id); };
+const DEFAULT_UNITS = [
+  { id:'neuro', name:'Neurology', icon:'🧠', desc:'Stroke & Neurological Disorders', code:'1234', color:'#a855f7', sheetId:'' },
+  { id:'cardio', name:'Cardiology', icon:'❤️', desc:'Cardiac Care Unit', code:'5678', color:'#ef4444', sheetId:'' },
+  { id:'icu', name:'ICU', icon:'🏥', desc:'Intensive Care Unit', code:'9012', color:'#f97316', sheetId:'' }
+];
 
-  // ========== SCORES ==========
-  var SCORES = {
-    nihss:{name:'NIHSS',icon:'🧠',desc:'Stroke Severity',max:42,items:[
-      {id:'1a',name:'LOC',opts:[{s:0,l:'Alert'},{s:1,l:'Drowsy'},{s:2,l:'Stupor'},{s:3,l:'Coma'}]},
-      {id:'1b',name:'LOC Q',opts:[{s:0,l:'Both'},{s:1,l:'One'},{s:2,l:'Neither'}]},
-      {id:'1c',name:'LOC C',opts:[{s:0,l:'Both'},{s:1,l:'One'},{s:2,l:'Neither'}]},
-      {id:'2',name:'Gaze',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Forced'}]},
-      {id:'3',name:'Visual',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Complete'},{s:3,l:'Bilateral'}]},
-      {id:'4',name:'Facial',opts:[{s:0,l:'Normal'},{s:1,l:'Minor'},{s:2,l:'Partial'},{s:3,l:'Complete'}]},
-      {id:'5a',name:'Arm L',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
-      {id:'5b',name:'Arm R',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
-      {id:'6a',name:'Leg L',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
-      {id:'6b',name:'Leg R',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
-      {id:'7',name:'Ataxia',opts:[{s:0,l:'Absent'},{s:1,l:'One'},{s:2,l:'Two'}]},
-      {id:'8',name:'Sensory',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
-      {id:'9',name:'Language',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'},{s:3,l:'Mute'}]},
-      {id:'10',name:'Dysarthria',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
-      {id:'11',name:'Extinction',opts:[{s:0,l:'Normal'},{s:1,l:'One'},{s:2,l:'Profound'}]}
-    ],interpret:function(s){if(s===0)return{t:'No Symptoms',c:'#10b981'};if(s<=4)return{t:'Minor',c:'#6ee7b7'};if(s<=15)return{t:'Moderate',c:'#fbbf24'};if(s<=20)return{t:'Mod-Severe',c:'#f97316'};return{t:'Severe',c:'#ef4444'}}},
-    gcs:{name:'GCS',icon:'👁',desc:'Consciousness',max:15,items:[
-      {id:'e',name:'Eye',opts:[{s:4,l:'Spontaneous'},{s:3,l:'Voice'},{s:2,l:'Pain'},{s:1,l:'None'}]},
-      {id:'v',name:'Verbal',opts:[{s:5,l:'Oriented'},{s:4,l:'Confused'},{s:3,l:'Words'},{s:2,l:'Sounds'},{s:1,l:'None'}]},
-      {id:'m',name:'Motor',opts:[{s:6,l:'Obeys'},{s:5,l:'Localizes'},{s:4,l:'Withdraws'},{s:3,l:'Flexion'},{s:2,l:'Extension'},{s:1,l:'None'}]}
-    ],interpret:function(s){if(s>=13)return{t:'Mild',c:'#10b981'};if(s>=9)return{t:'Moderate',c:'#fbbf24'};return{t:'Severe',c:'#ef4444'}}},
-    sedan:{name:'SEDAN',icon:'🩸',desc:'tPA Bleed Risk',max:6,items:[
-      {id:'s',name:'Glucose',opts:[{s:0,l:'<145'},{s:1,l:'145-216'},{s:2,l:'>216'}]},
-      {id:'e',name:'Early CT',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
-      {id:'d',name:'Dense Artery',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},
-      {id:'a',name:'Age ≥75',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
-      {id:'n',name:'NIHSS ≥10',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
-    ],interpret:function(s){var r=['1.4%','2.9%','5.0%','8.5%','12.2%','16.9%','21.5%'],c=['#10b981','#6ee7b7','#84cc16','#fbbf24','#f97316','#ef4444','#dc2626'];return{t:r[Math.min(s,6)]+' sICH',c:c[Math.min(s,6)]}}},
-    chads:{name:'CHA₂DS₂-VASc',icon:'❤️',desc:'AF Stroke',max:9,items:[
-      {id:'c',name:'CHF',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'h',name:'HTN',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'a2',name:'Age≥75',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},{id:'d',name:'DM',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'s2',name:'Stroke',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},{id:'v',name:'Vascular',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'a',name:'Age65-74',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'sc',name:'Female',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
-    ],interpret:function(s){if(s===0)return{t:'Low 0.2%/yr',c:'#10b981'};if(s===1)return{t:'Low-Mod',c:'#6ee7b7'};return{t:'Anticoag indicated',c:'#ef4444'}}},
-    wells:{name:'Wells PE',icon:'🫁',desc:'PE Probability',max:12.5,items:[
-      {id:'dv',name:'DVT Signs',opts:[{s:0,l:'No'},{s:3,l:'Yes'}]},{id:'al',name:'PE Likely',opts:[{s:0,l:'No'},{s:3,l:'Yes'}]},{id:'hr',name:'HR>100',opts:[{s:0,l:'No'},{s:1.5,l:'Yes'}]},{id:'im',name:'Immobile',opts:[{s:0,l:'No'},{s:1.5,l:'Yes'}]},{id:'pr',name:'Prior VTE',opts:[{s:0,l:'No'},{s:1.5,l:'Yes'}]},{id:'he',name:'Hemoptysis',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'ca',name:'Cancer',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
-    ],interpret:function(s){if(s<=4)return{t:'PE Unlikely',c:'#10b981'};return{t:'PE Likely',c:'#ef4444'}}},
-    curb:{name:'CURB-65',icon:'🦠',desc:'Pneumonia',max:5,items:[
-      {id:'c',name:'Confusion',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'u',name:'BUN>19',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'r',name:'RR≥30',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'b',name:'BP<90/60',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},{id:'65',name:'Age≥65',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
-    ],interpret:function(s){if(s<=1)return{t:'Outpatient',c:'#10b981'};if(s===2)return{t:'Admit',c:'#fbbf24'};return{t:'ICU',c:'#ef4444'}}}
-  };
+// ═══════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════
+let state = {
+  units: [],
+  settings: { adminPassword: CONFIG.DEFAULT_ADMIN_PWD, claudeApiUrl: CONFIG.DEFAULT_API },
+  currentUnit: null,
+  currentUser: null,
+  patients: [],
+  analysisType: 'lab',
+  uploadedFiles: [],
+  uploadedBase64s: [],
+  activeScore: null,
+  scores: {}
+};
 
-  var REFS = [
-    // Critical Values & Emergencies
-    {title:'🚨 Critical Lab Values', category:'critical', content:'<p><b>K⁺:</b> <2.5 or >6.5 mmol/L</p><p><b>Na⁺:</b> <120 or >160 mmol/L</p><p><b>Glucose:</b> <40 or >500 mg/dL</p><p><b>Hgb:</b> <7 g/dL | <b>Plt:</b> <50k</p><p><b>pH:</b> <7.2 or >7.6</p><p><b>Lactate:</b> >4 mmol/L</p>'},
-    {title:'⚡ Hyperkalemia Protocol', category:'critical', content:'<p><b>Stabilize:</b> Ca gluconate 10mL IV</p><p><b>Shift:</b> Insulin 10U + D50 | Salbutamol neb</p><p><b>Remove:</b> Kayexalate | Furosemide | HD</p><p><b>ECG changes:</b> Peaked T → Wide QRS → Sine wave</p>'},
-    {title:'💉 Hypoglycemia', category:'critical', content:'<p><b>Conscious:</b> 15-20g oral glucose</p><p><b>Unconscious:</b> D50 25-50mL IV push</p><p><b>No IV:</b> Glucagon 1mg IM</p><p><b>Recheck:</b> q15min until >100 mg/dL</p>'},
-    
-    // Cardiac
-    {title:'❤️ ACS Management', category:'cardiac', content:'<p><b>MONA:</b> Morphine, O₂, Nitrates, Aspirin</p><p><b>STEMI:</b> PCI <90min | Lysis <30min</p><p><b>NSTEMI:</b> Anticoag + early cath</p><p><b>Troponin:</b> Repeat at 3h & 6h</p>'},
-    {title:'💓 Afib Rate Control', category:'cardiac', content:'<p><b>Stable:</b> Diltiazem 15-20mg IV or Metoprolol 5mg IV</p><p><b>Target HR:</b> <110 bpm</p><p><b>HFrEF:</b> Avoid diltiazem, use digoxin/amiodarone</p><p><b>CHA₂DS₂-VASc:</b> ≥2 = anticoagulate</p>'},
-    {title:'🫀 Heart Failure', category:'cardiac', content:'<p><b>Acute:</b> Furosemide 40-80mg IV, Nitrates, O₂</p><p><b>Target:</b> UOP 0.5-1 mL/kg/hr</p><p><b>Hold:</b> ACEi/ARB if Cr↑ >30%, K⁺>5.5</p><p><b>BNP:</b> >400 likely HF | <100 unlikely</p>'},
-    
-    // Respiratory
-    {title:'🫁 COPD Exacerbation', category:'respiratory', content:'<p><b>Bronchodilators:</b> Salbutamol + Ipratropium nebs</p><p><b>Steroids:</b> Prednisone 40mg x5 days</p><p><b>Antibiotics:</b> If purulent sputum (Augmentin/Azithro)</p><p><b>BiPAP:</b> If pH <7.35, pCO₂ >45</p>'},
-    {title:'🔵 Oxygen Targets', category:'respiratory', content:'<p><b>General:</b> SpO₂ 94-98%</p><p><b>COPD/CO₂ retainer:</b> 88-92%</p><p><b>ARDS:</b> Accept 88-92% with low tidal volume</p><p><b>Stroke/MI:</b> Only if SpO₂ <94%</p>'},
-    {title:'🩺 PE Wells Score', category:'respiratory', content:'<p>DVT symptoms: 3 | PE most likely: 3</p><p>HR >100: 1.5 | Immobile/Surgery: 1.5</p><p>Prior PE/DVT: 1.5 | Hemoptysis: 1 | Malignancy: 1</p><p><b>>4:</b> High risk → CT angio</p>'},
-    
-    // Renal
-    {title:'🔬 AKI Staging (KDIGO)', category:'renal', content:'<p><b>Stage 1:</b> Cr ↑1.5-1.9x or ↑≥0.3</p><p><b>Stage 2:</b> Cr ↑2-2.9x baseline</p><p><b>Stage 3:</b> Cr ↑3x or ≥4.0 or RRT</p><p><b>Workup:</b> U/A, FeNa, renal US</p>'},
-    {title:'💧 IV Fluid Guide', category:'renal', content:'<p><b>Resuscitation:</b> NS or LR bolus 500mL-1L</p><p><b>Maintenance:</b> 25-30 mL/kg/day</p><p><b>Hyperkalemia:</b> Avoid LR (has 4 mEq K⁺)</p><p><b>Hyponatremia:</b> NS or fluid restrict</p>'},
-    {title:'⚖️ Electrolyte Replacement', category:'renal', content:'<p><b>K⁺ 3.0-3.5:</b> 40 mEq PO</p><p><b>K⁺ <3.0:</b> 10-20 mEq/hr IV (max 40/hr)</p><p><b>Mg²⁺ <1.5:</b> 2g MgSO₄ IV over 2h</p><p><b>PO₄ <2:</b> K-Phos 15-30 mmol IV</p>'},
-    
-    // Neuro
-    {title:'🧠 Stroke - tPA', category:'neuro', content:'<p><b>Window:</b> ≤4.5h from last known well</p><p><b>Dose:</b> 0.9 mg/kg (max 90mg)</p><p><b>Admin:</b> 10% bolus, 90% over 60min</p><p><b>BP goal pre-tPA:</b> <185/110</p>'},
-    {title:'🧠 Stroke - Thrombectomy', category:'neuro', content:'<p><b>Window:</b> ≤6h standard | ≤24h (DAWN/DEFUSE)</p><p><b>Criteria:</b> LVO (ICA, M1, basilar)</p><p><b>NIHSS:</b> Usually ≥6</p><p><b>Post-procedure BP:</b> <180/105</p>'},
-    {title:'💊 Seizure Management', category:'neuro', content:'<p><b>1st line:</b> Lorazepam 4mg IV (may repeat x1)</p><p><b>2nd line:</b> Levetiracetam 60mg/kg or Fosphenytoin 20mg PE/kg</p><p><b>Refractory:</b> Propofol or Midazolam gtt</p><p><b>Check:</b> Glucose, Na⁺, Ca²⁺, Mg²⁺</p>'},
-    
-    // Infection
-    {title:'🦠 Sepsis Bundle (Hour-1)', category:'infection', content:'<p><b>1.</b> Measure lactate (repeat if >2)</p><p><b>2.</b> Blood cultures before abx</p><p><b>3.</b> Broad-spectrum antibiotics</p><p><b>4.</b> 30 mL/kg crystalloid if hypotensive or lactate ≥4</p>'},
-    {title:'💊 Empiric Antibiotics', category:'infection', content:'<p><b>CAP:</b> Ceftriaxone + Azithro</p><p><b>HAP/VAP:</b> Pip-Tazo + Vanc ± Tobra</p><p><b>UTI simple:</b> Ceftriaxone or Cipro</p><p><b>UTI complicated:</b> Pip-Tazo or Meropenem</p><p><b>SBP:</b> Ceftriaxone | <b>Cellulitis:</b> Cefazolin</p>'},
-    {title:'🧫 Meningitis', category:'infection', content:'<p><b>Empiric:</b> Ceftriaxone 2g + Vancomycin + Dexamethasone</p><p><b>Dexa timing:</b> Before or with first abx dose</p><p><b>LP before CT if:</b> No immunocompromise, no focal neuro, no papilledema</p>'},
-    
-    // GI/Liver
-    {title:'🩸 GI Bleed', category:'gi', content:'<p><b>Resuscitate:</b> 2 large bore IV, type & cross</p><p><b>Transfuse:</b> Hgb <7 (or <8 if CAD)</p><p><b>PPI:</b> Pantoprazole 80mg bolus then 8mg/hr</p><p><b>Variceal:</b> Octreotide + Ceftriaxone + EGD</p>'},
-    {title:'🍺 Alcohol Withdrawal', category:'gi', content:'<p><b>CIWA protocol:</b> Diazepam or Lorazepam PRN</p><p><b>Prophylaxis:</b> Thiamine 500mg IV x3d then 100mg PO</p><p><b>DTs peak:</b> 48-72h | Seizures: 12-48h</p><p><b>Severe:</b> Phenobarbital or dexmedetomidine</p>'},
-    {title:'🟡 Hepatic Encephalopathy', category:'gi', content:'<p><b>Lactulose:</b> 30mL q2h until 3-4 BM/day</p><p><b>Rifaximin:</b> 550mg BID (prevention)</p><p><b>Identify trigger:</b> Infection, GI bleed, constipation, meds</p><p><b>Protein:</b> Do NOT restrict (1.2-1.5 g/kg/day)</p>'},
-    
-    // Anticoagulation
-    {title:'💉 Anticoag Reversal', category:'anticoag', content:'<p><b>Warfarin:</b> Vit K 10mg IV + 4F-PCC</p><p><b>Heparin:</b> Protamine 1mg per 100U heparin</p><p><b>Dabigatran:</b> Idarucizumab 5g IV</p><p><b>Xa inhibitors:</b> Andexanet alfa or 4F-PCC</p>'},
-    {title:'🩸 DVT/PE Treatment', category:'anticoag', content:'<p><b>Enoxaparin:</b> 1mg/kg q12h or 1.5mg/kg daily</p><p><b>Heparin gtt:</b> 80U/kg bolus then 18U/kg/hr</p><p><b>Duration:</b> Provoked 3mo | Unprovoked ≥6mo</p><p><b>Cancer:</b> LMWH or DOAC long-term</p>'},
-    
-    // Diabetes
-    {title:'📊 DKA Management', category:'diabetes', content:'<p><b>Fluids:</b> NS 1L/hr x2h, then 250-500mL/hr</p><p><b>Insulin:</b> 0.1 U/kg/hr (no bolus per newer data)</p><p><b>K⁺:</b> Add 20-40 mEq/L when K⁺ <5.3</p><p><b>Bicarb:</b> Only if pH <6.9</p><p><b>Transition:</b> When AG closes + eating</p>'},
-    {title:'💉 Insulin Sliding Scale', category:'diabetes', content:'<p><b>Usual:</b> 150-200: 2U | 201-250: 4U | 251-300: 6U | 301-350: 8U | >350: 10U + call MD</p><p><b>Sensitive:</b> Halve doses</p><p><b>Resistant:</b> 1.5x doses</p><p><b>Target:</b> 140-180 mg/dL inpatient</p>'}
+// ═══════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+
+function toast(msg, isError = false) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function initials(name) {
+  if (!name) return '?';
+  const p = name.trim().split(/\s+/);
+  return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : name.substring(0,2).toUpperCase();
+}
+
+function closeModal(id) { $(id).classList.remove('active'); }
+function openModal(id) { $(id).classList.add('active'); }
+
+function saveState() {
+  try { localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({ units: state.units, settings: state.settings })); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      state.units = data.units || DEFAULT_UNITS;
+      state.settings = { ...state.settings, ...data.settings };
+    } else {
+      state.units = DEFAULT_UNITS;
+    }
+  } catch(e) { state.units = DEFAULT_UNITS; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LANDING PAGE
+// ═══════════════════════════════════════════════════════════════════════
+function renderUnits() {
+  const grid = $('unitsGrid');
+  if (!state.units.length) {
+    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;grid-column:1/-1;padding:40px">No units configured. Click ⚙️ to add units.</p>';
+    return;
+  }
+  grid.innerHTML = state.units.map(u => `
+    <div class="unit-card" data-id="${u.id}" style="--unit-color:${u.color}">
+      <div class="unit-card-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="unit-card-icon">${u.icon}</div>
+      <div class="unit-card-name">${u.name}</div>
+      <div class="unit-card-desc">${u.desc || 'No description'}</div>
+    </div>
+  `).join('');
+  $$('.unit-card').forEach(card => { card.onclick = () => openAccessModal(card.dataset.id); });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ACCESS MODAL
+// ═══════════════════════════════════════════════════════════════════════
+let selectedUnitId = null;
+
+function openAccessModal(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit) return;
+  selectedUnitId = unitId;
+  $('accessIcon').textContent = unit.icon;
+  $('accessTitle').textContent = unit.name;
+  $('codeError').classList.remove('show');
+  $('userSection').style.display = 'none';
+  $('enterUnitBtn').style.display = 'none';
+  $$('.code-digit').forEach(inp => { inp.value = ''; inp.disabled = false; inp.classList.remove('error', 'success'); });
+  openModal('accessModal');
+  document.querySelector('.code-digit[data-idx="0"]').focus();
+}
+
+function setupCodeInputs() {
+  const inputs = $$('.code-digit');
+  inputs.forEach((inp, idx) => {
+    inp.oninput = e => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val;
+      if (val && idx < 3) inputs[idx + 1].focus();
+      const code = Array.from(inputs).map(i => i.value).join('');
+      if (code.length === 4) validateCode(code);
+    };
+    inp.onkeydown = e => { if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus(); };
+  });
+}
+
+function validateCode(code) {
+  const unit = state.units.find(u => u.id === selectedUnitId);
+  if (!unit) return;
+  if (code === unit.code) {
+    $$('.code-digit').forEach(i => { i.disabled = true; i.classList.add('success'); });
+    $('userSection').style.display = 'block';
+    $('enterUnitBtn').style.display = 'flex';
+    $('userName').focus();
+    $('codeError').classList.remove('show');
+  } else {
+    $('codeError').classList.add('show');
+    $$('.code-digit').forEach(i => { i.classList.add('error'); setTimeout(() => i.classList.remove('error'), 400); });
+  }
+}
+
+function enterUnit() {
+  const name = $('userName').value.trim();
+  const role = $('userRole').value;
+  if (!name) { toast('Please enter your name', true); return; }
+  state.currentUnit = state.units.find(u => u.id === selectedUnitId);
+  state.currentUser = { name, role };
+  closeModal('accessModal');
+  showDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════════════════════════
+function openAdminLogin() {
+  $('adminPassword').value = '';
+  $('adminError').classList.remove('show');
+  openModal('adminLoginModal');
+  $('adminPassword').focus();
+}
+
+function loginAdmin() {
+  if ($('adminPassword').value === state.settings.adminPassword) {
+    closeModal('adminLoginModal');
+    showAdminPanel();
+  } else {
+    $('adminError').classList.add('show');
+  }
+}
+
+function showAdminPanel() {
+  $('landing').classList.add('hidden');
+  $('adminPanel').classList.add('active');
+  renderUnitsTable();
+  $('claudeApiUrl').value = state.settings.claudeApiUrl || '';
+}
+
+function exitAdmin() {
+  $('adminPanel').classList.remove('active');
+  $('landing').classList.remove('hidden');
+}
+
+function renderUnitsTable() {
+  const tbody = $('unitsTableBody');
+  if (!state.units.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:40px">No units</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.units.map(u => `
+    <tr>
+      <td><span style="margin-right:10px;font-size:1.25rem">${u.icon}</span><b>${u.name}</b></td>
+      <td><code style="background:var(--bg-elevated);padding:4px 10px;border-radius:6px">${u.code}</code></td>
+      <td style="color:var(--text-muted);font-size:0.85rem">${u.sheetId ? u.sheetId.substring(0,12)+'...' : '—'}</td>
+      <td><div style="display:flex;gap:8px"><button class="btn-icon" onclick="MW.editUnit('${u.id}')" title="Edit">✏️</button><button class="btn-icon" onclick="MW.deleteUnit('${u.id}')" title="Delete">🗑️</button></div></td>
+    </tr>
+  `).join('');
+}
+
+let editingUnitId = null;
+
+function openUnitModal(unitId = null) {
+  editingUnitId = unitId;
+  if (unitId) {
+    const u = state.units.find(x => x.id === unitId);
+    $('unitModalTitle').textContent = 'Edit Unit';
+    $('unitName').value = u.name;
+    $('unitIcon').value = u.icon;
+    $('unitCode').value = u.code;
+    $('unitDesc').value = u.desc || '';
+    $('unitSheetId').value = u.sheetId || '';
+    $$('.color-option').forEach(o => o.classList.toggle('selected', o.dataset.color === u.color));
+  } else {
+    $('unitModalTitle').textContent = 'Add Unit';
+    $('unitName').value = '';
+    $('unitIcon').value = '🏥';
+    $('unitCode').value = '';
+    $('unitDesc').value = '';
+    $('unitSheetId').value = '';
+    $$('.color-option').forEach((o, i) => o.classList.toggle('selected', i === 0));
+  }
+  openModal('unitModal');
+}
+
+function saveUnit() {
+  const name = $('unitName').value.trim();
+  const icon = $('unitIcon').value.trim() || '🏥';
+  const code = $('unitCode').value.trim();
+  const desc = $('unitDesc').value.trim();
+  const sheetId = $('unitSheetId').value.trim();
+  const color = document.querySelector('.color-option.selected')?.dataset.color || '#d4a437';
+  if (!name || !code) { toast('Name and code required', true); return; }
+  if (!/^\d{4}$/.test(code)) { toast('Code must be 4 digits', true); return; }
+  if (editingUnitId) {
+    const idx = state.units.findIndex(u => u.id === editingUnitId);
+    if (idx >= 0) state.units[idx] = { ...state.units[idx], name, icon, code, desc, sheetId, color };
+  } else {
+    const id = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+    state.units.push({ id, name, icon, code, desc, sheetId, color });
+  }
+  saveState(); renderUnitsTable(); renderUnits(); closeModal('unitModal');
+  toast(editingUnitId ? 'Unit updated!' : 'Unit created!');
+}
+
+function deleteUnit(unitId) {
+  if (!confirm('Delete this unit?')) return;
+  state.units = state.units.filter(u => u.id !== unitId);
+  saveState(); renderUnitsTable(); renderUnits();
+  toast('Unit deleted');
+}
+
+function saveSettings() {
+  const pwd = $('newAdminPwd').value.trim();
+  const url = $('claudeApiUrl').value.trim();
+  if (pwd) state.settings.adminPassword = pwd;
+  if (url) state.settings.claudeApiUrl = url;
+  saveState();
+  toast('Settings saved!');
+  $('newAdminPwd').value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════
+function showDashboard() {
+  $('landing').classList.add('hidden');
+  $('dashboard').classList.add('active');
+  const u = state.currentUnit;
+  $('dashUnitBadge').textContent = u.name;
+  $('dashUnitBadge').style.cssText = `border:1px solid ${u.color};color:${u.color};background:${u.color}20`;
+  $('dashUserName').textContent = state.currentUser.name;
+  $('dashUserRole').textContent = state.currentUser.role;
+  $('dashAvatar').textContent = initials(state.currentUser.name);
+  $('dashWelcome').textContent = `Welcome, Dr. ${state.currentUser.name.split(' ')[0]}`;
+  $('dashDate').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  setupTabs(); loadPatients(); renderScores(); renderRefs(); setupUpload(); updateNeuralStats();
+  toast(`Entered ${u.name}`);
+}
+
+function logout() {
+  state.currentUnit = null;
+  state.currentUser = null;
+  state.patients = [];
+  $('dashboard').classList.remove('active');
+  $('landing').classList.remove('hidden');
+}
+
+function setupTabs() {
+  $$('.tab').forEach(tab => {
+    tab.onclick = () => {
+      $$('.tab').forEach(t => t.classList.remove('active'));
+      $$('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $('panel' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1)).classList.add('active');
+    };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PATIENTS
+// ═══════════════════════════════════════════════════════════════════════
+function loadPatients() {
+  // Demo data - in production fetch from Google Sheet via sheetId
+  state.patients = [
+    { id:1, name:'Ahmed Al-Rashid', room:'21-A', diagnosis:'Acute Ischemic Stroke - MCA territory', status:'critical', doctor:'Dr. Fathy' },
+    { id:2, name:'Fatima Hassan', room:'21-B', diagnosis:'CHF Exacerbation, EF 25%', status:'active', doctor:'Dr. Fathy' },
+    { id:3, name:'Mohammed Saeed', room:'22-A', diagnosis:'DKA, Type 1 DM', status:'active', doctor:'Dr. Ahmed' }
   ];
+  renderPatients();
+}
 
-  // ========== UTILS ==========
-  function toast(m, err) {
-    var t = $('toast');
-    t.textContent = m;
-    t.className = 'toast show' + (err ? ' error' : '');
-    setTimeout(function() { t.className = 'toast'; }, 3000);
+function renderPatients() {
+  const grid = $('patientsGrid');
+  if (!state.patients.length) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:60px;grid-column:1/-1"><p>No patients in this unit</p></div>';
+  } else {
+    grid.innerHTML = state.patients.map(p => `
+      <div class="patient-card ${p.status}">
+        <div class="patient-header">
+          <div class="patient-avatar">${initials(p.name)}</div>
+          <div><div class="patient-name">${p.name}</div><div class="patient-meta">Room ${p.room} • ${p.doctor}</div></div>
+          <span class="patient-status ${p.status}">${p.status}</span>
+        </div>
+        <div class="patient-diagnosis">${p.diagnosis}</div>
+        <div class="patient-actions">
+          <button class="btn btn-secondary">View</button>
+          <button class="btn btn-primary">Rounds</button>
+        </div>
+      </div>
+    `).join('');
   }
+  $('statTotal').textContent = state.patients.length;
+  $('statActive').textContent = state.patients.filter(p => p.status === 'active').length;
+  $('statCritical').textContent = state.patients.filter(p => p.status === 'critical').length;
+  $('statChronic').textContent = state.patients.filter(p => p.status === 'chronic').length;
+}
 
-  function initials(n) {
-    if (!n) return '?';
-    var p = n.trim().split(/\s+/);
-    return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : n.substring(0,2).toUpperCase();
-  }
+function openPatientModal() {
+  $('patientName').value = '';
+  $('patientRoom').value = '';
+  $('patientDiagnosis').value = '';
+  $('patientDoctor').value = state.currentUser?.name || '';
+  $('patientStatus').value = 'active';
+  openModal('patientModal');
+}
 
-  function formatBytes(b) {
-    if (b < 1024) return b + ' B';
-    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-    return (b / 1048576).toFixed(1) + ' MB';
-  }
+function savePatient() {
+  const name = $('patientName').value.trim();
+  if (!name) { toast('Patient name required', true); return; }
+  state.patients.push({
+    id: Date.now(),
+    name,
+    room: $('patientRoom').value.trim() || '—',
+    diagnosis: $('patientDiagnosis').value.trim() || 'No diagnosis',
+    status: $('patientStatus').value,
+    doctor: $('patientDoctor').value.trim() || 'Unassigned'
+  });
+  renderPatients(); closeModal('patientModal');
+  toast('Patient added!');
+}
 
-  // ========== AUTH ==========
-  function login() {
-    var n = $('loginName').value.trim();
-    if (!n) { alert('Enter your name'); return; }
-    state.user = { name: n, init: n[0].toUpperCase() };
-    try { localStorage.setItem('mw_user', JSON.stringify(state.user)); } catch(e) {}
-    showDashboard();
-  }
-
-  function showDashboard() {
-    $('userName').textContent = state.user.name;
-    $('userAvatar').textContent = state.user.init;
-    $('userBtn').classList.add('show');
-    $('greeting').textContent = 'Dr. ' + state.user.name;
-    $('login').classList.remove('active');
-    $('dashboard').classList.add('active');
-    toast('Welcome, Dr. ' + state.user.name + '!');
-    loadPatients();
-    loadHistory();
-  }
-
-  function checkAuth() {
-    try {
-      var u = localStorage.getItem('mw_user');
-      if (u) { state.user = JSON.parse(u); showDashboard(); }
-    } catch(e) {}
-  }
-
-  // ========== PATIENTS ==========
-  function loadPatients() {
-    $('patientsContainer').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
-    fetch(API.PATIENT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'getAllData' }) })
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d.success) {
-          state.patients = d.patients || [];
-          renderPatients();
-          $('statTotal').textContent = d.totalCount || state.patients.length;
-          $('statActive').textContent = d.activeCount || 0;
-          $('statChronic').textContent = d.chronicCount || 0;
-          $('statWards').textContent = d.wards ? d.wards.length : 0;
-        } else {
-          $('patientsContainer').innerHTML = '<div class="empty-state"><p>Error loading patients</p></div>';
-        }
-      })
-      .catch(function() { $('patientsContainer').innerHTML = '<div class="empty-state"><p>Connection failed</p></div>'; });
-  }
-
-  function renderPatients() {
-    var c = $('patientsContainer');
-    if (!state.patients.length) { c.innerHTML = '<div class="empty-state"><p>No patients</p></div>'; return; }
-    var h = '<div class="patients-grid">';
-    state.patients.forEach(function(p) {
-      var name = p.patientName || p.name || 'Unknown';
-      var status = p.section || 'active';
-      var sc = status === 'critical' ? 'critical' : status === 'chronic' ? 'chronic' : '';
-      var badge = status === 'critical' ? 'badge-critical' : status === 'chronic' ? 'badge-chronic' : 'badge-active';
-      h += '<div class="patient-card ' + sc + '" data-row="' + p.rowIndex + '">';
-      h += '<div class="patient-top"><div class="patient-main"><div class="patient-avatar">' + initials(name) + '</div><div class="patient-info"><h3>' + name + '</h3><p>Dr. ' + (p.assignedDoctor || 'Unassigned') + '</p></div></div><span class="patient-badge ' + badge + '">' + status + '</span></div>';
-      h += '<div class="patient-details"><div class="patient-detail"><div class="patient-detail-label">Ward</div><div class="patient-detail-value">' + (p.ward || '-') + '</div></div><div class="patient-detail"><div class="patient-detail-label">Room</div><div class="patient-detail-value">' + (p.roomBed || '-') + '</div></div></div>';
-      h += '<div class="patient-diagnosis"><div class="patient-diagnosis-label">Diagnosis</div><div class="patient-diagnosis-text">' + (p.diagnosis || 'No diagnosis').substring(0, 100) + '</div></div>';
-      h += '<div class="patient-actions"><button class="btn btn-secondary btn-sm" onclick="MW.edit(' + p.rowIndex + ')">Edit</button><button class="btn btn-danger btn-sm" onclick="MW.discharge(' + p.rowIndex + ')">Discharge</button></div></div>';
-    });
-    c.innerHTML = h + '</div>';
-  }
-
-  function openPatientModal(p) {
-    state.editing = p || null;
-    $('patientModalTitle').textContent = p ? 'Edit Patient' : 'Add Patient';
-    $('patientName').value = p ? p.patientName || '' : '';
-    $('patientWard').value = p ? p.ward || '' : '';
-    $('patientRoom').value = p ? p.roomBed || '' : '';
-    $('patientDiagnosis').value = p ? p.diagnosis || '' : '';
-    $('patientDoctor').value = p ? p.assignedDoctor || '' : '';
-    $('patientStatus').value = p ? p.section || 'active' : 'active';
-    $('patientModal').classList.add('active');
-  }
-
-  function savePatient() {
-    var data = {
-      patientName: $('patientName').value.trim(),
-      ward: $('patientWard').value.trim(),
-      roomBed: $('patientRoom').value.trim(),
-      diagnosis: $('patientDiagnosis').value.trim(),
-      assignedDoctor: $('patientDoctor').value.trim(),
-      section: $('patientStatus').value
+// ═══════════════════════════════════════════════════════════════════════
+// AI ANALYSIS WITH NEURAL ENGINE
+// ═══════════════════════════════════════════════════════════════════════
+function setupUpload() {
+  const zone = $('uploadZone'), input = $('uploadInput');
+  zone.onclick = () => input.click();
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add('dragover'); };
+  zone.ondragleave = () => zone.classList.remove('dragover');
+  zone.ondrop = e => { e.preventDefault(); zone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); };
+  input.onchange = () => { if (input.files.length) handleFiles(input.files); };
+  $$('.analysis-type').forEach(t => {
+    t.onclick = () => {
+      $$('.analysis-type').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      state.analysisType = t.dataset.type;
     };
-    if (!data.patientName || !data.ward) { toast('Name and Ward required', true); return; }
-    var body = { action: state.editing ? 'updatePatient' : 'addPatient', ...data };
-    if (state.editing) { body.rowIndex = state.editing.rowIndex; body.oldWard = state.editing.ward; body.newWard = data.ward; }
-    toast('Saving...');
-    fetch(API.PATIENT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) })
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d.success) { toast('Saved!'); $('patientModal').classList.remove('active'); loadPatients(); }
-        else { toast('Error: ' + (d.error || 'Unknown'), true); }
-      });
-  }
+  });
+}
 
-  function discharge(row) {
-    var p = state.patients.find(function(x) { return x.rowIndex === row; });
-    if (!p || !confirm('Discharge ' + p.patientName + '?')) return;
-    fetch(API.PATIENT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'dischargePatient', rowIndex: row }) })
-      .then(function(r) { return r.json(); })
-      .then(function(d) { if (d.success) { toast('Discharged'); loadPatients(); } });
-  }
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    state.uploadedFiles.push(file);
+    const reader = new FileReader();
+    reader.onload = e => { state.uploadedBase64s.push(e.target.result); renderPreviews(); };
+    reader.readAsDataURL(file);
+  });
+  $('uploadZone').classList.add('has-file');
+  $('analyzeBtn').disabled = false;
+}
 
-  // ========== ANALYSIS ==========
-  function setupUpload() {
-    var zone = $('uploadZone'), input = $('uploadInput');
-    zone.onclick = function() { input.click(); };
-    zone.ondragover = function(e) { e.preventDefault(); zone.classList.add('dragover'); };
-    zone.ondragleave = function() { zone.classList.remove('dragover'); };
-    zone.ondrop = function(e) { 
-      e.preventDefault(); 
-      zone.classList.remove('dragover'); 
-      if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); 
-    };
-    input.onchange = function() { if (this.files.length) handleFiles(this.files); };
+function renderPreviews() {
+  $('previewGrid').innerHTML = state.uploadedBase64s.map((b, i) => `<div class="preview-thumb" onclick="MW.removeFile(${i})"><img src="${b}"></div>`).join('');
+}
 
-    document.querySelectorAll('.analysis-type').forEach(function(t) {
-      t.onclick = function() {
-        document.querySelectorAll('.analysis-type').forEach(function(x) { x.classList.remove('active'); });
-        this.classList.add('active');
-        state.analysisType = this.dataset.type;
-      };
-    });
-  }
-
-  // Multi-file handling
-  function handleFiles(files) {
-    state.uploadedFiles = state.uploadedFiles || [];
-    state.uploadedBase64s = state.uploadedBase64s || [];
-    
-    Array.from(files).forEach(function(file) {
-      if (!file.type.startsWith('image/')) return;
-      
-      state.uploadedFiles.push(file);
-      
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        state.uploadedBase64s.push(e.target.result);
-        renderPreviewGrid();
-      };
-      reader.readAsDataURL(file);
-    });
-    
-    $('previewArea').classList.add('show');
-    $('uploadZone').classList.add('has-file');
-    $('analyzeBtn').disabled = false;
-  }
-
-  function renderPreviewGrid() {
-    var grid = $('previewGrid');
-    grid.innerHTML = '';
-    
-    state.uploadedBase64s.forEach(function(base64, idx) {
-      var thumb = document.createElement('div');
-      thumb.className = 'preview-thumb';
-      thumb.innerHTML = '<img src="' + base64 + '">';
-      thumb.onclick = function() { removeFile(idx); };
-      grid.appendChild(thumb);
-    });
-    
-    $('previewFilename').textContent = state.uploadedFiles.length + ' file(s) selected';
-    $('previewMeta').textContent = 'Tap to remove';
-    
-    if (state.uploadedFiles.length === 0) {
-      $('previewArea').classList.remove('show');
-      $('uploadZone').classList.remove('has-file');
-      $('analyzeBtn').disabled = true;
-    }
-  }
-
-  function removeFile(idx) {
-    state.uploadedFiles.splice(idx, 1);
-    state.uploadedBase64s.splice(idx, 1);
-    renderPreviewGrid();
-  }
-
-  // Analysis with multi-image and Lab Engine
-  function runAnalysis() {
-    if (!state.uploadedBase64s || state.uploadedBase64s.length === 0) { 
-      toast('Upload files first', true); 
-      return; 
-    }
-
-    var startTime = performance.now();
-    var totalImages = state.uploadedBase64s.length;
-    var processedImages = 0;
-    var allExtractedText = [];
-    
-    // Show progress
-    $('uploadSection').style.display = 'none';
-    $('analysisProgress').classList.add('show');
-    $('analysisResults').classList.remove('show');
-    $('progressStatus').textContent = 'Processing ' + totalImages + ' image(s)...';
-
-    // Process all images in parallel
-    var promises = state.uploadedBase64s.map(function(base64, idx) {
-      return new Promise(function(resolve) {
-        var payload = {
-          action: 'interpret',
-          documentType: state.analysisType === 'auto' ? 'lab' : state.analysisType,
-          image: base64,
-          provider: 'claude'
-        };
-
-        fetch(API.CLAUDE, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-          processedImages++;
-          $('progressStatus').textContent = 'Processed ' + processedImages + '/' + totalImages + ' images...';
-          
-          if (d.success && d.extractedText) {
-            allExtractedText.push(d.extractedText);
-          }
-          resolve(d);
-        })
-        .catch(function(e) {
-          processedImages++;
-          resolve({ success: false, error: e.message });
-        });
-      });
-    });
-
-    Promise.all(promises).then(function(results) {
-      var totalTime = performance.now() - startTime;
-      $('analysisProgress').classList.remove('show');
-      
-      // Combine all extracted text
-      var combinedText = allExtractedText.join('\n\n');
-      
-      // Use Lab Engine to extract and interpret values
-      var labAnalysis = null;
-      if (window.LabEngine && combinedText) {
-        labAnalysis = window.LabEngine.analyze(combinedText);
-      }
-      
-      // Build final analysis result
-      var analysis = {
-        summary: '',
-        findings: [],
-        abnormalities: [],
-        normalFindings: [],
-        recommendations: [],
-        insights: []
-      };
-      
-      // Merge Claude results
-      results.forEach(function(d) {
-        if (d.success) {
-          if (d.interpretation) {
-            if (d.interpretation.summary) analysis.summary += d.interpretation.summary + ' ';
-            if (d.interpretation.keyFindings) analysis.findings = analysis.findings.concat(d.interpretation.keyFindings);
-            if (d.interpretation.abnormalities) analysis.abnormalities = analysis.abnormalities.concat(d.interpretation.abnormalities);
-            if (d.interpretation.normalFindings) analysis.normalFindings = analysis.normalFindings.concat(d.interpretation.normalFindings);
-          }
-          if (d.clinicalPearls) analysis.insights = analysis.insights.concat(d.clinicalPearls);
-          if (d.presentation && d.presentation.recommendations) {
-            analysis.recommendations = analysis.recommendations.concat(d.presentation.recommendations);
-          }
-        }
-      });
-      
-      // Enhance with Lab Engine results
-      if (labAnalysis) {
-        if (labAnalysis.summary) analysis.summary = labAnalysis.summary;
-        
-        // Add lab-specific findings
-        labAnalysis.findings.forEach(function(f) {
-          analysis.abnormalities.push({
-            name: f.name,
-            value: f.value + ' ' + (f.unit || ''),
-            flag: f.flag,
-            severity: f.severity,
-            reference: f.reference,
-            interpretation: f.interpretation
-          });
-        });
-        
-        if (labAnalysis.normalFindings) {
-          analysis.normalFindings = labAnalysis.normalFindings;
-        }
-        
-        if (labAnalysis.insights) {
-          analysis.insights = labAnalysis.insights.concat(analysis.insights);
-        }
-        
-        if (labAnalysis.recommendations) {
-          analysis.recommendations = labAnalysis.recommendations.concat(analysis.recommendations);
-        }
-      }
-      
-      // Remove duplicates
-      analysis.findings = [...new Set(analysis.findings)];
-      analysis.normalFindings = [...new Set(analysis.normalFindings)];
-      analysis.insights = [...new Set(analysis.insights)];
-      analysis.recommendations = [...new Set(analysis.recommendations)];
-      
-      // Learn pattern
-      if (window.NeuralEngine && combinedText) {
-        window.NeuralEngine.learn(combinedText, state.analysisType, analysis);
-      }
-      
-      showResults(analysis, {
-        source: 'claude_api',
-        totalTime: totalTime,
-        imageCount: totalImages,
-        labCount: labAnalysis ? labAnalysis.extractedCount : 0
-      });
-      
-      saveToHistory(analysis);
-      updateNeuralStats();
-      toast('✓ Analysis complete!');
-    });
-  }
-
-  function updateNeuralStats() {
-    if (!window.NeuralEngine) return;
-    var stats = window.NeuralEngine.getStats();
-    var statsEl = $('neuralStats');
-    if (statsEl) {
-      statsEl.innerHTML = '<span>🧠 ' + stats.patterns + ' patterns</span><span>⚡ ' + stats.hitRate + ' hit rate</span>';
-    }
-  }
-
-  function showResults(analysis, meta) {
-    $('analysisResults').classList.add('show');
-    meta = meta || {};
-    
-    var h = '';
-    
-    // Source badge
-    var badgeText = meta.source === 'neural_cache' 
-      ? '⚡ Neural Cache (' + (meta.confidence * 100).toFixed(0) + '% match)'
-      : '🤖 Claude AI';
-    var badgeTime = meta.queryTime 
-      ? (meta.queryTime).toFixed(0) + 'ms'
-      : meta.totalTime 
-        ? (meta.totalTime / 1000).toFixed(1) + 's'
-        : '';
-    
-    $('resultBadge').innerHTML = badgeText + (badgeTime ? ' • ' + badgeTime : '');
-
-    // Summary
-    if (analysis.summary) {
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Summary</div><div class="result-content">' + formatText(analysis.summary) + '</div></div>';
-    }
-
-    // Abnormalities (Critical)
-    if (analysis.abnormalities && analysis.abnormalities.length) {
-      h += '<div class="result-section" style="border-left:3px solid var(--rose)"><div class="result-section-title" style="color:var(--rose)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Abnormal Findings</div><div class="result-content">';
-      analysis.abnormalities.forEach(function(a) {
-        h += '<div class="finding-card critical"><div class="finding-title">' + (typeof a === 'string' ? a : a.title || a.finding || JSON.stringify(a)) + '</div></div>';
-      });
-      h += '</div></div>';
-    }
-
-    // Key Findings
-    if (analysis.findings && analysis.findings.length) {
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Key Findings</div><div class="result-content">';
-      analysis.findings.forEach(function(f) {
-        h += '<div class="finding-card"><div class="finding-title">' + (typeof f === 'string' ? f : f.title || JSON.stringify(f)) + '</div></div>';
-      });
-      h += '</div></div>';
-    }
-
-    // Normal Findings
-    if (analysis.normalFindings && analysis.normalFindings.length) {
-      h += '<div class="result-section" style="border-left:3px solid var(--emerald)"><div class="result-section-title" style="color:var(--emerald)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Normal Findings</div><div class="result-content"><ul>';
-      analysis.normalFindings.forEach(function(n) { h += '<li>' + n + '</li>'; });
-      h += '</ul></div></div>';
-    }
-
-    // Extracted Text / Interpretation
-    if (analysis.interpretation && analysis.interpretation.length > 50) {
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Extracted Text</div><div class="result-content" style="max-height:300px;overflow-y:auto;font-family:monospace;font-size:0.8rem;white-space:pre-wrap;background:var(--bg-card);padding:12px;border-radius:8px">' + analysis.interpretation + '</div></div>';
-    }
-
-    // Clinical Pearls
-    if (analysis.clinicalPearls && analysis.clinicalPearls.length) {
-      h += '<div class="result-section" style="border-left:3px solid var(--gold)"><div class="result-section-title" style="color:var(--gold)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Clinical Pearls</div><div class="result-content"><ul>';
-      analysis.clinicalPearls.forEach(function(p) { h += '<li>' + p + '</li>'; });
-      h += '</ul></div></div>';
-    }
-
-    // Recommendations
-    if (analysis.recommendations && analysis.recommendations.length) {
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Recommendations</div><div class="result-content"><ul>';
-      analysis.recommendations.forEach(function(r) { h += '<li>' + r + '</li>'; });
-      h += '</ul></div></div>';
-    }
-
-    // Patient-Friendly Explanation
-    if (analysis.patientFriendly) {
-      h += '<div class="result-section" style="border-left:3px solid var(--teal)"><div class="result-section-title" style="color:var(--teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patient-Friendly Explanation</div><div class="result-content">' + formatText(analysis.patientFriendly) + '</div></div>';
-    }
-
-    // Potential Questions
-    if (analysis.potentialQuestions && analysis.potentialQuestions.length) {
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Questions to Consider</div><div class="result-content"><ul>';
-      analysis.potentialQuestions.forEach(function(q) { h += '<li>' + q + '</li>'; });
-      h += '</ul></div></div>';
-    }
-
-    // Fallback
-    if (!h) {
-      h = '<div class="result-section"><div class="result-section-title">Analysis Result</div><div class="result-content"><pre style="white-space:pre-wrap;font-size:0.85rem">' + JSON.stringify(analysis, null, 2) + '</pre></div></div>';
-    }
-
-    $('resultsContent').innerHTML = h;
-  }
-
-  function formatText(text) {
-    if (!text) return '';
-    return text
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>');
-  }
-
-  function resetAnalysis() {
-    $('uploadSection').style.display = 'block';
-    $('analysisResults').classList.remove('show');
-    $('previewArea').classList.remove('show');
+function removeFile(idx) {
+  state.uploadedFiles.splice(idx, 1);
+  state.uploadedBase64s.splice(idx, 1);
+  renderPreviews();
+  if (!state.uploadedFiles.length) {
     $('uploadZone').classList.remove('has-file');
     $('analyzeBtn').disabled = true;
-    state.uploadedFiles = [];
-    state.uploadedBase64s = [];
-    var grid = $('previewGrid');
-    if (grid) grid.innerHTML = '';
   }
+}
 
-  function saveToHistory(analysis) {
-    var item = {
-      id: Date.now(),
-      type: state.analysisType,
-      filename: state.uploadedFiles && state.uploadedFiles.length ? state.uploadedFiles.length + ' file(s)' : 'Unknown',
-      thumb: state.uploadedBase64s && state.uploadedBase64s[0] ? state.uploadedBase64s[0] : null,
-      date: new Date().toLocaleString(),
-      summary: analysis.summary ? analysis.summary.substring(0, 100) + '...' : 'Analysis complete'
-    };
-    state.history.unshift(item);
-    if (state.history.length > 20) state.history.pop();
-    try { localStorage.setItem('mw_history', JSON.stringify(state.history)); } catch(e) {}
-    renderHistory();
+function updateNeuralStats() {
+  if (typeof NeuralEngine !== 'undefined') {
+    const stats = NeuralEngine.getStats();
+    $('neuralStats').innerHTML = `
+      <span class="neural-stat">🧠 ${stats.patterns} patterns</span>
+      <span class="neural-stat cached">✓ ${stats.hitRate} cache hit</span>
+    `;
   }
+}
 
-  function loadHistory() {
-    try {
-      var h = localStorage.getItem('mw_history');
-      if (h) state.history = JSON.parse(h);
-    } catch(e) {}
-    renderHistory();
-  }
+async function runAnalysis() {
+  if (!state.uploadedBase64s.length) { toast('Upload images first', true); return; }
+  const startTime = performance.now();
+  $('uploadSection').style.display = 'none';
+  $('analysisProgress').classList.add('show');
+  $('analysisResults').classList.remove('show');
 
-  function renderHistory() {
-    var c = $('historyList');
-    if (!state.history.length) {
-      c.innerHTML = '<div class="empty-state" style="padding:24px"><p style="color:var(--text-muted)">No analyses yet</p></div>';
+  const total = state.uploadedBase64s.length;
+  let processed = 0;
+  let allText = [];
+  let fromCache = false;
+
+  // Check Neural Engine cache first
+  if (typeof NeuralEngine !== 'undefined' && state.uploadedBase64s.length === 1) {
+    const cacheResult = NeuralEngine.query(state.uploadedBase64s[0], state.analysisType);
+    if (cacheResult.match) {
+      fromCache = true;
+      $('analysisProgress').classList.remove('show');
+      showResults(cacheResult.result, { totalTime: cacheResult.queryTime, imageCount: 1, cached: true });
+      updateNeuralStats();
+      toast('⚡ Retrieved from Neural Cache!');
       return;
     }
-    var h = '';
-    state.history.forEach(function(item) {
-      h += '<div class="history-item">';
-      h += item.thumb ? '<img src="' + item.thumb + '" class="history-thumb">' : '<div class="history-thumb" style="display:grid;place-items:center;font-size:1.5rem">' + (item.type === 'xray' ? '🩻' : item.type === 'lab' ? '🧪' : '📄') + '</div>';
-      h += '<div class="history-info"><div class="history-type">' + item.filename + '</div><div class="history-date">' + item.date + '</div></div>';
-      h += '<span class="history-badge">' + item.type + '</span></div>';
-    });
-    c.innerHTML = h;
   }
 
-  // ========== TABS ==========
-  function setupTabs() {
-    document.querySelectorAll('.tab').forEach(function(t) {
-      t.onclick = function() {
-        var id = this.dataset.tab;
-        document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
-        this.classList.add('active');
-        document.querySelectorAll('.panel').forEach(function(x) { x.classList.remove('active'); });
-        $('panel' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active');
-      };
-    });
-  }
+  // Call API for each image
+  const promises = state.uploadedBase64s.map(base64 => {
+    return fetch(state.settings.claudeApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'interpret', documentType: state.analysisType, image: base64, provider: 'claude' })
+    })
+    .then(r => r.json())
+    .then(d => {
+      processed++;
+      $('progressStatus').textContent = `Processed ${processed}/${total} images...`;
+      if (d.success && d.extractedText) allText.push(d.extractedText);
+      return d;
+    })
+    .catch(() => ({ success: false }));
+  });
 
-  // ========== SCORES ==========
-  function renderScores() {
-    var h = '';
-    for (var k in SCORES) { var s = SCORES[k]; h += '<div class="score-tile" data-score="' + k + '"><div class="score-icon">' + s.icon + '</div><div class="score-name">' + s.name + '</div><div class="score-desc">' + s.desc + '</div></div>'; }
-    $('scoresGrid').innerHTML = h;
-    $('scoresGrid').querySelectorAll('.score-tile').forEach(function(t) {
-      t.onclick = function() {
-        $('scoresGrid').querySelectorAll('.score-tile').forEach(function(x) { x.classList.remove('active'); });
-        this.classList.add('active');
-        openCalc(this.dataset.score);
-      };
-    });
-  }
+  const results = await Promise.all(promises);
+  $('analysisProgress').classList.remove('show');
 
-  function openCalc(key) {
-    var s = SCORES[key]; state.activeScore = key; state.scores[key] = {};
-    var h = '<div class="card" style="margin-top:20px"><div class="card-header"><h2 class="card-title">' + s.icon + ' ' + s.name + '</h2><button class="btn btn-secondary btn-sm" onclick="MW.resetCalc()">Reset</button></div><div class="card-body">';
-    s.items.forEach(function(item) {
-      h += '<div class="calc-item"><div class="calc-item-head"><span class="calc-item-num">' + item.id.toUpperCase() + '</span><span class="calc-item-name">' + item.name + '</span></div><div class="calc-opts">';
-      item.opts.forEach(function(o) { h += '<label class="calc-opt" data-item="' + item.id + '" data-score="' + o.s + '"><input type="radio" name="c_' + item.id + '"><span class="calc-opt-score">' + (o.s >= 0 ? '+' : '') + o.s + '</span><span class="calc-opt-label">' + o.l + '</span></label>'; });
-      h += '</div></div>';
-    });
-    h += '<div class="calc-result"><div class="calc-result-score" id="calcTotal">0</div><div class="calc-result-max">/ ' + s.max + '</div><div id="calcInterp"></div></div></div></div>';
-    $('calcArea').innerHTML = h;
-    $('calcArea').querySelectorAll('.calc-opt').forEach(function(o) {
-      o.onclick = function() {
-        var id = this.dataset.item, sc = parseFloat(this.dataset.score);
-        this.parentElement.querySelectorAll('.calc-opt').forEach(function(x) { x.classList.remove('sel'); });
-        this.classList.add('sel'); this.querySelector('input').checked = true;
-        state.scores[state.activeScore][id] = sc;
-        updateCalc();
-      };
-    });
-  }
-
-  function updateCalc() {
-    var k = state.activeScore, s = SCORES[k], t = 0;
-    for (var x in state.scores[k]) t += state.scores[k][x];
-    $('calcTotal').textContent = t;
-    var i = s.interpret(t);
-    $('calcInterp').innerHTML = '<span class="severity-pill" style="background:' + i.c + '20;color:' + i.c + '">' + i.t + '</span>';
-  }
-
-  // ========== REFERENCE ==========
-  function renderRefs(filter) {
-    filter = filter || 'all';
-    var filtered = filter === 'all' ? REFS : REFS.filter(function(r) { return r.category === filter; });
-    $('refGrid').innerHTML = filtered.map(function(r) { 
-      return '<div class="ref-card" data-cat="' + (r.category || '') + '"><h4>' + r.title + '</h4>' + r.content + '</div>'; 
-    }).join('');
-  }
-
-  function setupRefFilters() {
-    document.querySelectorAll('.ref-filter').forEach(function(btn) {
-      btn.onclick = function() {
-        document.querySelectorAll('.ref-filter').forEach(function(b) { b.classList.remove('active'); });
-        this.classList.add('active');
-        renderRefs(this.dataset.cat);
-      };
-    });
-  }
-
-  // ========== INIT ==========
-  function init() {
-    $('loginBtn').onclick = login;
-    $('loginName').onkeydown = function(e) { if (e.key === 'Enter') login(); };
-    $('refreshBtn').onclick = loadPatients;
-    $('addPatientBtn').onclick = function() { openPatientModal(); };
-    $('closePatientModal').onclick = function() { $('patientModal').classList.remove('active'); };
-    $('cancelPatient').onclick = function() { $('patientModal').classList.remove('active'); };
-    $('savePatient').onclick = savePatient;
-    $('patientModal').onclick = function(e) { if (e.target === this) this.classList.remove('active'); };
-    $('analyzeBtn').onclick = runAnalysis;
-    $('newAnalysisBtn').onclick = resetAnalysis;
-
-    setupTabs();
-    setupUpload();
-    setupRefFilters();
-    renderScores();
-    renderRefs();
-    checkAuth();
-    
-    // Initialize Neural Engine
-    if (window.NeuralEngine) {
-      window.NeuralEngine.init();
-      updateNeuralStats();
+  const analysis = { summary: '', findings: [], abnormalities: [], normalFindings: [], recommendations: [], insights: [] };
+  
+  results.forEach(d => {
+    if (d.success && d.interpretation) {
+      if (d.interpretation.summary) analysis.summary += d.interpretation.summary + ' ';
+      if (d.interpretation.keyFindings) analysis.findings.push(...d.interpretation.keyFindings);
+      if (d.interpretation.abnormalities) analysis.abnormalities.push(...d.interpretation.abnormalities);
+      if (d.interpretation.normalFindings) analysis.normalFindings.push(...d.interpretation.normalFindings);
     }
+    if (d.clinicalPearls) analysis.insights.push(...d.clinicalPearls);
+    if (d.presentation?.recommendations) analysis.recommendations.push(...d.presentation.recommendations);
+  });
+
+  // Enhance with Lab Engine
+  if (typeof LabEngine !== 'undefined' && allText.length) {
+    const labResult = LabEngine.analyze(allText.join('\n'));
+    if (labResult.summary) analysis.summary = labResult.summary;
+    if (labResult.insights) analysis.insights = [...labResult.insights, ...analysis.insights];
+    if (labResult.recommendations) analysis.recommendations = [...labResult.recommendations, ...analysis.recommendations];
+    labResult.findings?.forEach(f => {
+      analysis.abnormalities.push({ name: f.name, value: f.value + ' ' + (f.unit || ''), flag: f.flag, severity: f.severity, reference: f.reference, interpretation: f.interpretation });
+    });
+    if (labResult.normalFindings) analysis.normalFindings = labResult.normalFindings;
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  // Learn to Neural Engine
+  if (typeof NeuralEngine !== 'undefined' && state.uploadedBase64s.length === 1) {
+    NeuralEngine.learn(state.uploadedBase64s[0], state.analysisType, analysis);
+    updateNeuralStats();
+  }
 
-  window.MW = {
-    edit: function(r) { var p = state.patients.find(function(x) { return x.rowIndex === r; }); if (p) openPatientModal(p); },
-    discharge: discharge,
-    resetCalc: function() { if (state.activeScore) { state.scores[state.activeScore] = {}; openCalc(state.activeScore); } }
-  };
+  showResults(analysis, { totalTime: performance.now() - startTime, imageCount: total, cached: false });
+  toast('Analysis complete!');
+}
+id:'malig',name:'Malignancy',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+  ], interp: s => s <= 1 ? ['Low','var(--emerald)'] : s <= 4 ? ['Moderate','var(--gold)'] : ['High','var(--rose)']},
+  curb65: { name:'CURB-65', icon:'🦠', desc:'Pneumonia', max:5, items:[
+    {id:'c',name:'Confusion',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+    {id:'u',name:'BUN >19',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+    {id:'r',name:'RR ≥30',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+    {id:'b',name:'BP <90/60',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+    {id:'65',name:'Age ≥65',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+  ], interp: s => s <= 1 ? ['Outpatient','var(--emerald)'] : s === 2 ? ['Admit','var(--gold)'] : ['ICU','var(--rose)']}
+};
+
+function renderScores() {
+  $('scoresGrid').innerHTML = Object.entries(SCORES).map(([k, v]) => `
+    <div class="score-tile ${state.activeScore === k ? 'active' : ''}" data-score="${k}">
+      <div class="score-icon">${v.icon}</div>
+      <div class="score-name">${v.name}</div>
+      <div class="score-desc">${v.desc}</div>
+    </div>
+  `).join('');
+  $$('.score-tile').forEach(tile => {
+    tile.onclick = () => {
+      state.activeScore = tile.dataset.score;
+      state.scores[state.activeScore] = {};
+      renderScores();
+      renderCalc();
+    };
+  });
+}
+
+function renderCalc() {
+  if (!state.activeScore) { $('calcArea').innerHTML = ''; return; }
+  const sc = SCORES[state.activeScore];
+  let h = `<div class="card"><div class="card-header"><h3 class="card-title">${sc.icon} ${sc.name} Calculator</h3></div><div class="card-body">`;
+  sc.items.forEach((item, idx) => {
+    h += `<div class="calc-item"><div class="calc-item-head"><div class="calc-item-num">${idx + 1}</div><div class="calc-item-name">${item.name}</div></div><div class="calc-opts">`;
+    item.opts.forEach(opt => {
+      const sel = state.scores[state.activeScore]?.[item.id] === opt.s ? 'sel' : '';
+      h += `<label class="calc-opt ${sel}"><input type="radio" name="${item.id}" value="${opt.s}" ${sel ? 'checked' : ''} onchange="MW.setScore('${item.id}',${opt.s})"><span class="calc-opt-score">${opt.s}</span><span class="calc-opt-label">${opt.l}</span></label>`;
+    });
+    h += `</div></div>`;
+  });
+  const total = Object.values(state.scores[state.activeScore] || {}).reduce((a, b) => a + b, 0);
+  const [label, color] = sc.interp(total);
+  h += `<div class="calc-result"><div class="calc-result-score">${total}</div><div style="color:var(--text-muted)">/ ${sc.max}</div><div class="severity-pill" style="background:${color}20;color:${color}">${label}</div></div></div></div>`;
+  $('calcArea').innerHTML = h;
+}
+
+function setScore(id, val) {
+  if (!state.scores[state.activeScore]) state.scores[state.activeScore] = {};
+  state.scores[state.activeScore][id] = val;
+  renderCalc();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// REFERENCE CARDS
+// ═══════════════════════════════════════════════════════════════════════
+const REFS = [
+  { cat:'critical', title:'🚨 Critical Lab Values', content:'<p><b>K⁺:</b> <2.5 or >6.5 mmol/L</p><p><b>Na⁺:</b> <120 or >160 mmol/L</p><p><b>Glucose:</b> <40 or >500 mg/dL</p><p><b>Hgb:</b> <7 g/dL | <b>Plt:</b> <50k</p><p><b>pH:</b> <7.2 or >7.6</p>' },
+  { cat:'critical', title:'⚡ Hyperkalemia Protocol', content:'<p><b>Stabilize:</b> Ca gluconate 10mL IV</p><p><b>Shift:</b> Insulin 10U + D50 | Salbutamol neb</p><p><b>Remove:</b> Kayexalate | Furosemide | HD</p>' },
+  { cat:'cardiac', title:'❤️ ACS Management', content:'<p><b>MONA:</b> Morphine, O₂, Nitrates, Aspirin</p><p><b>STEMI:</b> PCI <90min | Lysis <30min</p><p><b>NSTEMI:</b> Anticoag + early cath</p>' },
+  { cat:'cardiac', title:'💓 Afib Rate Control', content:'<p><b>Stable:</b> Diltiazem 15-20mg IV or Metoprolol 5mg IV</p><p><b>Target HR:</b> <110 bpm</p><p><b>HFrEF:</b> Avoid diltiazem - use digoxin/amiodarone</p>' },
+  { cat:'respiratory', title:'🫁 COPD Exacerbation', content:'<p><b>Bronchodilators:</b> Salbutamol + Ipratropium nebs</p><p><b>Steroids:</b> Prednisone 40mg x5 days</p><p><b>BiPAP:</b> If pH <7.35, pCO₂ >45</p>' },
+  { cat:'respiratory', title:'🔵 Oxygen Targets', content:'<p><b>General:</b> SpO₂ 94-98%</p><p><b>COPD:</b> 88-92%</p><p><b>ARDS:</b> Accept 88-92%</p>' },
+  { cat:'neuro', title:'🧠 Stroke - tPA Criteria', content:'<p><b>Window:</b> ≤4.5h from last known well</p><p><b>Dose:</b> 0.9 mg/kg (max 90mg)</p><p><b>BP goal:</b> <185/110 pre-tPA</p><p><b>Post-tPA:</b> <180/105 x24h</p>' },
+  { cat:'neuro', title:'💊 Seizure Management', content:'<p><b>1st line:</b> Lorazepam 4mg IV</p><p><b>2nd line:</b> Levetiracetam 60mg/kg or Fosphenytoin 20mg/kg</p><p><b>Refractory:</b> Propofol/Midazolam gtt</p>' },
+  { cat:'infection', title:'🦠 Sepsis Hour-1 Bundle', content:'<p><b>1.</b> Measure lactate</p><p><b>2.</b> Blood cultures before abx</p><p><b>3.</b> Broad-spectrum antibiotics</p><p><b>4.</b> 30 mL/kg crystalloid if hypotensive/lactate ≥4</p>' },
+  { cat:'infection', title:'💊 Empiric Antibiotics', content:'<p><b>CAP:</b> Ceftriaxone + Azithromycin</p><p><b>HAP/VAP:</b> Pip-Tazo + Vancomycin</p><p><b>UTI:</b> Ceftriaxone or Ciprofloxacin</p><p><b>Cellulitis:</b> Cefazolin ± Vanc if MRSA</p>' },
+  { cat:'renal', title:'🔬 AKI Staging (KDIGO)', content:'<p><b>Stage 1:</b> Cr ↑1.5-1.9x baseline or ↑≥0.3</p><p><b>Stage 2:</b> Cr ↑2-2.9x baseline</p><p><b>Stage 3:</b> Cr ↑3x or ≥4.0 or RRT</p>' },
+  { cat:'renal', title:'💧 IV Fluid Guide', content:'<p><b>Resuscitation:</b> NS or LR bolus 500-1000mL</p><p><b>Maintenance:</b> 25-30 mL/kg/day</p><p><b>Hyperkalemia:</b> Avoid LR (contains K⁺)</p>' },
+  { cat:'gi', title:'🩸 GI Bleed Management', content:'<p><b>Resuscitate:</b> 2 large bore IV, type & cross</p><p><b>Transfuse:</b> Hgb <7 (or <8 if CAD)</p><p><b>PPI:</b> Pantoprazole 80mg bolus then 8mg/hr</p><p><b>Variceal:</b> + Octreotide + Ceftriaxone</p>' },
+  { cat:'gi', title:'🍺 Alcohol Withdrawal', content:'<p><b>CIWA protocol:</b> Lorazepam PRN</p><p><b>Thiamine:</b> 500mg IV TID x3 days</p><p><b>DTs peak:</b> 48-72h post last drink</p>' },
+  { cat:'anticoag', title:'💉 Anticoagulant Reversal', content:'<p><b>Warfarin:</b> Vitamin K + 4F-PCC</p><p><b>Heparin:</b> Protamine (1mg per 100U)</p><p><b>Dabigatran:</b> Idarucizumab</p><p><b>Xa inhibitors:</b> Andexanet alfa</p>' },
+  { cat:'diabetes', title:'📊 DKA Management', content:'<p><b>Fluids:</b> NS 1L/hr x2h, then 250-500mL/hr</p><p><b>Insulin:</b> 0.1 U/kg/hr (after K⁺ >3.3)</p><p><b>K⁺:</b> Add 20-40 mEq/L when <5.3</p><p><b>Bicarb:</b> Only if pH <6.9</p>' }
+];
+
+const REF_CATS = [
+  { id:'all', name:'All' },
+  { id:'critical', name:'🚨 Critical' },
+  { id:'cardiac', name:'❤️ Cardiac' },
+  { id:'respiratory', name:'🫁 Respiratory' },
+  { id:'neuro', name:'🧠 Neuro' },
+  { id:'infection', name:'🦠 Infection' },
+  { id:'renal', name:'💧 Renal' },
+  { id:'gi', name:'🩺 GI' },
+  { id:'anticoag', name:'💉 Anticoag' },
+  { id:'diabetes', name:'📊 Diabetes' }
+];
+
+let activeRefCat = 'all';
+
+function renderRefs() {
+  $('refFilters').innerHTML = REF_CATS.map(c => `<button class="ref-filter ${activeRefCat === c.id ? 'active' : ''}" data-cat="${c.id}">${c.name}</button>`).join('');
+  const filtered = activeRefCat === 'all' ? REFS : REFS.filter(r => r.cat === activeRefCat);
+  $('refGrid').innerHTML = filtered.map(r => `<div class="ref-card"><h4>${r.title}</h4>${r.content}</div>`).join('');
+  $$('.ref-filter').forEach(btn => { btn.onclick = () => { activeRefCat = btn.dataset.cat; renderRefs(); }; });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════════
+function init() {
+  loadState();
+  renderUnits();
+  setupCodeInputs();
+  
+  // Initialize Neural Engine
+  if (typeof NeuralEngine !== 'undefined') {
+    NeuralEngine.init();
+    console.log('[MedWard] Neural Engine initialized');
+  }
+
+  // Event listeners
+  $('adminFab').onclick = openAdminLogin;
+  $('adminLoginBtn').onclick = loginAdmin;
+  $('adminPassword').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
+  $('exitAdminBtn').onclick = exitAdmin;
+  $('addUnitBtn').onclick = () => openUnitModal();
+  $('saveUnitBtn').onclick = saveUnit;
+  $('saveSettingsBtn').onclick = saveSettings;
+  $('enterUnitBtn').onclick = enterUnit;
+  $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
+  $('logoutBtn').onclick = logout;
+  $('addPatientBtn').onclick = openPatientModal;
+  $('savePatientBtn').onclick = savePatient;
+  $('refreshPatientsBtn').onclick = loadPatients;
+  $('analyzeBtn').onclick = runAnalysis;
+  $('newAnalysisBtn').onclick = resetAnalysis;
+
+  // Color picker
+  $$('.color-option').forEach(o => {
+    o.onclick = () => { $$('.color-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected'); };
+  });
+
+  // Modal backdrop close
+  $$('.modal').forEach(m => { m.onclick = e => { if (e.target === m) m.classList.remove('active'); }; });
+}
+
+// Global access for inline handlers
+window.MW = { editUnit: openUnitModal, deleteUnit, removeFile, setScore };
+window.closeModal = closeModal;
+
+document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
+
 })();
+</script>
 
-/**
- * MedWard Neural Pattern Engine v2.0
- * Learns from Claude analyses to provide instant results for similar cases
- */
+<!-- ═══════════════════════════════════════════════════════════════════════
+     NEURAL ENGINE - Intelligent Pattern Caching System
+═══════════════════════════════════════════════════════════════════════ -->
+<script>
 var NeuralEngine = (function() {
   'use strict';
-
   var CONFIG = {
-    SIMILARITY_THRESHOLD: 0.82,
+    STORAGE_KEY: 'medward_neural_v3',
     MAX_PATTERNS: 500,
+    SIMILARITY_THRESHOLD: 0.85,
+    LSH_BANDS: 20,
+    LSH_ROWS: 5,
     PATTERN_EXPIRY_DAYS: 30,
-    MIN_CONFIDENCE: 0.75,
-    LEARNING_RATE: 0.1,
-    STORAGE_KEY: 'medward_neural_v2'
+    LEARNING_RATE: 0.15
   };
-
   var patterns = [];
   var hashIndex = new Map();
   var stats = { hits: 0, misses: 0, learned: 0 };
 
   function init() {
-    load();
-    console.log('[Neural] Initialized with ' + patterns.length + ' patterns');
-    return stats;
-  }
-
-  function load() {
     try {
-      var data = localStorage.getItem(CONFIG.STORAGE_KEY);
-      if (data) {
-        var parsed = JSON.parse(data);
-        patterns = parsed.patterns || [];
-        stats = parsed.stats || stats;
+      var saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+      if (saved) {
+        var data = JSON.parse(saved);
+        patterns = data.patterns || [];
+        stats = data.stats || stats;
         rebuildIndex();
         pruneExpired();
       }
-    } catch (e) {
-      console.warn('[Neural] Load failed:', e);
-      patterns = [];
-    }
+    } catch (e) { console.warn('[Neural] Init error:', e); }
+    console.log('[Neural] Initialized with ' + patterns.length + ' patterns');
   }
 
   function save() {
     try {
-      localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
-        patterns: patterns.slice(0, CONFIG.MAX_PATTERNS),
-        stats: stats,
-        version: 2,
-        updated: Date.now()
-      }));
-    } catch (e) {
-      patterns = patterns.slice(0, Math.floor(CONFIG.MAX_PATTERNS / 2));
-      rebuildIndex();
-    }
-  }
-
-  function extractFeatures(text) {
-    if (!text) return null;
-    var normalized = text.toLowerCase().replace(/\s+/g, ' ');
-    var features = {
-      labs: extractLabValues(normalized),
-      vitals: extractVitals(normalized),
-      keywords: extractKeywords(normalized),
-      structure: getStructureSignature(normalized),
-      lengthBucket: Math.floor(text.length / 500),
-      textHash: simpleHash(normalized)
-    };
-    features.vector = createFeatureVector(features);
-    return features;
-  }
-
-  function extractLabValues(text) {
-    var labs = {};
-    var pattern = /\b(wbc|rbc|hgb|hb|hemoglobin|hct|plt|platelets|na|sodium|k|potassium|cl|chloride|co2|bun|urea|cr|creatinine|glu|glucose|alt|ast|alp|ggt|bili|bilirubin|albumin|protein|ca|calcium|mg|magnesium|phos|phosphate|tsh|t3|t4|inr|pt|ptt|aptt|crp|esr|troponin|bnp|lactate|ph|pco2|po2|hco3|egfr)[:\s=*]+([<>]?\d+\.?\d*)/gi;
-    var match;
-    while ((match = pattern.exec(text)) !== null) {
-      var name = normalizeLabName(match[1]);
-      var value = parseFloat(match[2]);
-      if (!isNaN(value)) labs[name] = value;
-    }
-    return labs;
-  }
-
-  function normalizeLabName(name) {
-    var map = { 'hgb': 'hemoglobin', 'hb': 'hemoglobin', 'plt': 'platelets', 'na': 'sodium', 'k': 'potassium', 'cl': 'chloride', 'cr': 'creatinine', 'glu': 'glucose', 'bili': 'bilirubin', 'ca': 'calcium', 'mg': 'magnesium', 'phos': 'phosphate', 'ptt': 'aptt' };
-    return map[name.toLowerCase()] || name.toLowerCase();
-  }
-
-  function extractVitals(text) {
-    var vitals = {};
-    var bp = text.match(/(?:bp|blood pressure)[:\s]*(\d{2,3})[\/\\](\d{2,3})/i);
-    if (bp) { vitals.sbp = parseInt(bp[1]); vitals.dbp = parseInt(bp[2]); }
-    var hr = text.match(/(?:hr|heart rate|pulse)[:\s]*(\d{2,3})/i);
-    if (hr) vitals.hr = parseInt(hr[1]);
-    var rr = text.match(/(?:rr|resp|respiratory)[:\s]*(\d{1,2})/i);
-    if (rr) vitals.rr = parseInt(rr[1]);
-    var temp = text.match(/(?:temp|temperature)[:\s]*(\d{2,3}\.?\d?)/i);
-    if (temp) vitals.temp = parseFloat(temp[1]);
-    var spo2 = text.match(/(?:spo2|sao2|o2 sat)[:\s]*(\d{2,3})%?/i);
-    if (spo2) vitals.spo2 = parseInt(spo2[1]);
-    return vitals;
-  }
-
-  function extractKeywords(text) {
-    var keywords = {};
-    var critical = ['critical', 'urgent', 'emergency', 'stat', 'acute', 'severe'];
-    var conditions = ['infection', 'sepsis', 'anemia', 'diabetes', 'hypertension', 'renal', 'hepatic', 'cardiac', 'respiratory', 'neurologic'];
-    var findings = ['elevated', 'decreased', 'abnormal', 'normal', 'high', 'low'];
-    critical.forEach(function(w) { if (text.includes(w)) keywords[w] = 3; });
-    conditions.forEach(function(w) { if (text.includes(w)) keywords[w] = 2; });
-    findings.forEach(function(w) { if (text.includes(w)) keywords[w] = 1; });
-    return keywords;
-  }
-
-  function getStructureSignature(text) {
-    return {
-      hasLabs: /\b(wbc|rbc|hemoglobin|sodium|potassium|creatinine)\b/i.test(text),
-      hasVitals: /\b(bp|hr|temp|spo2)\b/i.test(text),
-      hasHistory: /\b(hpi|pmh|history|presents|complains)\b/i.test(text),
-      hasMeds: /\b(medications?|meds|taking|prescribed)\b/i.test(text),
-      hasAssessment: /\b(assessment|diagnosis|impression|plan)\b/i.test(text)
-    };
-  }
-
-  function createFeatureVector(features) {
-    var vector = [];
-    var labOrder = ['wbc', 'hemoglobin', 'platelets', 'sodium', 'potassium', 'creatinine', 'glucose', 'alt', 'ast', 'bilirubin'];
-    labOrder.forEach(function(lab) {
-      var val = features.labs[lab];
-      vector.push(val ? normalizeLabValue(lab, val) : -1);
-    });
-    vector.push(features.vitals.sbp ? features.vitals.sbp / 200 : -1);
-    vector.push(features.vitals.dbp ? features.vitals.dbp / 120 : -1);
-    vector.push(features.vitals.hr ? features.vitals.hr / 150 : -1);
-    vector.push(features.vitals.spo2 ? features.vitals.spo2 / 100 : -1);
-    vector.push(features.structure.hasLabs ? 1 : 0);
-    vector.push(features.structure.hasVitals ? 1 : 0);
-    vector.push(features.structure.hasHistory ? 1 : 0);
-    vector.push(features.structure.hasAssessment ? 1 : 0);
-    vector.push(Math.min(features.lengthBucket / 20, 1));
-    return vector;
-  }
-
-  function normalizeLabValue(name, value) {
-    var ranges = { wbc: [4, 11], hemoglobin: [12, 17], platelets: [150, 400], sodium: [136, 146], potassium: [3.5, 5.1], creatinine: [0.7, 1.3], glucose: [70, 100], alt: [7, 56], ast: [10, 40], bilirubin: [0.1, 1.2] };
-    var range = ranges[name] || [0, 100];
-    return Math.max(0, Math.min(1, (value - range[0]) / (range[1] - range[0])));
-  }
-
-  function calculateSimilarity(f1, f2) {
-    if (!f1 || !f2) return 0;
-    var score = 0, weights = 0;
-    if (f1.vector && f2.vector) {
-      var vecSim = vectorSimilarity(f1.vector, f2.vector);
-      score += vecSim * 0.5;
-      weights += 0.5;
-    }
-    var labSim = objectSimilarity(f1.labs, f2.labs);
-    score += labSim * 0.3;
-    weights += 0.3;
-    var kwSim = objectSimilarity(f1.keywords, f2.keywords);
-    score += kwSim * 0.2;
-    weights += 0.2;
-    return weights > 0 ? score / weights : 0;
-  }
-
-  function vectorSimilarity(v1, v2) {
-    var sum = 0, count = 0;
-    for (var i = 0; i < Math.min(v1.length, v2.length); i++) {
-      if (v1[i] >= 0 && v2[i] >= 0) {
-        sum += 1 - Math.abs(v1[i] - v2[i]);
-        count++;
-      }
-    }
-    return count > 0 ? sum / count : 0;
-  }
-
-  function objectSimilarity(o1, o2) {
-    var keys1 = Object.keys(o1 || {});
-    var keys2 = Object.keys(o2 || {});
-    if (keys1.length === 0 && keys2.length === 0) return 1;
-    if (keys1.length === 0 || keys2.length === 0) return 0;
-    var intersection = keys1.filter(function(k) { return keys2.includes(k); });
-    var union = new Set(keys1.concat(keys2));
-    return intersection.length / union.size;
-  }
-
-  function getLSHBuckets(features) {
-    var buckets = [];
-    if (features.vector) {
-      for (var i = 0; i < 4; i++) {
-        var bucket = 'v' + i + '_';
-        for (var j = i * 4; j < Math.min((i + 1) * 4, features.vector.length); j++) {
-          bucket += features.vector[j] >= 0 ? Math.floor(features.vector[j] * 4) : 'x';
-        }
-        buckets.push(bucket);
-      }
-    }
-    buckets.push('len_' + features.lengthBucket);
-    Object.keys(features.structure).forEach(function(k) {
-      if (features.structure[k]) buckets.push('s_' + k);
-    });
-    return buckets;
+      localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({ patterns: patterns.slice(0, CONFIG.MAX_PATTERNS), stats: stats }));
+    } catch (e) {}
   }
 
   function rebuildIndex() {
     hashIndex.clear();
-    patterns.forEach(function(p, idx) {
-      if (p.buckets) {
-        p.buckets.forEach(function(bucket) {
+    patterns.forEach(function(pattern, idx) {
+      if (pattern.buckets) {
+        pattern.buckets.forEach(function(bucket) {
           if (!hashIndex.has(bucket)) hashIndex.set(bucket, []);
           hashIndex.get(bucket).push(idx);
         });
@@ -1520,39 +1165,69 @@ var NeuralEngine = (function() {
     });
   }
 
+  function extractFeatures(text) {
+    if (!text || text.length < 20) return null;
+    var features = {};
+    var words = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function(w) { return w.length > 2; });
+    var bigrams = [];
+    for (var i = 0; i < words.length - 1; i++) bigrams.push(words[i] + '_' + words[i + 1]);
+    words.concat(bigrams).forEach(function(term) { features[term] = (features[term] || 0) + 1; });
+    var nums = text.match(/\d+\.?\d*/g) || [];
+    features['_num_count'] = nums.length;
+    features['_char_count'] = Math.floor(text.length / 100);
+    return features;
+  }
+
+  function getLSHBuckets(features) {
+    var keys = Object.keys(features).sort();
+    var buckets = [];
+    for (var band = 0; band < CONFIG.LSH_BANDS; band++) {
+      var sig = '';
+      for (var row = 0; row < CONFIG.LSH_ROWS; row++) {
+        var idx = (band * CONFIG.LSH_ROWS + row) % keys.length;
+        sig += keys[idx] + ':' + (features[keys[idx]] || 0) + '|';
+      }
+      buckets.push('b' + band + '_' + simpleHash(sig));
+    }
+    return buckets;
+  }
+
   function findCandidates(buckets) {
     var candidateSet = new Set();
     buckets.forEach(function(bucket) {
-      var indices = hashIndex.get(bucket) || [];
-      indices.forEach(function(idx) { candidateSet.add(idx); });
+      var indices = hashIndex.get(bucket);
+      if (indices) indices.forEach(function(idx) { candidateSet.add(idx); });
     });
     return Array.from(candidateSet);
   }
 
+  function calculateSimilarity(f1, f2) {
+    var keys1 = Object.keys(f1), keys2 = Object.keys(f2);
+    var allKeys = new Set(keys1.concat(keys2));
+    var dotProduct = 0, mag1 = 0, mag2 = 0;
+    allKeys.forEach(function(key) {
+      var v1 = f1[key] || 0, v2 = f2[key] || 0;
+      dotProduct += v1 * v2;
+      mag1 += v1 * v1;
+      mag2 += v2 * v2;
+    });
+    return mag1 && mag2 ? dotProduct / (Math.sqrt(mag1) * Math.sqrt(mag2)) : 0;
+  }
+
   function query(text, docType) {
-    docType = docType || 'general';
     var startTime = performance.now();
     var features = extractFeatures(text);
-    if (!features) {
-      stats.misses++;
-      return { match: false, reason: 'no_features' };
-    }
+    if (!features) return { match: false, reason: 'insufficient_features' };
     var buckets = getLSHBuckets(features);
     var candidates = findCandidates(buckets);
-    if (candidates.length === 0) {
-      stats.misses++;
-      return { match: false, reason: 'no_candidates' };
-    }
+    if (candidates.length === 0) { stats.misses++; return { match: false, reason: 'no_candidates' }; }
     var bestMatch = null, bestScore = 0;
     for (var i = 0; i < candidates.length; i++) {
       var pattern = patterns[candidates[i]];
       if (pattern.docType && pattern.docType !== docType) continue;
       var similarity = calculateSimilarity(features, pattern.features);
       var adjustedScore = similarity * (0.8 + 0.2 * Math.min(pattern.strength || 1, 5));
-      if (adjustedScore > bestScore) {
-        bestScore = adjustedScore;
-        bestMatch = pattern;
-      }
+      if (adjustedScore > bestScore) { bestScore = adjustedScore; bestMatch = pattern; }
     }
     var queryTime = performance.now() - startTime;
     if (bestMatch && bestScore >= CONFIG.SIMILARITY_THRESHOLD) {
@@ -1597,9 +1272,7 @@ var NeuralEngine = (function() {
       if (!hashIndex.has(bucket)) hashIndex.set(bucket, []);
       hashIndex.get(bucket).unshift(0);
     });
-    if (patterns.length > CONFIG.MAX_PATTERNS) {
-      pruneWeakest();
-    }
+    if (patterns.length > CONFIG.MAX_PATTERNS) pruneWeakest();
     save();
     return true;
   }
@@ -1619,10 +1292,7 @@ var NeuralEngine = (function() {
     var cutoff = Date.now() - (CONFIG.PATTERN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
     var before = patterns.length;
     patterns = patterns.filter(function(p) { return p.created > cutoff || p.useCount > 5; });
-    if (patterns.length < before) {
-      rebuildIndex();
-      console.log('[Neural] Pruned ' + (before - patterns.length) + ' expired patterns');
-    }
+    if (patterns.length < before) rebuildIndex();
   }
 
   function pruneWeakest() {
@@ -1637,21 +1307,13 @@ var NeuralEngine = (function() {
 
   function simpleHash(str) {
     var hash = 0;
-    for (var i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xFFFFFFFF;
-    }
+    for (var i = 0; i < str.length; i++) hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xFFFFFFFF;
     return hash;
   }
 
   function getStats() {
     var hitRate = stats.hits + stats.misses > 0 ? (stats.hits / (stats.hits + stats.misses) * 100).toFixed(1) : 0;
-    return {
-      patterns: patterns.length,
-      hits: stats.hits,
-      misses: stats.misses,
-      hitRate: hitRate + '%',
-      learned: stats.learned
-    };
+    return { patterns: patterns.length, hits: stats.hits, misses: stats.misses, hitRate: hitRate + '%', learned: stats.learned };
   }
 
   function clear() {
@@ -1659,17 +1321,15 @@ var NeuralEngine = (function() {
     hashIndex.clear();
     stats = { hits: 0, misses: 0, learned: 0 };
     localStorage.removeItem(CONFIG.STORAGE_KEY);
-    console.log('[Neural] Cleared all patterns');
   }
 
   return { init: init, query: query, learn: learn, getStats: getStats, clear: clear, extractFeatures: extractFeatures };
 })();
 
-// Auto-initialize Neural Engine
-if (typeof window !== 'undefined') {
-  window.NeuralEngine = NeuralEngine;
-}
+if (typeof window !== 'undefined') window.NeuralEngine = NeuralEngine;
 </script>
+
+<!-- Lab Engine (external file) -->
 <script src="lab-engine.js"></script>
 </body>
 </html>
