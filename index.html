@@ -7,1323 +7,202 @@
   <meta name="theme-color" content="#0a0f1a">
   <title>MedWard | Clinical Intelligence Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --bg-primary: #050810;
-      --bg-secondary: #0c1322;
-      --bg-tertiary: #131d2e;
-      --bg-card: linear-gradient(145deg, #0f1829 0%, #0a1220 100%);
-      --bg-glass: rgba(15, 25, 45, 0.85);
-      
-      --text-primary: #f0f4fc;
-      --text-secondary: #a0aec4;
-      --text-muted: #5a6a85;
-      
-      --accent-gold: #d4af37;
-      --accent-gold-light: #f0d875;
-      --accent-teal: #00d4aa;
-      --accent-blue: #3b82f6;
-      --accent-purple: #8b5cf6;
-      --accent-rose: #f43f5e;
-      
-      --gradient-gold: linear-gradient(135deg, #d4af37 0%, #f0d875 50%, #d4af37 100%);
-      --gradient-premium: linear-gradient(135deg, #d4af37 0%, #00d4aa 100%);
-      --gradient-card: linear-gradient(145deg, rgba(212,175,55,0.1) 0%, rgba(0,212,170,0.05) 100%);
-      
-      --border-subtle: rgba(212, 175, 55, 0.15);
-      --border-glow: rgba(212, 175, 55, 0.4);
-      
-      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
-      --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
-      --shadow-lg: 0 16px 64px rgba(0,0,0,0.5);
-      --shadow-glow: 0 0 40px rgba(212,175,55,0.15);
-      
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
-      --radius-xl: 24px;
-      
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-      
-      --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    html {
-      font-size: 16px;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    body {
-      font-family: var(--font-sans);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      line-height: 1.6;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* Ambient Background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: 
-        radial-gradient(ellipse at 20% 20%, rgba(212,175,55,0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(0,212,170,0.06) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 50%, rgba(59,130,246,0.04) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    /* ==================== HEADER ==================== */
-    .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 72px;
-      background: var(--bg-glass);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      z-index: 1000;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .logo-mark {
-      width: 44px;
-      height: 44px;
-      background: var(--gradient-gold);
-      border-radius: var(--radius-md);
-      display: grid;
-      place-items: center;
-      box-shadow: var(--shadow-glow);
-    }
-
-    .logo-mark svg {
-      width: 26px;
-      height: 26px;
-      stroke: var(--bg-primary);
-      stroke-width: 2.5;
-      fill: none;
-    }
-
-    .logo-text {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: var(--gradient-gold);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--bg-tertiary);
-      padding: 6px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-subtle);
-    }
-
-    .nav-item {
-      padding: 10px 20px;
-      background: transparent;
-      border: none;
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      font-family: inherit;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition-fast);
-      white-space: nowrap;
-    }
-
-    .nav-item:hover {
-      color: var(--text-primary);
-      background: rgba(255,255,255,0.05);
-    }
-
-    .nav-item.active {
-      background: var(--gradient-gold);
-      color: var(--bg-primary);
-      font-weight: 600;
-    }
-
-    .user-section {
-      display: none;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .user-section.visible {
-      display: flex;
-    }
-
-    .user-avatar {
-      width: 42px;
-      height: 42px;
-      background: var(--gradient-premium);
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--bg-primary);
-      border: 2px solid rgba(212,175,55,0.3);
-    }
-
-    .user-name {
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .user-role {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    /* ==================== SCREENS ==================== */
-    .screen {
-      display: none;
-      min-height: 100vh;
-      padding-top: 96px;
-      padding-bottom: 40px;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    /* ==================== LOGIN SCREEN ==================== */
-    #screen-login {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: 
-        radial-gradient(ellipse at center, rgba(212,175,55,0.08) 0%, transparent 60%);
-    }
-
-    #screen-login.active {
-      display: flex;
-    }
-
-    .login-container {
-      width: 100%;
-      max-width: 440px;
-    }
-
-    .login-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-xl);
-      padding: 48px 40px;
-      box-shadow: var(--shadow-lg), var(--shadow-glow);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .login-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--gradient-gold);
-    }
-
-    .login-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      background: rgba(212,175,55,0.1);
-      border: 1px solid rgba(212,175,55,0.2);
-      border-radius: 100px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--accent-gold);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 24px;
-    }
-
-    .login-title {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-gold-light) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .login-subtitle {
-      color: var(--text-muted);
-      margin-bottom: 36px;
-      font-size: 0.95rem;
-    }
-
-    .form-group {
-      margin-bottom: 24px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 10px;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 16px 20px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 1rem;
-      transition: var(--transition-fast);
-      -webkit-appearance: none;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: var(--accent-gold);
-      box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
-    }
-
-    .form-input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 16px 32px;
-      border: none;
-      border-radius: var(--radius-md);
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition-smooth);
-      text-decoration: none;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
-    .btn-primary {
-      width: 100%;
-      background: var(--gradient-gold);
-      color: var(--bg-primary);
-      box-shadow: 0 4px 20px rgba(212,175,55,0.3);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(212,175,55,0.4);
-    }
-
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-
-    .login-footer {
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border-subtle);
-      text-align: center;
-    }
-
-    .login-footer p {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .login-features {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      margin-top: 16px;
-    }
-
-    .login-feature {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-
-    .login-feature svg {
-      width: 14px;
-      height: 14px;
-      stroke: var(--accent-teal);
-    }
-
-    /* ==================== DASHBOARD ==================== */
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    .page-header {
-      margin-bottom: 32px;
-    }
-
-    .page-title {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-
-    .page-subtitle {
-      color: var(--text-muted);
-      font-size: 1rem;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-      margin-bottom: 32px;
-    }
-
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      position: relative;
-      overflow: hidden;
-      transition: var(--transition-smooth);
-    }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--stat-color, var(--accent-gold));
-    }
-
-    .stat-card:hover {
-      border-color: var(--border-glow);
-      transform: translateY(-2px);
-    }
-
-    .stat-icon {
-      width: 48px;
-      height: 48px;
-      background: rgba(212,175,55,0.1);
-      border-radius: var(--radius-md);
-      display: grid;
-      place-items: center;
-      margin-bottom: 16px;
-    }
-
-    .stat-icon svg {
-      width: 24px;
-      height: 24px;
-      stroke: var(--stat-color, var(--accent-gold));
-    }
-
-    .stat-value {
-      font-size: 2.5rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      color: var(--text-primary);
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    .stat-label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .stat-trend {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 100px;
-    }
-
-    .stat-trend.up {
-      background: rgba(0,212,170,0.1);
-      color: var(--accent-teal);
-    }
-
-    .stat-trend.down {
-      background: rgba(244,63,94,0.1);
-      color: var(--accent-rose);
-    }
-
-    /* Dashboard Grid */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 24px;
-    }
-
-    @media (max-width: 1024px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Card Styles */
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .card-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .card-title svg {
-      width: 20px;
-      height: 20px;
-      stroke: var(--accent-gold);
-    }
-
-    .card-body {
-      padding: 24px;
-    }
-
-    /* Upload Zone */
-    .upload-zone {
-      border: 2px dashed var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 48px 32px;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition-smooth);
-    }
-
-    .upload-zone:hover {
-      border-color: var(--accent-gold);
-      background: rgba(212,175,55,0.03);
-    }
-
-    .upload-icon {
-      width: 64px;
-      height: 64px;
-      background: rgba(212,175,55,0.1);
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      margin: 0 auto 20px;
-    }
-
-    .upload-icon svg {
-      width: 32px;
-      height: 32px;
-      stroke: var(--accent-gold);
-    }
-
-    .upload-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .upload-desc {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    /* Activity List */
-    .activity-list {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .activity-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .activity-item:last-child {
-      border-bottom: none;
-    }
-
-    .activity-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent-gold);
-      margin-top: 6px;
-      flex-shrink: 0;
-    }
-
-    .activity-dot.teal { background: var(--accent-teal); }
-    .activity-dot.blue { background: var(--accent-blue); }
-    .activity-dot.purple { background: var(--accent-purple); }
-
-    .activity-content {
-      flex: 1;
-    }
-
-    .activity-title {
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    .activity-time {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    /* ==================== PATIENTS SCREEN ==================== */
-    .patients-header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      margin-bottom: 32px;
-    }
-
-    .search-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-      max-width: 400px;
-      padding: 12px 20px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-    }
-
-    .search-bar svg {
-      width: 20px;
-      height: 20px;
-      stroke: var(--text-muted);
-      flex-shrink: 0;
-    }
-
-    .search-bar input {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 0.95rem;
-      outline: none;
-    }
-
-    .search-bar input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .btn-secondary {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--accent-gold);
-      background: rgba(212,175,55,0.1);
-    }
-
-    .btn-sm {
-      padding: 10px 18px;
-      font-size: 0.875rem;
-    }
-
-    /* Patients Table */
-    .patients-table {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .table-header {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 120px;
-      gap: 16px;
-      padding: 16px 24px;
-      background: var(--bg-tertiary);
-      border-bottom: 1px solid var(--border-subtle);
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-    }
-
-    .table-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 120px;
-      gap: 16px;
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border-subtle);
-      align-items: center;
-      transition: var(--transition-fast);
-    }
-
-    .table-row:last-child {
-      border-bottom: none;
-    }
-
-    .table-row:hover {
-      background: rgba(212,175,55,0.03);
-    }
-
-    .patient-info {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .patient-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--gradient-premium);
-      display: grid;
-      place-items: center;
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--bg-primary);
-    }
-
-    .patient-name {
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .patient-id {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 12px;
-      border-radius: 100px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .badge-active {
-      background: rgba(0,212,170,0.15);
-      color: var(--accent-teal);
-    }
-
-    .badge-critical {
-      background: rgba(244,63,94,0.15);
-      color: var(--accent-rose);
-    }
-
-    .badge-stable {
-      background: rgba(59,130,246,0.15);
-      color: var(--accent-blue);
-    }
-
-    .badge-discharged {
-      background: rgba(139,92,246,0.15);
-      color: var(--accent-purple);
-    }
-
-    .action-btn {
-      padding: 8px 16px;
-      background: rgba(212,175,55,0.1);
-      border: 1px solid rgba(212,175,55,0.2);
-      border-radius: var(--radius-sm);
-      color: var(--accent-gold);
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition-fast);
-    }
-
-    .action-btn:hover {
-      background: rgba(212,175,55,0.2);
-    }
-
-    /* ==================== STROKE SCREEN ==================== */
-    .stroke-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 24px;
-      margin-bottom: 32px;
-    }
-
-    @media (max-width: 900px) {
-      .stroke-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .calculator-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .calc-header {
-      padding: 20px 24px;
-      background: var(--gradient-card);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .calc-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .calc-subtitle {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .calc-body {
-      padding: 20px 24px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .calc-item {
-      padding: 16px;
-      background: var(--bg-tertiary);
-      border-radius: var(--radius-md);
-      margin-bottom: 12px;
-    }
-
-    .calc-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .calc-item-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .calc-item-number {
-      width: 28px;
-      height: 28px;
-      background: var(--accent-gold);
-      border-radius: 6px;
-      display: grid;
-      place-items: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--bg-primary);
-    }
-
-    .calc-item-name {
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .calc-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .calc-option {
-      flex: 1;
-      min-width: 100px;
-      padding: 10px 14px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: var(--transition-fast);
-      text-align: center;
-    }
-
-    .calc-option:hover {
-      border-color: var(--accent-gold);
-    }
-
-    .calc-option.selected {
-      background: rgba(212,175,55,0.15);
-      border-color: var(--accent-gold);
-    }
-
-    .calc-option input {
-      display: none;
-    }
-
-    .calc-option-score {
-      display: block;
-      font-size: 1.25rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      color: var(--accent-gold);
-      margin-bottom: 4px;
-    }
-
-    .calc-option-label {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-
-    .calc-result {
-      padding: 24px;
-      background: var(--bg-tertiary);
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .result-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .result-label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .result-value {
-      font-size: 2rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      color: var(--accent-gold);
-    }
-
-    .result-interpretation {
-      padding: 16px;
-      background: var(--bg-secondary);
-      border-radius: var(--radius-md);
-      margin-top: 16px;
-    }
-
-    .severity-badge {
-      display: inline-block;
-      padding: 6px 14px;
-      border-radius: 100px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    /* Quick Reference */
-    .reference-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-    }
-
-    .reference-card {
-      padding: 20px;
-      background: var(--bg-tertiary);
-      border-radius: var(--radius-md);
-      border-left: 3px solid var(--accent-gold);
-    }
-
-    .reference-card h4 {
-      font-size: 0.95rem;
-      color: var(--accent-gold);
-      margin-bottom: 12px;
-    }
-
-    .reference-card p {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-    }
-
-    .reference-card ul {
-      margin: 0;
-      padding-left: 20px;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .reference-card li {
-      margin-bottom: 4px;
-    }
-
-    /* ==================== RESPONSIVE ==================== */
-    @media (max-width: 768px) {
-      .header {
-        height: auto;
-        flex-wrap: wrap;
-        padding: 12px 16px;
-        gap: 12px;
-      }
-
-      .nav {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-      }
-
-      .nav-item {
-        padding: 8px 14px;
-        font-size: 0.8rem;
-      }
-
-      .user-section {
-        order: 2;
-      }
-
-      .screen {
-        padding-top: 140px;
-      }
-
-      .page-title {
-        font-size: 1.5rem;
-      }
-
-      .table-header,
-      .table-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-
-      .table-header > *:not(:first-child) {
-        display: none;
-      }
-
-      .table-row {
-        padding: 16px;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .stat-value {
-        font-size: 1.75rem;
-      }
-    }
-
-    /* ==================== ANIMATIONS ==================== */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .screen.active {
-      animation: fadeIn 0.3s ease-out;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 16px 24px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--accent-teal);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-weight: 500;
-      box-shadow: var(--shadow-lg);
-      transform: translateY(100px);
-      opacity: 0;
-      transition: var(--transition-smooth);
-      z-index: 9999;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#050810;--bg2:#0c1322;--bg3:#131d2e;--text:#f0f4fc;--text2:#a0aec4;--muted:#5a6a85;--gold:#d4af37;--teal:#00d4aa;--blue:#3b82f6;--rose:#f43f5e;--purple:#8b5cf6;--border:rgba(212,175,55,0.15)}
+    html{font-size:16px;-webkit-font-smoothing:antialiased}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+    
+    .header{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,25,45,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:1000}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo-mark{width:40px;height:40px;background:linear-gradient(135deg,#d4af37,#f0d875);border-radius:12px;display:grid;place-items:center}
+    .logo-mark svg{width:24px;height:24px;stroke:#050810;stroke-width:2.5;fill:none}
+    .logo-text{font-size:1.35rem;font-weight:700;background:linear-gradient(135deg,#d4af37,#f0d875);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .user-section{display:none;align-items:center;gap:12px}
+    .user-section.visible{display:flex}
+    .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,#d4af37,#00d4aa);border-radius:50%;display:grid;place-items:center;font-weight:700;color:#050810}
+    .user-name{font-weight:500;font-size:0.9rem}
+    
+    .screen{display:none;min-height:100vh;padding:84px 20px 40px}
+    .screen.active{display:block}
+    #screen-login.active{display:flex;align-items:center;justify-content:center}
+    
+    .login-card{width:100%;max-width:420px;background:linear-gradient(145deg,#0f1829,#0a1220);border:1px solid var(--border);border-radius:24px;padding:40px 32px;box-shadow:0 16px 64px rgba(0,0,0,0.5);position:relative}
+    .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(135deg,#d4af37,#f0d875);border-radius:24px 24px 0 0}
+    .login-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);border-radius:100px;font-size:0.7rem;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:20px}
+    .login-title{font-size:1.75rem;font-weight:700;margin-bottom:6px}
+    .login-subtitle{color:var(--muted);margin-bottom:28px;font-size:0.9rem}
+    .form-group{margin-bottom:20px}
+    .form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .form-input{width:100%;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:1rem;-webkit-appearance:none}
+    .form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,0.15)}
+    .form-input::placeholder{color:var(--muted)}
+    .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 24px;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+    .btn-primary{background:linear-gradient(135deg,#d4af37,#f0d875);color:#050810;box-shadow:0 4px 20px rgba(212,175,55,0.3)}
+    .btn-primary:active{transform:scale(0.98)}
+    
+    .container{max-width:1200px;margin:0 auto}
+    .page-header{margin-bottom:24px}
+    .page-title{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+    .page-subtitle{color:var(--muted);font-size:0.9rem}
+    
+    .tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:12px;margin-bottom:24px;overflow-x:auto}
+    .tab{flex:1;min-width:80px;padding:12px 16px;background:transparent;border:none;border-radius:8px;color:var(--text2);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap}
+    .tab:hover{color:var(--text)}
+    .tab.active{background:linear-gradient(135deg,#d4af37,#f0d875);color:#050810;font-weight:600}
+    .tab-content{display:none}
+    .tab-content.active{display:block;animation:fadeIn 0.3s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    
+    .card{background:linear-gradient(145deg,#0f1829,#0a1220);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .card-title{display:flex;align-items:center;gap:10px;font-size:0.95rem;font-weight:600}
+    .card-title svg{width:18px;height:18px;stroke:var(--gold)}
+    .card-body{padding:20px}
+    
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+    .stat-value{font-size:2rem;font-weight:700;color:var(--gold)}
+    .stat-label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px}
+    
+    .patients-table{width:100%;border-collapse:collapse}
+    .patients-table th{text-align:left;padding:12px 16px;background:var(--bg3);font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);border-bottom:1px solid var(--border)}
+    .patients-table td{padding:16px;border-bottom:1px solid var(--border);font-size:0.9rem}
+    .patients-table tr:hover{background:rgba(212,175,55,0.03)}
+    .patient-cell{display:flex;align-items:center;gap:12px}
+    .patient-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d4af37,#00d4aa);display:grid;place-items:center;font-weight:700;font-size:0.85rem;color:#050810;flex-shrink:0}
+    .patient-name{font-weight:600}
+    .patient-id{font-size:0.75rem;color:var(--muted)}
+    .badge{display:inline-block;padding:4px 10px;border-radius:100px;font-size:0.7rem;font-weight:600;text-transform:uppercase}
+    .badge-critical{background:rgba(244,63,94,0.15);color:var(--rose)}
+    .badge-active{background:rgba(0,212,170,0.15);color:var(--teal)}
+    .badge-stable{background:rgba(59,130,246,0.15);color:var(--blue)}
+    .badge-chronic{background:rgba(139,92,246,0.15);color:var(--purple)}
+    
+    .empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+    .empty-state svg{width:48px;height:48px;stroke:var(--muted);margin-bottom:16px;opacity:0.5}
+    .loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--muted)}
+    .spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
+    .calc-item{background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:12px}
+    .calc-item-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .calc-item-num{width:28px;height:28px;background:var(--gold);border-radius:6px;display:grid;place-items:center;font-size:0.75rem;font-weight:700;color:#050810}
+    .calc-item-name{font-weight:600;font-size:0.9rem}
+    .calc-options{display:flex;flex-wrap:wrap;gap:8px}
+    .calc-option{flex:1;min-width:70px;padding:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;transition:0.15s}
+    .calc-option:hover{border-color:var(--gold)}
+    .calc-option.selected{background:rgba(212,175,55,0.15);border-color:var(--gold)}
+    .calc-option input{display:none}
+    .calc-option-score{display:block;font-size:1.25rem;font-weight:700;color:var(--gold)}
+    .calc-option-label{font-size:0.7rem;color:var(--text2)}
+    .calc-result{background:var(--bg3);border-radius:12px;padding:20px;text-align:center;margin-top:20px}
+    .calc-result-value{font-size:3rem;font-weight:700;color:var(--gold)}
+    .calc-result-max{font-size:1rem;color:var(--muted)}
+    .calc-result-label{font-size:0.8rem;color:var(--muted);margin-bottom:12px}
+    .severity-badge{display:inline-block;padding:8px 16px;border-radius:100px;font-size:0.85rem;font-weight:600}
+    
+    .reference-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+    .reference-item{background:var(--bg3);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:16px}
+    .reference-item h4{font-size:0.85rem;color:var(--gold);margin-bottom:8px}
+    .reference-item p{font-size:0.8rem;color:var(--text2);margin:4px 0}
+    
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 24px;background:var(--bg3);border:1px solid var(--teal);border-radius:12px;color:var(--text);font-weight:500;opacity:0;transition:0.3s;z-index:9999}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    
+    @media(max-width:768px){
+      .patients-table th:nth-child(n+3),.patients-table td:nth-child(n+3){display:none}
+      .calc-options{flex-direction:column}
+      .calc-option{min-width:100%}
+      .stats-row{grid-template-columns:repeat(3,1fr)}
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <div class="logo">
-      <div class="logo-mark">
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-        </svg>
-      </div>
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
       <span class="logo-text">MedWard</span>
     </div>
-
-    <nav class="nav" id="main-nav">
-      <button class="nav-item active" data-screen="dashboard">Dashboard</button>
-      <button class="nav-item" data-screen="patients">Patients</button>
-      <button class="nav-item" data-screen="stroke">Stroke</button>
-    </nav>
-
     <div class="user-section" id="user-section">
-      <div>
-        <div class="user-name" id="display-name">User</div>
-        <div class="user-role">Physician</div>
-      </div>
+      <span class="user-name" id="display-name">User</span>
       <div class="user-avatar" id="display-initial">U</div>
     </div>
   </header>
 
-  <!-- Login Screen -->
   <main class="screen active" id="screen-login">
-    <div class="login-container">
-      <div class="login-card">
-        <div class="login-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-          Secure Access
-        </div>
-        
-        <h1 class="login-title">Welcome to MedWard</h1>
-        <p class="login-subtitle">Clinical Intelligence Platform for Modern Healthcare</p>
-        
-        <div class="form-group">
-          <label class="form-label">Your Name</label>
-          <input 
-            type="text" 
-            id="input-name" 
-            class="form-input" 
-            placeholder="Enter your name"
-            autocomplete="off"
-            autocapitalize="words"
-          >
-        </div>
-        
-        <button type="button" class="btn btn-primary" id="btn-login">
-          Continue to Dashboard
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </button>
-        
-        <div class="login-footer">
-          <p>Powered by Advanced AI Analytics</p>
-          <div class="login-features">
-            <div class="login-feature">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              NIHSS Scoring
-            </div>
-            <div class="login-feature">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Patient Tracking
-            </div>
-            <div class="login-feature">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              AI Analysis
-            </div>
-          </div>
-        </div>
+    <div class="login-card">
+      <div class="login-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Secure Access</div>
+      <h1 class="login-title">Welcome to MedWard</h1>
+      <p class="login-subtitle">Clinical Intelligence Platform</p>
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input type="text" id="input-name" class="form-input" placeholder="Enter your name" autocomplete="off">
       </div>
+      <button type="button" class="btn btn-primary" id="btn-login">Continue<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
     </div>
   </main>
 
-  <!-- Dashboard Screen -->
   <main class="screen" id="screen-dashboard">
     <div class="container">
       <header class="page-header">
         <h1 class="page-title">Clinical Dashboard</h1>
-        <p class="page-subtitle">Welcome back, <span id="greeting-name">Doctor</span>. Here's your overview.</p>
+        <p class="page-subtitle">Welcome back, <span id="greeting-name">Doctor</span></p>
       </header>
-
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card" style="--stat-color: var(--accent-teal)">
-          <span class="stat-trend up">+12%</span>
-          <div class="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <div class="stat-value">24</div>
-          <div class="stat-label">Active Patients</div>
-        </div>
-
-        <div class="stat-card" style="--stat-color: var(--accent-rose)">
-          <span class="stat-trend down">-3</span>
-          <div class="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
-          </div>
-          <div class="stat-value">5</div>
-          <div class="stat-label">Critical Cases</div>
-        </div>
-
-        <div class="stat-card" style="--stat-color: var(--accent-blue)">
-          <div class="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </div>
-          <div class="stat-value">8</div>
-          <div class="stat-label">Today's Rounds</div>
-        </div>
-
-        <div class="stat-card" style="--stat-color: var(--accent-purple)">
-          <span class="stat-trend up">+5</span>
-          <div class="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
-          </div>
-          <div class="stat-value">47</div>
-          <div class="stat-label">Reports Analyzed</div>
-        </div>
+      <div class="tabs">
+        <button class="tab active" data-tab="patients">Patients</button>
+        <button class="tab" data-tab="nihss">NIHSS</button>
+        <button class="tab" data-tab="sedan">SEDAN</button>
+        <button class="tab" data-tab="reference">Reference</button>
       </div>
-
-      <!-- Main Grid -->
-      <div class="dashboard-grid">
+      
+      <div class="tab-content active" id="tab-patients">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-value" id="stat-total">-</div><div class="stat-label">Total</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-active">-</div><div class="stat-label">Active</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-critical">-</div><div class="stat-label">Critical</div></div>
+        </div>
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              Upload Medical Report
-            </h2>
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ward Patients</h2>
+            <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:0.8rem;" id="btn-refresh">Refresh</button>
           </div>
-          <div class="card-body">
-            <div class="upload-zone" id="upload-zone">
-              <div class="upload-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-              </div>
-              <h3 class="upload-title">Drop files here or click to upload</h3>
-              <p class="upload-desc">Supports PDF, images, and text files up to 10MB</p>
-            </div>
-          </div>
+          <div class="card-body" style="padding:0;overflow-x:auto;"><div id="patients-container"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div></div>
         </div>
-
+      </div>
+      
+      <div class="tab-content" id="tab-nihss">
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-              Recent Activity
-            </h2>
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>NIHSS Calculator</h2>
+            <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:0.8rem;" id="btn-reset-nihss">Reset</button>
           </div>
+          <div class="card-body" id="nihss-calculator"></div>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="tab-sedan">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>SEDAN Score</h2>
+            <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:0.8rem;" id="btn-reset-sedan">Reset</button>
+          </div>
+          <div class="card-body" id="sedan-calculator"></div>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="tab-reference">
+        <div class="card">
+          <div class="card-header"><h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Quick Reference</h2></div>
           <div class="card-body">
-            <div class="activity-list">
-              <div class="activity-item">
-                <div class="activity-dot teal"></div>
-                <div class="activity-content">
-                  <div class="activity-title">Lab Results Analyzed</div>
-                  <div class="activity-time">Patient: Ahmad K. • 15 min ago</div>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-dot"></div>
-                <div class="activity-content">
-                  <div class="activity-title">NIHSS Assessment</div>
-                  <div class="activity-time">Score: 8 (Moderate) • 1 hour ago</div>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-dot blue"></div>
-                <div class="activity-content">
-                  <div class="activity-title">New Patient Admitted</div>
-                  <div class="activity-time">Ward 3B, Room 12 • 2 hours ago</div>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-dot purple"></div>
-                <div class="activity-content">
-                  <div class="activity-title">Discharge Summary</div>
-                  <div class="activity-time">Patient: Sara M. • 3 hours ago</div>
-                </div>
-              </div>
+            <div class="reference-grid">
+              <div class="reference-item"><h4>tPA Window</h4><p><strong>IV tPA:</strong> Within 4.5 hours</p><p><strong>Thrombectomy:</strong> Up to 24h</p></div>
+              <div class="reference-item"><h4>tPA Dosing</h4><p><strong>Dose:</strong> 0.9 mg/kg (max 90mg)</p><p><strong>Admin:</strong> 10% bolus, 90% over 60min</p></div>
+              <div class="reference-item"><h4>BP Targets</h4><p><strong>Pre-tPA:</strong> &lt;185/110</p><p><strong>Post-tPA:</strong> &lt;180/105</p></div>
+              <div class="reference-item"><h4>NIHSS Interpretation</h4><p>0: None | 1-4: Minor | 5-15: Moderate</p><p>16-20: Mod-Severe | 21+: Severe</p></div>
+              <div class="reference-item"><h4>SEDAN sICH Risk</h4><p>0: 1.4% | 1: 2.9% | 2: 5.0%</p><p>3: 8.5% | 4: 12.2% | 5-6: 17-21%</p></div>
+              <div class="reference-item"><h4>Contraindications</h4><p>Recent surgery (14d), Plt&lt;100k</p><p>INR&gt;1.7, Prior ICH, Active bleed</p></div>
             </div>
           </div>
         </div>
@@ -1331,759 +210,180 @@
     </div>
   </main>
 
-  <!-- Patients Screen -->
-  <main class="screen" id="screen-patients">
-    <div class="container">
-      <header class="page-header">
-        <h1 class="page-title">Patient Management</h1>
-        <p class="page-subtitle">Track and manage your ward patients</p>
-      </header>
+  <div class="toast" id="toast"></div>
 
-      <div class="patients-header">
-        <div class="search-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
-          </svg>
-          <input type="text" placeholder="Search patients..." id="patient-search">
-        </div>
-        <button class="btn btn-secondary btn-sm">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Add Patient
-        </button>
-      </div>
-
-      <div class="patients-table">
-        <div class="table-header">
-          <div>Patient</div>
-          <div>Ward / Room</div>
-          <div>Diagnosis</div>
-          <div>Status</div>
-          <div>Action</div>
-        </div>
-
-        <div class="table-row">
-          <div class="patient-info">
-            <div class="patient-avatar">AK</div>
-            <div>
-              <div class="patient-name">Ahmad Al-Khalidi</div>
-              <div class="patient-id">MRN: 2024-0847</div>
-            </div>
-          </div>
-          <div>ICU • Bed 3</div>
-          <div>Acute Ischemic Stroke</div>
-          <div><span class="badge badge-critical">Critical</span></div>
-          <div><button class="action-btn">View Details</button></div>
-        </div>
-
-        <div class="table-row">
-          <div class="patient-info">
-            <div class="patient-avatar">SM</div>
-            <div>
-              <div class="patient-name">Sara Al-Mutairi</div>
-              <div class="patient-id">MRN: 2024-0912</div>
-            </div>
-          </div>
-          <div>Neuro • Room 12</div>
-          <div>Seizure Disorder</div>
-          <div><span class="badge badge-active">Active</span></div>
-          <div><button class="action-btn">View Details</button></div>
-        </div>
-
-        <div class="table-row">
-          <div class="patient-info">
-            <div class="patient-avatar">MR</div>
-            <div>
-              <div class="patient-name">Mohammed Al-Rashid</div>
-              <div class="patient-id">MRN: 2024-0756</div>
-            </div>
-          </div>
-          <div>Ward 3B • Room 8</div>
-          <div>TIA - Under Observation</div>
-          <div><span class="badge badge-stable">Stable</span></div>
-          <div><button class="action-btn">View Details</button></div>
-        </div>
-
-        <div class="table-row">
-          <div class="patient-info">
-            <div class="patient-avatar">FA</div>
-            <div>
-              <div class="patient-name">Fatima Al-Ahmed</div>
-              <div class="patient-id">MRN: 2024-0623</div>
-            </div>
-          </div>
-          <div>Ward 2A • Room 5</div>
-          <div>Parkinson's Disease</div>
-          <div><span class="badge badge-active">Active</span></div>
-          <div><button class="action-btn">View Details</button></div>
-        </div>
-
-        <div class="table-row">
-          <div class="patient-info">
-            <div class="patient-avatar">KH</div>
-            <div>
-              <div class="patient-name">Khalid Al-Hamad</div>
-              <div class="patient-id">MRN: 2024-0589</div>
-            </div>
-          </div>
-          <div>Ward 3B • Room 11</div>
-          <div>Multiple Sclerosis</div>
-          <div><span class="badge badge-stable">Stable</span></div>
-          <div><button class="action-btn">View Details</button></div>
-        </div>
-
-        <div class="table-row">
-          <div class="patient-info">
-            <div class="patient-avatar">NA</div>
-            <div>
-              <div class="patient-name">Noura Al-Sabah</div>
-              <div class="patient-id">MRN: 2024-0478</div>
-            </div>
-          </div>
-          <div>Discharged</div>
-          <div>Migraine with Aura</div>
-          <div><span class="badge badge-discharged">Discharged</span></div>
-          <div><button class="action-btn">View Details</button></div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Stroke Screen -->
-  <main class="screen" id="screen-stroke">
-    <div class="container">
-      <header class="page-header">
-        <h1 class="page-title">Stroke Assessment Tools</h1>
-        <p class="page-subtitle">NIHSS scoring and post-tPA bleeding risk calculators</p>
-      </header>
-
-      <div class="stroke-grid">
-        <!-- NIHSS Calculator -->
-        <div class="calculator-card">
-          <div class="calc-header">
-            <h2 class="calc-title">NIHSS Calculator</h2>
-            <p class="calc-subtitle">National Institutes of Health Stroke Scale</p>
-          </div>
-          <div class="calc-body" id="nihss-body">
-            <!-- 1a. Level of Consciousness -->
-            <div class="calc-item" data-item="1a">
-              <div class="calc-item-header">
-                <span class="calc-item-number">1a</span>
-                <span class="calc-item-name">Level of Consciousness</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_1a" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Alert</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_1a" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Drowsy</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_1a" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Stuporous</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_1a" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">Coma</span></label>
-              </div>
-            </div>
-
-            <!-- 1b. LOC Questions -->
-            <div class="calc-item" data-item="1b">
-              <div class="calc-item-header">
-                <span class="calc-item-number">1b</span>
-                <span class="calc-item-name">LOC Questions (Month, Age)</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_1b" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Both Correct</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_1b" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">One Correct</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_1b" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Neither</span></label>
-              </div>
-            </div>
-
-            <!-- 1c. LOC Commands -->
-            <div class="calc-item" data-item="1c">
-              <div class="calc-item-header">
-                <span class="calc-item-number">1c</span>
-                <span class="calc-item-name">LOC Commands (Open/Close, Grip)</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_1c" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Both Correct</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_1c" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">One Correct</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_1c" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Neither</span></label>
-              </div>
-            </div>
-
-            <!-- 2. Best Gaze -->
-            <div class="calc-item" data-item="2">
-              <div class="calc-item-header">
-                <span class="calc-item-number">2</span>
-                <span class="calc-item-name">Best Gaze</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_2" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Normal</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_2" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Partial Palsy</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_2" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Forced Deviation</span></label>
-              </div>
-            </div>
-
-            <!-- 3. Visual Fields -->
-            <div class="calc-item" data-item="3">
-              <div class="calc-item-header">
-                <span class="calc-item-number">3</span>
-                <span class="calc-item-name">Visual Fields</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_3" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Normal</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_3" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Partial</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_3" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Complete</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_3" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">Bilateral</span></label>
-              </div>
-            </div>
-
-            <!-- 4. Facial Palsy -->
-            <div class="calc-item" data-item="4">
-              <div class="calc-item-header">
-                <span class="calc-item-number">4</span>
-                <span class="calc-item-name">Facial Palsy</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_4" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Normal</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_4" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Minor</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_4" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Partial</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_4" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">Complete</span></label>
-              </div>
-            </div>
-
-            <!-- 5a. Motor Arm Left -->
-            <div class="calc-item" data-item="5a">
-              <div class="calc-item-header">
-                <span class="calc-item-number">5a</span>
-                <span class="calc-item-name">Motor Arm - Left</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_5a" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">No Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5a" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5a" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Some Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5a" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">No Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5a" value="4"><span class="calc-option-score">4</span><span class="calc-option-label">No Movement</span></label>
-              </div>
-            </div>
-
-            <!-- 5b. Motor Arm Right -->
-            <div class="calc-item" data-item="5b">
-              <div class="calc-item-header">
-                <span class="calc-item-number">5b</span>
-                <span class="calc-item-name">Motor Arm - Right</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_5b" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">No Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5b" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5b" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Some Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5b" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">No Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_5b" value="4"><span class="calc-option-score">4</span><span class="calc-option-label">No Movement</span></label>
-              </div>
-            </div>
-
-            <!-- 6a. Motor Leg Left -->
-            <div class="calc-item" data-item="6a">
-              <div class="calc-item-header">
-                <span class="calc-item-number">6a</span>
-                <span class="calc-item-name">Motor Leg - Left</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_6a" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">No Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6a" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6a" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Some Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6a" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">No Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6a" value="4"><span class="calc-option-score">4</span><span class="calc-option-label">No Movement</span></label>
-              </div>
-            </div>
-
-            <!-- 6b. Motor Leg Right -->
-            <div class="calc-item" data-item="6b">
-              <div class="calc-item-header">
-                <span class="calc-item-number">6b</span>
-                <span class="calc-item-name">Motor Leg - Right</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_6b" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">No Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6b" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Drift</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6b" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Some Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6b" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">No Effort</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_6b" value="4"><span class="calc-option-score">4</span><span class="calc-option-label">No Movement</span></label>
-              </div>
-            </div>
-
-            <!-- 7. Limb Ataxia -->
-            <div class="calc-item" data-item="7">
-              <div class="calc-item-header">
-                <span class="calc-item-number">7</span>
-                <span class="calc-item-name">Limb Ataxia</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_7" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Absent</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_7" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">One Limb</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_7" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Two Limbs</span></label>
-              </div>
-            </div>
-
-            <!-- 8. Sensory -->
-            <div class="calc-item" data-item="8">
-              <div class="calc-item-header">
-                <span class="calc-item-number">8</span>
-                <span class="calc-item-name">Sensory</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_8" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Normal</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_8" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Mild Loss</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_8" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Severe Loss</span></label>
-              </div>
-            </div>
-
-            <!-- 9. Best Language -->
-            <div class="calc-item" data-item="9">
-              <div class="calc-item-header">
-                <span class="calc-item-number">9</span>
-                <span class="calc-item-name">Best Language</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_9" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Normal</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_9" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Mild Aphasia</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_9" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Severe Aphasia</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_9" value="3"><span class="calc-option-score">3</span><span class="calc-option-label">Mute/Global</span></label>
-              </div>
-            </div>
-
-            <!-- 10. Dysarthria -->
-            <div class="calc-item" data-item="10">
-              <div class="calc-item-header">
-                <span class="calc-item-number">10</span>
-                <span class="calc-item-name">Dysarthria</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_10" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Normal</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_10" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Mild Slur</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_10" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Unintelligible</span></label>
-              </div>
-            </div>
-
-            <!-- 11. Extinction -->
-            <div class="calc-item" data-item="11">
-              <div class="calc-item-header">
-                <span class="calc-item-number">11</span>
-                <span class="calc-item-name">Extinction/Inattention</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="nihss_11" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">Normal</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_11" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">One Modality</span></label>
-                <label class="calc-option"><input type="radio" name="nihss_11" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Profound</span></label>
-              </div>
-            </div>
-          </div>
-          <div class="calc-result">
-            <div class="result-row">
-              <span class="result-label">Total NIHSS Score</span>
-              <span class="result-value" id="nihss-total">0<span style="font-size: 1rem; opacity: 0.5"> / 42</span></span>
-            </div>
-            <div class="result-interpretation" id="nihss-interpretation">
-              <div class="severity-badge" style="background: rgba(16,185,129,0.15); color: #10b981;">No Stroke Symptoms</div>
-              <p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">Select items above to calculate score</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- SEDAN Score -->
-        <div class="calculator-card">
-          <div class="calc-header">
-            <h2 class="calc-title">SEDAN Score</h2>
-            <p class="calc-subtitle">Post-tPA Symptomatic ICH Risk</p>
-          </div>
-          <div class="calc-body" id="sedan-body">
-            <!-- Blood Glucose -->
-            <div class="calc-item">
-              <div class="calc-item-header">
-                <span class="calc-item-number">S</span>
-                <span class="calc-item-name">Blood Glucose</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="sedan_glucose" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">&lt;145 mg/dL</span></label>
-                <label class="calc-option"><input type="radio" name="sedan_glucose" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">145-216</span></label>
-                <label class="calc-option"><input type="radio" name="sedan_glucose" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">&gt;216 mg/dL</span></label>
-              </div>
-            </div>
-
-            <!-- Early Infarct Signs -->
-            <div class="calc-item">
-              <div class="calc-item-header">
-                <span class="calc-item-number">E</span>
-                <span class="calc-item-name">Early Infarct Signs on CT</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="sedan_early" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">No</span></label>
-                <label class="calc-option"><input type="radio" name="sedan_early" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">Yes</span></label>
-              </div>
-            </div>
-
-            <!-- Dense Artery -->
-            <div class="calc-item">
-              <div class="calc-item-header">
-                <span class="calc-item-number">D</span>
-                <span class="calc-item-name">Hyperdense Artery Sign</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="sedan_dense" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">No</span></label>
-                <label class="calc-option"><input type="radio" name="sedan_dense" value="2"><span class="calc-option-score">2</span><span class="calc-option-label">Yes</span></label>
-              </div>
-            </div>
-
-            <!-- Age -->
-            <div class="calc-item">
-              <div class="calc-item-header">
-                <span class="calc-item-number">A</span>
-                <span class="calc-item-name">Age</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="sedan_age" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">&lt;75 years</span></label>
-                <label class="calc-option"><input type="radio" name="sedan_age" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">≥75 years</span></label>
-              </div>
-            </div>
-
-            <!-- NIHSS -->
-            <div class="calc-item">
-              <div class="calc-item-header">
-                <span class="calc-item-number">N</span>
-                <span class="calc-item-name">NIHSS Score</span>
-              </div>
-              <div class="calc-options">
-                <label class="calc-option"><input type="radio" name="sedan_nihss" value="0"><span class="calc-option-score">0</span><span class="calc-option-label">0-9</span></label>
-                <label class="calc-option"><input type="radio" name="sedan_nihss" value="1"><span class="calc-option-score">1</span><span class="calc-option-label">≥10</span></label>
-              </div>
-            </div>
-          </div>
-          <div class="calc-result">
-            <div class="result-row">
-              <span class="result-label">SEDAN Score</span>
-              <span class="result-value" id="sedan-total">0<span style="font-size: 1rem; opacity: 0.5"> / 6</span></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">sICH Risk</span>
-              <span class="result-value" id="sedan-risk" style="font-size: 1.5rem;">1.4%</span>
-            </div>
-            <div class="result-interpretation" id="sedan-interpretation">
-              <div class="severity-badge" style="background: rgba(16,185,129,0.15); color: #10b981;">Very Low Risk</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Reference -->
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 16v-4"/>
-              <path d="M12 8h.01"/>
-            </svg>
-            Quick Reference
-          </h2>
-        </div>
-        <div class="card-body">
-          <div class="reference-grid">
-            <div class="reference-card">
-              <h4>tPA Window</h4>
-              <p><strong>IV tPA:</strong> Within 4.5 hours of onset</p>
-              <p><strong>Thrombectomy:</strong> Up to 24h (DAWN/DEFUSE-3)</p>
-            </div>
-            <div class="reference-card">
-              <h4>tPA Dosing</h4>
-              <p><strong>Dose:</strong> 0.9 mg/kg (max 90 mg)</p>
-              <p><strong>Admin:</strong> 10% bolus, 90% over 60 min</p>
-            </div>
-            <div class="reference-card">
-              <h4>BP Targets</h4>
-              <p><strong>Pre-tPA:</strong> &lt;185/110 mmHg</p>
-              <p><strong>Post-tPA:</strong> &lt;180/105 mmHg</p>
-            </div>
-            <div class="reference-card">
-              <h4>Contraindications</h4>
-              <ul>
-                <li>Recent surgery/trauma (14d)</li>
-                <li>Platelets &lt;100,000</li>
-                <li>INR &gt;1.7</li>
-                <li>Prior ICH</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Toast -->
-  <div class="toast" id="toast">Welcome to MedWard!</div>
-
-  <!-- JavaScript -->
   <script>
-    (function() {
-      'use strict';
-      
-      // =============== STATE ===============
-      var state = {
-        user: null,
-        currentScreen: 'login',
-        nihssScores: {},
-        sedanScores: {}
-      };
+(function(){
+  var API='https://script.google.com/macros/s/AKfycbx-l2xdsAHTZu7bcueN83Yz8xbCwtKbHfUSJuhIgtWVR5XyeJYh9TrfMgzznTYX4Z0kww/exec';
+  var state={user:null,patients:[],nihss:{},sedan:{}};
+  var $=function(id){return document.getElementById(id)};
+  
+  var NIHSS=[
+    {id:'1a',name:'Level of Consciousness',opts:[{s:0,l:'Alert'},{s:1,l:'Drowsy'},{s:2,l:'Stuporous'},{s:3,l:'Coma'}]},
+    {id:'1b',name:'LOC Questions',opts:[{s:0,l:'Both Correct'},{s:1,l:'One Correct'},{s:2,l:'Neither'}]},
+    {id:'1c',name:'LOC Commands',opts:[{s:0,l:'Both Correct'},{s:1,l:'One Correct'},{s:2,l:'Neither'}]},
+    {id:'2',name:'Best Gaze',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Forced'}]},
+    {id:'3',name:'Visual Fields',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Complete'},{s:3,l:'Bilateral'}]},
+    {id:'4',name:'Facial Palsy',opts:[{s:0,l:'Normal'},{s:1,l:'Minor'},{s:2,l:'Partial'},{s:3,l:'Complete'}]},
+    {id:'5a',name:'Motor Arm L',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
+    {id:'5b',name:'Motor Arm R',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
+    {id:'6a',name:'Motor Leg L',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
+    {id:'6b',name:'Motor Leg R',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
+    {id:'7',name:'Limb Ataxia',opts:[{s:0,l:'Absent'},{s:1,l:'One'},{s:2,l:'Two'}]},
+    {id:'8',name:'Sensory',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
+    {id:'9',name:'Language',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'},{s:3,l:'Mute'}]},
+    {id:'10',name:'Dysarthria',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
+    {id:'11',name:'Extinction',opts:[{s:0,l:'Normal'},{s:1,l:'One'},{s:2,l:'Profound'}]}
+  ];
+  
+  var SEDAN=[
+    {id:'s',name:'Blood Glucose',letter:'S',opts:[{s:0,l:'<145'},{s:1,l:'145-216'},{s:2,l:'>216'}]},
+    {id:'e',name:'Early Infarct on CT',letter:'E',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+    {id:'d',name:'Hyperdense Artery',letter:'D',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},
+    {id:'a',name:'Age',letter:'A',opts:[{s:0,l:'<75'},{s:1,l:'≥75'}]},
+    {id:'n',name:'NIHSS',letter:'N',opts:[{s:0,l:'0-9'},{s:1,l:'≥10'}]}
+  ];
 
-      // =============== DOM ELEMENTS ===============
-      var $ = function(id) { return document.getElementById(id); };
-      
-      // =============== UTILITIES ===============
-      function showToast(message) {
-        var toast = $('toast');
-        toast.textContent = message;
-        toast.classList.add('show');
-        setTimeout(function() {
-          toast.classList.remove('show');
-        }, 3000);
-      }
+  function showToast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
+  function getInitials(n){if(!n)return'?';var p=n.trim().split(/\s+/);return p.length>=2?(p[0][0]+p[p.length-1][0]).toUpperCase():n.substring(0,2).toUpperCase()}
+  function showScreen(n){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});var t=$('screen-'+n);if(t)t.classList.add('active')}
 
-      // =============== NAVIGATION ===============
-      function showScreen(screenName) {
-        // Hide all screens
-        var screens = document.querySelectorAll('.screen');
-        for (var i = 0; i < screens.length; i++) {
-          screens[i].classList.remove('active');
-        }
-        
-        // Show target screen
-        var target = $('screen-' + screenName);
-        if (target) {
-          target.classList.add('active');
-          state.currentScreen = screenName;
-        }
-        
-        // Update nav
-        var navItems = document.querySelectorAll('.nav-item');
-        for (var j = 0; j < navItems.length; j++) {
-          navItems[j].classList.remove('active');
-          if (navItems[j].getAttribute('data-screen') === screenName) {
-            navItems[j].classList.add('active');
-          }
-        }
-      }
+  function login(){
+    var input=$('input-name'),name=input?input.value.trim():'';
+    if(!name){alert('Please enter your name');if(input)input.focus();return}
+    state.user={name:name,initial:name.charAt(0).toUpperCase()};
+    try{localStorage.setItem('medward_user',JSON.stringify(state.user))}catch(e){}
+    $('display-name').textContent=state.user.name;
+    $('display-initial').textContent=state.user.initial;
+    $('greeting-name').textContent='Dr. '+state.user.name;
+    $('user-section').classList.add('visible');
+    showScreen('dashboard');
+    showToast('Welcome, Dr. '+name+'!');
+    loadPatients();
+  }
 
-      // =============== LOGIN ===============
-      function login() {
-        var nameInput = $('input-name');
-        var name = nameInput ? nameInput.value.trim() : '';
-        
-        if (!name) {
-          alert('Please enter your name');
-          if (nameInput) nameInput.focus();
-          return;
-        }
-        
-        state.user = {
-          name: name,
-          initial: name.charAt(0).toUpperCase()
-        };
-        
-        // Save to localStorage
-        try {
-          localStorage.setItem('medward_user', JSON.stringify(state.user));
-        } catch (e) {}
-        
-        // Update UI
-        updateUserDisplay();
-        showScreen('dashboard');
-        showToast('Welcome, Dr. ' + name + '!');
-      }
+  function checkSession(){
+    try{
+      var s=localStorage.getItem('medward_user');
+      if(s){state.user=JSON.parse(s);$('display-name').textContent=state.user.name;$('display-initial').textContent=state.user.initial;$('greeting-name').textContent='Dr. '+state.user.name;$('user-section').classList.add('visible');showScreen('dashboard');loadPatients()}
+    }catch(e){}
+  }
 
-      function logout() {
-        state.user = null;
-        try {
-          localStorage.removeItem('medward_user');
-        } catch (e) {}
-        
-        $('user-section').classList.remove('visible');
-        $('input-name').value = '';
-        showScreen('login');
-      }
+  function loadPatients(){
+    var c=$('patients-container');
+    c.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
+    fetch(API+'?action=list').then(function(r){return r.json()}).then(function(d){
+      if(d.success&&d.patients){state.patients=d.patients;renderPatients()}
+      else{c.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>No patients found</p></div>'}
+    }).catch(function(){c.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>Failed to load</p></div>'});
+  }
 
-      function updateUserDisplay() {
-        if (!state.user) return;
-        
-        $('display-name').textContent = state.user.name;
-        $('display-initial').textContent = state.user.initial;
-        $('greeting-name').textContent = 'Dr. ' + state.user.name;
-        $('user-section').classList.add('visible');
-      }
+  function renderPatients(){
+    var c=$('patients-container');
+    if(!state.patients||!state.patients.length){c.innerHTML='<div class="empty-state"><p>No patients</p></div>';updateStats();return}
+    var h='<table class="patients-table"><thead><tr><th>Patient</th><th>Ward</th><th>Diagnosis</th><th>Status</th></tr></thead><tbody>';
+    state.patients.forEach(function(p){
+      var i=getInitials(p.name),sc='badge-active',st=p.status||'Active';
+      if(st.toLowerCase()==='critical')sc='badge-critical';
+      else if(st.toLowerCase()==='stable')sc='badge-stable';
+      else if(st.toLowerCase()==='chronic')sc='badge-chronic';
+      h+='<tr><td><div class="patient-cell"><div class="patient-avatar">'+i+'</div><div><div class="patient-name">'+(p.name||'Unknown')+'</div><div class="patient-id">MRN: '+(p.mrn||p.id||'-')+'</div></div></div></td>';
+      h+='<td>'+(p.ward||'-')+(p.room?' • '+p.room:'')+'</td><td>'+(p.diagnosis||'-')+'</td><td><span class="badge '+sc+'">'+st+'</span></td></tr>';
+    });
+    h+='</tbody></table>';c.innerHTML=h;updateStats();
+  }
 
-      function checkSession() {
-        try {
-          var saved = localStorage.getItem('medward_user');
-          if (saved) {
-            state.user = JSON.parse(saved);
-            updateUserDisplay();
-            showScreen('dashboard');
-          }
-        } catch (e) {}
-      }
+  function updateStats(){
+    var t=state.patients.length,a=0,cr=0;
+    state.patients.forEach(function(p){var s=(p.status||'').toLowerCase();if(s==='active')a++;else if(s==='critical')cr++});
+    $('stat-total').textContent=t;$('stat-active').textContent=a;$('stat-critical').textContent=cr;
+  }
 
-      // =============== NIHSS CALCULATOR ===============
-      function updateNIHSS() {
-        var total = 0;
-        var items = ['1a', '1b', '1c', '2', '3', '4', '5a', '5b', '6a', '6b', '7', '8', '9', '10', '11'];
-        
-        for (var i = 0; i < items.length; i++) {
-          var radios = document.querySelectorAll('input[name="nihss_' + items[i] + '"]');
-          for (var j = 0; j < radios.length; j++) {
-            if (radios[j].checked) {
-              total += parseInt(radios[j].value) || 0;
-              break;
-            }
-          }
-        }
-        
-        $('nihss-total').innerHTML = total + '<span style="font-size: 1rem; opacity: 0.5"> / 42</span>';
-        
-        // Interpretation
-        var severity, color;
-        if (total === 0) {
-          severity = 'No Stroke Symptoms';
-          color = '#10b981';
-        } else if (total <= 4) {
-          severity = 'Minor Stroke';
-          color = '#6ee7b7';
-        } else if (total <= 15) {
-          severity = 'Moderate Stroke';
-          color = '#fbbf24';
-        } else if (total <= 20) {
-          severity = 'Moderate-Severe Stroke';
-          color = '#f97316';
-        } else {
-          severity = 'Severe Stroke';
-          color = '#ef4444';
-        }
-        
-        $('nihss-interpretation').innerHTML = 
-          '<div class="severity-badge" style="background: ' + color + '20; color: ' + color + '">' + severity + '</div>' +
-          '<p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">Total score: ' + total + ' points</p>';
-      }
+  function setupTabs(){
+    document.querySelectorAll('.tab').forEach(function(tab){
+      tab.addEventListener('click',function(){
+        var id=this.getAttribute('data-tab');
+        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+        this.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active')});
+        var target=$('tab-'+id);if(target)target.classList.add('active');
+      });
+    });
+  }
 
-      // =============== SEDAN CALCULATOR ===============
-      function updateSEDAN() {
-        var total = 0;
-        var items = ['glucose', 'early', 'dense', 'age', 'nihss'];
-        
-        for (var i = 0; i < items.length; i++) {
-          var radios = document.querySelectorAll('input[name="sedan_' + items[i] + '"]');
-          for (var j = 0; j < radios.length; j++) {
-            if (radios[j].checked) {
-              total += parseInt(radios[j].value) || 0;
-              break;
-            }
-          }
-        }
-        
-        $('sedan-total').innerHTML = total + '<span style="font-size: 1rem; opacity: 0.5"> / 6</span>';
-        
-        // Risk lookup
-        var risks = ['1.4%', '2.9%', '5.0%', '8.5%', '12.2%', '16.9%', '21.5%'];
-        var levels = ['Very Low', 'Low', 'Low-Moderate', 'Moderate', 'Moderate-High', 'High', 'Very High'];
-        var colors = ['#10b981', '#6ee7b7', '#84cc16', '#fbbf24', '#f97316', '#ef4444', '#dc2626'];
-        
-        var idx = Math.min(total, 6);
-        $('sedan-risk').textContent = risks[idx];
-        $('sedan-risk').style.color = colors[idx];
-        
-        $('sedan-interpretation').innerHTML = 
-          '<div class="severity-badge" style="background: ' + colors[idx] + '20; color: ' + colors[idx] + '">' + levels[idx] + ' Risk</div>';
-      }
+  function renderNIHSS(){
+    var c=$('nihss-calculator'),h='';
+    NIHSS.forEach(function(item){
+      h+='<div class="calc-item"><div class="calc-item-header"><span class="calc-item-num">'+item.id+'</span><span class="calc-item-name">'+item.name+'</span></div><div class="calc-options">';
+      item.opts.forEach(function(o){h+='<label class="calc-option" data-item="'+item.id+'" data-score="'+o.s+'"><input type="radio" name="n_'+item.id+'" value="'+o.s+'"><span class="calc-option-score">'+o.s+'</span><span class="calc-option-label">'+o.l+'</span></label>'});
+      h+='</div></div>';
+    });
+    h+='<div class="calc-result"><div class="calc-result-label">Total NIHSS</div><div><span class="calc-result-value" id="nihss-total">0</span><span class="calc-result-max"> / 42</span></div><div id="nihss-interp" style="margin-top:16px"><span class="severity-badge" style="background:rgba(16,185,129,0.15);color:#10b981">No Symptoms</span></div></div>';
+    c.innerHTML=h;
+    c.querySelectorAll('.calc-option').forEach(function(opt){
+      opt.addEventListener('click',function(){
+        var id=this.getAttribute('data-item'),s=parseInt(this.getAttribute('data-score'));
+        this.parentElement.querySelectorAll('.calc-option').forEach(function(o){o.classList.remove('selected')});
+        this.classList.add('selected');this.querySelector('input').checked=true;
+        state.nihss[id]=s;updateNIHSS();
+      });
+    });
+  }
 
-      // =============== EVENT LISTENERS ===============
-      function setupEventListeners() {
-        // Login button - Multiple event types for maximum compatibility
-        var loginBtn = $('btn-login');
-        if (loginBtn) {
-          // Click event
-          loginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            login();
-          });
-          
-          // Touch event for mobile
-          loginBtn.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            login();
-          });
-        }
-        
-        // Enter key on input
-        var nameInput = $('input-name');
-        if (nameInput) {
-          nameInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.keyCode === 13) {
-              e.preventDefault();
-              login();
-            }
-          });
-        }
-        
-        // Navigation
-        var navItems = document.querySelectorAll('.nav-item');
-        for (var i = 0; i < navItems.length; i++) {
-          navItems[i].addEventListener('click', function() {
-            var screen = this.getAttribute('data-screen');
-            if (!state.user && screen !== 'login') {
-              showToast('Please login first');
-              return;
-            }
-            showScreen(screen);
-          });
-        }
-        
-        // NIHSS options
-        var nihssInputs = document.querySelectorAll('[name^="nihss_"]');
-        for (var j = 0; j < nihssInputs.length; j++) {
-          nihssInputs[j].addEventListener('change', function() {
-            // Update selected state
-            var options = this.closest('.calc-options').querySelectorAll('.calc-option');
-            for (var k = 0; k < options.length; k++) {
-              options[k].classList.remove('selected');
-            }
-            this.closest('.calc-option').classList.add('selected');
-            
-            updateNIHSS();
-          });
-        }
-        
-        // SEDAN options
-        var sedanInputs = document.querySelectorAll('[name^="sedan_"]');
-        for (var l = 0; l < sedanInputs.length; l++) {
-          sedanInputs[l].addEventListener('change', function() {
-            // Update selected state
-            var options = this.closest('.calc-options').querySelectorAll('.calc-option');
-            for (var m = 0; m < options.length; m++) {
-              options[m].classList.remove('selected');
-            }
-            this.closest('.calc-option').classList.add('selected');
-            
-            updateSEDAN();
-          });
-        }
-      }
+  function updateNIHSS(){
+    var t=0;for(var k in state.nihss)t+=state.nihss[k];
+    $('nihss-total').textContent=t;
+    var sev,col;
+    if(t===0){sev='No Symptoms';col='#10b981'}
+    else if(t<=4){sev='Minor';col='#6ee7b7'}
+    else if(t<=15){sev='Moderate';col='#fbbf24'}
+    else if(t<=20){sev='Mod-Severe';col='#f97316'}
+    else{sev='Severe';col='#ef4444'}
+    $('nihss-interp').innerHTML='<span class="severity-badge" style="background:'+col+'20;color:'+col+'">'+sev+'</span>';
+  }
 
-      // =============== INIT ===============
-      function init() {
-        setupEventListeners();
-        checkSession();
-      }
+  function renderSEDAN(){
+    var c=$('sedan-calculator'),h='';
+    SEDAN.forEach(function(item){
+      h+='<div class="calc-item"><div class="calc-item-header"><span class="calc-item-num">'+item.letter+'</span><span class="calc-item-name">'+item.name+'</span></div><div class="calc-options">';
+      item.opts.forEach(function(o){h+='<label class="calc-option" data-item="'+item.id+'" data-score="'+o.s+'"><input type="radio" name="s_'+item.id+'" value="'+o.s+'"><span class="calc-option-score">+'+o.s+'</span><span class="calc-option-label">'+o.l+'</span></label>'});
+      h+='</div></div>';
+    });
+    h+='<div class="calc-result"><div class="calc-result-label">SEDAN Score</div><div><span class="calc-result-value" id="sedan-total">0</span><span class="calc-result-max"> / 6</span></div><div style="margin-top:12px"><span style="color:var(--muted)">sICH Risk: </span><span id="sedan-risk" style="font-size:1.5rem;font-weight:700;color:#10b981">1.4%</span></div><div id="sedan-interp" style="margin-top:16px"><span class="severity-badge" style="background:rgba(16,185,129,0.15);color:#10b981">Very Low</span></div></div>';
+    c.innerHTML=h;
+    c.querySelectorAll('.calc-option').forEach(function(opt){
+      opt.addEventListener('click',function(){
+        var id=this.getAttribute('data-item'),s=parseInt(this.getAttribute('data-score'));
+        this.parentElement.querySelectorAll('.calc-option').forEach(function(o){o.classList.remove('selected')});
+        this.classList.add('selected');this.querySelector('input').checked=true;
+        state.sedan[id]=s;updateSEDAN();
+      });
+    });
+  }
 
-      // Run on DOM ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
-    })();
+  function updateSEDAN(){
+    var t=0;for(var k in state.sedan)t+=state.sedan[k];
+    $('sedan-total').textContent=t;
+    var risks=['1.4%','2.9%','5.0%','8.5%','12.2%','16.9%','21.5%'];
+    var levels=['Very Low','Low','Low-Mod','Moderate','Mod-High','High','Very High'];
+    var colors=['#10b981','#6ee7b7','#84cc16','#fbbf24','#f97316','#ef4444','#dc2626'];
+    var i=Math.min(t,6);
+    $('sedan-risk').textContent=risks[i];$('sedan-risk').style.color=colors[i];
+    $('sedan-interp').innerHTML='<span class="severity-badge" style="background:'+colors[i]+'20;color:'+colors[i]+'">'+levels[i]+' Risk</span>';
+  }
+
+  function init(){
+    var btn=$('btn-login');
+    if(btn){btn.addEventListener('click',function(e){e.preventDefault();login()});btn.addEventListener('touchend',function(e){e.preventDefault();login()})}
+    var inp=$('input-name');if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();login()}});
+    var ref=$('btn-refresh');if(ref)ref.addEventListener('click',loadPatients);
+    var rn=$('btn-reset-nihss');if(rn)rn.addEventListener('click',function(){state.nihss={};renderNIHSS()});
+    var rs=$('btn-reset-sedan');if(rs)rs.addEventListener('click',function(){state.sedan={};renderSEDAN()});
+    setupTabs();renderNIHSS();renderSEDAN();checkSession();
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
   </script>
 </body>
 </html>
