@@ -690,6 +690,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
   function loadState() {
     // Always start with defaults
     state.units = DEFAULT_UNITS.slice();
+    state.settings = { 
+      adminPassword: CONFIG.DEFAULT_ADMIN_PWD, 
+      claudeApiUrl: CONFIG.DEFAULT_API 
+    };
     
     try {
       var saved = localStorage.getItem(CONFIG.STORAGE_KEY);
@@ -699,17 +703,20 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
           state.units = data.units;
         }
         if (data.settings) {
-          state.settings = {
-            adminPassword: data.settings.adminPassword || CONFIG.DEFAULT_ADMIN_PWD,
-            claudeApiUrl: data.settings.claudeApiUrl || CONFIG.DEFAULT_API
-          };
+          if (data.settings.adminPassword) {
+            state.settings.adminPassword = data.settings.adminPassword;
+          }
+          if (data.settings.claudeApiUrl) {
+            state.settings.claudeApiUrl = data.settings.claudeApiUrl;
+          }
         }
       }
     } catch(e) {
       console.warn('Load failed, using defaults:', e);
-      state.units = DEFAULT_UNITS.slice();
     }
+    
     console.log('[MedWard] Loaded ' + state.units.length + ' units');
+    console.log('[MedWard] Admin password set:', state.settings.adminPassword ? 'yes' : 'no');
   }
 
   // RENDER UNITS - Called on page load
@@ -860,7 +867,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
   }
 
   function loginAdmin() {
-    if ($('adminPassword').value === state.settings.adminPassword) {
+    var enteredPwd = $('adminPassword').value;
+    var correctPwd = state.settings.adminPassword || CONFIG.DEFAULT_ADMIN_PWD;
+    
+    console.log('[MedWard] Login attempt - entered:', enteredPwd, 'expected:', correctPwd);
+    
+    if (enteredPwd === correctPwd) {
       closeModal('adminLoginModal');
       showAdminPanel();
     } else {
