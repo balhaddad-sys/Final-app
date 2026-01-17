@@ -348,7 +348,8 @@
             </svg>
           </div>
           <h2>AI Medical Analysis</h2>
-          <p>Upload medical images, lab results, or clinical documents for instant AI-powered analysis using Claude</p>
+          <p>Upload medical images, lab results, or clinical documents for instant AI-powered analysis</p>
+          <div id="neuralStats" style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:0.8rem;color:var(--text-secondary)"></div>
         </div>
 
         <!-- Upload Section -->
@@ -807,11 +808,14 @@
   function runAnalysis() {
     if (!state.uploadedFile) { toast('Upload a file first', true); return; }
 
+    var startTime = performance.now();
+    
+    // Show progress
     $('uploadSection').style.display = 'none';
     $('analysisProgress').classList.add('show');
     $('analysisResults').classList.remove('show');
 
-    var steps = ['Processing file...', 'Sending to Claude AI...', 'Generating medical report...'];
+    var steps = ['Initializing Neural Engine...', 'Processing with Claude Vision AI...', 'Extracting medical data...', 'Generating clinical insights...'];
     var stepIdx = 0;
     var stepInterval = setInterval(function() {
       stepIdx++;
@@ -819,28 +823,53 @@
         $('progressStatus').textContent = steps[stepIdx];
         document.querySelectorAll('.progress-step').forEach(function(s, i) { s.classList.toggle('active', i <= stepIdx); });
       }
-    }, 2500);
+    }, 1500);
 
+    // First check Neural Engine cache
+    var cachedResult = null;
+    if (window.NeuralEngine && state.uploadedBase64) {
+      var textContent = state.uploadedBase64.startsWith('data:') ? '' : state.uploadedBase64;
+      if (textContent) {
+        var neuralQuery = window.NeuralEngine.query(textContent, state.analysisType);
+        if (neuralQuery.match && neuralQuery.confidence >= 0.82) {
+          clearInterval(stepInterval);
+          $('analysisProgress').classList.remove('show');
+          showResults(neuralQuery.result, {
+            source: 'neural_cache',
+            confidence: neuralQuery.confidence,
+            queryTime: neuralQuery.queryTime
+          });
+          toast('⚡ Instant result from Neural Engine!');
+          updateNeuralStats();
+          return;
+        }
+      }
+    }
+
+    // Build payload for Claude API
     var payload = {
-      action: 'analyzeImage',
-      imageType: state.analysisType,
-      context: $('clinicalContext').value.trim(),
-      filename: state.uploadedFile.name,
-      mimeType: state.uploadedFile.type
+      action: 'interpret',
+      documentType: state.analysisType === 'auto' ? 'general' : state.analysisType,
+      username: state.user ? state.user.name : 'Anonymous',
+      provider: 'claude'
     };
 
     // Add image or text data
     if (state.uploadedBase64) {
       if (state.uploadedBase64.startsWith('data:')) {
-        payload.imageData = state.uploadedBase64.split(',')[1];
-        payload.base64Full = state.uploadedBase64;
+        payload.image = state.uploadedBase64;
       } else {
-        payload.textContent = state.uploadedBase64;
-        payload.content = state.uploadedBase64;
+        payload.text = state.uploadedBase64;
       }
     }
 
-    console.log('Sending analysis request:', { ...payload, imageData: payload.imageData ? '[BASE64]' : undefined });
+    // Add clinical context if provided
+    var context = $('clinicalContext').value.trim();
+    if (context) {
+      payload.clinicalContext = context;
+    }
+
+    console.log('Sending to Claude API:', { action: payload.action, type: payload.documentType, hasImage: !!payload.image });
 
     fetch(API.CLAUDE, {
       method: 'POST',
@@ -854,25 +883,42 @@
     .then(function(d) {
       clearInterval(stepInterval);
       $('analysisProgress').classList.remove('show');
+      
+      var totalTime = performance.now() - startTime;
       console.log('Analysis response:', d);
       
-      if (d.success && (d.analysis || d.result || d.response)) {
-        var analysis = d.analysis || d.result || d.response;
-        // Handle if analysis is a string
-        if (typeof analysis === 'string') {
-          analysis = { summary: analysis, interpretation: analysis };
+      if (d.success) {
+        // Structure the result
+        var analysis = {
+          summary: d.interpretation ? d.interpretation.summary : (d.extractedText || 'Analysis complete'),
+          findings: d.interpretation ? d.interpretation.keyFindings : [],
+          abnormalities: d.interpretation ? d.interpretation.abnormalities : [],
+          normalFindings: d.interpretation ? d.interpretation.normalFindings : [],
+          interpretation: d.extractedText || '',
+          recommendations: d.presentation ? d.presentation.recommendations : [],
+          clinicalPearls: d.clinicalPearls || [],
+          patientFriendly: d.presentation ? d.presentation.patientFriendly : '',
+          potentialQuestions: d.potentialQuestions || []
+        };
+        
+        // Learn this pattern for future use
+        if (window.NeuralEngine && d.extractedText) {
+          var learned = window.NeuralEngine.learn(d.extractedText, state.analysisType, analysis);
+          if (learned) console.log('[Neural] Learned new pattern');
         }
-        showResults(analysis);
+        
+        showResults(analysis, {
+          source: 'claude_api',
+          provider: d.provider || 'claude',
+          totalTime: totalTime
+        });
+        
         saveToHistory(analysis);
-        toast('Analysis complete!');
-      } else if (d.error) {
-        toast('Error: ' + d.error, true);
-        $('uploadSection').style.display = 'block';
+        updateNeuralStats();
+        toast('✓ Analysis complete!');
       } else {
-        // Try to use any text in response
-        var text = d.text || d.message || d.output || JSON.stringify(d);
-        showResults({ summary: text });
-        toast('Analysis received');
+        toast('Error: ' + (d.error || 'Analysis failed'), true);
+        $('uploadSection').style.display = 'block';
       }
     })
     .catch(function(e) {
@@ -884,64 +930,95 @@
     });
   }
 
-  function showResults(analysis) {
+  function updateNeuralStats() {
+    if (!window.NeuralEngine) return;
+    var stats = window.NeuralEngine.getStats();
+    var statsEl = $('neuralStats');
+    if (statsEl) {
+      statsEl.innerHTML = '<span>🧠 ' + stats.patterns + ' patterns</span><span>⚡ ' + stats.hitRate + ' cache</span>';
+    }
+  }
+
+  function showResults(analysis, meta) {
     $('analysisResults').classList.add('show');
+    meta = meta || {};
+    
     var h = '';
+    
+    // Source badge
+    var badgeText = meta.source === 'neural_cache' 
+      ? '⚡ Neural Cache (' + (meta.confidence * 100).toFixed(0) + '% match)'
+      : '🤖 Claude AI';
+    var badgeTime = meta.queryTime 
+      ? (meta.queryTime).toFixed(0) + 'ms'
+      : meta.totalTime 
+        ? (meta.totalTime / 1000).toFixed(1) + 's'
+        : '';
+    
+    $('resultBadge').innerHTML = badgeText + (badgeTime ? ' • ' + badgeTime : '');
 
-    // Handle string response
-    if (typeof analysis === 'string') {
-      analysis = { summary: analysis };
+    // Summary
+    if (analysis.summary) {
+      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Summary</div><div class="result-content">' + formatText(analysis.summary) + '</div></div>';
     }
 
-    // Summary section
-    if (analysis.summary || analysis.overview || analysis.description) {
-      var summary = analysis.summary || analysis.overview || analysis.description;
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Summary</div><div class="result-content">' + formatText(summary) + '</div></div>';
-    }
-
-    // Findings section
-    if (analysis.findings && analysis.findings.length) {
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Key Findings</div><div class="result-content">';
-      analysis.findings.forEach(function(f) {
-        if (typeof f === 'string') {
-          h += '<div class="finding-card"><div class="finding-title">' + f + '</div></div>';
-        } else {
-          var cls = f.severity === 'critical' || f.critical ? 'critical' : f.severity === 'normal' || f.normal ? 'normal' : '';
-          h += '<div class="finding-card ' + cls + '"><div class="finding-title">' + (f.title || f.name || f.finding || JSON.stringify(f)) + '</div>' + (f.detail || f.description || f.value ? '<div class="finding-value">' + (f.detail || f.description || f.value) + '</div>' : '') + '</div>';
-        }
+    // Abnormalities (Critical)
+    if (analysis.abnormalities && analysis.abnormalities.length) {
+      h += '<div class="result-section" style="border-left:3px solid var(--rose)"><div class="result-section-title" style="color:var(--rose)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Abnormal Findings</div><div class="result-content">';
+      analysis.abnormalities.forEach(function(a) {
+        h += '<div class="finding-card critical"><div class="finding-title">' + (typeof a === 'string' ? a : a.title || a.finding || JSON.stringify(a)) + '</div></div>';
       });
       h += '</div></div>';
     }
 
-    // Interpretation section
-    if (analysis.interpretation || analysis.impression || analysis.assessment) {
-      var interp = analysis.interpretation || analysis.impression || analysis.assessment;
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Interpretation</div><div class="result-content">' + formatText(interp) + '</div></div>';
+    // Key Findings
+    if (analysis.findings && analysis.findings.length) {
+      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Key Findings</div><div class="result-content">';
+      analysis.findings.forEach(function(f) {
+        h += '<div class="finding-card"><div class="finding-title">' + (typeof f === 'string' ? f : f.title || JSON.stringify(f)) + '</div></div>';
+      });
+      h += '</div></div>';
     }
 
-    // Recommendations section
-    var recs = analysis.recommendations || analysis.suggestions || analysis.nextSteps;
-    if (recs && recs.length) {
+    // Normal Findings
+    if (analysis.normalFindings && analysis.normalFindings.length) {
+      h += '<div class="result-section" style="border-left:3px solid var(--emerald)"><div class="result-section-title" style="color:var(--emerald)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Normal Findings</div><div class="result-content"><ul>';
+      analysis.normalFindings.forEach(function(n) { h += '<li>' + n + '</li>'; });
+      h += '</ul></div></div>';
+    }
+
+    // Extracted Text / Interpretation
+    if (analysis.interpretation && analysis.interpretation.length > 50) {
+      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Extracted Text</div><div class="result-content" style="max-height:300px;overflow-y:auto;font-family:monospace;font-size:0.8rem;white-space:pre-wrap;background:var(--bg-card);padding:12px;border-radius:8px">' + analysis.interpretation + '</div></div>';
+    }
+
+    // Clinical Pearls
+    if (analysis.clinicalPearls && analysis.clinicalPearls.length) {
+      h += '<div class="result-section" style="border-left:3px solid var(--gold)"><div class="result-section-title" style="color:var(--gold)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Clinical Pearls</div><div class="result-content"><ul>';
+      analysis.clinicalPearls.forEach(function(p) { h += '<li>' + p + '</li>'; });
+      h += '</ul></div></div>';
+    }
+
+    // Recommendations
+    if (analysis.recommendations && analysis.recommendations.length) {
       h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Recommendations</div><div class="result-content"><ul>';
-      recs.forEach(function(r) { h += '<li>' + (typeof r === 'string' ? r : r.text || r.recommendation || JSON.stringify(r)) + '</li>'; });
+      analysis.recommendations.forEach(function(r) { h += '<li>' + r + '</li>'; });
       h += '</ul></div></div>';
     }
 
-    // Differential diagnoses
-    var diffs = analysis.differentials || analysis.differentialDiagnoses || analysis.ddx;
-    if (diffs && diffs.length) {
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Differential Diagnoses</div><div class="result-content"><ul>';
-      diffs.forEach(function(d) { h += '<li><strong>' + (typeof d === 'string' ? d : d.diagnosis || d.name || JSON.stringify(d)) + '</strong></li>'; });
+    // Patient-Friendly Explanation
+    if (analysis.patientFriendly) {
+      h += '<div class="result-section" style="border-left:3px solid var(--teal)"><div class="result-section-title" style="color:var(--teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patient-Friendly Explanation</div><div class="result-content">' + formatText(analysis.patientFriendly) + '</div></div>';
+    }
+
+    // Potential Questions
+    if (analysis.potentialQuestions && analysis.potentialQuestions.length) {
+      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Questions to Consider</div><div class="result-content"><ul>';
+      analysis.potentialQuestions.forEach(function(q) { h += '<li>' + q + '</li>'; });
       h += '</ul></div></div>';
     }
 
-    // Clinical pearls / notes
-    if (analysis.clinicalPearls || analysis.notes || analysis.additionalInfo) {
-      var notes = analysis.clinicalPearls || analysis.notes || analysis.additionalInfo;
-      h += '<div class="result-section"><div class="result-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Clinical Notes</div><div class="result-content">' + formatText(typeof notes === 'string' ? notes : JSON.stringify(notes)) + '</div></div>';
-    }
-
-    // Raw response fallback
+    // Fallback
     if (!h) {
       h = '<div class="result-section"><div class="result-section-title">Analysis Result</div><div class="result-content"><pre style="white-space:pre-wrap;font-size:0.85rem">' + JSON.stringify(analysis, null, 2) + '</pre></div></div>';
     }
@@ -1087,6 +1164,12 @@
     renderScores();
     renderRefs();
     checkAuth();
+    
+    // Initialize Neural Engine
+    if (window.NeuralEngine) {
+      window.NeuralEngine.init();
+      updateNeuralStats();
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
@@ -1098,6 +1181,373 @@
     resetCalc: function() { if (state.activeScore) { state.scores[state.activeScore] = {}; openCalc(state.activeScore); } }
   };
 })();
+
+/**
+ * MedWard Neural Pattern Engine v2.0
+ * Learns from Claude analyses to provide instant results for similar cases
+ */
+var NeuralEngine = (function() {
+  'use strict';
+
+  var CONFIG = {
+    SIMILARITY_THRESHOLD: 0.82,
+    MAX_PATTERNS: 500,
+    PATTERN_EXPIRY_DAYS: 30,
+    MIN_CONFIDENCE: 0.75,
+    LEARNING_RATE: 0.1,
+    STORAGE_KEY: 'medward_neural_v2'
+  };
+
+  var patterns = [];
+  var hashIndex = new Map();
+  var stats = { hits: 0, misses: 0, learned: 0 };
+
+  function init() {
+    load();
+    console.log('[Neural] Initialized with ' + patterns.length + ' patterns');
+    return stats;
+  }
+
+  function load() {
+    try {
+      var data = localStorage.getItem(CONFIG.STORAGE_KEY);
+      if (data) {
+        var parsed = JSON.parse(data);
+        patterns = parsed.patterns || [];
+        stats = parsed.stats || stats;
+        rebuildIndex();
+        pruneExpired();
+      }
+    } catch (e) {
+      console.warn('[Neural] Load failed:', e);
+      patterns = [];
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
+        patterns: patterns.slice(0, CONFIG.MAX_PATTERNS),
+        stats: stats,
+        version: 2,
+        updated: Date.now()
+      }));
+    } catch (e) {
+      patterns = patterns.slice(0, Math.floor(CONFIG.MAX_PATTERNS / 2));
+      rebuildIndex();
+    }
+  }
+
+  function extractFeatures(text) {
+    if (!text) return null;
+    var normalized = text.toLowerCase().replace(/\s+/g, ' ');
+    var features = {
+      labs: extractLabValues(normalized),
+      vitals: extractVitals(normalized),
+      keywords: extractKeywords(normalized),
+      structure: getStructureSignature(normalized),
+      lengthBucket: Math.floor(text.length / 500),
+      textHash: simpleHash(normalized)
+    };
+    features.vector = createFeatureVector(features);
+    return features;
+  }
+
+  function extractLabValues(text) {
+    var labs = {};
+    var pattern = /\b(wbc|rbc|hgb|hb|hemoglobin|hct|plt|platelets|na|sodium|k|potassium|cl|chloride|co2|bun|urea|cr|creatinine|glu|glucose|alt|ast|alp|ggt|bili|bilirubin|albumin|protein|ca|calcium|mg|magnesium|phos|phosphate|tsh|t3|t4|inr|pt|ptt|aptt|crp|esr|troponin|bnp|lactate|ph|pco2|po2|hco3|egfr)[:\s=*]+([<>]?\d+\.?\d*)/gi;
+    var match;
+    while ((match = pattern.exec(text)) !== null) {
+      var name = normalizeLabName(match[1]);
+      var value = parseFloat(match[2]);
+      if (!isNaN(value)) labs[name] = value;
+    }
+    return labs;
+  }
+
+  function normalizeLabName(name) {
+    var map = { 'hgb': 'hemoglobin', 'hb': 'hemoglobin', 'plt': 'platelets', 'na': 'sodium', 'k': 'potassium', 'cl': 'chloride', 'cr': 'creatinine', 'glu': 'glucose', 'bili': 'bilirubin', 'ca': 'calcium', 'mg': 'magnesium', 'phos': 'phosphate', 'ptt': 'aptt' };
+    return map[name.toLowerCase()] || name.toLowerCase();
+  }
+
+  function extractVitals(text) {
+    var vitals = {};
+    var bp = text.match(/(?:bp|blood pressure)[:\s]*(\d{2,3})[\/\\](\d{2,3})/i);
+    if (bp) { vitals.sbp = parseInt(bp[1]); vitals.dbp = parseInt(bp[2]); }
+    var hr = text.match(/(?:hr|heart rate|pulse)[:\s]*(\d{2,3})/i);
+    if (hr) vitals.hr = parseInt(hr[1]);
+    var rr = text.match(/(?:rr|resp|respiratory)[:\s]*(\d{1,2})/i);
+    if (rr) vitals.rr = parseInt(rr[1]);
+    var temp = text.match(/(?:temp|temperature)[:\s]*(\d{2,3}\.?\d?)/i);
+    if (temp) vitals.temp = parseFloat(temp[1]);
+    var spo2 = text.match(/(?:spo2|sao2|o2 sat)[:\s]*(\d{2,3})%?/i);
+    if (spo2) vitals.spo2 = parseInt(spo2[1]);
+    return vitals;
+  }
+
+  function extractKeywords(text) {
+    var keywords = {};
+    var critical = ['critical', 'urgent', 'emergency', 'stat', 'acute', 'severe'];
+    var conditions = ['infection', 'sepsis', 'anemia', 'diabetes', 'hypertension', 'renal', 'hepatic', 'cardiac', 'respiratory', 'neurologic'];
+    var findings = ['elevated', 'decreased', 'abnormal', 'normal', 'high', 'low'];
+    critical.forEach(function(w) { if (text.includes(w)) keywords[w] = 3; });
+    conditions.forEach(function(w) { if (text.includes(w)) keywords[w] = 2; });
+    findings.forEach(function(w) { if (text.includes(w)) keywords[w] = 1; });
+    return keywords;
+  }
+
+  function getStructureSignature(text) {
+    return {
+      hasLabs: /\b(wbc|rbc|hemoglobin|sodium|potassium|creatinine)\b/i.test(text),
+      hasVitals: /\b(bp|hr|temp|spo2)\b/i.test(text),
+      hasHistory: /\b(hpi|pmh|history|presents|complains)\b/i.test(text),
+      hasMeds: /\b(medications?|meds|taking|prescribed)\b/i.test(text),
+      hasAssessment: /\b(assessment|diagnosis|impression|plan)\b/i.test(text)
+    };
+  }
+
+  function createFeatureVector(features) {
+    var vector = [];
+    var labOrder = ['wbc', 'hemoglobin', 'platelets', 'sodium', 'potassium', 'creatinine', 'glucose', 'alt', 'ast', 'bilirubin'];
+    labOrder.forEach(function(lab) {
+      var val = features.labs[lab];
+      vector.push(val ? normalizeLabValue(lab, val) : -1);
+    });
+    vector.push(features.vitals.sbp ? features.vitals.sbp / 200 : -1);
+    vector.push(features.vitals.dbp ? features.vitals.dbp / 120 : -1);
+    vector.push(features.vitals.hr ? features.vitals.hr / 150 : -1);
+    vector.push(features.vitals.spo2 ? features.vitals.spo2 / 100 : -1);
+    vector.push(features.structure.hasLabs ? 1 : 0);
+    vector.push(features.structure.hasVitals ? 1 : 0);
+    vector.push(features.structure.hasHistory ? 1 : 0);
+    vector.push(features.structure.hasAssessment ? 1 : 0);
+    vector.push(Math.min(features.lengthBucket / 20, 1));
+    return vector;
+  }
+
+  function normalizeLabValue(name, value) {
+    var ranges = { wbc: [4, 11], hemoglobin: [12, 17], platelets: [150, 400], sodium: [136, 146], potassium: [3.5, 5.1], creatinine: [0.7, 1.3], glucose: [70, 100], alt: [7, 56], ast: [10, 40], bilirubin: [0.1, 1.2] };
+    var range = ranges[name] || [0, 100];
+    return Math.max(0, Math.min(1, (value - range[0]) / (range[1] - range[0])));
+  }
+
+  function calculateSimilarity(f1, f2) {
+    if (!f1 || !f2) return 0;
+    var score = 0, weights = 0;
+    if (f1.vector && f2.vector) {
+      var vecSim = vectorSimilarity(f1.vector, f2.vector);
+      score += vecSim * 0.5;
+      weights += 0.5;
+    }
+    var labSim = objectSimilarity(f1.labs, f2.labs);
+    score += labSim * 0.3;
+    weights += 0.3;
+    var kwSim = objectSimilarity(f1.keywords, f2.keywords);
+    score += kwSim * 0.2;
+    weights += 0.2;
+    return weights > 0 ? score / weights : 0;
+  }
+
+  function vectorSimilarity(v1, v2) {
+    var sum = 0, count = 0;
+    for (var i = 0; i < Math.min(v1.length, v2.length); i++) {
+      if (v1[i] >= 0 && v2[i] >= 0) {
+        sum += 1 - Math.abs(v1[i] - v2[i]);
+        count++;
+      }
+    }
+    return count > 0 ? sum / count : 0;
+  }
+
+  function objectSimilarity(o1, o2) {
+    var keys1 = Object.keys(o1 || {});
+    var keys2 = Object.keys(o2 || {});
+    if (keys1.length === 0 && keys2.length === 0) return 1;
+    if (keys1.length === 0 || keys2.length === 0) return 0;
+    var intersection = keys1.filter(function(k) { return keys2.includes(k); });
+    var union = new Set(keys1.concat(keys2));
+    return intersection.length / union.size;
+  }
+
+  function getLSHBuckets(features) {
+    var buckets = [];
+    if (features.vector) {
+      for (var i = 0; i < 4; i++) {
+        var bucket = 'v' + i + '_';
+        for (var j = i * 4; j < Math.min((i + 1) * 4, features.vector.length); j++) {
+          bucket += features.vector[j] >= 0 ? Math.floor(features.vector[j] * 4) : 'x';
+        }
+        buckets.push(bucket);
+      }
+    }
+    buckets.push('len_' + features.lengthBucket);
+    Object.keys(features.structure).forEach(function(k) {
+      if (features.structure[k]) buckets.push('s_' + k);
+    });
+    return buckets;
+  }
+
+  function rebuildIndex() {
+    hashIndex.clear();
+    patterns.forEach(function(p, idx) {
+      if (p.buckets) {
+        p.buckets.forEach(function(bucket) {
+          if (!hashIndex.has(bucket)) hashIndex.set(bucket, []);
+          hashIndex.get(bucket).push(idx);
+        });
+      }
+    });
+  }
+
+  function findCandidates(buckets) {
+    var candidateSet = new Set();
+    buckets.forEach(function(bucket) {
+      var indices = hashIndex.get(bucket) || [];
+      indices.forEach(function(idx) { candidateSet.add(idx); });
+    });
+    return Array.from(candidateSet);
+  }
+
+  function query(text, docType) {
+    docType = docType || 'general';
+    var startTime = performance.now();
+    var features = extractFeatures(text);
+    if (!features) {
+      stats.misses++;
+      return { match: false, reason: 'no_features' };
+    }
+    var buckets = getLSHBuckets(features);
+    var candidates = findCandidates(buckets);
+    if (candidates.length === 0) {
+      stats.misses++;
+      return { match: false, reason: 'no_candidates' };
+    }
+    var bestMatch = null, bestScore = 0;
+    for (var i = 0; i < candidates.length; i++) {
+      var pattern = patterns[candidates[i]];
+      if (pattern.docType && pattern.docType !== docType) continue;
+      var similarity = calculateSimilarity(features, pattern.features);
+      var adjustedScore = similarity * (0.8 + 0.2 * Math.min(pattern.strength || 1, 5));
+      if (adjustedScore > bestScore) {
+        bestScore = adjustedScore;
+        bestMatch = pattern;
+      }
+    }
+    var queryTime = performance.now() - startTime;
+    if (bestMatch && bestScore >= CONFIG.SIMILARITY_THRESHOLD) {
+      stats.hits++;
+      bestMatch.strength = (bestMatch.strength || 1) + CONFIG.LEARNING_RATE;
+      bestMatch.lastUsed = Date.now();
+      bestMatch.useCount = (bestMatch.useCount || 0) + 1;
+      return { match: true, result: bestMatch.result, confidence: bestScore, queryTime: queryTime, source: 'neural_cache' };
+    }
+    stats.misses++;
+    return { match: false, reason: 'below_threshold', bestScore: bestScore, queryTime: queryTime };
+  }
+
+  function learn(text, docType, result) {
+    var features = extractFeatures(text);
+    if (!features) return false;
+    var buckets = getLSHBuckets(features);
+    var candidates = findCandidates(buckets);
+    for (var i = 0; i < candidates.length; i++) {
+      var existing = patterns[candidates[i]];
+      var similarity = calculateSimilarity(features, existing.features);
+      if (similarity > 0.95) {
+        existing.strength = (existing.strength || 1) + CONFIG.LEARNING_RATE * 2;
+        existing.lastUsed = Date.now();
+        save();
+        return false;
+      }
+    }
+    var pattern = {
+      features: features,
+      buckets: buckets,
+      docType: docType,
+      result: compressResult(result),
+      strength: 1,
+      created: Date.now(),
+      lastUsed: Date.now(),
+      useCount: 0
+    };
+    patterns.unshift(pattern);
+    stats.learned++;
+    buckets.forEach(function(bucket) {
+      if (!hashIndex.has(bucket)) hashIndex.set(bucket, []);
+      hashIndex.get(bucket).unshift(0);
+    });
+    if (patterns.length > CONFIG.MAX_PATTERNS) {
+      pruneWeakest();
+    }
+    save();
+    return true;
+  }
+
+  function compressResult(result) {
+    return {
+      summary: result.summary,
+      findings: result.findings ? result.findings.slice(0, 5) : [],
+      abnormalities: result.abnormalities ? result.abnormalities.slice(0, 5) : [],
+      normalFindings: result.normalFindings ? result.normalFindings.slice(0, 5) : [],
+      clinicalPearls: result.clinicalPearls ? result.clinicalPearls.slice(0, 3) : [],
+      recommendations: result.recommendations ? result.recommendations.slice(0, 5) : []
+    };
+  }
+
+  function pruneExpired() {
+    var cutoff = Date.now() - (CONFIG.PATTERN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+    var before = patterns.length;
+    patterns = patterns.filter(function(p) { return p.created > cutoff || p.useCount > 5; });
+    if (patterns.length < before) {
+      rebuildIndex();
+      console.log('[Neural] Pruned ' + (before - patterns.length) + ' expired patterns');
+    }
+  }
+
+  function pruneWeakest() {
+    patterns.sort(function(a, b) {
+      var scoreA = (a.strength || 1) * (1 / (Date.now() - a.lastUsed + 1));
+      var scoreB = (b.strength || 1) * (1 / (Date.now() - b.lastUsed + 1));
+      return scoreB - scoreA;
+    });
+    patterns = patterns.slice(0, CONFIG.MAX_PATTERNS);
+    rebuildIndex();
+  }
+
+  function simpleHash(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xFFFFFFFF;
+    }
+    return hash;
+  }
+
+  function getStats() {
+    var hitRate = stats.hits + stats.misses > 0 ? (stats.hits / (stats.hits + stats.misses) * 100).toFixed(1) : 0;
+    return {
+      patterns: patterns.length,
+      hits: stats.hits,
+      misses: stats.misses,
+      hitRate: hitRate + '%',
+      learned: stats.learned
+    };
+  }
+
+  function clear() {
+    patterns = [];
+    hashIndex.clear();
+    stats = { hits: 0, misses: 0, learned: 0 };
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
+    console.log('[Neural] Cleared all patterns');
+  }
+
+  return { init: init, query: query, learn: learn, getStats: getStats, clear: clear, extractFeatures: extractFeatures };
+})();
+
+// Auto-initialize Neural Engine
+if (typeof window !== 'undefined') {
+  window.NeuralEngine = NeuralEngine;
+}
 </script>
 </body>
 </html>
