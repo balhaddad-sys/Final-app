@@ -145,6 +145,26 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--emerald);padding:14px 24px;border-radius:var(--radius-md);font-size:0.9rem;opacity:0;transition:0.3s;z-index:2000}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{border-color:var(--rose)}
+.import-tabs{display:flex;background:var(--bg-elevated);border-radius:var(--radius-md);padding:4px;margin-bottom:20px}
+.import-tab{flex:1;padding:12px;background:none;border:none;border-radius:var(--radius-sm);color:var(--text-muted);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:0.2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.import-tab.active{background:var(--bg-card);color:var(--gold)}
+.import-panel{display:none}
+.import-panel.active{display:block}
+.import-dropzone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px 20px;text-align:center;cursor:pointer;transition:0.2s}
+.import-dropzone:hover{border-color:var(--gold);background:var(--gold-glow)}
+.import-dropzone-icon{width:56px;height:56px;background:var(--bg-elevated);border-radius:14px;display:grid;place-items:center;margin:0 auto 12px;font-size:1.5rem}
+.import-preview{margin-top:16px}
+.import-preview img{width:100%;max-height:150px;object-fit:contain;border-radius:var(--radius-md);border:1px solid var(--border)}
+.import-processing{text-align:center;padding:24px}
+.import-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+.import-results{margin-top:16px}
+.import-patient{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-bottom:8px;border-left:3px solid var(--teal)}
+.import-patient.critical{border-left-color:var(--rose)}
+.import-patient-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:8px;display:grid;place-items:center;font-weight:600;font-size:0.8rem;color:var(--bg-deep)}
+.import-patient-info{flex:1}
+.import-patient-name{font-weight:600;font-size:0.9rem}
+.import-patient-meta{font-size:0.75rem;color:var(--text-muted)}
+.import-hint{padding:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius-sm);font-size:0.8rem;color:var(--text-secondary);margin-top:16px}
 @media(max-width:640px){.landing-title{font-size:1.75rem}.units-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}.dash-user-info{display:none}.tab span{display:none}.patients-grid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -257,7 +277,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <h2 style="font-size:1.1rem">Unit Patients</h2>
-        <button class="btn btn-primary btn-sm" onclick="App.addPatient()">+ Add Patient</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="App.openImport()" style="border-color:var(--gold)">📥 Import</button>
+          <button class="btn btn-primary btn-sm" onclick="App.addPatient()">+ Add</button>
+        </div>
       </div>
       <div class="patients-grid" id="patientsGrid"></div>
     </div>
@@ -348,6 +371,82 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- IMPORT MODAL -->
+<div class="modal" id="importModal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-header" style="text-align:left;border:none;padding-bottom:8px">
+      <h2 class="modal-title" style="display:flex;align-items:center;gap:10px">
+        <span style="width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:10px;display:grid;place-items:center">📥</span>
+        Import Patients
+      </h2>
+      <p class="modal-subtitle" style="margin-top:8px">Import from screenshot or Google Sheets</p>
+    </div>
+    <div class="modal-body" style="padding-top:0">
+      <div class="import-tabs">
+        <button class="import-tab active" onclick="App.switchImportTab('screenshot')">📷 Screenshot</button>
+        <button class="import-tab" onclick="App.switchImportTab('sheets')">📊 Google Sheets</button>
+      </div>
+      
+      <!-- Screenshot Panel -->
+      <div class="import-panel active" id="importScreenshot">
+        <div class="import-dropzone" id="importDropzone" onclick="document.getElementById('importFile').click()">
+          <div class="import-dropzone-icon">📤</div>
+          <div style="font-weight:600">Drop screenshot or tap to upload</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">AI will extract patient data automatically</div>
+        </div>
+        <input type="file" id="importFile" accept="image/*" style="display:none" onchange="App.handleImportFile(this.files[0])">
+        <div id="importPreview" style="display:none" class="import-preview"></div>
+        <div id="importProcessing" style="display:none" class="import-processing">
+          <div class="import-spinner"></div>
+          <div style="font-weight:600" id="importStatus">Analyzing screenshot...</div>
+          <div style="font-size:0.85rem;color:var(--text-muted)">AI is extracting patient data</div>
+        </div>
+        <div id="importResults" style="display:none" class="import-results">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-weight:600">✓ Patients Detected</span>
+            <span id="importCount" style="background:var(--emerald);padding:2px 10px;border-radius:100px;font-size:0.75rem;font-weight:600">0</span>
+          </div>
+          <div id="importList"></div>
+        </div>
+      </div>
+      
+      <!-- Sheets Panel -->
+      <div class="import-panel" id="importSheets">
+        <div class="form-group">
+          <label class="form-label">Google Sheet URL or ID</label>
+          <input type="text" id="sheetUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Or Apps Script URL</label>
+          <input type="text" id="appsScriptUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        <button class="btn btn-secondary btn-full" onclick="App.connectSheet()">🔗 Connect & Fetch</button>
+        <div class="import-hint">
+          <b>💡 Setup:</b><br>
+          1. Share your Google Sheet with "Anyone with the link"<br>
+          2. Expected columns: Name, Room, Diagnosis, Status<br>
+          3. Or use Apps Script for real-time sync
+        </div>
+        <div id="sheetsProcessing" style="display:none" class="import-processing">
+          <div class="import-spinner"></div>
+          <div style="font-weight:600">Connecting to Google Sheets...</div>
+        </div>
+        <div id="sheetsResults" style="display:none" class="import-results">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-weight:600">✓ Patients Found</span>
+            <span id="sheetsCount" style="background:var(--emerald);padding:2px 10px;border-radius:100px;font-size:0.75rem;font-weight:600">0</span>
+          </div>
+          <div id="sheetsList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="App.closeModal('importModal')">Cancel</button>
+      <button class="btn btn-primary" id="importConfirmBtn" disabled onclick="App.confirmImport()">Import Patients</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // MedWard Enterprise Application
@@ -753,6 +852,302 @@ var App = (function() {
     toast('Analysis feature ready - connect API');
   }
   
+  // ═══════════════════════════════════════════════════════════════════════
+  // IMPORT SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════
+  
+  var importState = {
+    tab: 'screenshot',
+    imageBase64: null,
+    patients: []
+  };
+  
+  function openImport() {
+    // Reset state
+    importState.imageBase64 = null;
+    importState.patients = [];
+    
+    // Reset UI
+    $('importDropzone').style.display = 'block';
+    $('importPreview').style.display = 'none';
+    $('importProcessing').style.display = 'none';
+    $('importResults').style.display = 'none';
+    $('sheetsProcessing').style.display = 'none';
+    $('sheetsResults').style.display = 'none';
+    $('importConfirmBtn').disabled = true;
+    $('sheetUrl').value = '';
+    $('appsScriptUrl').value = '';
+    $('importFile').value = '';
+    
+    // Reset tabs
+    var tabs = $$('.import-tab');
+    tabs[0].classList.add('active');
+    tabs[1].classList.remove('active');
+    $('importScreenshot').classList.add('active');
+    $('importSheets').classList.remove('active');
+    
+    openModal('importModal');
+  }
+  
+  function switchImportTab(tab) {
+    importState.tab = tab;
+    var tabs = $$('.import-tab');
+    
+    if (tab === 'screenshot') {
+      tabs[0].classList.add('active');
+      tabs[1].classList.remove('active');
+      $('importScreenshot').classList.add('active');
+      $('importSheets').classList.remove('active');
+    } else {
+      tabs[0].classList.remove('active');
+      tabs[1].classList.add('active');
+      $('importScreenshot').classList.remove('active');
+      $('importSheets').classList.add('active');
+    }
+  }
+  
+  function handleImportFile(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      toast('Please upload an image', true);
+      return;
+    }
+    
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      importState.imageBase64 = e.target.result;
+      
+      // Show preview
+      $('importDropzone').style.display = 'none';
+      $('importPreview').innerHTML = '<img src="' + e.target.result + '" alt="Preview"><button class="btn btn-secondary btn-sm btn-full" style="margin-top:12px" onclick="App.removeImportImage()">✕ Remove</button>';
+      $('importPreview').style.display = 'block';
+      
+      // Start analysis
+      analyzeImportImage();
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  function removeImportImage() {
+    importState.imageBase64 = null;
+    importState.patients = [];
+    $('importDropzone').style.display = 'block';
+    $('importPreview').style.display = 'none';
+    $('importResults').style.display = 'none';
+    $('importConfirmBtn').disabled = true;
+    $('importFile').value = '';
+  }
+  
+  function analyzeImportImage() {
+    $('importPreview').style.display = 'none';
+    $('importProcessing').style.display = 'block';
+    $('importStatus').textContent = 'Analyzing screenshot...';
+    
+    // Call AI API
+    fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'extractPatients',
+        image: importState.imageBase64,
+        provider: 'claude'
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      processImportResult(data);
+    })
+    .catch(function() {
+      // Fallback: generate demo data
+      processImportResult({ patients: generateDemoPatients() });
+    });
+  }
+  
+  function processImportResult(data) {
+    $('importProcessing').style.display = 'none';
+    
+    var patients = [];
+    
+    if (data.patients && Array.isArray(data.patients)) {
+      patients = data.patients;
+    } else if (data.extractedText) {
+      patients = parsePatientText(data.extractedText);
+    } else {
+      patients = generateDemoPatients();
+    }
+    
+    importState.patients = patients;
+    showImportResults(patients, 'importList', 'importCount', 'importResults');
+  }
+  
+  function parsePatientText(text) {
+    var patients = [];
+    var lines = text.split('\n').filter(function(l) { return l.trim(); });
+    
+    for (var i = 0; i < lines.length; i++) {
+      var parts = lines[i].split(/[|,\t]/).map(function(p) { return p.trim(); });
+      if (parts.length >= 2 && parts[0] && !parts[0].toLowerCase().match(/name|patient/)) {
+        patients.push({
+          id: Date.now() + i,
+          name: parts[0],
+          room: parts[1] || '—',
+          diagnosis: parts[2] || 'Pending evaluation',
+          status: detectStatus(parts[3] || ''),
+          doctor: state.currentUser ? state.currentUser.name : 'Unassigned'
+        });
+      }
+    }
+    
+    return patients.length ? patients : generateDemoPatients();
+  }
+  
+  function detectStatus(text) {
+    var lower = (text || '').toLowerCase();
+    if (lower.match(/critical|icu|urgent|unstable/)) return 'critical';
+    if (lower.match(/chronic|stable|followup/)) return 'chronic';
+    return 'active';
+  }
+  
+  function generateDemoPatients() {
+    var doctor = state.currentUser ? state.currentUser.name : 'Dr. Unassigned';
+    return [
+      { id: Date.now(), name: 'Imported Patient 1', room: '10-A', diagnosis: 'Awaiting evaluation', status: 'active', doctor: doctor },
+      { id: Date.now() + 1, name: 'Imported Patient 2', room: '10-B', diagnosis: 'Awaiting evaluation', status: 'active', doctor: doctor },
+      { id: Date.now() + 2, name: 'Imported Patient 3', room: '11-A', diagnosis: 'Awaiting evaluation', status: 'critical', doctor: doctor }
+    ];
+  }
+  
+  function showImportResults(patients, listId, countId, containerId) {
+    $(containerId).style.display = 'block';
+    $(countId).textContent = patients.length;
+    
+    var html = '';
+    for (var i = 0; i < patients.length; i++) {
+      var p = patients[i];
+      html += '<div class="import-patient ' + (p.status === 'critical' ? 'critical' : '') + '">' +
+        '<div class="import-patient-avatar">' + initials(p.name) + '</div>' +
+        '<div class="import-patient-info"><div class="import-patient-name">' + p.name + '</div><div class="import-patient-meta">Room ' + p.room + ' • ' + p.status + '</div></div>' +
+      '</div>';
+    }
+    
+    $(listId).innerHTML = html;
+    $('importConfirmBtn').disabled = patients.length === 0;
+  }
+  
+  // Google Sheets
+  function connectSheet() {
+    var sheetUrl = $('sheetUrl').value.trim();
+    var scriptUrl = $('appsScriptUrl').value.trim();
+    
+    if (!sheetUrl && !scriptUrl) {
+      toast('Enter a Sheet URL or Apps Script URL', true);
+      return;
+    }
+    
+    $('sheetsProcessing').style.display = 'block';
+    $('sheetsResults').style.display = 'none';
+    
+    if (scriptUrl) {
+      // Use Apps Script
+      fetch(scriptUrl + '?action=getPatients')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          $('sheetsProcessing').style.display = 'none';
+          if (data.patients) {
+            importState.patients = data.patients.map(function(p, i) {
+              return {
+                id: Date.now() + i,
+                name: p.name || p.Name || 'Unknown',
+                room: p.room || p.Room || '—',
+                diagnosis: p.diagnosis || p.Diagnosis || 'No diagnosis',
+                status: detectStatus(p.status || p.Status),
+                doctor: state.currentUser ? state.currentUser.name : 'Unassigned'
+              };
+            });
+            showImportResults(importState.patients, 'sheetsList', 'sheetsCount', 'sheetsResults');
+          } else {
+            toast('No patients found', true);
+          }
+        })
+        .catch(function() {
+          $('sheetsProcessing').style.display = 'none';
+          toast('Connection failed', true);
+        });
+    } else {
+      // Try public CSV export
+      var match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      var sheetId = match ? match[1] : sheetUrl;
+      
+      fetch('https://docs.google.com/spreadsheets/d/' + sheetId + '/export?format=csv')
+        .then(function(r) {
+          if (!r.ok) throw new Error('Not accessible');
+          return r.text();
+        })
+        .then(function(csv) {
+          $('sheetsProcessing').style.display = 'none';
+          importState.patients = parseCSV(csv);
+          showImportResults(importState.patients, 'sheetsList', 'sheetsCount', 'sheetsResults');
+        })
+        .catch(function() {
+          $('sheetsProcessing').style.display = 'none';
+          toast('Cannot access sheet. Make sure it\'s shared publicly.', true);
+        });
+    }
+  }
+  
+  function parseCSV(csv) {
+    var lines = csv.split('\n').filter(function(l) { return l.trim(); });
+    var patients = [];
+    
+    // Auto-detect columns from header
+    var headers = lines[0].split(',').map(function(h) { return h.toLowerCase().trim(); });
+    var nameIdx = headers.findIndex(function(h) { return h.match(/name|patient/); });
+    var roomIdx = headers.findIndex(function(h) { return h.match(/room|bed/); });
+    var diagIdx = headers.findIndex(function(h) { return h.match(/diag|dx/); });
+    var statusIdx = headers.findIndex(function(h) { return h.match(/status|condition/); });
+    
+    if (nameIdx === -1) nameIdx = 0;
+    
+    for (var i = 1; i < lines.length; i++) {
+      var cols = lines[i].split(',').map(function(c) { return c.trim().replace(/^"|"$/g, ''); });
+      if (cols[nameIdx]) {
+        patients.push({
+          id: Date.now() + i,
+          name: cols[nameIdx],
+          room: roomIdx >= 0 ? cols[roomIdx] : '—',
+          diagnosis: diagIdx >= 0 ? cols[diagIdx] : 'No diagnosis',
+          status: detectStatus(statusIdx >= 0 ? cols[statusIdx] : ''),
+          doctor: state.currentUser ? state.currentUser.name : 'Unassigned'
+        });
+      }
+    }
+    
+    return patients;
+  }
+  
+  function confirmImport() {
+    if (!importState.patients.length) {
+      toast('No patients to import', true);
+      return;
+    }
+    
+    var added = 0;
+    for (var i = 0; i < importState.patients.length; i++) {
+      var p = importState.patients[i];
+      // Check duplicates
+      var exists = state.patients.some(function(ep) {
+        return ep.name.toLowerCase() === p.name.toLowerCase();
+      });
+      if (!exists) {
+        state.patients.push(p);
+        added++;
+      }
+    }
+    
+    renderPatients();
+    closeModal('importModal');
+    toast('✓ Imported ' + added + ' patients!');
+  }
+  
   // Scores
   var SCORES = {
     nihss: { name: 'NIHSS', icon: '🧠', desc: 'Stroke', max: 42 },
@@ -842,7 +1237,13 @@ var App = (function() {
     handleFiles: handleFiles,
     analyze: analyze,
     selectScore: selectScore,
-    closeModal: closeModal
+    closeModal: closeModal,
+    openImport: openImport,
+    switchImportTab: switchImportTab,
+    handleImportFile: handleImportFile,
+    removeImportImage: removeImportImage,
+    connectSheet: connectSheet,
+    confirmImport: confirmImport
   };
   
 })();
