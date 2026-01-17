@@ -70,10 +70,12 @@
     .page-title{font-size:1.4rem;font-weight:700;margin-bottom:2px}
     .page-sub{color:var(--text-muted);font-size:0.9rem}
 
-    /* Tabs */
-    .tabs{display:flex;gap:4px;background:var(--bg-card);border:1px solid var(--border);padding:4px;border-radius:var(--radius-md);margin-bottom:24px;overflow-x:auto}
-    .tab{flex:1;min-width:80px;padding:10px 16px;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--text-secondary);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:0.2s;white-space:nowrap}
-    .tab.active{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--bg-deep);font-weight:600}
+    /* Tabs - Professional Navigation */
+    .tabs{display:flex;gap:0;background:transparent;border:none;border-bottom:1px solid var(--border);padding:0;margin-bottom:24px;overflow-x:auto}
+    .tab{flex:none;padding:14px 24px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:inherit;font-size:0.9rem;font-weight:500;cursor:pointer;transition:0.2s;white-space:nowrap;position:relative}
+    .tab:hover{color:var(--text-primary)}
+    .tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:600}
+    .tab svg{width:18px;height:18px;margin-right:8px;vertical-align:middle}
     .panel{display:none}
     .panel.active{display:block;animation:fadeUp 0.3s ease}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -240,10 +242,25 @@
     .severity-pill{display:inline-block;padding:8px 20px;border-radius:100px;font-size:0.85rem;font-weight:600;margin-top:12px}
 
     /* Reference */
-    .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-    .ref-card{background:var(--bg-elevated);border-radius:var(--radius-md);padding:16px;border-left:3px solid var(--gold)}
-    .ref-card h4{font-size:0.9rem;color:var(--gold);margin-bottom:10px}
-    .ref-card p{font-size:0.8rem;color:var(--text-secondary);margin:4px 0}
+    .ref-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+    .ref-filter{padding:8px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:100px;color:var(--text-secondary);font-size:0.75rem;font-weight:500;cursor:pointer;transition:0.2s;white-space:nowrap}
+    .ref-filter:hover{border-color:var(--gold);color:var(--text-primary)}
+    .ref-filter.active{background:var(--gold-glow);border-color:var(--gold);color:var(--gold)}
+    .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+    .ref-card{background:var(--bg-elevated);border-radius:var(--radius-md);padding:16px;border-left:3px solid var(--gold);transition:0.2s}
+    .ref-card:hover{border-left-color:var(--teal);background:var(--bg-card)}
+    .ref-card h4{font-size:0.95rem;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .ref-card p{font-size:0.8rem;color:var(--text-secondary);margin:6px 0;line-height:1.5}
+    .ref-card b{color:var(--gold)}
+    .ref-card[data-cat="critical"]{border-left-color:var(--rose)}
+    .ref-card[data-cat="cardiac"]{border-left-color:#ef4444}
+    .ref-card[data-cat="respiratory"]{border-left-color:#3b82f6}
+    .ref-card[data-cat="renal"]{border-left-color:#06b6d4}
+    .ref-card[data-cat="neuro"]{border-left-color:#a855f7}
+    .ref-card[data-cat="infection"]{border-left-color:#22c55e}
+    .ref-card[data-cat="gi"]{border-left-color:#f59e0b}
+    .ref-card[data-cat="anticoag"]{border-left-color:#ec4899}
+    .ref-card[data-cat="diabetes"]{border-left-color:#14b8a6}
 
     /* Modal */
     .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;padding:16px;z-index:200;overflow-y:auto}
@@ -316,10 +333,10 @@
       </div>
 
       <div class="tabs">
-        <button class="tab active" data-tab="patients">Patients</button>
-        <button class="tab" data-tab="analysis">AI Analysis</button>
-        <button class="tab" data-tab="scores">Scores</button>
-        <button class="tab" data-tab="reference">Reference</button>
+        <button class="tab active" data-tab="patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Patients</button>
+        <button class="tab" data-tab="analysis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>AI Analysis</button>
+        <button class="tab" data-tab="scores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Scores</button>
+        <button class="tab" data-tab="reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Reference</button>
       </div>
 
       <!-- Patients Panel -->
@@ -495,9 +512,21 @@
       <div class="panel" id="panelReference">
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Quick Reference</h2>
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Ward Quick Reference</h2>
           </div>
           <div class="card-body">
+            <div class="ref-filters" id="refFilters">
+              <button class="ref-filter active" data-cat="all">All</button>
+              <button class="ref-filter" data-cat="critical">🚨 Critical</button>
+              <button class="ref-filter" data-cat="cardiac">❤️ Cardiac</button>
+              <button class="ref-filter" data-cat="respiratory">🫁 Respiratory</button>
+              <button class="ref-filter" data-cat="renal">💧 Renal</button>
+              <button class="ref-filter" data-cat="neuro">🧠 Neuro</button>
+              <button class="ref-filter" data-cat="infection">🦠 Infection</button>
+              <button class="ref-filter" data-cat="gi">🩺 GI/Liver</button>
+              <button class="ref-filter" data-cat="anticoag">💉 Anticoag</button>
+              <button class="ref-filter" data-cat="diabetes">📊 Diabetes</button>
+            </div>
             <div class="ref-grid" id="refGrid"></div>
           </div>
         </div>
@@ -620,12 +649,48 @@
   };
 
   var REFS = [
-    {title:'tPA Window',content:'<p><b>IV tPA:</b> ≤4.5h</p><p><b>Thrombectomy:</b> ≤24h (DAWN)</p>'},
-    {title:'tPA Dosing',content:'<p>0.9 mg/kg (max 90mg)</p><p>10% bolus, 90% over 60min</p>'},
-    {title:'BP Targets',content:'<p><b>Pre-tPA:</b> <185/110</p><p><b>Post-tPA:</b> <180/105</p>'},
-    {title:'GCS Guide',content:'<p>13-15: Mild | 9-12: Mod | ≤8: Severe</p>'},
-    {title:'Sepsis Bundle',content:'<p>Hour-1: Lactate, cultures, abx, 30ml/kg</p>'},
-    {title:'Anticoag Reversal',content:'<p>Warfarin: VitK+PCC | Dabigatran: Idarucizumab</p>'}
+    // Critical Values & Emergencies
+    {title:'🚨 Critical Lab Values', category:'critical', content:'<p><b>K⁺:</b> <2.5 or >6.5 mmol/L</p><p><b>Na⁺:</b> <120 or >160 mmol/L</p><p><b>Glucose:</b> <40 or >500 mg/dL</p><p><b>Hgb:</b> <7 g/dL | <b>Plt:</b> <50k</p><p><b>pH:</b> <7.2 or >7.6</p><p><b>Lactate:</b> >4 mmol/L</p>'},
+    {title:'⚡ Hyperkalemia Protocol', category:'critical', content:'<p><b>Stabilize:</b> Ca gluconate 10mL IV</p><p><b>Shift:</b> Insulin 10U + D50 | Salbutamol neb</p><p><b>Remove:</b> Kayexalate | Furosemide | HD</p><p><b>ECG changes:</b> Peaked T → Wide QRS → Sine wave</p>'},
+    {title:'💉 Hypoglycemia', category:'critical', content:'<p><b>Conscious:</b> 15-20g oral glucose</p><p><b>Unconscious:</b> D50 25-50mL IV push</p><p><b>No IV:</b> Glucagon 1mg IM</p><p><b>Recheck:</b> q15min until >100 mg/dL</p>'},
+    
+    // Cardiac
+    {title:'❤️ ACS Management', category:'cardiac', content:'<p><b>MONA:</b> Morphine, O₂, Nitrates, Aspirin</p><p><b>STEMI:</b> PCI <90min | Lysis <30min</p><p><b>NSTEMI:</b> Anticoag + early cath</p><p><b>Troponin:</b> Repeat at 3h & 6h</p>'},
+    {title:'💓 Afib Rate Control', category:'cardiac', content:'<p><b>Stable:</b> Diltiazem 15-20mg IV or Metoprolol 5mg IV</p><p><b>Target HR:</b> <110 bpm</p><p><b>HFrEF:</b> Avoid diltiazem, use digoxin/amiodarone</p><p><b>CHA₂DS₂-VASc:</b> ≥2 = anticoagulate</p>'},
+    {title:'🫀 Heart Failure', category:'cardiac', content:'<p><b>Acute:</b> Furosemide 40-80mg IV, Nitrates, O₂</p><p><b>Target:</b> UOP 0.5-1 mL/kg/hr</p><p><b>Hold:</b> ACEi/ARB if Cr↑ >30%, K⁺>5.5</p><p><b>BNP:</b> >400 likely HF | <100 unlikely</p>'},
+    
+    // Respiratory
+    {title:'🫁 COPD Exacerbation', category:'respiratory', content:'<p><b>Bronchodilators:</b> Salbutamol + Ipratropium nebs</p><p><b>Steroids:</b> Prednisone 40mg x5 days</p><p><b>Antibiotics:</b> If purulent sputum (Augmentin/Azithro)</p><p><b>BiPAP:</b> If pH <7.35, pCO₂ >45</p>'},
+    {title:'🔵 Oxygen Targets', category:'respiratory', content:'<p><b>General:</b> SpO₂ 94-98%</p><p><b>COPD/CO₂ retainer:</b> 88-92%</p><p><b>ARDS:</b> Accept 88-92% with low tidal volume</p><p><b>Stroke/MI:</b> Only if SpO₂ <94%</p>'},
+    {title:'🩺 PE Wells Score', category:'respiratory', content:'<p>DVT symptoms: 3 | PE most likely: 3</p><p>HR >100: 1.5 | Immobile/Surgery: 1.5</p><p>Prior PE/DVT: 1.5 | Hemoptysis: 1 | Malignancy: 1</p><p><b>>4:</b> High risk → CT angio</p>'},
+    
+    // Renal
+    {title:'🔬 AKI Staging (KDIGO)', category:'renal', content:'<p><b>Stage 1:</b> Cr ↑1.5-1.9x or ↑≥0.3</p><p><b>Stage 2:</b> Cr ↑2-2.9x baseline</p><p><b>Stage 3:</b> Cr ↑3x or ≥4.0 or RRT</p><p><b>Workup:</b> U/A, FeNa, renal US</p>'},
+    {title:'💧 IV Fluid Guide', category:'renal', content:'<p><b>Resuscitation:</b> NS or LR bolus 500mL-1L</p><p><b>Maintenance:</b> 25-30 mL/kg/day</p><p><b>Hyperkalemia:</b> Avoid LR (has 4 mEq K⁺)</p><p><b>Hyponatremia:</b> NS or fluid restrict</p>'},
+    {title:'⚖️ Electrolyte Replacement', category:'renal', content:'<p><b>K⁺ 3.0-3.5:</b> 40 mEq PO</p><p><b>K⁺ <3.0:</b> 10-20 mEq/hr IV (max 40/hr)</p><p><b>Mg²⁺ <1.5:</b> 2g MgSO₄ IV over 2h</p><p><b>PO₄ <2:</b> K-Phos 15-30 mmol IV</p>'},
+    
+    // Neuro
+    {title:'🧠 Stroke - tPA', category:'neuro', content:'<p><b>Window:</b> ≤4.5h from last known well</p><p><b>Dose:</b> 0.9 mg/kg (max 90mg)</p><p><b>Admin:</b> 10% bolus, 90% over 60min</p><p><b>BP goal pre-tPA:</b> <185/110</p>'},
+    {title:'🧠 Stroke - Thrombectomy', category:'neuro', content:'<p><b>Window:</b> ≤6h standard | ≤24h (DAWN/DEFUSE)</p><p><b>Criteria:</b> LVO (ICA, M1, basilar)</p><p><b>NIHSS:</b> Usually ≥6</p><p><b>Post-procedure BP:</b> <180/105</p>'},
+    {title:'💊 Seizure Management', category:'neuro', content:'<p><b>1st line:</b> Lorazepam 4mg IV (may repeat x1)</p><p><b>2nd line:</b> Levetiracetam 60mg/kg or Fosphenytoin 20mg PE/kg</p><p><b>Refractory:</b> Propofol or Midazolam gtt</p><p><b>Check:</b> Glucose, Na⁺, Ca²⁺, Mg²⁺</p>'},
+    
+    // Infection
+    {title:'🦠 Sepsis Bundle (Hour-1)', category:'infection', content:'<p><b>1.</b> Measure lactate (repeat if >2)</p><p><b>2.</b> Blood cultures before abx</p><p><b>3.</b> Broad-spectrum antibiotics</p><p><b>4.</b> 30 mL/kg crystalloid if hypotensive or lactate ≥4</p>'},
+    {title:'💊 Empiric Antibiotics', category:'infection', content:'<p><b>CAP:</b> Ceftriaxone + Azithro</p><p><b>HAP/VAP:</b> Pip-Tazo + Vanc ± Tobra</p><p><b>UTI simple:</b> Ceftriaxone or Cipro</p><p><b>UTI complicated:</b> Pip-Tazo or Meropenem</p><p><b>SBP:</b> Ceftriaxone | <b>Cellulitis:</b> Cefazolin</p>'},
+    {title:'🧫 Meningitis', category:'infection', content:'<p><b>Empiric:</b> Ceftriaxone 2g + Vancomycin + Dexamethasone</p><p><b>Dexa timing:</b> Before or with first abx dose</p><p><b>LP before CT if:</b> No immunocompromise, no focal neuro, no papilledema</p>'},
+    
+    // GI/Liver
+    {title:'🩸 GI Bleed', category:'gi', content:'<p><b>Resuscitate:</b> 2 large bore IV, type & cross</p><p><b>Transfuse:</b> Hgb <7 (or <8 if CAD)</p><p><b>PPI:</b> Pantoprazole 80mg bolus then 8mg/hr</p><p><b>Variceal:</b> Octreotide + Ceftriaxone + EGD</p>'},
+    {title:'🍺 Alcohol Withdrawal', category:'gi', content:'<p><b>CIWA protocol:</b> Diazepam or Lorazepam PRN</p><p><b>Prophylaxis:</b> Thiamine 500mg IV x3d then 100mg PO</p><p><b>DTs peak:</b> 48-72h | Seizures: 12-48h</p><p><b>Severe:</b> Phenobarbital or dexmedetomidine</p>'},
+    {title:'🟡 Hepatic Encephalopathy', category:'gi', content:'<p><b>Lactulose:</b> 30mL q2h until 3-4 BM/day</p><p><b>Rifaximin:</b> 550mg BID (prevention)</p><p><b>Identify trigger:</b> Infection, GI bleed, constipation, meds</p><p><b>Protein:</b> Do NOT restrict (1.2-1.5 g/kg/day)</p>'},
+    
+    // Anticoagulation
+    {title:'💉 Anticoag Reversal', category:'anticoag', content:'<p><b>Warfarin:</b> Vit K 10mg IV + 4F-PCC</p><p><b>Heparin:</b> Protamine 1mg per 100U heparin</p><p><b>Dabigatran:</b> Idarucizumab 5g IV</p><p><b>Xa inhibitors:</b> Andexanet alfa or 4F-PCC</p>'},
+    {title:'🩸 DVT/PE Treatment', category:'anticoag', content:'<p><b>Enoxaparin:</b> 1mg/kg q12h or 1.5mg/kg daily</p><p><b>Heparin gtt:</b> 80U/kg bolus then 18U/kg/hr</p><p><b>Duration:</b> Provoked 3mo | Unprovoked ≥6mo</p><p><b>Cancer:</b> LMWH or DOAC long-term</p>'},
+    
+    // Diabetes
+    {title:'📊 DKA Management', category:'diabetes', content:'<p><b>Fluids:</b> NS 1L/hr x2h, then 250-500mL/hr</p><p><b>Insulin:</b> 0.1 U/kg/hr (no bolus per newer data)</p><p><b>K⁺:</b> Add 20-40 mEq/L when K⁺ <5.3</p><p><b>Bicarb:</b> Only if pH <6.9</p><p><b>Transition:</b> When AG closes + eating</p>'},
+    {title:'💉 Insulin Sliding Scale', category:'diabetes', content:'<p><b>Usual:</b> 150-200: 2U | 201-250: 4U | 251-300: 6U | 301-350: 8U | >350: 10U + call MD</p><p><b>Sensitive:</b> Halve doses</p><p><b>Resistant:</b> 1.5x doses</p><p><b>Target:</b> 140-180 mg/dL inpatient</p>'}
   ];
 
   // ========== UTILS ==========
@@ -1183,8 +1248,22 @@
   }
 
   // ========== REFERENCE ==========
-  function renderRefs() {
-    $('refGrid').innerHTML = REFS.map(function(r) { return '<div class="ref-card"><h4>' + r.title + '</h4>' + r.content + '</div>'; }).join('');
+  function renderRefs(filter) {
+    filter = filter || 'all';
+    var filtered = filter === 'all' ? REFS : REFS.filter(function(r) { return r.category === filter; });
+    $('refGrid').innerHTML = filtered.map(function(r) { 
+      return '<div class="ref-card" data-cat="' + (r.category || '') + '"><h4>' + r.title + '</h4>' + r.content + '</div>'; 
+    }).join('');
+  }
+
+  function setupRefFilters() {
+    document.querySelectorAll('.ref-filter').forEach(function(btn) {
+      btn.onclick = function() {
+        document.querySelectorAll('.ref-filter').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        renderRefs(this.dataset.cat);
+      };
+    });
   }
 
   // ========== INIT ==========
@@ -1202,6 +1281,7 @@
 
     setupTabs();
     setupUpload();
+    setupRefFilters();
     renderScores();
     renderRefs();
     checkAuth();
