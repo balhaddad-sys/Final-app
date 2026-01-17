@@ -3,387 +3,931 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0a0f1a">
+  <meta name="theme-color" content="#050810">
   <title>MedWard | Clinical Intelligence Platform</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--bg:#050810;--bg2:#0c1322;--bg3:#131d2e;--text:#f0f4fc;--text2:#a0aec4;--muted:#5a6a85;--gold:#d4af37;--teal:#00d4aa;--blue:#3b82f6;--rose:#f43f5e;--purple:#8b5cf6;--border:rgba(212,175,55,0.15)}
+    :root{
+      --bg:#050810;--bg2:#0c1322;--bg3:#131d2e;--bg4:#1a2744;
+      --text:#f0f4fc;--text2:#a0aec4;--muted:#5a6a85;
+      --gold:#d4af37;--gold2:#f0d875;--teal:#00d4aa;--blue:#3b82f6;--rose:#f43f5e;--purple:#8b5cf6;--orange:#f97316;
+      --border:rgba(212,175,55,0.15);--glow:rgba(212,175,55,0.08);
+      --radius:12px;
+    }
     html{font-size:16px;-webkit-font-smoothing:antialiased}
     body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,var(--glow),transparent 50%),radial-gradient(ellipse at 80% 90%,rgba(0,212,170,0.05),transparent 50%);pointer-events:none;z-index:-1}
     
-    .header{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,25,45,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:1000}
-    .logo{display:flex;align-items:center;gap:12px}
-    .logo-mark{width:40px;height:40px;background:linear-gradient(135deg,#d4af37,#f0d875);border-radius:12px;display:grid;place-items:center}
-    .logo-mark svg{width:24px;height:24px;stroke:#050810;stroke-width:2.5;fill:none}
-    .logo-text{font-size:1.35rem;font-weight:700;background:linear-gradient(135deg,#d4af37,#f0d875);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .user-section{display:none;align-items:center;gap:12px}
-    .user-section.visible{display:flex}
-    .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,#d4af37,#00d4aa);border-radius:50%;display:grid;place-items:center;font-weight:700;color:#050810}
-    .user-name{font-weight:500;font-size:0.9rem}
+    /* Header */
+    .header{position:fixed;top:0;left:0;right:0;height:60px;background:rgba(12,19,34,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:1000}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:grid;place-items:center}
+    .logo-icon svg{width:22px;height:22px;stroke:#050810;stroke-width:2.5;fill:none}
+    .logo-text{font-size:1.2rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .user-pill{display:none;align-items:center;gap:8px;padding:6px 12px 6px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:100px}
+    .user-pill.show{display:flex}
+    .user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:0.75rem;color:#050810}
+    .user-name{font-size:0.8rem;font-weight:500}
     
-    .screen{display:none;min-height:100vh;padding:84px 20px 40px}
+    /* Screen */
+    .screen{display:none;min-height:100vh;padding:76px 16px 32px}
     .screen.active{display:block}
-    #screen-login.active{display:flex;align-items:center;justify-content:center}
+    #login.active{display:flex;align-items:center;justify-content:center;padding:20px}
     
-    .login-card{width:100%;max-width:420px;background:linear-gradient(145deg,#0f1829,#0a1220);border:1px solid var(--border);border-radius:24px;padding:40px 32px;box-shadow:0 16px 64px rgba(0,0,0,0.5);position:relative}
-    .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(135deg,#d4af37,#f0d875);border-radius:24px 24px 0 0}
-    .login-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);border-radius:100px;font-size:0.7rem;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:20px}
-    .login-title{font-size:1.75rem;font-weight:700;margin-bottom:6px}
-    .login-subtitle{color:var(--muted);margin-bottom:28px;font-size:0.9rem}
-    .form-group{margin-bottom:20px}
-    .form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
-    .form-input{width:100%;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:1rem;-webkit-appearance:none}
-    .form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,0.15)}
-    .form-input::placeholder{color:var(--muted)}
-    .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 24px;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-    .btn-primary{background:linear-gradient(135deg,#d4af37,#f0d875);color:#050810;box-shadow:0 4px 20px rgba(212,175,55,0.3)}
-    .btn-primary:active{transform:scale(0.98)}
+    /* Login */
+    .login-card{width:100%;max-width:400px;background:linear-gradient(145deg,var(--bg2),var(--bg));border:1px solid var(--border);border-radius:20px;padding:36px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal));border-radius:20px 20px 0 0}
+    .login-card{position:relative}
+    .login-title{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+    .login-sub{color:var(--muted);font-size:0.85rem;margin-bottom:24px}
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:0.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+    .form-input{width:100%;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:1rem;-webkit-appearance:none}
+    .form-input:focus{outline:none;border-color:var(--gold)}
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 20px;border:none;border-radius:10px;font-family:inherit;font-size:0.95rem;font-weight:600;cursor:pointer;transition:transform 0.15s}
+    .btn:active{transform:scale(0.98)}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#050810}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
+    .btn-sm{padding:8px 14px;font-size:0.8rem}
     
+    /* Container */
     .container{max-width:1200px;margin:0 auto}
-    .page-header{margin-bottom:24px}
-    .page-title{font-size:1.5rem;font-weight:700;margin-bottom:4px}
-    .page-subtitle{color:var(--muted);font-size:0.9rem}
+    .page-title{font-size:1.3rem;font-weight:700;margin-bottom:4px}
+    .page-sub{color:var(--muted);font-size:0.85rem;margin-bottom:20px}
     
-    .tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:12px;margin-bottom:24px;overflow-x:auto}
-    .tab{flex:1;min-width:80px;padding:12px 16px;background:transparent;border:none;border-radius:8px;color:var(--text2);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;white-space:nowrap}
-    .tab:hover{color:var(--text)}
-    .tab.active{background:linear-gradient(135deg,#d4af37,#f0d875);color:#050810;font-weight:600}
-    .tab-content{display:none}
-    .tab-content.active{display:block;animation:fadeIn 0.3s ease}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    /* Nav Tabs */
+    .nav-tabs{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:var(--radius);margin-bottom:20px;overflow-x:auto}
+    .nav-tab{flex:1;min-width:70px;padding:10px 12px;background:transparent;border:none;border-radius:8px;color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:0.15s}
+    .nav-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#050810;font-weight:600}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block;animation:fadeIn 0.3s}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     
-    .card{background:linear-gradient(145deg,#0f1829,#0a1220);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px}
-    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-    .card-title{display:flex;align-items:center;gap:10px;font-size:0.95rem;font-weight:600}
-    .card-title svg{width:18px;height:18px;stroke:var(--gold)}
-    .card-body{padding:20px}
+    /* Cards */
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+    .card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .card-title{display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:600}
+    .card-title svg{width:16px;height:16px;stroke:var(--gold)}
+    .card-body{padding:16px}
     
-    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
-    .stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
-    .stat-value{font-size:2rem;font-weight:700;color:var(--gold)}
-    .stat-label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px}
+    /* Upload Zone */
+    .upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:0.2s}
+    .upload-zone:hover,.upload-zone.dragover{border-color:var(--gold);background:rgba(212,175,55,0.05)}
+    .upload-icon{width:48px;height:48px;background:rgba(212,175,55,0.1);border-radius:50%;display:grid;place-items:center;margin:0 auto 12px}
+    .upload-icon svg{width:24px;height:24px;stroke:var(--gold)}
+    .upload-title{font-weight:600;margin-bottom:4px}
+    .upload-sub{font-size:0.8rem;color:var(--muted)}
+    .upload-file{display:none}
     
-    .patients-table{width:100%;border-collapse:collapse}
-    .patients-table th{text-align:left;padding:12px 16px;background:var(--bg3);font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);border-bottom:1px solid var(--border)}
-    .patients-table td{padding:16px;border-bottom:1px solid var(--border);font-size:0.9rem}
-    .patients-table tr:hover{background:rgba(212,175,55,0.03)}
-    .patient-cell{display:flex;align-items:center;gap:12px}
-    .patient-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d4af37,#00d4aa);display:grid;place-items:center;font-weight:700;font-size:0.85rem;color:#050810;flex-shrink:0}
+    /* Doc Type Pills */
+    .doc-types{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .doc-type{padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:100px;font-size:0.75rem;font-weight:500;cursor:pointer;transition:0.15s}
+    .doc-type.active{background:rgba(212,175,55,0.15);border-color:var(--gold);color:var(--gold)}
+    
+    /* Stats Row */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+    .stat-val{font-size:1.5rem;font-weight:700;color:var(--gold)}
+    .stat-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px}
+    
+    /* Patient Table */
+    .patient-table{width:100%;border-collapse:collapse}
+    .patient-table th{text-align:left;padding:10px 12px;background:var(--bg3);font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)}
+    .patient-table td{padding:12px;border-bottom:1px solid var(--border);font-size:0.85rem}
+    .patient-table tr:hover{background:rgba(212,175,55,0.03)}
+    .patient-cell{display:flex;align-items:center;gap:10px}
+    .patient-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--teal));display:grid;place-items:center;font-weight:700;font-size:0.75rem;color:#050810;flex-shrink:0}
     .patient-name{font-weight:600}
-    .patient-id{font-size:0.75rem;color:var(--muted)}
-    .badge{display:inline-block;padding:4px 10px;border-radius:100px;font-size:0.7rem;font-weight:600;text-transform:uppercase}
+    .patient-mrn{font-size:0.7rem;color:var(--muted)}
+    .badge{display:inline-block;padding:3px 8px;border-radius:100px;font-size:0.65rem;font-weight:600;text-transform:uppercase}
     .badge-critical{background:rgba(244,63,94,0.15);color:var(--rose)}
     .badge-active{background:rgba(0,212,170,0.15);color:var(--teal)}
     .badge-stable{background:rgba(59,130,246,0.15);color:var(--blue)}
-    .badge-chronic{background:rgba(139,92,246,0.15);color:var(--purple)}
     
-    .empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
-    .empty-state svg{width:48px;height:48px;stroke:var(--muted);margin-bottom:16px;opacity:0.5}
-    .loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--muted)}
-    .spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+    /* Scores Grid */
+    .scores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .score-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;transition:0.2s}
+    .score-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+    .score-card.active{border-color:var(--gold);background:rgba(212,175,55,0.08)}
+    .score-icon{font-size:1.5rem;margin-bottom:6px}
+    .score-name{font-weight:600;font-size:0.85rem;margin-bottom:2px}
+    .score-desc{font-size:0.7rem;color:var(--muted)}
+    
+    /* Calculator */
+    .calc-container{display:none}
+    .calc-container.active{display:block}
+    .calc-item{background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:10px}
+    .calc-item-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .calc-item-num{width:26px;height:26px;background:var(--gold);border-radius:6px;display:grid;place-items:center;font-size:0.7rem;font-weight:700;color:#050810}
+    .calc-item-name{font-weight:600;font-size:0.85rem}
+    .calc-opts{display:flex;flex-wrap:wrap;gap:6px}
+    .calc-opt{flex:1;min-width:60px;padding:10px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;transition:0.15s}
+    .calc-opt:hover{border-color:var(--gold)}
+    .calc-opt.sel{background:rgba(212,175,55,0.15);border-color:var(--gold)}
+    .calc-opt input{display:none}
+    .calc-opt-score{display:block;font-size:1.1rem;font-weight:700;color:var(--gold)}
+    .calc-opt-label{font-size:0.65rem;color:var(--text2)}
+    .calc-result{background:var(--bg3);border-radius:10px;padding:20px;text-align:center;margin-top:16px}
+    .calc-result-val{font-size:2.5rem;font-weight:700;color:var(--gold)}
+    .calc-result-max{font-size:0.9rem;color:var(--muted)}
+    .severity-badge{display:inline-block;padding:8px 16px;border-radius:100px;font-size:0.8rem;font-weight:600;margin-top:12px}
+    
+    /* Reference */
+    .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+    .ref-card{background:var(--bg3);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:14px}
+    .ref-card h4{font-size:0.85rem;color:var(--gold);margin-bottom:8px}
+    .ref-card p{font-size:0.8rem;color:var(--text2);margin:3px 0}
+    
+    /* Loading */
+    .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--muted)}
+    .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{text-align:center;padding:40px;color:var(--muted)}
     
-    .calc-item{background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:12px}
-    .calc-item-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .calc-item-num{width:28px;height:28px;background:var(--gold);border-radius:6px;display:grid;place-items:center;font-size:0.75rem;font-weight:700;color:#050810}
-    .calc-item-name{font-weight:600;font-size:0.9rem}
-    .calc-options{display:flex;flex-wrap:wrap;gap:8px}
-    .calc-option{flex:1;min-width:70px;padding:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;transition:0.15s}
-    .calc-option:hover{border-color:var(--gold)}
-    .calc-option.selected{background:rgba(212,175,55,0.15);border-color:var(--gold)}
-    .calc-option input{display:none}
-    .calc-option-score{display:block;font-size:1.25rem;font-weight:700;color:var(--gold)}
-    .calc-option-label{font-size:0.7rem;color:var(--text2)}
-    .calc-result{background:var(--bg3);border-radius:12px;padding:20px;text-align:center;margin-top:20px}
-    .calc-result-value{font-size:3rem;font-weight:700;color:var(--gold)}
-    .calc-result-max{font-size:1rem;color:var(--muted)}
-    .calc-result-label{font-size:0.8rem;color:var(--muted);margin-bottom:12px}
-    .severity-badge{display:inline-block;padding:8px 16px;border-radius:100px;font-size:0.85rem;font-weight:600}
-    
-    .reference-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
-    .reference-item{background:var(--bg3);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:16px}
-    .reference-item h4{font-size:0.85rem;color:var(--gold);margin-bottom:8px}
-    .reference-item p{font-size:0.8rem;color:var(--text2);margin:4px 0}
-    
-    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 24px;background:var(--bg3);border:1px solid var(--teal);border-radius:12px;color:var(--text);font-weight:500;opacity:0;transition:0.3s;z-index:9999}
+    /* Toast */
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 20px;background:var(--bg3);border:1px solid var(--teal);border-radius:10px;font-size:0.85rem;font-weight:500;opacity:0;transition:0.3s;z-index:9999}
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    .toast.error{border-color:var(--rose)}
     
-    @media(max-width:768px){
-      .patients-table th:nth-child(n+3),.patients-table td:nth-child(n+3){display:none}
-      .calc-options{flex-direction:column}
-      .calc-option{min-width:100%}
-      .stats-row{grid-template-columns:repeat(3,1fr)}
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;padding:20px;z-index:2000}
+    .modal.active{display:flex}
+    .modal-content{width:100%;max-width:600px;max-height:90vh;background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+    .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .modal-title{font-size:1rem;font-weight:600}
+    .modal-close{width:32px;height:32px;background:var(--bg3);border:none;border-radius:8px;color:var(--text2);cursor:pointer;display:grid;place-items:center}
+    .modal-body{padding:20px;overflow-y:auto;flex:1}
+    
+    /* Analysis Result */
+    .analysis-section{margin-bottom:20px}
+    .analysis-section h4{font-size:0.85rem;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .analysis-content{background:var(--bg3);border-radius:10px;padding:14px;font-size:0.85rem;line-height:1.7}
+    .analysis-content ul{margin:8px 0;padding-left:20px}
+    .analysis-content li{margin:4px 0}
+    
+    /* Neural Badge */
+    .neural-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:100px;font-size:0.7rem;font-weight:600;color:var(--teal)}
+    .neural-dot{width:6px;height:6px;background:var(--teal);border-radius:50%;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    
+    /* Responsive */
+    @media(max-width:640px){
+      .stats-row{grid-template-columns:repeat(2,1fr)}
+      .patient-table th:nth-child(n+3),.patient-table td:nth-child(n+3){display:none}
+      .scores-grid{grid-template-columns:repeat(2,1fr)}
+      .calc-opts{flex-direction:column}
+      .calc-opt{min-width:100%}
     }
   </style>
 </head>
 <body>
   <header class="header">
     <div class="logo">
-      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
       <span class="logo-text">MedWard</span>
     </div>
-    <div class="user-section" id="user-section">
-      <span class="user-name" id="display-name">User</span>
-      <div class="user-avatar" id="display-initial">U</div>
+    <div class="user-pill" id="user-pill">
+      <div class="user-avatar" id="user-avatar">B</div>
+      <span class="user-name" id="user-name">User</span>
     </div>
   </header>
 
-  <main class="screen active" id="screen-login">
+  <!-- Login -->
+  <main class="screen active" id="login">
     <div class="login-card">
-      <div class="login-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Secure Access</div>
       <h1 class="login-title">Welcome to MedWard</h1>
-      <p class="login-subtitle">Clinical Intelligence Platform</p>
+      <p class="login-sub">Clinical Intelligence Platform</p>
       <div class="form-group">
         <label class="form-label">Your Name</label>
-        <input type="text" id="input-name" class="form-input" placeholder="Enter your name" autocomplete="off">
+        <input type="text" id="login-name" class="form-input" placeholder="Enter your name" autocomplete="off">
       </div>
-      <button type="button" class="btn btn-primary" id="btn-login">Continue<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      <button class="btn btn-gold" id="login-btn">Continue</button>
     </div>
   </main>
 
-  <main class="screen" id="screen-dashboard">
+  <!-- Dashboard -->
+  <main class="screen" id="dashboard">
     <div class="container">
-      <header class="page-header">
-        <h1 class="page-title">Clinical Dashboard</h1>
-        <p class="page-subtitle">Welcome back, <span id="greeting-name">Doctor</span></p>
-      </header>
-      <div class="tabs">
-        <button class="tab active" data-tab="patients">Patients</button>
-        <button class="tab" data-tab="nihss">NIHSS</button>
-        <button class="tab" data-tab="sedan">SEDAN</button>
-        <button class="tab" data-tab="reference">Reference</button>
+      <h1 class="page-title">Clinical Dashboard</h1>
+      <p class="page-sub">Welcome back, <span id="greeting">Doctor</span></p>
+      
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="analysis">Analysis</button>
+        <button class="nav-tab" data-tab="patients">Patients</button>
+        <button class="nav-tab" data-tab="scores">Scores</button>
+        <button class="nav-tab" data-tab="reference">Reference</button>
       </div>
       
-      <div class="tab-content active" id="tab-patients">
-        <div class="stats-row">
-          <div class="stat-card"><div class="stat-value" id="stat-total">-</div><div class="stat-label">Total</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-active">-</div><div class="stat-label">Active</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-critical">-</div><div class="stat-label">Critical</div></div>
-        </div>
+      <!-- Analysis Tab -->
+      <div class="tab-panel active" id="panel-analysis">
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ward Patients</h2>
-            <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:0.8rem;" id="btn-refresh">Refresh</button>
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Medical Document</h2>
+            <div class="neural-badge"><span class="neural-dot"></span>Neural Engine Active</div>
           </div>
-          <div class="card-body" style="padding:0;overflow-x:auto;"><div id="patients-container"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div></div>
-        </div>
-      </div>
-      
-      <div class="tab-content" id="tab-nihss">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>NIHSS Calculator</h2>
-            <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:0.8rem;" id="btn-reset-nihss">Reset</button>
-          </div>
-          <div class="card-body" id="nihss-calculator"></div>
-        </div>
-      </div>
-      
-      <div class="tab-content" id="tab-sedan">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>SEDAN Score</h2>
-            <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:0.8rem;" id="btn-reset-sedan">Reset</button>
-          </div>
-          <div class="card-body" id="sedan-calculator"></div>
-        </div>
-      </div>
-      
-      <div class="tab-content" id="tab-reference">
-        <div class="card">
-          <div class="card-header"><h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Quick Reference</h2></div>
           <div class="card-body">
-            <div class="reference-grid">
-              <div class="reference-item"><h4>tPA Window</h4><p><strong>IV tPA:</strong> Within 4.5 hours</p><p><strong>Thrombectomy:</strong> Up to 24h</p></div>
-              <div class="reference-item"><h4>tPA Dosing</h4><p><strong>Dose:</strong> 0.9 mg/kg (max 90mg)</p><p><strong>Admin:</strong> 10% bolus, 90% over 60min</p></div>
-              <div class="reference-item"><h4>BP Targets</h4><p><strong>Pre-tPA:</strong> &lt;185/110</p><p><strong>Post-tPA:</strong> &lt;180/105</p></div>
-              <div class="reference-item"><h4>NIHSS Interpretation</h4><p>0: None | 1-4: Minor | 5-15: Moderate</p><p>16-20: Mod-Severe | 21+: Severe</p></div>
-              <div class="reference-item"><h4>SEDAN sICH Risk</h4><p>0: 1.4% | 1: 2.9% | 2: 5.0%</p><p>3: 8.5% | 4: 12.2% | 5-6: 17-21%</p></div>
-              <div class="reference-item"><h4>Contraindications</h4><p>Recent surgery (14d), Plt&lt;100k</p><p>INR&gt;1.7, Prior ICH, Active bleed</p></div>
+            <div class="upload-zone" id="upload-zone">
+              <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+              <div class="upload-title">Drop file or tap to upload</div>
+              <div class="upload-sub">PDF, images, or text files</div>
+              <input type="file" class="upload-file" id="upload-file" accept=".pdf,.png,.jpg,.jpeg,.txt">
+            </div>
+            <div class="doc-types">
+              <span class="doc-type active" data-type="lab">Lab Results</span>
+              <span class="doc-type" data-type="imaging">Imaging</span>
+              <span class="doc-type" data-type="history">History</span>
+              <span class="doc-type" data-type="discharge">Discharge</span>
+              <span class="doc-type" data-type="general">General</span>
             </div>
           </div>
         </div>
+        
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-val" id="neural-patterns">0</div><div class="stat-label">Patterns</div></div>
+          <div class="stat-box"><div class="stat-val" id="neural-hits">0%</div><div class="stat-label">Cache Hit</div></div>
+          <div class="stat-box"><div class="stat-val" id="analyses-count">0</div><div class="stat-label">Analyses</div></div>
+          <div class="stat-box"><div class="stat-val" id="avg-time">0s</div><div class="stat-label">Avg Time</div></div>
+        </div>
+      </div>
+      
+      <!-- Patients Tab -->
+      <div class="tab-panel" id="panel-patients">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Ward Patients</h2>
+            <button class="btn btn-ghost btn-sm" id="refresh-patients">Refresh</button>
+          </div>
+          <div class="card-body" style="padding:0;overflow-x:auto">
+            <div id="patients-container"><div class="loading"><div class="spinner"></div>Loading patients...</div></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Scores Tab -->
+      <div class="tab-panel" id="panel-scores">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Clinical Scoring Tools</h2>
+          </div>
+          <div class="card-body">
+            <div class="scores-grid" id="scores-grid"></div>
+          </div>
+        </div>
+        <div id="calculator-area"></div>
+      </div>
+      
+      <!-- Reference Tab -->
+      <div class="tab-panel" id="panel-reference">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Quick Reference</h2>
+          </div>
+          <div class="card-body">
+            <div class="ref-grid" id="ref-grid"></div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 
+  <!-- Analysis Modal -->
+  <div class="modal" id="analysis-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Analysis Results</h2>
+        <button class="modal-close" id="close-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="analysis-results"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
-  <script>
+<script>
 (function(){
-  var API='https://script.google.com/macros/s/AKfycbx-l2xdsAHTZu7bcueN83Yz8xbCwtKbHfUSJuhIgtWVR5XyeJYh9TrfMgzznTYX4Z0kww/exec';
-  var state={user:null,patients:[],nihss:{},sedan:{}};
-  var $=function(id){return document.getElementById(id)};
-  
-  var NIHSS=[
-    {id:'1a',name:'Level of Consciousness',opts:[{s:0,l:'Alert'},{s:1,l:'Drowsy'},{s:2,l:'Stuporous'},{s:3,l:'Coma'}]},
-    {id:'1b',name:'LOC Questions',opts:[{s:0,l:'Both Correct'},{s:1,l:'One Correct'},{s:2,l:'Neither'}]},
-    {id:'1c',name:'LOC Commands',opts:[{s:0,l:'Both Correct'},{s:1,l:'One Correct'},{s:2,l:'Neither'}]},
-    {id:'2',name:'Best Gaze',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Forced'}]},
-    {id:'3',name:'Visual Fields',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Complete'},{s:3,l:'Bilateral'}]},
-    {id:'4',name:'Facial Palsy',opts:[{s:0,l:'Normal'},{s:1,l:'Minor'},{s:2,l:'Partial'},{s:3,l:'Complete'}]},
-    {id:'5a',name:'Motor Arm L',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
-    {id:'5b',name:'Motor Arm R',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
-    {id:'6a',name:'Motor Leg L',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
-    {id:'6b',name:'Motor Leg R',opts:[{s:0,l:'No Drift'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No Effort'},{s:4,l:'None'}]},
-    {id:'7',name:'Limb Ataxia',opts:[{s:0,l:'Absent'},{s:1,l:'One'},{s:2,l:'Two'}]},
-    {id:'8',name:'Sensory',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
-    {id:'9',name:'Language',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'},{s:3,l:'Mute'}]},
-    {id:'10',name:'Dysarthria',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
-    {id:'11',name:'Extinction',opts:[{s:0,l:'Normal'},{s:1,l:'One'},{s:2,l:'Profound'}]}
-  ];
-  
-  var SEDAN=[
-    {id:'s',name:'Blood Glucose',letter:'S',opts:[{s:0,l:'<145'},{s:1,l:'145-216'},{s:2,l:'>216'}]},
-    {id:'e',name:'Early Infarct on CT',letter:'E',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
-    {id:'d',name:'Hyperdense Artery',letter:'D',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},
-    {id:'a',name:'Age',letter:'A',opts:[{s:0,l:'<75'},{s:1,l:'≥75'}]},
-    {id:'n',name:'NIHSS',letter:'N',opts:[{s:0,l:'0-9'},{s:1,l:'≥10'}]}
+  // ========== CONFIG ==========
+  var CONFIG = {
+    CLAUDE_API: 'https://script.google.com/macros/s/AKfycby-3iNSD4CquZiyg0inXQ_sGs3IxNrSx1WzRREIv2ABKnyPP5GjvSYZdzClkZqWZ9M7Og/exec',
+    PATIENT_API: 'https://script.google.com/macros/s/AKfycbx-l2xdsAHTZu7bcueN83Yz8xbCwtKbHfUSJuhIgtWVR5XyeJYh9TrfMgzznTYX4Z0kww/exec'
+  };
+
+  // ========== STATE ==========
+  var state = {
+    user: null,
+    patients: [],
+    docType: 'lab',
+    analyses: 0,
+    totalTime: 0,
+    activeScore: null,
+    scores: {}
+  };
+
+  // ========== SCORING SYSTEMS ==========
+  var SCORES = {
+    nihss: {
+      name: 'NIHSS',
+      icon: '🧠',
+      desc: 'Stroke Severity',
+      items: [
+        {id:'1a',name:'LOC',opts:[{s:0,l:'Alert'},{s:1,l:'Drowsy'},{s:2,l:'Stupor'},{s:3,l:'Coma'}]},
+        {id:'1b',name:'LOC Questions',opts:[{s:0,l:'Both'},{s:1,l:'One'},{s:2,l:'Neither'}]},
+        {id:'1c',name:'LOC Commands',opts:[{s:0,l:'Both'},{s:1,l:'One'},{s:2,l:'Neither'}]},
+        {id:'2',name:'Gaze',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Forced'}]},
+        {id:'3',name:'Visual',opts:[{s:0,l:'Normal'},{s:1,l:'Partial'},{s:2,l:'Complete'},{s:3,l:'Bilateral'}]},
+        {id:'4',name:'Facial',opts:[{s:0,l:'Normal'},{s:1,l:'Minor'},{s:2,l:'Partial'},{s:3,l:'Complete'}]},
+        {id:'5a',name:'Arm L',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
+        {id:'5b',name:'Arm R',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
+        {id:'6a',name:'Leg L',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
+        {id:'6b',name:'Leg R',opts:[{s:0,l:'None'},{s:1,l:'Drift'},{s:2,l:'Some'},{s:3,l:'No effort'},{s:4,l:'No mvmt'}]},
+        {id:'7',name:'Ataxia',opts:[{s:0,l:'Absent'},{s:1,l:'One'},{s:2,l:'Two'}]},
+        {id:'8',name:'Sensory',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
+        {id:'9',name:'Language',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'},{s:3,l:'Mute'}]},
+        {id:'10',name:'Dysarthria',opts:[{s:0,l:'Normal'},{s:1,l:'Mild'},{s:2,l:'Severe'}]},
+        {id:'11',name:'Extinction',opts:[{s:0,l:'Normal'},{s:1,l:'One'},{s:2,l:'Profound'}]}
+      ],
+      max:42,
+      interpret:function(s){
+        if(s===0)return{t:'No Symptoms',c:'#10b981'};
+        if(s<=4)return{t:'Minor',c:'#6ee7b7'};
+        if(s<=15)return{t:'Moderate',c:'#fbbf24'};
+        if(s<=20)return{t:'Mod-Severe',c:'#f97316'};
+        return{t:'Severe',c:'#ef4444'};
+      }
+    },
+    gcs: {
+      name: 'GCS',
+      icon: '👁',
+      desc: 'Consciousness',
+      items: [
+        {id:'e',name:'Eye Opening',opts:[{s:4,l:'Spontaneous'},{s:3,l:'To voice'},{s:2,l:'To pain'},{s:1,l:'None'}]},
+        {id:'v',name:'Verbal',opts:[{s:5,l:'Oriented'},{s:4,l:'Confused'},{s:3,l:'Words'},{s:2,l:'Sounds'},{s:1,l:'None'}]},
+        {id:'m',name:'Motor',opts:[{s:6,l:'Obeys'},{s:5,l:'Localizes'},{s:4,l:'Withdraws'},{s:3,l:'Flexion'},{s:2,l:'Extension'},{s:1,l:'None'}]}
+      ],
+      max:15,
+      interpret:function(s){
+        if(s>=13)return{t:'Mild (13-15)',c:'#10b981'};
+        if(s>=9)return{t:'Moderate (9-12)',c:'#fbbf24'};
+        return{t:'Severe (3-8)',c:'#ef4444'};
+      }
+    },
+    sedan: {
+      name: 'SEDAN',
+      icon: '🩸',
+      desc: 'Post-tPA ICH Risk',
+      items: [
+        {id:'s',name:'Glucose',opts:[{s:0,l:'<145'},{s:1,l:'145-216'},{s:2,l:'>216'}]},
+        {id:'e',name:'Early CT Signs',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'d',name:'Dense Artery',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},
+        {id:'a',name:'Age ≥75',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'n',name:'NIHSS ≥10',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+      ],
+      max:6,
+      interpret:function(s){
+        var r=['1.4%','2.9%','5.0%','8.5%','12.2%','16.9%','21.5%'];
+        var c=['#10b981','#6ee7b7','#84cc16','#fbbf24','#f97316','#ef4444','#dc2626'];
+        var i=Math.min(s,6);
+        return{t:r[i]+' sICH risk',c:c[i]};
+      }
+    },
+    chads: {
+      name: 'CHA₂DS₂-VASc',
+      icon: '❤️',
+      desc: 'AF Stroke Risk',
+      items: [
+        {id:'c',name:'CHF',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'h',name:'Hypertension',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'a2',name:'Age ≥75',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},
+        {id:'d',name:'Diabetes',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'s2',name:'Stroke/TIA',opts:[{s:0,l:'No'},{s:2,l:'Yes'}]},
+        {id:'v',name:'Vascular Dz',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'a',name:'Age 65-74',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'sc',name:'Female',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+      ],
+      max:9,
+      interpret:function(s){
+        if(s===0)return{t:'Low (0.2%/yr)',c:'#10b981'};
+        if(s===1)return{t:'Low-Mod (0.6%/yr)',c:'#6ee7b7'};
+        if(s===2)return{t:'Moderate (2.2%/yr)',c:'#fbbf24'};
+        return{t:'High ('+[2.2,3.2,4.0,6.7,9.8,9.6,12.2][Math.min(s-2,6)]+'%/yr)',c:'#ef4444'};
+      }
+    },
+    hasbled: {
+      name: 'HAS-BLED',
+      icon: '🩹',
+      desc: 'Bleeding Risk',
+      items: [
+        {id:'h',name:'HTN (>160)',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'a',name:'Renal/Liver',opts:[{s:0,l:'No'},{s:1,l:'One'},{s:2,l:'Both'}]},
+        {id:'s',name:'Stroke Hx',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'b',name:'Bleeding Hx',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'l',name:'Labile INR',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'e',name:'Age >65',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'d',name:'Drugs/Alcohol',opts:[{s:0,l:'No'},{s:1,l:'One'},{s:2,l:'Both'}]}
+      ],
+      max:9,
+      interpret:function(s){
+        if(s<=1)return{t:'Low (1%/yr)',c:'#10b981'};
+        if(s===2)return{t:'Moderate (1.9%/yr)',c:'#fbbf24'};
+        return{t:'High ('+[3.7,4.9,8.7,12.5][Math.min(s-3,3)]+'%/yr)',c:'#ef4444'};
+      }
+    },
+    wells_dvt: {
+      name: 'Wells DVT',
+      icon: '🦵',
+      desc: 'DVT Probability',
+      items: [
+        {id:'ca',name:'Active Cancer',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'pa',name:'Paralysis/Cast',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'br',name:'Bedridden >3d',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'te',name:'Tenderness',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'sw',name:'Leg Swelling',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'ca3',name:'Calf >3cm',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'ed',name:'Pitting Edema',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'co',name:'Collateral Veins',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'pr',name:'Prior DVT',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'al',name:'Alt Dx Likely',opts:[{s:0,l:'No'},{s:-2,l:'Yes'}]}
+      ],
+      max:9,
+      interpret:function(s){
+        if(s<=0)return{t:'Low (5%)',c:'#10b981'};
+        if(s<=2)return{t:'Moderate (17%)',c:'#fbbf24'};
+        return{t:'High (53%)',c:'#ef4444'};
+      }
+    },
+    wells_pe: {
+      name: 'Wells PE',
+      icon: '🫁',
+      desc: 'PE Probability',
+      items: [
+        {id:'dv',name:'DVT Signs',opts:[{s:0,l:'No'},{s:3,l:'Yes'}]},
+        {id:'al',name:'PE Most Likely',opts:[{s:0,l:'No'},{s:3,l:'Yes'}]},
+        {id:'hr',name:'HR >100',opts:[{s:0,l:'No'},{s:1.5,l:'Yes'}]},
+        {id:'im',name:'Immobile/Surgery',opts:[{s:0,l:'No'},{s:1.5,l:'Yes'}]},
+        {id:'pr',name:'Prior DVT/PE',opts:[{s:0,l:'No'},{s:1.5,l:'Yes'}]},
+        {id:'he',name:'Hemoptysis',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'ca',name:'Cancer',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+      ],
+      max:12.5,
+      interpret:function(s){
+        if(s<=4)return{t:'PE Unlikely (8%)',c:'#10b981'};
+        return{t:'PE Likely (34%)',c:'#ef4444'};
+      }
+    },
+    curb65: {
+      name: 'CURB-65',
+      icon: '🦠',
+      desc: 'Pneumonia Severity',
+      items: [
+        {id:'c',name:'Confusion',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'u',name:'BUN >19',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'r',name:'RR ≥30',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'b',name:'BP <90/60',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'65',name:'Age ≥65',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+      ],
+      max:5,
+      interpret:function(s){
+        if(s<=1)return{t:'Low (1.5%)',c:'#10b981'};
+        if(s===2)return{t:'Moderate (9%)',c:'#fbbf24'};
+        return{t:'Severe (22%)',c:'#ef4444'};
+      }
+    },
+    sofa: {
+      name: 'SOFA',
+      icon: '🏥',
+      desc: 'Organ Failure',
+      items: [
+        {id:'r',name:'PaO2/FiO2',opts:[{s:0,l:'≥400'},{s:1,l:'<400'},{s:2,l:'<300'},{s:3,l:'<200+vent'},{s:4,l:'<100+vent'}]},
+        {id:'c',name:'Platelets (k)',opts:[{s:0,l:'≥150'},{s:1,l:'<150'},{s:2,l:'<100'},{s:3,l:'<50'},{s:4,l:'<20'}]},
+        {id:'l',name:'Bilirubin',opts:[{s:0,l:'<1.2'},{s:1,l:'1.2-1.9'},{s:2,l:'2.0-5.9'},{s:3,l:'6-12'},{s:4,l:'>12'}]},
+        {id:'cv',name:'MAP/Pressors',opts:[{s:0,l:'≥70'},{s:1,l:'<70'},{s:2,l:'Low dopa'},{s:3,l:'Med dopa'},{s:4,l:'High'}]},
+        {id:'n',name:'GCS',opts:[{s:0,l:'15'},{s:1,l:'13-14'},{s:2,l:'10-12'},{s:3,l:'6-9'},{s:4,l:'<6'}]},
+        {id:'k',name:'Creatinine',opts:[{s:0,l:'<1.2'},{s:1,l:'1.2-1.9'},{s:2,l:'2.0-3.4'},{s:3,l:'3.5-5'},{s:4,l:'>5'}]}
+      ],
+      max:24,
+      interpret:function(s){
+        if(s<=6)return{t:'Mortality <10%',c:'#10b981'};
+        if(s<=9)return{t:'Mortality 15-20%',c:'#fbbf24'};
+        if(s<=12)return{t:'Mortality 40-50%',c:'#f97316'};
+        return{t:'Mortality >80%',c:'#ef4444'};
+      }
+    },
+    qsofa: {
+      name: 'qSOFA',
+      icon: '⚡',
+      desc: 'Sepsis Screen',
+      items: [
+        {id:'r',name:'RR ≥22',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'m',name:'Altered Mental',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'s',name:'SBP ≤100',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+      ],
+      max:3,
+      interpret:function(s){
+        if(s<2)return{t:'Low Risk',c:'#10b981'};
+        return{t:'High Risk - Evaluate for sepsis',c:'#ef4444'};
+      }
+    },
+    abcd2: {
+      name: 'ABCD²',
+      icon: '🔄',
+      desc: 'TIA Stroke Risk',
+      items: [
+        {id:'a',name:'Age ≥60',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'b',name:'BP ≥140/90',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]},
+        {id:'c',name:'Clinical',opts:[{s:0,l:'Other'},{s:1,l:'Speech'},{s:2,l:'Weakness'}]},
+        {id:'d',name:'Duration',opts:[{s:0,l:'<10m'},{s:1,l:'10-59m'},{s:2,l:'≥60m'}]},
+        {id:'d2',name:'Diabetes',opts:[{s:0,l:'No'},{s:1,l:'Yes'}]}
+      ],
+      max:7,
+      interpret:function(s){
+        if(s<=3)return{t:'Low (1% 2-day)',c:'#10b981'};
+        if(s<=5)return{t:'Moderate (4% 2-day)',c:'#fbbf24'};
+        return{t:'High (8% 2-day)',c:'#ef4444'};
+      }
+    }
+  };
+
+  // ========== REFERENCE DATA ==========
+  var REFERENCE = [
+    {title:'tPA Window',content:'<p><strong>IV tPA:</strong> Within 4.5 hours</p><p><strong>Thrombectomy:</strong> Up to 24h (DAWN/DEFUSE-3)</p>'},
+    {title:'tPA Dosing',content:'<p><strong>Dose:</strong> 0.9 mg/kg (max 90mg)</p><p><strong>Admin:</strong> 10% bolus, 90% over 60min</p>'},
+    {title:'BP Targets',content:'<p><strong>Pre-tPA:</strong> &lt;185/110</p><p><strong>Post-tPA 24h:</strong> &lt;180/105</p><p><strong>No tPA:</strong> Permissive unless &gt;220/120</p>'},
+    {title:'Anticoag Reversal',content:'<p><strong>Warfarin:</strong> Vit K + 4F-PCC</p><p><strong>DOAC:</strong> Idarucizumab (Pradaxa), Andexanet (Xa)</p>'},
+    {title:'NIHSS Interpretation',content:'<p>0: No symptoms</p><p>1-4: Minor</p><p>5-15: Moderate</p><p>16-20: Mod-Severe</p><p>21+: Severe</p>'},
+    {title:'GCS Interpretation',content:'<p>13-15: Mild injury</p><p>9-12: Moderate injury</p><p>3-8: Severe (intubate)</p>'},
+    {title:'Sepsis Criteria',content:'<p><strong>SIRS ≥2:</strong> Temp &gt;38/&lt;36, HR&gt;90, RR&gt;20, WBC &gt;12k/&lt;4k</p><p><strong>Sepsis:</strong> SIRS + suspected infection</p>'},
+    {title:'tPA Contraindications',content:'<p>• Recent surgery (14d)</p><p>• Plt &lt;100k, INR &gt;1.7</p><p>• Prior ICH</p><p>• BP &gt;185/110</p>'}
   ];
 
-  function showToast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
-  function getInitials(n){if(!n)return'?';var p=n.trim().split(/\s+/);return p.length>=2?(p[0][0]+p[p.length-1][0]).toUpperCase():n.substring(0,2).toUpperCase()}
-  function showScreen(n){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});var t=$('screen-'+n);if(t)t.classList.add('active')}
+  // ========== NEURAL ENGINE ==========
+  var Neural = {
+    patterns: [],
+    init: function() {
+      try {
+        var saved = localStorage.getItem('medward_neural');
+        if (saved) this.patterns = JSON.parse(saved);
+      } catch(e) {}
+    },
+    save: function() {
+      try {
+        localStorage.setItem('medward_neural', JSON.stringify(this.patterns.slice(-200)));
+      } catch(e) {}
+    },
+    hash: function(text) {
+      var h = 0;
+      for (var i = 0; i < text.length; i++) {
+        h = ((h << 5) - h) + text.charCodeAt(i);
+        h |= 0;
+      }
+      return h.toString(16);
+    },
+    query: function(text, type) {
+      var hash = this.hash(text.substring(0, 500));
+      var match = this.patterns.find(function(p) { return p.hash === hash && p.type === type; });
+      if (match) {
+        match.hits++;
+        this.save();
+        return match.result;
+      }
+      return null;
+    },
+    learn: function(text, type, result) {
+      var hash = this.hash(text.substring(0, 500));
+      this.patterns.push({ hash: hash, type: type, result: result, hits: 1, time: Date.now() });
+      this.save();
+    },
+    stats: function() {
+      var hits = this.patterns.reduce(function(a, p) { return a + p.hits; }, 0);
+      return { patterns: this.patterns.length, hits: hits };
+    }
+  };
 
-  function login(){
-    var input=$('input-name'),name=input?input.value.trim():'';
-    if(!name){alert('Please enter your name');if(input)input.focus();return}
-    state.user={name:name,initial:name.charAt(0).toUpperCase()};
-    try{localStorage.setItem('medward_user',JSON.stringify(state.user))}catch(e){}
-    $('display-name').textContent=state.user.name;
-    $('display-initial').textContent=state.user.initial;
-    $('greeting-name').textContent='Dr. '+state.user.name;
-    $('user-section').classList.add('visible');
+  // ========== UTILITIES ==========
+  var $ = function(id) { return document.getElementById(id); };
+  
+  function toast(msg, err) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (err ? ' error' : '');
+    setTimeout(function() { t.className = 'toast'; }, 3000);
+  }
+
+  function getInitials(name) {
+    if (!name) return '?';
+    var p = name.trim().split(/\s+/);
+    return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : name.substring(0,2).toUpperCase();
+  }
+
+  // ========== SCREENS ==========
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    $(name).classList.add('active');
+  }
+
+  // ========== LOGIN ==========
+  function login() {
+    var name = $('login-name').value.trim();
+    if (!name) { alert('Please enter your name'); return; }
+    state.user = { name: name, initial: name.charAt(0).toUpperCase() };
+    try { localStorage.setItem('medward_user', JSON.stringify(state.user)); } catch(e) {}
+    $('user-name').textContent = name;
+    $('user-avatar').textContent = state.user.initial;
+    $('user-pill').classList.add('show');
+    $('greeting').textContent = 'Dr. ' + name;
     showScreen('dashboard');
-    showToast('Welcome, Dr. '+name+'!');
+    toast('Welcome, Dr. ' + name + '!');
     loadPatients();
+    updateNeuralStats();
   }
 
-  function checkSession(){
-    try{
-      var s=localStorage.getItem('medward_user');
-      if(s){state.user=JSON.parse(s);$('display-name').textContent=state.user.name;$('display-initial').textContent=state.user.initial;$('greeting-name').textContent='Dr. '+state.user.name;$('user-section').classList.add('visible');showScreen('dashboard');loadPatients()}
-    }catch(e){}
+  function checkSession() {
+    try {
+      var s = localStorage.getItem('medward_user');
+      if (s) {
+        state.user = JSON.parse(s);
+        $('user-name').textContent = state.user.name;
+        $('user-avatar').textContent = state.user.initial;
+        $('user-pill').classList.add('show');
+        $('greeting').textContent = 'Dr. ' + state.user.name;
+        showScreen('dashboard');
+        loadPatients();
+        updateNeuralStats();
+      }
+    } catch(e) {}
   }
 
-  function loadPatients(){
-    var c=$('patients-container');
-    c.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
-    fetch(API+'?action=list').then(function(r){return r.json()}).then(function(d){
-      if(d.success&&d.patients){state.patients=d.patients;renderPatients()}
-      else{c.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>No patients found</p></div>'}
-    }).catch(function(){c.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>Failed to load</p></div>'});
+  // ========== PATIENTS ==========
+  function loadPatients() {
+    var c = $('patients-container');
+    c.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+    
+    fetch(CONFIG.PATIENT_API + '?action=list')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success && d.patients && d.patients.length) {
+          state.patients = d.patients;
+          renderPatients();
+        } else {
+          c.innerHTML = '<div class="empty">No patients found</div>';
+        }
+      })
+      .catch(function(e) {
+        console.error('Patient load error:', e);
+        c.innerHTML = '<div class="empty">Failed to load patients. Check connection.</div>';
+      });
   }
 
-  function renderPatients(){
-    var c=$('patients-container');
-    if(!state.patients||!state.patients.length){c.innerHTML='<div class="empty-state"><p>No patients</p></div>';updateStats();return}
-    var h='<table class="patients-table"><thead><tr><th>Patient</th><th>Ward</th><th>Diagnosis</th><th>Status</th></tr></thead><tbody>';
-    state.patients.forEach(function(p){
-      var i=getInitials(p.name),sc='badge-active',st=p.status||'Active';
-      if(st.toLowerCase()==='critical')sc='badge-critical';
-      else if(st.toLowerCase()==='stable')sc='badge-stable';
-      else if(st.toLowerCase()==='chronic')sc='badge-chronic';
-      h+='<tr><td><div class="patient-cell"><div class="patient-avatar">'+i+'</div><div><div class="patient-name">'+(p.name||'Unknown')+'</div><div class="patient-id">MRN: '+(p.mrn||p.id||'-')+'</div></div></div></td>';
-      h+='<td>'+(p.ward||'-')+(p.room?' • '+p.room:'')+'</td><td>'+(p.diagnosis||'-')+'</td><td><span class="badge '+sc+'">'+st+'</span></td></tr>';
+  function renderPatients() {
+    var c = $('patients-container');
+    if (!state.patients.length) {
+      c.innerHTML = '<div class="empty">No patients</div>';
+      return;
+    }
+    var h = '<table class="patient-table"><thead><tr><th>Patient</th><th>Ward</th><th>Diagnosis</th><th>Status</th></tr></thead><tbody>';
+    state.patients.forEach(function(p) {
+      var sc = 'badge-active', st = p.status || 'Active';
+      if (st.toLowerCase() === 'critical') sc = 'badge-critical';
+      else if (st.toLowerCase() === 'stable') sc = 'badge-stable';
+      h += '<tr><td><div class="patient-cell"><div class="patient-avatar">' + getInitials(p.name) + '</div><div><div class="patient-name">' + (p.name||'Unknown') + '</div><div class="patient-mrn">MRN: ' + (p.mrn||p.id||'-') + '</div></div></div></td>';
+      h += '<td>' + (p.ward||'-') + '</td><td>' + (p.diagnosis||'-') + '</td><td><span class="badge ' + sc + '">' + st + '</span></td></tr>';
     });
-    h+='</tbody></table>';c.innerHTML=h;updateStats();
+    h += '</tbody></table>';
+    c.innerHTML = h;
   }
 
-  function updateStats(){
-    var t=state.patients.length,a=0,cr=0;
-    state.patients.forEach(function(p){var s=(p.status||'').toLowerCase();if(s==='active')a++;else if(s==='critical')cr++});
-    $('stat-total').textContent=t;$('stat-active').textContent=a;$('stat-critical').textContent=cr;
+  // ========== ANALYSIS ==========
+  function analyzeDocument(text) {
+    // Check neural cache first
+    var cached = Neural.query(text, state.docType);
+    if (cached) {
+      toast('⚡ Instant result from neural cache!');
+      showAnalysisResult(cached, true);
+      return;
+    }
+
+    toast('Analyzing document...');
+    var start = Date.now();
+
+    fetch(CONFIG.CLAUDE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'analyze',
+        documentType: state.docType,
+        content: text.substring(0, 15000)
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var elapsed = (Date.now() - start) / 1000;
+      state.analyses++;
+      state.totalTime += elapsed;
+      
+      if (d.success && d.analysis) {
+        Neural.learn(text, state.docType, d.analysis);
+        showAnalysisResult(d.analysis, false);
+        updateNeuralStats();
+        toast('Analysis complete in ' + elapsed.toFixed(1) + 's');
+      } else {
+        toast('Analysis failed: ' + (d.error || 'Unknown error'), true);
+      }
+    })
+    .catch(function(e) {
+      toast('Analysis error: ' + e.message, true);
+    });
   }
 
-  function setupTabs(){
-    document.querySelectorAll('.tab').forEach(function(tab){
-      tab.addEventListener('click',function(){
-        var id=this.getAttribute('data-tab');
-        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  function showAnalysisResult(analysis, fromCache) {
+    var m = $('analysis-modal');
+    var r = $('analysis-results');
+    
+    var h = '';
+    if (fromCache) h += '<div class="neural-badge" style="margin-bottom:16px"><span class="neural-dot"></span>Retrieved from Neural Cache</div>';
+    
+    if (analysis.interpretation) {
+      h += '<div class="analysis-section"><h4>📋 Interpretation</h4><div class="analysis-content">' + analysis.interpretation.replace(/\n/g, '<br>') + '</div></div>';
+    }
+    if (analysis.findings && analysis.findings.length) {
+      h += '<div class="analysis-section"><h4>🔍 Key Findings</h4><div class="analysis-content"><ul>' + analysis.findings.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul></div></div>';
+    }
+    if (analysis.recommendations && analysis.recommendations.length) {
+      h += '<div class="analysis-section"><h4>💡 Recommendations</h4><div class="analysis-content"><ul>' + analysis.recommendations.map(function(r) { return '<li>' + r + '</li>'; }).join('') + '</ul></div></div>';
+    }
+    if (analysis.clinicalPearls) {
+      h += '<div class="analysis-section"><h4>💎 Clinical Pearls</h4><div class="analysis-content">' + analysis.clinicalPearls.replace(/\n/g, '<br>') + '</div></div>';
+    }
+    
+    r.innerHTML = h || '<p>No analysis data available.</p>';
+    m.classList.add('active');
+  }
+
+  function updateNeuralStats() {
+    var stats = Neural.stats();
+    $('neural-patterns').textContent = stats.patterns;
+    $('neural-hits').textContent = stats.patterns ? Math.round((stats.hits / Math.max(stats.patterns, 1)) * 100) + '%' : '0%';
+    $('analyses-count').textContent = state.analyses;
+    $('avg-time').textContent = state.analyses ? (state.totalTime / state.analyses).toFixed(1) + 's' : '0s';
+  }
+
+  // ========== SCORES ==========
+  function renderScoresGrid() {
+    var g = $('scores-grid');
+    var h = '';
+    for (var key in SCORES) {
+      var s = SCORES[key];
+      h += '<div class="score-card" data-score="' + key + '"><div class="score-icon">' + s.icon + '</div><div class="score-name">' + s.name + '</div><div class="score-desc">' + s.desc + '</div></div>';
+    }
+    g.innerHTML = h;
+    
+    g.querySelectorAll('.score-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var key = this.getAttribute('data-score');
+        openCalculator(key);
+        g.querySelectorAll('.score-card').forEach(function(c) { c.classList.remove('active'); });
         this.classList.add('active');
-        document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active')});
-        var target=$('tab-'+id);if(target)target.classList.add('active');
       });
     });
   }
 
-  function renderNIHSS(){
-    var c=$('nihss-calculator'),h='';
-    NIHSS.forEach(function(item){
-      h+='<div class="calc-item"><div class="calc-item-header"><span class="calc-item-num">'+item.id+'</span><span class="calc-item-name">'+item.name+'</span></div><div class="calc-options">';
-      item.opts.forEach(function(o){h+='<label class="calc-option" data-item="'+item.id+'" data-score="'+o.s+'"><input type="radio" name="n_'+item.id+'" value="'+o.s+'"><span class="calc-option-score">'+o.s+'</span><span class="calc-option-label">'+o.l+'</span></label>'});
-      h+='</div></div>';
+  function openCalculator(key) {
+    var score = SCORES[key];
+    state.activeScore = key;
+    state.scores[key] = {};
+    
+    var area = $('calculator-area');
+    var h = '<div class="card"><div class="card-header"><h2 class="card-title">' + score.icon + ' ' + score.name + ' Calculator</h2><button class="btn btn-ghost btn-sm" onclick="MedWard.resetScore()">Reset</button></div><div class="card-body">';
+    
+    score.items.forEach(function(item) {
+      h += '<div class="calc-item"><div class="calc-item-header"><span class="calc-item-num">' + item.id.toUpperCase() + '</span><span class="calc-item-name">' + item.name + '</span></div><div class="calc-opts">';
+      item.opts.forEach(function(o) {
+        h += '<label class="calc-opt" data-item="' + item.id + '" data-score="' + o.s + '"><input type="radio" name="calc_' + item.id + '" value="' + o.s + '"><span class="calc-opt-score">' + (o.s >= 0 ? '+' : '') + o.s + '</span><span class="calc-opt-label">' + o.l + '</span></label>';
+      });
+      h += '</div></div>';
     });
-    h+='<div class="calc-result"><div class="calc-result-label">Total NIHSS</div><div><span class="calc-result-value" id="nihss-total">0</span><span class="calc-result-max"> / 42</span></div><div id="nihss-interp" style="margin-top:16px"><span class="severity-badge" style="background:rgba(16,185,129,0.15);color:#10b981">No Symptoms</span></div></div>';
-    c.innerHTML=h;
-    c.querySelectorAll('.calc-option').forEach(function(opt){
-      opt.addEventListener('click',function(){
-        var id=this.getAttribute('data-item'),s=parseInt(this.getAttribute('data-score'));
-        this.parentElement.querySelectorAll('.calc-option').forEach(function(o){o.classList.remove('selected')});
-        this.classList.add('selected');this.querySelector('input').checked=true;
-        state.nihss[id]=s;updateNIHSS();
+    
+    h += '<div class="calc-result"><div class="calc-result-val" id="calc-total">0</div><div class="calc-result-max">/ ' + score.max + '</div><div id="calc-interp"></div></div></div></div>';
+    area.innerHTML = h;
+    
+    area.querySelectorAll('.calc-opt').forEach(function(opt) {
+      opt.addEventListener('click', function() {
+        var itemId = this.getAttribute('data-item');
+        var s = parseFloat(this.getAttribute('data-score'));
+        this.parentElement.querySelectorAll('.calc-opt').forEach(function(o) { o.classList.remove('sel'); });
+        this.classList.add('sel');
+        this.querySelector('input').checked = true;
+        state.scores[state.activeScore][itemId] = s;
+        updateScoreTotal();
       });
     });
   }
 
-  function updateNIHSS(){
-    var t=0;for(var k in state.nihss)t+=state.nihss[k];
-    $('nihss-total').textContent=t;
-    var sev,col;
-    if(t===0){sev='No Symptoms';col='#10b981'}
-    else if(t<=4){sev='Minor';col='#6ee7b7'}
-    else if(t<=15){sev='Moderate';col='#fbbf24'}
-    else if(t<=20){sev='Mod-Severe';col='#f97316'}
-    else{sev='Severe';col='#ef4444'}
-    $('nihss-interp').innerHTML='<span class="severity-badge" style="background:'+col+'20;color:'+col+'">'+sev+'</span>';
+  function updateScoreTotal() {
+    var key = state.activeScore;
+    var score = SCORES[key];
+    var total = 0;
+    for (var k in state.scores[key]) total += state.scores[key][k];
+    $('calc-total').textContent = total;
+    var interp = score.interpret(total);
+    $('calc-interp').innerHTML = '<span class="severity-badge" style="background:' + interp.c + '20;color:' + interp.c + '">' + interp.t + '</span>';
   }
 
-  function renderSEDAN(){
-    var c=$('sedan-calculator'),h='';
-    SEDAN.forEach(function(item){
-      h+='<div class="calc-item"><div class="calc-item-header"><span class="calc-item-num">'+item.letter+'</span><span class="calc-item-name">'+item.name+'</span></div><div class="calc-options">';
-      item.opts.forEach(function(o){h+='<label class="calc-option" data-item="'+item.id+'" data-score="'+o.s+'"><input type="radio" name="s_'+item.id+'" value="'+o.s+'"><span class="calc-option-score">+'+o.s+'</span><span class="calc-option-label">'+o.l+'</span></label>'});
-      h+='</div></div>';
-    });
-    h+='<div class="calc-result"><div class="calc-result-label">SEDAN Score</div><div><span class="calc-result-value" id="sedan-total">0</span><span class="calc-result-max"> / 6</span></div><div style="margin-top:12px"><span style="color:var(--muted)">sICH Risk: </span><span id="sedan-risk" style="font-size:1.5rem;font-weight:700;color:#10b981">1.4%</span></div><div id="sedan-interp" style="margin-top:16px"><span class="severity-badge" style="background:rgba(16,185,129,0.15);color:#10b981">Very Low</span></div></div>';
-    c.innerHTML=h;
-    c.querySelectorAll('.calc-option').forEach(function(opt){
-      opt.addEventListener('click',function(){
-        var id=this.getAttribute('data-item'),s=parseInt(this.getAttribute('data-score'));
-        this.parentElement.querySelectorAll('.calc-option').forEach(function(o){o.classList.remove('selected')});
-        this.classList.add('selected');this.querySelector('input').checked=true;
-        state.sedan[id]=s;updateSEDAN();
+  function resetScore() {
+    if (state.activeScore) {
+      state.scores[state.activeScore] = {};
+      openCalculator(state.activeScore);
+    }
+  }
+
+  // ========== REFERENCE ==========
+  function renderReference() {
+    var g = $('ref-grid');
+    g.innerHTML = REFERENCE.map(function(r) {
+      return '<div class="ref-card"><h4>' + r.title + '</h4>' + r.content + '</div>';
+    }).join('');
+  }
+
+  // ========== TABS ==========
+  function setupTabs() {
+    document.querySelectorAll('.nav-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var id = this.getAttribute('data-tab');
+        document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+        $('panel-' + id).classList.add('active');
       });
     });
   }
 
-  function updateSEDAN(){
-    var t=0;for(var k in state.sedan)t+=state.sedan[k];
-    $('sedan-total').textContent=t;
-    var risks=['1.4%','2.9%','5.0%','8.5%','12.2%','16.9%','21.5%'];
-    var levels=['Very Low','Low','Low-Mod','Moderate','Mod-High','High','Very High'];
-    var colors=['#10b981','#6ee7b7','#84cc16','#fbbf24','#f97316','#ef4444','#dc2626'];
-    var i=Math.min(t,6);
-    $('sedan-risk').textContent=risks[i];$('sedan-risk').style.color=colors[i];
-    $('sedan-interp').innerHTML='<span class="severity-badge" style="background:'+colors[i]+'20;color:'+colors[i]+'">'+levels[i]+' Risk</span>';
+  // ========== UPLOAD ==========
+  function setupUpload() {
+    var zone = $('upload-zone');
+    var file = $('upload-file');
+    
+    zone.addEventListener('click', function() { file.click(); });
+    zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', function() { zone.classList.remove('dragover'); });
+    zone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    
+    file.addEventListener('change', function() {
+      if (this.files.length) handleFile(this.files[0]);
+    });
+    
+    document.querySelectorAll('.doc-type').forEach(function(dt) {
+      dt.addEventListener('click', function() {
+        document.querySelectorAll('.doc-type').forEach(function(d) { d.classList.remove('active'); });
+        this.classList.add('active');
+        state.docType = this.getAttribute('data-type');
+      });
+    });
   }
 
-  function init(){
-    var btn=$('btn-login');
-    if(btn){btn.addEventListener('click',function(e){e.preventDefault();login()});btn.addEventListener('touchend',function(e){e.preventDefault();login()})}
-    var inp=$('input-name');if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();login()}});
-    var ref=$('btn-refresh');if(ref)ref.addEventListener('click',loadPatients);
-    var rn=$('btn-reset-nihss');if(rn)rn.addEventListener('click',function(){state.nihss={};renderNIHSS()});
-    var rs=$('btn-reset-sedan');if(rs)rs.addEventListener('click',function(){state.sedan={};renderSEDAN()});
-    setupTabs();renderNIHSS();renderSEDAN();checkSession();
+  function handleFile(file) {
+    if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+      var reader = new FileReader();
+      reader.onload = function(e) { analyzeDocument(e.target.result); };
+      reader.readAsText(file);
+    } else {
+      toast('For images/PDFs, text extraction coming soon. Try a text file.', true);
+    }
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  // ========== INIT ==========
+  function init() {
+    Neural.init();
+    
+    // Login
+    $('login-btn').addEventListener('click', login);
+    $('login-btn').addEventListener('touchend', function(e) { e.preventDefault(); login(); });
+    $('login-name').addEventListener('keydown', function(e) { if (e.key === 'Enter') login(); });
+    
+    // Modal
+    $('close-modal').addEventListener('click', function() { $('analysis-modal').classList.remove('active'); });
+    $('analysis-modal').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+    
+    // Refresh
+    $('refresh-patients').addEventListener('click', loadPatients);
+    
+    setupTabs();
+    setupUpload();
+    renderScoresGrid();
+    renderReference();
+    checkSession();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Public API
+  window.MedWard = { resetScore: resetScore };
 })();
-  </script>
+</script>
 </body>
 </html>
