@@ -1164,99 +1164,57 @@ var App = (function() {
       $('importStatus').textContent = statusMessages[msgIdx];
     }, 1500);
     
-    // Extract base64 data (remove data URL prefix)
-    var base64Data = importState.imageBase64;
-    if (base64Data.indexOf(',') > -1) {
-      base64Data = base64Data.split(',')[1];
-    }
-    
-    // Detect media type
-    var mediaType = 'image/jpeg';
-    if (importState.imageBase64.indexOf('data:image/png') === 0) {
-      mediaType = 'image/png';
-    } else if (importState.imageBase64.indexOf('data:image/webp') === 0) {
-      mediaType = 'image/webp';
-    }
-    
-    // Call Claude AI API directly
-    var requestBody = {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: mediaType,
-              data: base64Data
-            }
-          },
-          {
-            type: 'text',
-            text: 'You are a medical data extraction specialist. Analyze this image which contains a patient list (could be from Excel, Google Sheets, EMR system, handwritten notes, or any tabular format).\n\nExtract ALL patient information you can find. For each patient, identify:\n- Name (required)\n- Room/Bed number\n- Diagnosis/Condition\n- Status (classify as: critical, active, or chronic based on context)\n- Attending physician/doctor if mentioned\n\nRules:\n1. Extract EVERY patient visible in the image\n2. If a field is unclear, make your best inference from context\n3. For status: use "critical" for ICU, unstable, urgent cases; "chronic" for stable, follow-up cases; "active" for regular admissions\n4. Clean up any OCR artifacts or formatting issues in names\n5. Standardize room numbers (e.g., "21A" → "21-A")\n\nRespond ONLY with a valid JSON array, no other text:\n[{"name":"Patient Name","room":"Room","diagnosis":"Diagnosis","status":"active|critical|chronic","doctor":"Dr. Name"}]\n\nIf you cannot find any patients, respond with: []'
-          }
-        ]
-      }]
-    };
-    
-    fetch('https://api.anthropic.com/v1/messages', {
+    // Use the existing Apps Script endpoint which connects to Claude
+    fetch(state.settings.apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify(requestBody)
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'extractPatients',
+        image: importState.imageBase64,
+        provider: 'claude'
+      })
     })
-    .then(function(response) {
-      if (!response.ok) {
-        return response.json().then(function(err) {
-          throw new Error(err.error?.message || 'API request failed');
-        });
-      }
-      return response.json();
-    })
+    .then(function(r) { return r.json(); })
     .then(function(data) {
       clearInterval(statusInterval);
       importState.isProcessing = false;
       
-      // Extract text content from response
-      var textContent = '';
-      if (data.content && Array.isArray(data.content)) {
-        for (var i = 0; i < data.content.length; i++) {
-          if (data.content[i].type === 'text') {
-            textContent += data.content[i].text;
-          }
+      var patients = [];
+      
+      // Try to extract patients from various response formats
+      if (data.patients && Array.isArray(data.patients)) {
+        patients = data.patients;
+      } else if (data.extractedText) {
+        patients = parseClaudeResponse(data.extractedText);
+      } else if (data.interpretation) {
+        if (typeof data.interpretation === 'string') {
+          patients = parseClaudeResponse(data.interpretation);
+        } else if (data.interpretation.text) {
+          patients = parseClaudeResponse(data.interpretation.text);
+        } else if (data.interpretation.summary) {
+          patients = parseClaudeResponse(data.interpretation.summary);
         }
+      } else if (data.text) {
+        patients = parseClaudeResponse(data.text);
+      } else if (data.content) {
+        patients = parseClaudeResponse(typeof data.content === 'string' ? data.content : JSON.stringify(data.content));
       }
       
-      // Parse JSON from response
-      var patients = parseClaudeResponse(textContent);
       processExtractedPatients(patients);
     })
     .catch(function(error) {
       clearInterval(statusInterval);
       importState.isProcessing = false;
-      console.error('Claude AI Error:', error);
-      
-      // Fallback to Apps Script API
-      fallbackToAppsScript();
+      console.error('Import Error:', error);
+      $('importProcessing').style.display = 'none';
+      $('importPreview').style.display = 'block';
+      toast('Analysis failed. Please try again.', true);
     });
   }
   
   function getApiKey() {
-    // Try to get API key from settings or prompt user
-    var key = localStorage.getItem('claude_api_key');
-    if (!key) {
-      key = prompt('Enter your Claude API key to enable AI-powered import:\n\n(Get one at console.anthropic.com)');
-      if (key) {
-        localStorage.setItem('claude_api_key', key);
-      }
-    }
-    return key || '';
+    // Not needed - using Apps Script
+    return '';
   }
   
   function parseClaudeResponse(text) {
@@ -1285,42 +1243,6 @@ var App = (function() {
     }
     
     return patients;
-  }
-  
-  function fallbackToAppsScript() {
-    $('importStatus').textContent = 'Using backup extraction...';
-    
-    // Use Apps Script as fallback
-    fetch(state.settings.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'interpret',
-        documentType: 'patientList',
-        image: importState.imageBase64,
-        provider: 'claude',
-        customPrompt: 'Extract all patient information from this image. Return as JSON array with fields: name, room, diagnosis, status, doctor.'
-      })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var patients = [];
-      
-      if (data.extractedText) {
-        patients = parseClaudeResponse(data.extractedText);
-      }
-      
-      if (patients.length === 0 && data.interpretation) {
-        patients = parseClaudeResponse(JSON.stringify(data.interpretation));
-      }
-      
-      processExtractedPatients(patients);
-    })
-    .catch(function() {
-      $('importProcessing').style.display = 'none';
-      $('importPreview').style.display = 'block';
-      toast('Extraction failed. Please check your API key or try a clearer image.', true);
-    });
   }
   
   function processExtractedPatients(patients) {
