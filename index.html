@@ -145,27 +145,93 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--emerald);padding:14px 24px;border-radius:var(--radius-md);font-size:0.9rem;opacity:0;transition:0.3s;z-index:2000}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{border-color:var(--rose)}
+
+/* ═══════════════════ PROFESSIONAL IMPORT SYSTEM ═══════════════════ */
+.import-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;padding:16px 0}
+.import-step{display:flex;align-items:center;gap:8px;color:var(--text-muted)}
+.import-step.active{color:var(--gold)}
+.import-step.completed{color:var(--emerald)}
+.import-step-num{width:28px;height:28px;border-radius:50%;background:var(--bg-elevated);border:2px solid var(--border);display:grid;place-items:center;font-size:0.8rem;font-weight:600}
+.import-step.active .import-step-num{border-color:var(--gold);background:var(--gold);color:var(--bg-deep)}
+.import-step.completed .import-step-num{border-color:var(--emerald);background:var(--emerald);color:white}
+.import-step-label{font-size:0.8rem;font-weight:500}
+.import-step-line{width:40px;height:2px;background:var(--border);margin:0 8px}
 .import-tabs{display:flex;background:var(--bg-elevated);border-radius:var(--radius-md);padding:4px;margin-bottom:20px}
-.import-tab{flex:1;padding:12px;background:none;border:none;border-radius:var(--radius-sm);color:var(--text-muted);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:0.2s;display:flex;align-items:center;justify-content:center;gap:6px}
-.import-tab.active{background:var(--bg-card);color:var(--gold)}
+.import-tab{flex:1;padding:12px 16px;background:none;border:none;border-radius:var(--radius-sm);color:var(--text-muted);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.import-tab:hover{color:var(--text-primary)}
+.import-tab.active{background:var(--bg-card);color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.import-tab svg{width:18px;height:18px}
 .import-panel{display:none}
 .import-panel.active{display:block}
-.import-dropzone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px 20px;text-align:center;cursor:pointer;transition:0.2s}
+.import-stage{animation:fadeIn 0.3s}
+.import-dropzone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px 24px;text-align:center;cursor:pointer;transition:0.2s;position:relative}
 .import-dropzone:hover{border-color:var(--gold);background:var(--gold-glow)}
-.import-dropzone-icon{width:56px;height:56px;background:var(--bg-elevated);border-radius:14px;display:grid;place-items:center;margin:0 auto 12px;font-size:1.5rem}
-.import-preview{margin-top:16px}
-.import-preview img{width:100%;max-height:150px;object-fit:contain;border-radius:var(--radius-md);border:1px solid var(--border)}
-.import-processing{text-align:center;padding:24px}
-.import-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
-.import-results{margin-top:16px}
-.import-patient{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-bottom:8px;border-left:3px solid var(--teal)}
-.import-patient.critical{border-left-color:var(--rose)}
-.import-patient-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:8px;display:grid;place-items:center;font-weight:600;font-size:0.8rem;color:var(--bg-deep)}
-.import-patient-info{flex:1}
-.import-patient-name{font-weight:600;font-size:0.9rem}
-.import-patient-meta{font-size:0.75rem;color:var(--text-muted)}
-.import-hint{padding:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius-sm);font-size:0.8rem;color:var(--text-secondary);margin-top:16px}
-@media(max-width:640px){.landing-title{font-size:1.75rem}.units-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}.dash-user-info{display:none}.tab span{display:none}.patients-grid{grid-template-columns:1fr}}
+.import-dropzone.dragover{border-color:var(--gold);background:var(--gold-glow);transform:scale(1.01)}
+.import-dropzone-visual{display:flex;flex-direction:column;align-items:center;gap:12px}
+.import-dropzone-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--gold-glow),rgba(20,184,166,0.1));border-radius:16px;display:grid;place-items:center;margin-bottom:4px}
+.import-dropzone-icon svg{stroke:var(--gold)}
+.import-dropzone-text{display:flex;flex-direction:column;align-items:center}
+.import-dropzone-formats{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px}
+.import-format-badge{padding:4px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:100px;font-size:0.7rem;color:var(--text-muted)}
+.import-preview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.import-preview-img{width:100%;max-height:180px;object-fit:contain;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-elevated)}
+.import-sheet-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.import-sheet-option{display:flex;align-items:center;gap:12px;padding:16px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:0.2s}
+.import-sheet-option:hover{border-color:var(--gold)}
+.import-sheet-option.active{border-color:var(--gold);background:var(--gold-glow)}
+.import-sheet-option-icon{font-size:1.5rem}
+.sheet-method{display:none}
+.sheet-method.active{display:block}
+.import-hint{display:flex;gap:12px;padding:14px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);border-radius:var(--radius-sm);font-size:0.8rem;color:var(--text-secondary);margin-top:16px}
+.import-hint svg{flex-shrink:0;stroke:var(--blue)}
+.import-hint ul{margin:6px 0 0 0;padding-left:16px}
+.import-hint li{margin:2px 0}
+.import-processing-container{text-align:center;padding:40px 20px}
+.import-processing-animation{position:relative;width:80px;height:80px;margin:0 auto 24px}
+.import-processing-ring{position:absolute;inset:0;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+.import-processing-icon{position:absolute;inset:0;display:grid;place-items:center;font-size:2rem}
+.import-processing-status{margin-bottom:24px}
+.import-processing-title{font-size:1.1rem;font-weight:600;margin-bottom:4px}
+.import-processing-subtitle{color:var(--text-muted);font-size:0.9rem}
+.import-processing-steps{display:flex;flex-direction:column;gap:12px;text-align:left;max-width:280px;margin:0 auto}
+.import-processing-step{display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:0.85rem}
+.import-processing-step.completed{color:var(--emerald)}
+.import-processing-step.active{color:var(--text-primary)}
+.import-processing-step svg{flex-shrink:0}
+.import-mini-spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
+.import-results-header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);margin-bottom:16px}
+.import-results-summary{display:flex;align-items:center;gap:12px}
+.import-results-icon{width:40px;height:40px;background:var(--emerald);border-radius:10px;display:grid;place-items:center;font-size:1.25rem;color:white}
+.import-results-title{font-weight:600}
+.import-results-subtitle{font-size:0.85rem;color:var(--text-muted)}
+.import-column-mapping{background:var(--bg-elevated);border-radius:var(--radius-md);padding:16px;margin-bottom:16px}
+.import-mapping-title{font-weight:600;font-size:0.85rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.import-mapping-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.import-mapping-item label{display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase}
+.import-mapping-item select{padding:8px 12px;font-size:0.85rem}
+.import-patients-list{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.import-patient-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);border-left:4px solid var(--teal);transition:0.2s}
+.import-patient-card:hover{border-color:var(--gold)}
+.import-patient-card.critical{border-left-color:var(--rose)}
+.import-patient-card.chronic{border-left-color:var(--purple)}
+.import-patient-card.invalid{border-left-color:var(--orange);background:rgba(249,115,22,0.05)}
+.import-patient-avatar{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:10px;display:grid;place-items:center;font-weight:600;font-size:0.85rem;color:var(--bg-deep);flex-shrink:0}
+.import-patient-info{flex:1;min-width:0}
+.import-patient-name{font-weight:600;font-size:0.95rem;display:flex;align-items:center;gap:8px}
+.import-patient-name input{background:transparent;border:none;font:inherit;color:inherit;padding:0;width:100%}
+.import-patient-name input:focus{outline:none;border-bottom:1px solid var(--gold)}
+.import-patient-details{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;font-size:0.8rem;color:var(--text-muted)}
+.import-patient-detail{display:flex;align-items:center;gap:4px}
+.import-patient-status{padding:3px 10px;border-radius:100px;font-size:0.7rem;font-weight:600;text-transform:uppercase;flex-shrink:0}
+.import-patient-status.active{background:rgba(20,184,166,0.15);color:var(--teal)}
+.import-patient-status.critical{background:rgba(244,63,94,0.15);color:var(--rose)}
+.import-patient-status.chronic{background:rgba(139,92,246,0.15);color:var(--purple)}
+.import-patient-actions{display:flex;gap:4px}
+.import-patient-action{width:28px;height:28px;border:none;background:var(--bg-card);border-radius:6px;cursor:pointer;display:grid;place-items:center;color:var(--text-muted);transition:0.2s}
+.import-patient-action:hover{color:var(--rose);background:rgba(244,63,94,0.1)}
+.import-validation-summary{padding:12px;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-top:12px;font-size:0.8rem;color:var(--text-muted)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:640px){.landing-title{font-size:1.75rem}.units-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}.dash-user-info{display:none}.tab span{display:none}.patients-grid{grid-template-columns:1fr}.import-sheet-options{grid-template-columns:1fr}.import-mapping-grid{grid-template-columns:1fr}.import-step-label{display:none}}
   </style>
 </head>
 <body>
@@ -372,78 +438,216 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-deep);color:va
 
 <div class="toast" id="toast"></div>
 
-<!-- IMPORT MODAL -->
+<!-- IMPORT MODAL - Professional Patient Import System -->
 <div class="modal" id="importModal">
-  <div class="modal-box" style="max-width:520px">
+  <div class="modal-box" style="max-width:600px">
     <div class="modal-header" style="text-align:left;border:none;padding-bottom:8px">
-      <h2 class="modal-title" style="display:flex;align-items:center;gap:10px">
-        <span style="width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:10px;display:grid;place-items:center">📥</span>
-        Import Patients
+      <h2 class="modal-title" style="display:flex;align-items:center;gap:12px">
+        <span style="width:44px;height:44px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:12px;display:grid;place-items:center;font-size:1.25rem">📥</span>
+        <div>
+          <div>Import Patients</div>
+          <div style="font-size:0.8rem;font-weight:400;color:var(--text-muted)">AI-powered extraction from screenshots or spreadsheets</div>
+        </div>
       </h2>
-      <p class="modal-subtitle" style="margin-top:8px">Import from screenshot or Google Sheets</p>
     </div>
     <div class="modal-body" style="padding-top:0">
-      <div class="import-tabs">
-        <button class="import-tab active" onclick="App.switchImportTab('screenshot')">📷 Screenshot</button>
-        <button class="import-tab" onclick="App.switchImportTab('sheets')">📊 Google Sheets</button>
+      <!-- Step Indicator -->
+      <div class="import-steps" id="importSteps">
+        <div class="import-step active" data-step="1"><span class="import-step-num">1</span><span class="import-step-label">Upload</span></div>
+        <div class="import-step-line"></div>
+        <div class="import-step" data-step="2"><span class="import-step-num">2</span><span class="import-step-label">Review</span></div>
+        <div class="import-step-line"></div>
+        <div class="import-step" data-step="3"><span class="import-step-num">3</span><span class="import-step-label">Import</span></div>
       </div>
-      
-      <!-- Screenshot Panel -->
-      <div class="import-panel active" id="importScreenshot">
-        <div class="import-dropzone" id="importDropzone" onclick="document.getElementById('importFile').click()">
-          <div class="import-dropzone-icon">📤</div>
-          <div style="font-weight:600">Drop screenshot or tap to upload</div>
-          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">AI will extract patient data automatically</div>
+
+      <!-- Step 1: Upload -->
+      <div class="import-stage" id="importStage1">
+        <div class="import-tabs">
+          <button class="import-tab active" onclick="App.switchImportTab('screenshot')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            Screenshot
+          </button>
+          <button class="import-tab" onclick="App.switchImportTab('sheets')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+            Spreadsheet
+          </button>
         </div>
-        <input type="file" id="importFile" accept="image/*" style="display:none" onchange="App.handleImportFile(this.files[0])">
-        <div id="importPreview" style="display:none" class="import-preview"></div>
-        <div id="importProcessing" style="display:none" class="import-processing">
-          <div class="import-spinner"></div>
-          <div style="font-weight:600" id="importStatus">Analyzing screenshot...</div>
-          <div style="font-size:0.85rem;color:var(--text-muted)">AI is extracting patient data</div>
-        </div>
-        <div id="importResults" style="display:none" class="import-results">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <span style="font-weight:600">✓ Patients Detected</span>
-            <span id="importCount" style="background:var(--emerald);padding:2px 10px;border-radius:100px;font-size:0.75rem;font-weight:600">0</span>
+
+        <!-- Screenshot Upload -->
+        <div class="import-panel active" id="importScreenshot">
+          <div class="import-dropzone" id="importDropzone">
+            <input type="file" id="importFile" accept="image/*" style="display:none">
+            <div class="import-dropzone-visual">
+              <div class="import-dropzone-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div class="import-dropzone-text">
+                <span style="font-weight:600;font-size:1rem">Drop image or click to upload</span>
+                <span style="color:var(--text-muted);font-size:0.85rem;margin-top:4px">Supports PNG, JPG, HEIC • Max 10MB</span>
+              </div>
+            </div>
+            <div class="import-dropzone-formats">
+              <span class="import-format-badge">Excel Screenshot</span>
+              <span class="import-format-badge">Google Sheets</span>
+              <span class="import-format-badge">EMR Export</span>
+              <span class="import-format-badge">Handwritten List</span>
+            </div>
           </div>
-          <div id="importList"></div>
+          <div id="importPreviewContainer" style="display:none">
+            <div class="import-preview-header">
+              <span style="font-weight:600;display:flex;align-items:center;gap:8px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Image Ready
+              </span>
+              <button class="btn btn-sm" style="padding:6px 12px;font-size:0.75rem" onclick="App.removeImportImage()">✕ Remove</button>
+            </div>
+            <img id="importPreviewImg" class="import-preview-img" src="" alt="Preview">
+            <button class="btn btn-primary btn-full" onclick="App.startAnalysis()" style="margin-top:16px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              Analyze with AI
+            </button>
+          </div>
+        </div>
+
+        <!-- Spreadsheet Import -->
+        <div class="import-panel" id="importSheets">
+          <div class="import-sheet-options">
+            <div class="import-sheet-option active" onclick="App.selectSheetMethod('url')">
+              <div class="import-sheet-option-icon">🔗</div>
+              <div class="import-sheet-option-text">
+                <div style="font-weight:600">Public Sheet URL</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">Paste Google Sheets link</div>
+              </div>
+            </div>
+            <div class="import-sheet-option" onclick="App.selectSheetMethod('paste')">
+              <div class="import-sheet-option-icon">📋</div>
+              <div class="import-sheet-option-text">
+                <div style="font-weight:600">Paste Data</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">Copy & paste from Excel</div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="sheetMethodUrl" class="sheet-method active">
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">Google Sheet URL</label>
+              <input type="text" id="sheetUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="App.fetchSheet()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+              Fetch Patients
+            </button>
+          </div>
+          
+          <div id="sheetMethodPaste" class="sheet-method">
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">Paste spreadsheet data (with headers)</label>
+              <textarea id="pasteData" class="form-textarea" rows="6" placeholder="Name	Room	Diagnosis	Status
+Ahmed Ali	21-A	Stroke	Critical
+Fatima Hassan	21-B	CHF	Active"></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="App.parsePastedData()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+              Parse Data
+            </button>
+          </div>
+          
+          <div class="import-hint">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div>
+              <b>Tips for best results:</b>
+              <ul style="margin:4px 0 0 16px;padding:0">
+                <li>Include column headers (Name, Room, Diagnosis, Status)</li>
+                <li>For Google Sheets, ensure it's shared as "Anyone with link"</li>
+                <li>Tab-separated or comma-separated data works best</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <!-- Sheets Panel -->
-      <div class="import-panel" id="importSheets">
-        <div class="form-group">
-          <label class="form-label">Google Sheet URL or ID</label>
-          <input type="text" id="sheetUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Or Apps Script URL</label>
-          <input type="text" id="appsScriptUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
-        </div>
-        <button class="btn btn-secondary btn-full" onclick="App.connectSheet()">🔗 Connect & Fetch</button>
-        <div class="import-hint">
-          <b>💡 Setup:</b><br>
-          1. Share your Google Sheet with "Anyone with the link"<br>
-          2. Expected columns: Name, Room, Diagnosis, Status<br>
-          3. Or use Apps Script for real-time sync
-        </div>
-        <div id="sheetsProcessing" style="display:none" class="import-processing">
-          <div class="import-spinner"></div>
-          <div style="font-weight:600">Connecting to Google Sheets...</div>
-        </div>
-        <div id="sheetsResults" style="display:none" class="import-results">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <span style="font-weight:600">✓ Patients Found</span>
-            <span id="sheetsCount" style="background:var(--emerald);padding:2px 10px;border-radius:100px;font-size:0.75rem;font-weight:600">0</span>
+
+      <!-- Step 2: Processing -->
+      <div class="import-stage" id="importStage2" style="display:none">
+        <div class="import-processing-container">
+          <div class="import-processing-animation">
+            <div class="import-processing-ring"></div>
+            <div class="import-processing-icon">🤖</div>
           </div>
-          <div id="sheetsList"></div>
+          <div class="import-processing-status">
+            <div class="import-processing-title" id="processingTitle">Analyzing Image...</div>
+            <div class="import-processing-subtitle" id="processingSubtitle">AI is extracting patient information</div>
+          </div>
+          <div class="import-processing-steps">
+            <div class="import-processing-step completed" id="procStep1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Image received</span>
+            </div>
+            <div class="import-processing-step" id="procStep2">
+              <div class="import-mini-spinner"></div>
+              <span>Detecting table structure</span>
+            </div>
+            <div class="import-processing-step" id="procStep3">
+              <div class="import-mini-spinner"></div>
+              <span>Extracting patient data</span>
+            </div>
+            <div class="import-processing-step" id="procStep4">
+              <div class="import-mini-spinner"></div>
+              <span>Validating entries</span>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Step 3: Review & Edit -->
+      <div class="import-stage" id="importStage3" style="display:none">
+        <div class="import-results-header">
+          <div class="import-results-summary">
+            <div class="import-results-icon">✓</div>
+            <div>
+              <div class="import-results-title">Extraction Complete</div>
+              <div class="import-results-subtitle"><span id="patientCountText">0 patients</span> ready to import</div>
+            </div>
+          </div>
+          <div class="import-results-actions">
+            <button class="btn btn-sm btn-secondary" onclick="App.editAllPatients()">✏️ Edit All</button>
+          </div>
+        </div>
+        
+        <div class="import-column-mapping" id="columnMapping" style="display:none">
+          <div class="import-mapping-title">Column Mapping</div>
+          <div class="import-mapping-grid">
+            <div class="import-mapping-item">
+              <label>Name Column</label>
+              <select id="mapName" class="form-select"></select>
+            </div>
+            <div class="import-mapping-item">
+              <label>Room Column</label>
+              <select id="mapRoom" class="form-select"></select>
+            </div>
+            <div class="import-mapping-item">
+              <label>Diagnosis Column</label>
+              <select id="mapDiagnosis" class="form-select"></select>
+            </div>
+            <div class="import-mapping-item">
+              <label>Status Column</label>
+              <select id="mapStatus" class="form-select"></select>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="App.applyMapping()">Apply Mapping</button>
+        </div>
+        
+        <div class="import-patients-list" id="importPatientsList"></div>
+        
+        <div class="import-validation-summary" id="validationSummary"></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="App.closeModal('importModal')">Cancel</button>
-      <button class="btn btn-primary" id="importConfirmBtn" disabled onclick="App.confirmImport()">Import Patients</button>
+    
+    <div class="modal-footer" id="importFooter">
+      <button class="btn btn-secondary" onclick="App.closeImport()">Cancel</button>
+      <button class="btn btn-primary" id="importConfirmBtn" style="display:none" onclick="App.confirmImport()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Import <span id="importBtnCount">0</span> Patients
+      </button>
     </div>
   </div>
 </div>
@@ -853,19 +1057,21 @@ var App = (function() {
   }
   
   // ═══════════════════════════════════════════════════════════════════════
-  // IMPORT SYSTEM
+  // PROFESSIONAL IMPORT SYSTEM - Claude AI Powered
   // ═══════════════════════════════════════════════════════════════════════
   
   var importState = {
     tab: 'screenshot',
     imageBase64: null,
-    patients: []
+    patients: [],
+    isProcessing: false
   };
   
   function openImport() {
     // Reset state
     importState.imageBase64 = null;
     importState.patients = [];
+    importState.isProcessing = false;
     
     // Reset UI
     $('importDropzone').style.display = 'block';
@@ -918,11 +1124,11 @@ var App = (function() {
       
       // Show preview
       $('importDropzone').style.display = 'none';
-      $('importPreview').innerHTML = '<img src="' + e.target.result + '" alt="Preview"><button class="btn btn-secondary btn-sm btn-full" style="margin-top:12px" onclick="App.removeImportImage()">✕ Remove</button>';
+      $('importPreview').innerHTML = '<img src="' + e.target.result + '" alt="Preview"><button class="btn btn-secondary btn-sm btn-full" style="margin-top:12px" onclick="App.removeImportImage()">✕ Remove & Upload Different</button>';
       $('importPreview').style.display = 'block';
       
-      // Start analysis
-      analyzeImportImage();
+      // Start Claude AI analysis
+      analyzeWithClaudeAI();
     };
     reader.readAsDataURL(file);
   }
@@ -937,83 +1143,254 @@ var App = (function() {
     $('importFile').value = '';
   }
   
-  function analyzeImportImage() {
+  function analyzeWithClaudeAI() {
+    if (importState.isProcessing) return;
+    importState.isProcessing = true;
+    
     $('importPreview').style.display = 'none';
     $('importProcessing').style.display = 'block';
-    $('importStatus').textContent = 'Analyzing screenshot...';
     
-    // Call AI API
+    // Progressive status updates
+    var statusMessages = [
+      'Sending to Claude AI...',
+      'Analyzing image structure...',
+      'Detecting table format...',
+      'Extracting patient data...',
+      'Validating entries...'
+    ];
+    var msgIdx = 0;
+    var statusInterval = setInterval(function() {
+      msgIdx = (msgIdx + 1) % statusMessages.length;
+      $('importStatus').textContent = statusMessages[msgIdx];
+    }, 1500);
+    
+    // Extract base64 data (remove data URL prefix)
+    var base64Data = importState.imageBase64;
+    if (base64Data.indexOf(',') > -1) {
+      base64Data = base64Data.split(',')[1];
+    }
+    
+    // Detect media type
+    var mediaType = 'image/jpeg';
+    if (importState.imageBase64.indexOf('data:image/png') === 0) {
+      mediaType = 'image/png';
+    } else if (importState.imageBase64.indexOf('data:image/webp') === 0) {
+      mediaType = 'image/webp';
+    }
+    
+    // Call Claude AI API directly
+    var requestBody = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: base64Data
+            }
+          },
+          {
+            type: 'text',
+            text: 'You are a medical data extraction specialist. Analyze this image which contains a patient list (could be from Excel, Google Sheets, EMR system, handwritten notes, or any tabular format).\n\nExtract ALL patient information you can find. For each patient, identify:\n- Name (required)\n- Room/Bed number\n- Diagnosis/Condition\n- Status (classify as: critical, active, or chronic based on context)\n- Attending physician/doctor if mentioned\n\nRules:\n1. Extract EVERY patient visible in the image\n2. If a field is unclear, make your best inference from context\n3. For status: use "critical" for ICU, unstable, urgent cases; "chronic" for stable, follow-up cases; "active" for regular admissions\n4. Clean up any OCR artifacts or formatting issues in names\n5. Standardize room numbers (e.g., "21A" → "21-A")\n\nRespond ONLY with a valid JSON array, no other text:\n[{"name":"Patient Name","room":"Room","diagnosis":"Diagnosis","status":"active|critical|chronic","doctor":"Dr. Name"}]\n\nIf you cannot find any patients, respond with: []'
+          }
+        ]
+      }]
+    };
+    
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': getApiKey(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(requestBody)
+    })
+    .then(function(response) {
+      if (!response.ok) {
+        return response.json().then(function(err) {
+          throw new Error(err.error?.message || 'API request failed');
+        });
+      }
+      return response.json();
+    })
+    .then(function(data) {
+      clearInterval(statusInterval);
+      importState.isProcessing = false;
+      
+      // Extract text content from response
+      var textContent = '';
+      if (data.content && Array.isArray(data.content)) {
+        for (var i = 0; i < data.content.length; i++) {
+          if (data.content[i].type === 'text') {
+            textContent += data.content[i].text;
+          }
+        }
+      }
+      
+      // Parse JSON from response
+      var patients = parseClaudeResponse(textContent);
+      processExtractedPatients(patients);
+    })
+    .catch(function(error) {
+      clearInterval(statusInterval);
+      importState.isProcessing = false;
+      console.error('Claude AI Error:', error);
+      
+      // Fallback to Apps Script API
+      fallbackToAppsScript();
+    });
+  }
+  
+  function getApiKey() {
+    // Try to get API key from settings or prompt user
+    var key = localStorage.getItem('claude_api_key');
+    if (!key) {
+      key = prompt('Enter your Claude API key to enable AI-powered import:\n\n(Get one at console.anthropic.com)');
+      if (key) {
+        localStorage.setItem('claude_api_key', key);
+      }
+    }
+    return key || '';
+  }
+  
+  function parseClaudeResponse(text) {
+    var patients = [];
+    
+    try {
+      // Find JSON array in response
+      var jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        patients = JSON.parse(jsonMatch[0]);
+      }
+    } catch (e) {
+      console.warn('JSON parse failed, trying line-by-line:', e);
+      
+      // Fallback: try to extract data line by line
+      var lines = text.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (line.indexOf('{') > -1 && line.indexOf('}') > -1) {
+          try {
+            var obj = JSON.parse(line.match(/\{[^}]+\}/)[0]);
+            if (obj.name) patients.push(obj);
+          } catch (e2) {}
+        }
+      }
+    }
+    
+    return patients;
+  }
+  
+  function fallbackToAppsScript() {
+    $('importStatus').textContent = 'Using backup extraction...';
+    
+    // Use Apps Script as fallback
     fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
-        action: 'extractPatients',
+        action: 'interpret',
+        documentType: 'patientList',
         image: importState.imageBase64,
-        provider: 'claude'
+        provider: 'claude',
+        customPrompt: 'Extract all patient information from this image. Return as JSON array with fields: name, room, diagnosis, status, doctor.'
       })
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      processImportResult(data);
+      var patients = [];
+      
+      if (data.extractedText) {
+        patients = parseClaudeResponse(data.extractedText);
+      }
+      
+      if (patients.length === 0 && data.interpretation) {
+        patients = parseClaudeResponse(JSON.stringify(data.interpretation));
+      }
+      
+      processExtractedPatients(patients);
     })
     .catch(function() {
-      // Fallback: generate demo data
-      processImportResult({ patients: generateDemoPatients() });
+      $('importProcessing').style.display = 'none';
+      $('importPreview').style.display = 'block';
+      toast('Extraction failed. Please check your API key or try a clearer image.', true);
     });
   }
   
-  function processImportResult(data) {
+  function processExtractedPatients(patients) {
     $('importProcessing').style.display = 'none';
     
-    var patients = [];
-    
-    if (data.patients && Array.isArray(data.patients)) {
-      patients = data.patients;
-    } else if (data.extractedText) {
-      patients = parsePatientText(data.extractedText);
-    } else {
-      patients = generateDemoPatients();
+    if (!patients || patients.length === 0) {
+      $('importPreview').style.display = 'block';
+      toast('No patients detected. Try a clearer image.', true);
+      return;
     }
     
-    importState.patients = patients;
-    showImportResults(patients, 'importList', 'importCount', 'importResults');
-  }
-  
-  function parsePatientText(text) {
-    var patients = [];
-    var lines = text.split('\n').filter(function(l) { return l.trim(); });
+    // Normalize and validate patients
+    var doctor = state.currentUser ? state.currentUser.name : 'Unassigned';
     
-    for (var i = 0; i < lines.length; i++) {
-      var parts = lines[i].split(/[|,\t]/).map(function(p) { return p.trim(); });
-      if (parts.length >= 2 && parts[0] && !parts[0].toLowerCase().match(/name|patient/)) {
-        patients.push({
-          id: Date.now() + i,
-          name: parts[0],
-          room: parts[1] || '—',
-          diagnosis: parts[2] || 'Pending evaluation',
-          status: detectStatus(parts[3] || ''),
-          doctor: state.currentUser ? state.currentUser.name : 'Unassigned'
-        });
-      }
+    importState.patients = patients.map(function(p, idx) {
+      return {
+        id: Date.now() + idx,
+        name: cleanName(p.name || 'Unknown Patient'),
+        room: cleanRoom(p.room || p.bed || '—'),
+        diagnosis: p.diagnosis || p.condition || p.dx || 'Pending evaluation',
+        status: normalizeStatus(p.status),
+        doctor: p.doctor || p.physician || doctor
+      };
+    }).filter(function(p) {
+      // Filter out invalid entries
+      return p.name && p.name !== 'Unknown Patient' && p.name.length > 1;
+    });
+    
+    if (importState.patients.length === 0) {
+      $('importPreview').style.display = 'block';
+      toast('No valid patients found. Try a different image.', true);
+      return;
     }
     
-    return patients.length ? patients : generateDemoPatients();
+    showImportResults(importState.patients, 'importList', 'importCount', 'importResults');
+    toast('✓ Found ' + importState.patients.length + ' patients!');
   }
   
-  function detectStatus(text) {
-    var lower = (text || '').toLowerCase();
-    if (lower.match(/critical|icu|urgent|unstable/)) return 'critical';
-    if (lower.match(/chronic|stable|followup/)) return 'chronic';
+  function cleanName(name) {
+    if (!name) return '';
+    // Remove common OCR artifacts and clean up
+    return name
+      .replace(/[|\\\/\[\]{}]/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/^\d+[\.\)]\s*/, '') // Remove leading numbers like "1." or "2)"
+      .trim();
+  }
+  
+  function cleanRoom(room) {
+    if (!room || room === '—') return '—';
+    // Standardize room format
+    var cleaned = room.toString().replace(/\s+/g, '').toUpperCase();
+    // Add hyphen if format is like "21A" → "21-A"
+    if (/^\d+[A-Z]$/.test(cleaned)) {
+      cleaned = cleaned.slice(0, -1) + '-' + cleaned.slice(-1);
+    }
+    return cleaned;
+  }
+  
+  function normalizeStatus(status) {
+    if (!status) return 'active';
+    var s = status.toLowerCase();
+    
+    if (s.match(/critical|icu|intensive|urgent|emergency|unstable|serious|severe/)) {
+      return 'critical';
+    }
+    if (s.match(/chronic|stable|routine|followup|follow-up|outpatient|maintenance/)) {
+      return 'chronic';
+    }
     return 'active';
-  }
-  
-  function generateDemoPatients() {
-    var doctor = state.currentUser ? state.currentUser.name : 'Dr. Unassigned';
-    return [
-      { id: Date.now(), name: 'Imported Patient 1', room: '10-A', diagnosis: 'Awaiting evaluation', status: 'active', doctor: doctor },
-      { id: Date.now() + 1, name: 'Imported Patient 2', room: '10-B', diagnosis: 'Awaiting evaluation', status: 'active', doctor: doctor },
-      { id: Date.now() + 2, name: 'Imported Patient 3', room: '11-A', diagnosis: 'Awaiting evaluation', status: 'critical', doctor: doctor }
-    ];
   }
   
   function showImportResults(patients, listId, countId, containerId) {
@@ -1021,19 +1398,35 @@ var App = (function() {
     $(countId).textContent = patients.length;
     
     var html = '';
-    for (var i = 0; i < patients.length; i++) {
+    for (var i = 0; i < Math.min(patients.length, 15); i++) {
       var p = patients[i];
+      var statusColor = p.status === 'critical' ? 'var(--rose)' : (p.status === 'chronic' ? 'var(--purple)' : 'var(--teal)');
+      
       html += '<div class="import-patient ' + (p.status === 'critical' ? 'critical' : '') + '">' +
         '<div class="import-patient-avatar">' + initials(p.name) + '</div>' +
-        '<div class="import-patient-info"><div class="import-patient-name">' + p.name + '</div><div class="import-patient-meta">Room ' + p.room + ' • ' + p.status + '</div></div>' +
+        '<div class="import-patient-info">' +
+          '<div class="import-patient-name">' + escapeHtml(p.name) + '</div>' +
+          '<div class="import-patient-meta">Room ' + escapeHtml(p.room) + ' • ' + escapeHtml(p.diagnosis.substring(0, 40)) + (p.diagnosis.length > 40 ? '...' : '') + '</div>' +
+        '</div>' +
+        '<span style="padding:3px 8px;border-radius:100px;font-size:0.65rem;font-weight:600;background:' + statusColor + '20;color:' + statusColor + '">' + p.status + '</span>' +
       '</div>';
+    }
+    
+    if (patients.length > 15) {
+      html += '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:0.85rem">+ ' + (patients.length - 15) + ' more patients</div>';
     }
     
     $(listId).innerHTML = html;
     $('importConfirmBtn').disabled = patients.length === 0;
   }
   
-  // Google Sheets
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+  }
+  
+  // Google Sheets Integration
   function connectSheet() {
     var sheetUrl = $('sheetUrl').value.trim();
     var scriptUrl = $('appsScriptUrl').value.trim();
@@ -1047,76 +1440,109 @@ var App = (function() {
     $('sheetsResults').style.display = 'none';
     
     if (scriptUrl) {
-      // Use Apps Script
-      fetch(scriptUrl + '?action=getPatients')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          $('sheetsProcessing').style.display = 'none';
-          if (data.patients) {
-            importState.patients = data.patients.map(function(p, i) {
-              return {
-                id: Date.now() + i,
-                name: p.name || p.Name || 'Unknown',
-                room: p.room || p.Room || '—',
-                diagnosis: p.diagnosis || p.Diagnosis || 'No diagnosis',
-                status: detectStatus(p.status || p.Status),
-                doctor: state.currentUser ? state.currentUser.name : 'Unassigned'
-              };
-            });
-            showImportResults(importState.patients, 'sheetsList', 'sheetsCount', 'sheetsResults');
-          } else {
-            toast('No patients found', true);
-          }
-        })
-        .catch(function() {
-          $('sheetsProcessing').style.display = 'none';
-          toast('Connection failed', true);
-        });
+      fetchFromAppsScript(scriptUrl);
     } else {
-      // Try public CSV export
-      var match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-      var sheetId = match ? match[1] : sheetUrl;
-      
-      fetch('https://docs.google.com/spreadsheets/d/' + sheetId + '/export?format=csv')
-        .then(function(r) {
-          if (!r.ok) throw new Error('Not accessible');
-          return r.text();
-        })
-        .then(function(csv) {
-          $('sheetsProcessing').style.display = 'none';
-          importState.patients = parseCSV(csv);
-          showImportResults(importState.patients, 'sheetsList', 'sheetsCount', 'sheetsResults');
-        })
-        .catch(function() {
-          $('sheetsProcessing').style.display = 'none';
-          toast('Cannot access sheet. Make sure it\'s shared publicly.', true);
-        });
+      fetchFromPublicSheet(sheetUrl);
     }
+  }
+  
+  function fetchFromAppsScript(url) {
+    fetch(url + (url.indexOf('?') > -1 ? '&' : '?') + 'action=getPatients')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        $('sheetsProcessing').style.display = 'none';
+        
+        if (data.patients && data.patients.length) {
+          importState.patients = data.patients.map(function(p, i) {
+            return {
+              id: Date.now() + i,
+              name: cleanName(p.name || p.Name || p.patient || p.Patient),
+              room: cleanRoom(p.room || p.Room || p.bed || p.Bed),
+              diagnosis: p.diagnosis || p.Diagnosis || p.dx || p.condition || 'No diagnosis',
+              status: normalizeStatus(p.status || p.Status),
+              doctor: p.doctor || p.Doctor || p.physician || (state.currentUser ? state.currentUser.name : 'Unassigned')
+            };
+          }).filter(function(p) { return p.name; });
+          
+          showImportResults(importState.patients, 'sheetsList', 'sheetsCount', 'sheetsResults');
+          toast('✓ Found ' + importState.patients.length + ' patients!');
+        } else {
+          toast('No patients found in response', true);
+        }
+      })
+      .catch(function(err) {
+        $('sheetsProcessing').style.display = 'none';
+        toast('Connection failed: ' + err.message, true);
+      });
+  }
+  
+  function fetchFromPublicSheet(sheetUrl) {
+    // Extract sheet ID
+    var match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    var sheetId = match ? match[1] : sheetUrl;
+    
+    if (!sheetId || sheetId.length < 10) {
+      $('sheetsProcessing').style.display = 'none';
+      toast('Invalid Sheet URL', true);
+      return;
+    }
+    
+    fetch('https://docs.google.com/spreadsheets/d/' + sheetId + '/export?format=csv')
+      .then(function(r) {
+        if (!r.ok) throw new Error('Sheet not accessible');
+        return r.text();
+      })
+      .then(function(csv) {
+        $('sheetsProcessing').style.display = 'none';
+        importState.patients = parseCSV(csv);
+        
+        if (importState.patients.length) {
+          showImportResults(importState.patients, 'sheetsList', 'sheetsCount', 'sheetsResults');
+          toast('✓ Found ' + importState.patients.length + ' patients!');
+        } else {
+          toast('No patients found in sheet', true);
+        }
+      })
+      .catch(function(err) {
+        $('sheetsProcessing').style.display = 'none';
+        toast('Cannot access sheet. Ensure it\'s shared with "Anyone with link".', true);
+      });
   }
   
   function parseCSV(csv) {
     var lines = csv.split('\n').filter(function(l) { return l.trim(); });
+    if (lines.length < 2) return [];
+    
     var patients = [];
     
-    // Auto-detect columns from header
-    var headers = lines[0].split(',').map(function(h) { return h.toLowerCase().trim(); });
-    var nameIdx = headers.findIndex(function(h) { return h.match(/name|patient/); });
-    var roomIdx = headers.findIndex(function(h) { return h.match(/room|bed/); });
-    var diagIdx = headers.findIndex(function(h) { return h.match(/diag|dx/); });
-    var statusIdx = headers.findIndex(function(h) { return h.match(/status|condition/); });
+    // Parse header row - be flexible with column names
+    var headers = parseCSVLine(lines[0]).map(function(h) { return h.toLowerCase().trim(); });
     
-    if (nameIdx === -1) nameIdx = 0;
+    var colMap = {
+      name: findColumnIndex(headers, ['name', 'patient', 'patient name', 'full name', 'اسم']),
+      room: findColumnIndex(headers, ['room', 'bed', 'room/bed', 'location', 'غرفة']),
+      diagnosis: findColumnIndex(headers, ['diagnosis', 'dx', 'condition', 'chief complaint', 'cc', 'تشخيص']),
+      status: findColumnIndex(headers, ['status', 'condition', 'acuity', 'priority', 'حالة']),
+      doctor: findColumnIndex(headers, ['doctor', 'physician', 'attending', 'dr', 'طبيب'])
+    };
+    
+    // If no name column found, assume first column
+    if (colMap.name === -1) colMap.name = 0;
+    
+    var doctor = state.currentUser ? state.currentUser.name : 'Unassigned';
     
     for (var i = 1; i < lines.length; i++) {
-      var cols = lines[i].split(',').map(function(c) { return c.trim().replace(/^"|"$/g, ''); });
-      if (cols[nameIdx]) {
+      var cols = parseCSVLine(lines[i]);
+      var name = cols[colMap.name];
+      
+      if (name && name.trim() && !name.match(/^(name|patient|#|\d+)$/i)) {
         patients.push({
           id: Date.now() + i,
-          name: cols[nameIdx],
-          room: roomIdx >= 0 ? cols[roomIdx] : '—',
-          diagnosis: diagIdx >= 0 ? cols[diagIdx] : 'No diagnosis',
-          status: detectStatus(statusIdx >= 0 ? cols[statusIdx] : ''),
-          doctor: state.currentUser ? state.currentUser.name : 'Unassigned'
+          name: cleanName(name),
+          room: cleanRoom(colMap.room >= 0 ? cols[colMap.room] : ''),
+          diagnosis: colMap.diagnosis >= 0 ? (cols[colMap.diagnosis] || 'No diagnosis') : 'No diagnosis',
+          status: normalizeStatus(colMap.status >= 0 ? cols[colMap.status] : ''),
+          doctor: colMap.doctor >= 0 ? (cols[colMap.doctor] || doctor) : doctor
         });
       }
     }
@@ -1124,28 +1550,71 @@ var App = (function() {
     return patients;
   }
   
+  function findColumnIndex(headers, possibleNames) {
+    for (var i = 0; i < headers.length; i++) {
+      for (var j = 0; j < possibleNames.length; j++) {
+        if (headers[i].indexOf(possibleNames[j]) > -1) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+  
+  function parseCSVLine(line) {
+    var result = [];
+    var current = '';
+    var inQuotes = false;
+    
+    for (var i = 0; i < line.length; i++) {
+      var char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim().replace(/^"|"$/g, ''));
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim().replace(/^"|"$/g, ''));
+    
+    return result;
+  }
+  
   function confirmImport() {
-    if (!importState.patients.length) {
+    if (!importState.patients || !importState.patients.length) {
       toast('No patients to import', true);
       return;
     }
     
     var added = 0;
+    var skipped = 0;
+    
     for (var i = 0; i < importState.patients.length; i++) {
       var p = importState.patients[i];
-      // Check duplicates
-      var exists = state.patients.some(function(ep) {
-        return ep.name.toLowerCase() === p.name.toLowerCase();
+      
+      // Check for duplicates by name (case-insensitive)
+      var exists = state.patients.some(function(existing) {
+        return existing.name.toLowerCase().trim() === p.name.toLowerCase().trim();
       });
+      
       if (!exists) {
         state.patients.push(p);
         added++;
+      } else {
+        skipped++;
       }
     }
     
     renderPatients();
     closeModal('importModal');
-    toast('✓ Imported ' + added + ' patients!');
+    
+    var msg = '✓ Imported ' + added + ' patient' + (added !== 1 ? 's' : '');
+    if (skipped > 0) {
+      msg += ' (' + skipped + ' duplicate' + (skipped !== 1 ? 's' : '') + ' skipped)';
+    }
+    toast(msg);
   }
   
   // Scores
