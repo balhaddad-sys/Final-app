@@ -1625,16 +1625,15 @@ button, a, input, select, textarea{touch-action:manipulation}
     <div id="accessIcon" style="font-size:3rem;margin-bottom:12px">🏥</div>
     <div class="modal-title" id="accessTitle">Unit Access</div>
     <p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px">Enter 4-digit code</p>
-    <p style="color:var(--gold);font-size:0.7rem;margin-top:4px" id="codeHint"></p>
+    <p id="codeHint" style="color:var(--gold);font-size:0.7rem;margin-top:4px"></p>
   </div>
   <div class="modal-body">
-    <div class="code-inputs" id="codeInputs"></div>
+    <div id="codeInputs"></div>
     <p class="code-error" id="codeError">Invalid code</p>
-    <button class="btn btn-ghost btn-sm" style="margin-top:16px;width:100%" onclick="bypassCode()">Skip Code (Debug)</button>
     <div id="userSection" style="display:none;margin-top:28px;padding-top:28px;border-top:1px solid var(--border)">
       <div class="form-group">
         <label class="form-label">Your Name</label>
-        <input type="text" id="userName" class="form-input">
+        <input type="text" id="userName" class="form-input" placeholder="Enter your name">
       </div>
       <div class="form-group">
         <label class="form-label">Role</label>
@@ -1648,7 +1647,7 @@ button, a, input, select, textarea{touch-action:manipulation}
   </div>
   <div class="modal-footer">
     <button class="btn btn-secondary" onclick="closeModal('accessModal')">Cancel</button>
-    <button class="btn btn-primary" id="enterBtn" style="display:none" onclick="enterUnit()">Enter</button>
+    <button class="btn btn-primary" id="enterBtn" style="display:none" onclick="enterUnit()">Enter Unit</button>
   </div>
 </div>
 </div>
@@ -1659,11 +1658,11 @@ button, a, input, select, textarea{touch-action:manipulation}
   <div class="modal-header" style="text-align:center;display:block;border:none">
     <div style="font-size:3rem;margin-bottom:12px">⚙️</div>
     <div class="modal-title">Admin Access</div>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px">Enter admin password</p>
   </div>
   <div class="modal-body">
     <div class="form-group">
-      <label class="form-label">Password</label>
-      <input type="password" id="adminPwd" class="form-input">
+      <input type="password" id="adminPwd" class="form-input" placeholder="Password" style="text-align:center;font-size:1.2rem">
     </div>
     <p class="code-error" id="adminError">Invalid password</p>
   </div>
@@ -2369,69 +2368,46 @@ window.selectUnit = function(id) {
   
   $('accessIcon').textContent = u.icon || '🏥';
   $('accessTitle').textContent = u.name;
-  $('codeHint').textContent = 'Code: ' + u.code; // Debug hint
+  $('codeHint').textContent = ''; 
   $('codeError').classList.remove('show');
   $('userSection').style.display = 'none';
   $('enterBtn').style.display = 'none';
   
+  // Use a single input for the full code - more reliable on mobile
   const container = $('codeInputs');
-  container.innerHTML = '<input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*">';
+  container.innerHTML = '<input type="tel" id="fullCodeInput" class="form-input mono" placeholder="Enter 4-digit code" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="text-align:center;font-size:1.5rem;letter-spacing:0.5em;padding:16px">';
   
-  const inputs = container.querySelectorAll('.code-digit');
-  let lastCheck = 0;
+  const input = $('fullCodeInput');
   
-  function checkCode() {
-    const now = Date.now();
-    if (now - lastCheck < 300) return; // Debounce
-    lastCheck = now;
+  input.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 4);
     
-    const code = Array.from(inputs).map(i => (i.value || '').slice(-1)).join('');
-    console.log('Code entered:', code, 'Expected:', u.code);
-    
-    if (code.length === 4) {
-      if (code === u.code) {
-        inputs.forEach(i => { i.classList.add('success'); i.disabled = true; });
+    if (this.value.length === 4) {
+      if (this.value === u.code) {
+        this.style.borderColor = 'var(--emerald)';
+        this.style.background = 'rgba(16,185,129,0.1)';
+        this.disabled = true;
         $('userSection').style.display = 'block';
         $('enterBtn').style.display = 'flex';
         setTimeout(() => $('userName').focus(), 100);
       } else {
+        this.style.borderColor = 'var(--rose)';
         $('codeError').classList.add('show');
-        inputs.forEach(i => i.classList.add('error'));
-        setTimeout(() => { 
-          inputs.forEach(i => { i.classList.remove('error'); i.value = ''; }); 
-          inputs[0].focus(); 
-        }, 600);
+        setTimeout(() => {
+          this.style.borderColor = '';
+          this.value = '';
+          $('codeError').classList.remove('show');
+          this.focus();
+        }, 800);
       }
     }
-  }
-  
-  inputs.forEach((inp, idx) => {
-    inp.addEventListener('input', () => {
-      // Keep only last digit
-      let val = inp.value.replace(/\D/g, '');
-      if (val.length > 1) val = val.slice(-1);
-      inp.value = val;
-      
-      if (val && idx < 3) {
-        setTimeout(() => inputs[idx + 1].focus(), 50);
-      }
-      
-      setTimeout(checkCode, 100);
-    });
-    
-    inp.addEventListener('keydown', e => { 
-      if (e.key === 'Backspace' && !inp.value && idx > 0) {
-        inputs[idx - 1].focus();
-      }
-    });
   });
   
   openModal('accessModal');
-  setTimeout(() => inputs[0].focus(), 150);
+  setTimeout(() => input.focus(), 150);
 };
 
 window.bypassCode = function() {
-  // Debug function to skip code entry
   $('userSection').style.display = 'block';
   $('enterBtn').style.display = 'flex';
   setTimeout(() => $('userName').focus(), 100);
