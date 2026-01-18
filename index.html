@@ -78,6 +78,8 @@ button, a, input, select, textarea{touch-action:manipulation}
 
 .landing-scroll-container{
   flex:1;
+  position:relative;
+  z-index:1;
   overflow-y:auto;
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
@@ -161,6 +163,8 @@ button, a, input, select, textarea{touch-action:manipulation}
 
 /* Landing Header */
 .landing-header{
+  position:relative;
+  z-index:2;
   padding:24px 32px;
   display:flex;
   justify-content:space-between;
@@ -187,6 +191,8 @@ button, a, input, select, textarea{touch-action:manipulation}
 
 /* Landing Main Content */
 .landing-main{
+  position:relative;
+  z-index:2;
   flex:1;
   display:flex;
   flex-direction:column;
