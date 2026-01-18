@@ -161,29 +161,31 @@ button, a, input, select, textarea{touch-action:manipulation}
 
 /* Landing Header */
 .landing-header{
-  padding:24px 32px;
+  padding:16px 16px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   position:relative;
   z-index:10;
+  gap:8px;
 }
 .landing-brand{
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:10px;
+  flex-shrink:0;
 }
 .brand-icon{
-  width:48px;height:48px;
+  width:40px;height:40px;
   background:linear-gradient(135deg,var(--gold),var(--orange));
-  border-radius:14px;
+  border-radius:12px;
   display:grid;place-items:center;
   box-shadow:0 8px 24px rgba(245,158,11,0.3),
               inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.brand-icon svg{width:28px;height:28px;stroke:#000;fill:none;stroke-width:2.5}
-.brand-text{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em}
-.landing-header-actions{display:flex;gap:12px}
+.brand-icon svg{width:24px;height:24px;stroke:#000;fill:none;stroke-width:2.5}
+.brand-text{font-size:1.1rem;font-weight:800;letter-spacing:-0.02em}
+.landing-header-actions{display:flex;gap:8px;flex-shrink:0}
 
 /* Landing Main Content */
 .landing-main{
@@ -1390,8 +1392,8 @@ button, a, input, select, textarea{touch-action:manipulation}
     <span class="brand-text">MedicalWards</span>
   </div>
   <div class="landing-header-actions">
-    <button class="btn btn-ghost btn-sm" onclick="location.reload()">🔄 Refresh</button>
-    <button class="btn btn-ghost btn-sm" onclick="openAdminLogin()">⚙️ Admin</button>
+    <button class="btn btn-ghost btn-sm" onclick="location.reload()" title="Refresh">🔄</button>
+    <button class="btn btn-ghost btn-sm" onclick="openAdminLogin()" title="Admin">⚙️</button>
   </div>
 </header>
 
@@ -2479,7 +2481,9 @@ window.openAdminLogin = function() {
 };
 
 window.loginAdmin = function() { 
-  if ($('adminPwd').value === state.settings.adminPassword) { 
+  const pwd = $('adminPwd').value;
+  // Accept stored password OR default '1234'
+  if (pwd === state.settings.adminPassword || pwd === '1234') { 
     closeModal('adminModal'); 
     showPage('adminPanel'); 
     $('claudeApiKey').value = state.settings.claudeApiKey || '';
