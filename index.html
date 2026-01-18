@@ -1393,6 +1393,7 @@ button, a, input, select, textarea{touch-action:manipulation}
   </div>
   <div class="landing-header-actions">
     <button class="btn btn-ghost btn-sm" onclick="location.reload()" title="Refresh">🔄</button>
+    <button class="btn btn-ghost btn-sm" onclick="if(confirm('Reset all data?')){localStorage.clear();location.reload()}" title="Reset">🗑️</button>
     <button class="btn btn-ghost btn-sm" onclick="openAdminLogin()" title="Admin">⚙️</button>
   </div>
 </header>
@@ -2158,11 +2159,27 @@ function saveLocal() {
 
 function loadLocal() {
   try {
-    const d = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY) || '{}');
-    if (d.units) state.units = d.units;
-    if (d.patients) state.patients = d.patients;
-    if (d.settings) state.settings = { ...state.settings, ...d.settings };
-    if (d.unitRequests) state.unitRequests = d.unitRequests;
+    const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (!raw) {
+      console.log('No saved data, using defaults');
+      // Add a default unit for first-time users
+      state.units = [{
+        id: 'default_unit',
+        name: 'Medicine Unit',
+        icon: '🏥',
+        code: '1234',
+        desc: 'Internal Medicine',
+        color: '#f59e0b'
+      }];
+      return;
+    }
+    
+    const d = JSON.parse(raw);
+    if (d.units && Array.isArray(d.units)) state.units = d.units;
+    if (d.patients && Array.isArray(d.patients)) state.patients = d.patients;
+    if (d.settings && typeof d.settings === 'object') state.settings = { ...state.settings, ...d.settings };
+    if (d.unitRequests && Array.isArray(d.unitRequests)) state.unitRequests = d.unitRequests;
+    
     // Migrate old apiUrl to endpoints
     if (state.settings.apiUrl && !state.settings.apiEndpoints?.length) {
       state.settings.apiEndpoints = [{
@@ -2176,7 +2193,33 @@ function loadLocal() {
     }
     // Initialize links array if not present
     if (!state.settings.links) state.settings.links = [];
-  } catch (e) { console.error('Load error:', e); }
+    
+    // If no units exist, add default
+    if (!state.units.length) {
+      state.units = [{
+        id: 'default_unit',
+        name: 'Medicine Unit',
+        icon: '🏥',
+        code: '1234',
+        desc: 'Internal Medicine',
+        color: '#f59e0b'
+      }];
+    }
+    
+    console.log('Loaded data:', state.units.length, 'units,', state.patients.length, 'patients');
+  } catch (e) { 
+    console.error('Load error, resetting:', e);
+    // Reset to defaults on error
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
+    state.units = [{
+      id: 'default_unit',
+      name: 'Medicine Unit',
+      icon: '🏥',
+      code: '1234',
+      desc: 'Internal Medicine',
+      color: '#f59e0b'
+    }];
+  }
 }
 
 async function saveCloud() {
@@ -3570,41 +3613,80 @@ window.exportPDF = function() {
 // ═══════════════════════════════════════════════════════════════════
 
 async function init() {
-  loadLocal();
-  cacheDom();
-  renderUnits();
-  
-  $('syncFab').onclick = async () => { 
-    $('syncFab').classList.add('syncing'); 
-    await syncCloud(); 
-    $('syncFab').classList.remove('syncing'); 
-    toast('Synced!'); 
-  };
-  $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
-  $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
-  $('mainTabs').onclick = e => { const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab); };
-  $('profileTabs').onclick = e => { const t = e.target.closest('.profile-tab'); if (t) showProfileTab(t.dataset.ptab); };
-  $('statsBar').onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
-  
-  $('importFile').onchange = function() { 
-    if (this.files[0]) { 
-      compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { 
-        state.importImage = url; 
-        $('importImg').src = url; 
-        $('importUpload').style.display = 'none'; 
-        $('importPreview').style.display = 'block'; 
-      }); 
-    } 
-  };
-  
-  $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
-  
-  await syncCloud();
-  setInterval(() => syncCloud(), 30000);
+  try {
+    console.log('🚀 MedicalWards initializing...');
+    
+    loadLocal();
+    cacheDom();
+    renderUnits();
+    
+    // Set up event handlers with null checks
+    const syncFab = $('syncFab');
+    if (syncFab) {
+      syncFab.onclick = async () => { 
+        syncFab.classList.add('syncing'); 
+        await syncCloud(); 
+        syncFab.classList.remove('syncing'); 
+        toast('Synced!'); 
+      };
+    }
+    
+    const adminPwd = $('adminPwd');
+    if (adminPwd) adminPwd.onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
+    
+    const userName = $('userName');
+    if (userName) userName.onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
+    
+    const mainTabs = $('mainTabs');
+    if (mainTabs) mainTabs.onclick = e => { const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab); };
+    
+    const profileTabs = $('profileTabs');
+    if (profileTabs) profileTabs.onclick = e => { const t = e.target.closest('.profile-tab'); if (t) showProfileTab(t.dataset.ptab); };
+    
+    const statsBar = $('statsBar');
+    if (statsBar) statsBar.onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
+    
+    const importFile = $('importFile');
+    if (importFile) {
+      importFile.onchange = function() { 
+        if (this.files[0]) { 
+          compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { 
+            state.importImage = url; 
+            $('importImg').src = url; 
+            $('importUpload').style.display = 'none'; 
+            $('importPreview').style.display = 'block'; 
+          }); 
+        } 
+      };
+    }
+    
+    $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
+    
+    console.log('✅ MedicalWards ready!');
+    
+    // Non-blocking cloud sync
+    syncCloud().catch(e => console.warn('Cloud sync skipped:', e.message));
+    setInterval(() => syncCloud().catch(() => {}), 30000);
+    
+  } catch (err) {
+    console.error('❌ Init error:', err);
+    // Show error to user
+    const landing = $('landing');
+    if (landing) {
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'position:fixed;bottom:20px;left:20px;right:20px;background:#f43f5e;color:white;padding:16px;border-radius:12px;z-index:9999;font-size:14px';
+      errorDiv.innerHTML = '<b>Error:</b> ' + err.message + '<br><button onclick="localStorage.clear();location.reload()" style="margin-top:10px;padding:8px 16px;background:white;color:#f43f5e;border:none;border-radius:6px;font-weight:bold">Reset & Reload</button>';
+      document.body.appendChild(errorDiv);
+    }
+  }
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+// Start the app
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 
 })();
 </script>
