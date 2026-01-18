@@ -2369,28 +2369,59 @@ window.selectUnit = function(id) {
   $('enterBtn').style.display = 'none';
   
   const container = $('codeInputs');
-  container.innerHTML = '<input type="tel" maxlength="1" class="code-digit" inputmode="numeric"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric">';
+  container.innerHTML = '<input type="tel" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*">';
   
   const inputs = container.querySelectorAll('.code-digit');
+  
+  function checkCode() {
+    const code = Array.from(inputs).map(i => i.value).join('');
+    if (code.length === 4) {
+      if (code === u.code) {
+        inputs.forEach(i => { i.classList.add('success'); i.disabled = true; });
+        $('userSection').style.display = 'block';
+        $('enterBtn').style.display = 'flex';
+        $('userName').focus();
+      } else {
+        $('codeError').classList.add('show');
+        inputs.forEach(i => i.classList.add('error'));
+        setTimeout(() => { inputs.forEach(i => { i.classList.remove('error'); i.value = ''; }); inputs[0].focus(); }, 500);
+      }
+    }
+  }
+  
   inputs.forEach((inp, idx) => {
-    inp.addEventListener('input', () => {
+    // Handle input event
+    inp.addEventListener('input', (e) => {
       inp.value = inp.value.replace(/\D/g, '');
+      if (inp.value.length > 1) inp.value = inp.value.slice(-1);
       if (inp.value && idx < 3) inputs[idx + 1].focus();
-      const code = Array.from(inputs).map(i => i.value).join('');
-      if (code.length === 4) {
-        if (code === u.code) {
-          inputs.forEach(i => { i.classList.add('success'); i.disabled = true; });
-          $('userSection').style.display = 'block';
-          $('enterBtn').style.display = 'flex';
-          $('userName').focus();
-        } else {
-          $('codeError').classList.add('show');
-          inputs.forEach(i => i.classList.add('error'));
-          setTimeout(() => { inputs.forEach(i => { i.classList.remove('error'); i.value = ''; }); inputs[0].focus(); }, 500);
-        }
+      checkCode();
+    });
+    
+    // Handle keyup for better mobile support
+    inp.addEventListener('keyup', (e) => {
+      if (e.key >= '0' && e.key <= '9') {
+        inp.value = e.key;
+        if (idx < 3) inputs[idx + 1].focus();
+        checkCode();
+      } else if (e.key === 'Backspace') {
+        if (!inp.value && idx > 0) inputs[idx - 1].focus();
       }
     });
-    inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus(); });
+    
+    // Handle paste
+    inp.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 4);
+      paste.split('').forEach((char, i) => {
+        if (inputs[i]) inputs[i].value = char;
+      });
+      checkCode();
+    });
+    
+    inp.addEventListener('keydown', e => { 
+      if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus(); 
+    });
   });
   
   openModal('accessModal');
