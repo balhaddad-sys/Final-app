@@ -323,6 +323,8 @@
       <div id="analysisLoading" style="display:none;text-align:center;padding:30px">
         <div class="spinner"></div>
         <div style="margin-top:12px;font-weight:600">Analyzing...</div>
+        <div id="analysisTimer" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px">0s</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Usually takes 5-15 seconds</div>
       </div>
       <div id="analysisResults" style="margin-top:16px"></div>
     </div>
@@ -469,9 +471,9 @@
     ADMIN_PASSWORD: 'admin123',
     API_URL: 'https://script.google.com/macros/s/AKfycbwnPMayEKM6rHJB2qZ-DDECoVB4Kte1EcoBiea0pmcasfyAeW7RGeADiH5DMXGRJOSJ/exec',
     MAX_IMAGES: 5,
-    MAX_IMAGE_SIZE: 4 * 1024 * 1024,
-    IMAGE_QUALITY: 0.8,
-    MAX_IMAGE_DIMENSION: 2000
+    MAX_IMAGE_SIZE: 1024 * 1024,  // Reduced to 1MB for faster upload
+    IMAGE_QUALITY: 0.6,           // More compression for speed
+    MAX_IMAGE_DIMENSION: 1200     // Smaller images = faster processing
   };
 
   const DEFAULT_UNITS = [
@@ -561,11 +563,22 @@
     reader.readAsDataURL(file);
   }
 
-  // ========== STORAGE ==========
-  function loadStorage() {
+  // ========== STORAGE (Google Drive + localStorage fallback) ==========
+  let isSyncing = false;
+  
+  async function loadStorage() {
     state.units = DEFAULT_UNITS.slice();
     state.settings = { adminPassword: CONFIG.ADMIN_PASSWORD, apiUrl: CONFIG.API_URL };
     state.patients = [];
+    
+    // First load from localStorage (instant)
+    loadFromLocalStorage();
+    
+    // Then sync from Google Drive (background)
+    syncFromDrive();
+  }
+  
+  function loadFromLocalStorage() {
     try {
       const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
       if (saved) {
@@ -581,18 +594,95 @@
         if (data.patients && Array.isArray(data.patients)) state.patients = data.patients;
       }
     } catch (e) {
-      console.warn('Storage load failed:', e);
-      try { localStorage.removeItem(CONFIG.STORAGE_KEY); } catch (ce) {}
+      console.warn('LocalStorage load failed:', e);
     }
     if (!state.units || state.units.length === 0) state.units = DEFAULT_UNITS.slice();
   }
   
-  function saveStorage() {
+  async function syncFromDrive() {
+    if (isSyncing) return;
+    isSyncing = true;
+    
+    try {
+      const response = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'loadData' })
+      });
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const driveData = result.data;
+        
+        // Merge Drive data (Drive takes priority for units/settings, merge patients)
+        if (driveData.units && driveData.units.length > 0) {
+          state.units = driveData.units;
+        }
+        if (driveData.settings) {
+          state.settings = { ...state.settings, ...driveData.settings };
+        }
+        if (driveData.patients && driveData.patients.length > 0) {
+          // Merge patients by ID, Drive takes priority
+          const drivePatientIds = new Set(driveData.patients.map(p => p.id));
+          const localOnly = state.patients.filter(p => !drivePatientIds.has(p.id));
+          state.patients = [...driveData.patients, ...localOnly];
+        }
+        
+        // Update localStorage with merged data
+        saveToLocalStorage();
+        
+        // Re-render if on landing page
+        if (!state.currentUnit) {
+          renderUnits();
+        }
+        
+        console.log('[MedWard] Synced from Google Drive');
+      }
+    } catch (e) {
+      console.warn('Drive sync failed (using localStorage):', e);
+    }
+    
+    isSyncing = false;
+  }
+  
+  function saveToLocalStorage() {
     try {
       localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
         units: state.units, settings: state.settings, patients: state.patients
       }));
-    } catch (e) { console.warn('Storage save failed:', e); }
+    } catch (e) { console.warn('LocalStorage save failed:', e); }
+  }
+  
+  async function saveStorage() {
+    // Save to localStorage immediately
+    saveToLocalStorage();
+    
+    // Save to Google Drive in background
+    saveToDrive();
+  }
+  
+  async function saveToDrive() {
+    try {
+      const response = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'saveData',
+          payload: {
+            units: state.units,
+            settings: { adminPassword: state.settings.adminPassword },
+            patients: state.patients,
+            lastUpdated: new Date().toISOString()
+          }
+        })
+      });
+      const result = await response.json();
+      if (result.success) {
+        console.log('[MedWard] Saved to Google Drive');
+      }
+    } catch (e) {
+      console.warn('Drive save failed:', e);
+    }
   }
   
   function getUnit(id) { return state.units.find(u => u.id === id); }
@@ -910,6 +1000,25 @@
   }
 
   // ========== ANALYSIS ==========
+  let analysisTimer = null;
+  let analysisSeconds = 0;
+  
+  function startAnalysisTimer() {
+    analysisSeconds = 0;
+    $('analysisTimer').textContent = '0s';
+    analysisTimer = setInterval(() => {
+      analysisSeconds++;
+      $('analysisTimer').textContent = analysisSeconds + 's';
+    }, 1000);
+  }
+  
+  function stopAnalysisTimer() {
+    if (analysisTimer) {
+      clearInterval(analysisTimer);
+      analysisTimer = null;
+    }
+  }
+  
   function addAnalysisImage(file) {
     if (state.analysisImages.length >= CONFIG.MAX_IMAGES) {
       toast('Maximum ' + CONFIG.MAX_IMAGES + ' images', true);
@@ -954,6 +1063,7 @@
     $('analyzeBtn').disabled = true;
     $('analysisLoading').style.display = 'block';
     $('analysisResults').innerHTML = '';
+    startAnalysisTimer();
     
     const typeNames = { lab: 'Laboratory Results', xray: 'X-Ray', ct: 'CT/MRI Scan', ecg: 'ECG' };
     
@@ -970,6 +1080,7 @@
         })
       });
       const data = await response.json();
+      stopAnalysisTimer();
       $('analysisLoading').style.display = 'none';
       $('analyzeBtn').disabled = false;
       
@@ -979,6 +1090,7 @@
       }
       
       let html = `<div class="result-card"><h4>📋 ${typeNames[state.analysisType]} Analysis</h4>`;
+      html += `<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:10px">Completed in ${analysisSeconds}s</div>`;
       if (data.interpretation) {
         const interp = data.interpretation;
         if (interp.summary) html += `<p><b>Summary:</b> ${escapeHtml(interp.summary)}</p>`;
@@ -991,11 +1103,12 @@
       }
       html += '</div>';
       $('analysisResults').innerHTML = html;
-      toast('Analysis complete!');
+      toast('Analysis complete in ' + analysisSeconds + 's!');
     } catch (error) {
+      stopAnalysisTimer();
       $('analysisLoading').style.display = 'none';
       $('analyzeBtn').disabled = false;
-      $('analysisResults').innerHTML = '<div class="result-card"><h4>⚠️ Error</h4><p>Connection failed.</p></div>';
+      $('analysisResults').innerHTML = '<div class="result-card"><h4>⚠️ Error</h4><p>Connection failed. Try again.</p></div>';
     }
   }
 
@@ -1174,9 +1287,9 @@
   }
 
   // ========== INITIALIZATION ==========
-  function init() {
+  async function init() {
     console.log('[MedWard] Initializing...');
-    loadStorage();
+    await loadStorage();
     renderUnits();
     initEventListeners();
     console.log('[MedWard] Ready - Units:', state.units.length);
