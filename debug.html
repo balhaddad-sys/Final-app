@@ -1,1840 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta name="theme-color" content="#030712">
-<title>MedWard Pro • System Diagnostics</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
+<meta name="theme-color" content="#030712" />
+<title>MedWard Pro • Debug Console</title>
+
 <style>
+/* ==============================
+   DESIGN SYSTEM
+============================== */
 :root {
-  --bg-primary: #030712;
-  --bg-secondary: #0a0f1a;
-  --bg-tertiary: #111827;
-  --bg-elevated: #1f2937;
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --border: rgba(255,255,255,0.08);
-  --border-light: rgba(255,255,255,0.12);
-  --gold: #f59e0b;
-  --gold-light: #fbbf24;
-  --teal: #14b8a6;
-  --emerald: #10b981;
-  --blue: #3b82f6;
-  --purple: #8b5cf6;
-  --rose: #f43f5e;
-  --orange: #f97316;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 4px 20px rgba(0,0,0,0.4);
+  --bg:#030712;
+  --panel:#0b1220;
+  --card:#111827;
+  --border:rgba(255,255,255,.08);
+  --text:#f9fafb;
+  --muted:#9ca3af;
+  --gold:#f59e0b;
+  --green:#10b981;
+  --red:#ef4444;
+  --warn:#fbbf24;
+  --radius:12px;
+  --radius-sm:8px;
+  --shadow:0 10px 40px rgba(0,0,0,.5);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  line-height: 1.6;
-  overflow-x: hidden;
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; background:var(--bg); color:var(--text); }
+
+/* ==============================
+   LAYOUT
+============================== */
+.app { display:grid; grid-template-rows:64px 1fr; height:100vh; }
+
+header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0 20px; background:linear-gradient(180deg,#0b1220,#030712);
+  border-bottom:1px solid var(--border);
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+header h1 { font-size:1.1rem; font-weight:800; }
+header span { font-size:.75rem; color:var(--muted); }
 
-.mono { font-family: 'JetBrains Mono', monospace; }
+.main { display:grid; grid-template-columns:260px 1fr; }
 
-/* Layout */
-.app {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  height: 100vh;
+/* ==============================
+   SIDEBAR
+============================== */
+aside {
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  padding:16px;
 }
 
-/* Header */
-.header {
-  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border-bottom: 1px solid var(--border);
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+.nav {
+  display:flex; flex-direction:column; gap:6px;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.nav button {
+  background:none; border:none; color:var(--muted);
+  text-align:left; padding:12px;
+  border-radius:8px; cursor:pointer;
+  font-size:.85rem;
 }
 
-.logo {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--rose), var(--orange));
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 4px 15px rgba(244,63,94,0.3);
+.nav button.active,
+.nav button:hover {
+  background:rgba(245,158,11,.12);
+  color:var(--gold);
 }
 
-.logo svg { width: 24px; height: 24px; stroke: #fff; fill: none; }
-
-.header-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--rose), var(--gold));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* ==============================
+   CONTENT
+============================== */
+main {
+  padding:20px;
+  overflow:auto;
 }
 
-.header-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
+.panel { display:none; }
+.panel.active { display:block; }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.system-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-.status-dot.online { background: var(--emerald); }
-.status-dot.offline { background: var(--rose); }
-.status-dot.warning { background: var(--gold); }
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.9); }
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn:active { transform: scale(0.97); }
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--gold), var(--orange));
-  color: #000;
-}
-
-.btn-secondary {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-}
-
-.btn-secondary:hover { border-color: var(--gold); }
-
-.btn-danger {
-  background: rgba(244,63,94,0.15);
-  border: 1px solid rgba(244,63,94,0.3);
-  color: var(--rose);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  padding: 8px;
-}
-
-.btn-ghost:hover { color: var(--gold); }
-
-/* Main Content */
-.main {
-  display: grid;
-  grid-template-columns: 280px 1fr 320px;
-  gap: 1px;
-  background: var(--border);
-  overflow: hidden;
-}
-
-@media (max-width: 1200px) {
-  .main { grid-template-columns: 1fr; }
-  .sidebar, .panel-right { display: none; }
-}
-
-/* Sidebar */
-.sidebar {
-  background: var(--bg-secondary);
-  overflow-y: auto;
-  padding: 16px;
-}
-
-.nav-section {
-  margin-bottom: 24px;
-}
-
-.nav-section-title {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0 12px;
-  margin-bottom: 8px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
-.nav-item.active { background: rgba(245,158,11,0.1); color: var(--gold); }
-.nav-item-icon { font-size: 1.1rem; }
-.nav-item-badge {
-  margin-left: auto;
-  padding: 2px 8px;
-  background: var(--bg-elevated);
-  border-radius: 100px;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-.nav-item.active .nav-item-badge { background: var(--gold); color: #000; }
-
-/* Center Panel */
-.center-panel {
-  background: var(--bg-primary);
-  overflow-y: auto;
-  padding: 24px;
-}
-
-.panel-content { display: none; }
-.panel-content.active { display: block; }
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Cards */
 .card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin-bottom: 16px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
 }
 
-.card-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.card header {
+  padding:14px 18px;
+  border-bottom:1px solid var(--border);
+  background:none;
 }
 
-.card-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.card section { padding:18px; }
+
+/* ==============================
+   STATUS ITEMS
+============================== */
+.status {
+  display:flex; gap:12px;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:8px;
+  background:#0b1220;
 }
 
-.card-body { padding: 20px; }
-.card-body.no-padding { padding: 0; }
+.status.ok { border-left:4px solid var(--green); }
+.status.err { border-left:4px solid var(--red); }
+.status.warn { border-left:4px solid var(--warn); }
 
-/* Stats Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
+/* ==============================
+   BUTTONS
+============================== */
+.btn {
+  padding:10px 14px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
 }
 
-.stat-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-  position: relative;
-  overflow: hidden;
+.btn.primary {
+  background:linear-gradient(135deg,var(--gold),#fb923c);
+  color:#000;
 }
 
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--stat-color, var(--gold));
+.btn.secondary {
+  background:#0b1220;
+  color:var(--text);
+  border:1px solid var(--border);
 }
 
-.stat-icon {
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-}
-
-.stat-value {
-  font-size: 1.75rem;
-  font-weight: 800;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.stat-value.success { color: var(--emerald); }
-.stat-value.error { color: var(--rose); }
-.stat-value.warning { color: var(--gold); }
-
-.stat-label {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-
-/* Status Items */
-.status-list { display: flex; flex-direction: column; gap: 8px; }
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-
-.status-item:hover { background: var(--bg-elevated); }
-
-.status-item.success { border-left: 3px solid var(--emerald); }
-.status-item.error { border-left: 3px solid var(--rose); }
-.status-item.warning { border-left: 3px solid var(--gold); }
-.status-item.pending { border-left: 3px solid var(--text-muted); }
-
-.status-item-icon { font-size: 1.1rem; }
-.status-item-text { flex: 1; }
-.status-item-meta { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
-
-/* Log Viewer */
-.log-viewer {
-  background: #0d1117;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  overflow: hidden;
-}
-
-.log-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border);
-}
-
-.log-filter {
-  padding: 6px 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.75rem;
-}
-
-.log-filter:focus { outline: none; border-color: var(--gold); }
-
-.log-content {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 16px;
-}
-
-.log-entry {
-  display: flex;
-  gap: 12px;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-}
-
-.log-entry:last-child { border-bottom: none; }
-
-.log-time { color: var(--text-muted); white-space: nowrap; }
-.log-level {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.log-level.info { background: rgba(59,130,246,0.2); color: var(--blue); }
-.log-level.success { background: rgba(16,185,129,0.2); color: var(--emerald); }
-.log-level.warn { background: rgba(245,158,11,0.2); color: var(--gold); }
-.log-level.error { background: rgba(244,63,94,0.2); color: var(--rose); }
-
-.log-message { flex: 1; word-break: break-all; }
-
-/* API Tester */
-.api-tester {
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.api-input-group {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.api-input {
-  flex: 1;
-  padding: 12px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.85rem;
-}
-
-.api-input:focus { outline: none; border-color: var(--gold); }
-
-.api-select {
-  padding: 12px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.85rem;
-  min-width: 150px;
-}
-
-.api-response {
-  background: #0d1117;
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  max-height: 300px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* Right Panel */
-.panel-right {
-  background: var(--bg-secondary);
-  overflow-y: auto;
-  padding: 16px;
-}
-
-.metric-card {
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  margin-bottom: 12px;
-}
-
-.metric-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.metric-title {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.metric-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.metric-bar {
-  height: 6px;
-  background: var(--bg-elevated);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.metric-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.5s ease;
-}
-
-.metric-bar-fill.green { background: linear-gradient(90deg, var(--emerald), var(--teal)); }
-.metric-bar-fill.gold { background: linear-gradient(90deg, var(--gold), var(--orange)); }
-.metric-bar-fill.purple { background: linear-gradient(90deg, var(--purple), var(--blue)); }
-.metric-bar-fill.rose { background: linear-gradient(90deg, var(--rose), var(--orange)); }
-
-/* Quick Actions */
-.quick-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.quick-action {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.quick-action:hover {
-  background: var(--bg-elevated);
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-.quick-action-icon { font-size: 1.5rem; }
-
-/* Data Viewer */
-.data-viewer {
-  background: #0d1117;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.data-viewer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border);
-}
-
-.data-viewer-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.data-viewer-content {
-  padding: 16px;
-  max-height: 400px;
-  overflow: auto;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* JSON Syntax Highlighting */
-.json-key { color: #79c0ff; }
-.json-string { color: #a5d6ff; }
-.json-number { color: #a5d6ff; }
-.json-boolean { color: #ff7b72; }
-.json-null { color: #ff7b72; }
-
-/* Toast */
+/* ==============================
+   TOAST
+============================== */
 .toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--bg-secondary);
-  border: 1px solid var(--emerald);
-  padding: 16px 28px;
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-  opacity: 0;
-  transition: all 0.3s;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  position:fixed;
+  bottom:20px; left:50%;
+  transform:translateX(-50%);
+  background:#111827;
+  padding:14px 20px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  display:none;
+  z-index:9999;
 }
+.toast.show { display:block; }
 
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.error { border-color: var(--rose); }
-.toast.warning { border-color: var(--gold); }
-
-/* Loading Spinner */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+/* ==============================
+   HIT TEST OVERLAY
+============================== */
+.hit-overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+  color:white;
+  font-size:1rem;
+  text-align:center;
 }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 48px 24px;
-  color: var(--text-muted);
-}
-
-.empty-state-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; }
-.empty-state-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
-
-/* Modal */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(8px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 1000;
-}
-
-.modal.active { display: flex; }
-
-.modal-box {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-title { font-size: 1.1rem; font-weight: 700; }
-
-.modal-body { padding: 24px; overflow-y: auto; }
-
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-/* Form */
-.form-group { margin-bottom: 16px; }
-
-.form-label {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.9rem;
-}
-
-.form-input:focus { outline: none; border-color: var(--gold); }
 </style>
 </head>
+
 <body>
-
 <div class="app">
-  <!-- Header -->
-  <header class="header">
-    <div class="header-left">
-      <div class="logo">
-        <svg viewBox="0 0 24 24" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
-        </svg>
-      </div>
-      <div>
-        <div class="header-title">System Diagnostics</div>
-        <div class="header-subtitle">MedWard Pro Debug Console v2.0</div>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="system-status">
-        <div class="status-dot" id="systemStatusDot"></div>
-        <span id="systemStatusText">Checking...</span>
-      </div>
-      <button class="btn btn-secondary" onclick="runFullDiagnostics()">
-        <span id="runBtnText">🔍 Run Diagnostics</span>
-      </button>
-      <button class="btn btn-primary" onclick="window.location.href='index.html'">
-        🏠 Main App
-      </button>
-    </div>
-  </header>
 
-  <!-- Main Content -->
-  <div class="main">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="nav-section">
-        <div class="nav-section-title">Diagnostics</div>
-        <div class="nav-item active" data-panel="overview">
-          <span class="nav-item-icon">📊</span>
-          <span>Overview</span>
-        </div>
-        <div class="nav-item" data-panel="scripts">
-          <span class="nav-item-icon">📜</span>
-          <span>Script Status</span>
-          <span class="nav-item-badge" id="scriptsBadge">0</span>
-        </div>
-        <div class="nav-item" data-panel="objects">
-          <span class="nav-item-icon">🧩</span>
-          <span>Objects</span>
-          <span class="nav-item-badge" id="objectsBadge">0</span>
-        </div>
-        <div class="nav-item" data-panel="api">
-          <span class="nav-item-icon">🔌</span>
-          <span>API Tester</span>
-        </div>
-      </div>
-      
-      <div class="nav-section">
-        <div class="nav-section-title">Data</div>
-        <div class="nav-item" data-panel="storage">
-          <span class="nav-item-icon">💾</span>
-          <span>LocalStorage</span>
-        </div>
-        <div class="nav-item" data-panel="units">
-          <span class="nav-item-icon">🏥</span>
-          <span>Units Data</span>
-        </div>
-        <div class="nav-item" data-panel="patients">
-          <span class="nav-item-icon">👥</span>
-          <span>Patients</span>
-        </div>
-      </div>
-      
-      <div class="nav-section">
-        <div class="nav-section-title">Logs</div>
-        <div class="nav-item" data-panel="logs">
-          <span class="nav-item-icon">📋</span>
-          <span>Console Logs</span>
-          <span class="nav-item-badge" id="logsBadge">0</span>
-        </div>
-        <div class="nav-item" data-panel="network">
-          <span class="nav-item-icon">🌐</span>
-          <span>Network</span>
-          <span class="nav-item-badge" id="networkBadge">0</span>
-        </div>
-      </div>
-    </aside>
+<header>
+  <div>
+    <h1>MedWard Debug Console</h1>
+    <span>UI + System Diagnostics</span>
+  </div>
+  <button class="btn primary" onclick="location.href='index.html'">🏠 Main App</button>
+</header>
 
-    <!-- Center Panel -->
-    <main class="center-panel">
-      <!-- Overview Panel -->
-      <div class="panel-content active" id="panelOverview">
-        <h2 class="section-title">📊 System Overview</h2>
-        
-        <div class="stats-grid" id="overviewStats">
-          <div class="stat-card" style="--stat-color: var(--emerald)">
-            <div class="stat-icon">✅</div>
-            <div class="stat-value success" id="statPassed">—</div>
-            <div class="stat-label">Checks Passed</div>
-          </div>
-          <div class="stat-card" style="--stat-color: var(--rose)">
-            <div class="stat-icon">❌</div>
-            <div class="stat-value error" id="statFailed">—</div>
-            <div class="stat-label">Checks Failed</div>
-          </div>
-          <div class="stat-card" style="--stat-color: var(--gold)">
-            <div class="stat-icon">⚠️</div>
-            <div class="stat-value warning" id="statWarnings">—</div>
-            <div class="stat-label">Warnings</div>
-          </div>
-          <div class="stat-card" style="--stat-color: var(--blue)">
-            <div class="stat-icon">⏱️</div>
-            <div class="stat-value" id="statTime">—</div>
-            <div class="stat-label">Last Check</div>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">🎯 Critical Checks</div>
-          </div>
-          <div class="card-body">
-            <div class="status-list" id="criticalChecks">
-              <div class="status-item pending">
-                <span class="status-item-icon">⏳</span>
-                <span class="status-item-text">Waiting for diagnostics...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">💡 Recommendations</div>
-          </div>
-          <div class="card-body">
-            <div class="status-list" id="recommendations">
-              <div class="empty-state">
-                <div class="empty-state-icon">💡</div>
-                <div class="empty-state-title">No recommendations yet</div>
-                <div>Run diagnostics to get suggestions</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<div class="main">
 
-      <!-- Scripts Panel -->
-      <div class="panel-content" id="panelScripts">
-        <h2 class="section-title">📜 Script Loading Status</h2>
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">JavaScript Files</div>
-            <button class="btn btn-secondary" onclick="checkScripts()">🔄 Recheck</button>
-          </div>
-          <div class="card-body">
-            <div class="status-list" id="scriptsStatus">
-              <div class="status-item pending">
-                <span class="status-item-icon">⏳</span>
-                <span class="status-item-text">Checking scripts...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<aside>
+  <div class="nav">
+    <button class="active" data-panel="overview">📊 Overview</button>
+    <button data-panel="ui">🖱️ UI Interaction</button>
+    <button data-panel="storage">💾 Storage</button>
+    <button data-panel="network">🌐 Network</button>
+  </div>
+</aside>
 
-      <!-- Objects Panel -->
-      <div class="panel-content" id="panelObjects">
-        <h2 class="section-title">🧩 JavaScript Objects</h2>
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">MedWard Namespace</div>
-            <button class="btn btn-secondary" onclick="checkObjects()">🔄 Recheck</button>
-          </div>
-          <div class="card-body">
-            <div class="status-list" id="objectsStatus">
-              <div class="status-item pending">
-                <span class="status-item-icon">⏳</span>
-                <span class="status-item-text">Checking objects...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<main>
 
-      <!-- API Panel -->
-      <div class="panel-content" id="panelApi">
-        <h2 class="section-title">🔌 API Tester</h2>
-        
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Test API Endpoint</div>
-          </div>
-          <div class="card-body">
-            <div class="api-tester">
-              <div class="form-group">
-                <label class="form-label">API URL</label>
-                <input type="text" id="apiUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
-              </div>
-              <div class="api-input-group">
-                <select id="apiAction" class="api-select">
-                  <option value="loadData">loadData</option>
-                  <option value="extractPatients">extractPatients</option>
-                  <option value="analyzeLabs">analyzeLabs</option>
-                  <option value="getAnalytics">getAnalytics</option>
-                </select>
-                <button class="btn btn-primary" onclick="testApi()">🚀 Send Request</button>
-              </div>
-            </div>
-            
-            <div class="data-viewer">
-              <div class="data-viewer-header">
-                <span class="data-viewer-title">Response</span>
-                <button class="btn btn-ghost" onclick="copyResponse()">📋 Copy</button>
-              </div>
-              <div class="data-viewer-content" id="apiResponse">
-                <span style="color: var(--text-muted)">// Response will appear here</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Storage Panel -->
-      <div class="panel-content" id="panelStorage">
-        <h2 class="section-title">💾 LocalStorage Data</h2>
-        
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">medward_pro_v11</div>
-            <div style="display: flex; gap: 8px">
-              <button class="btn btn-secondary" onclick="refreshStorage()">🔄 Refresh</button>
-              <button class="btn btn-danger" onclick="clearStorage()">🗑️ Clear</button>
-            </div>
-          </div>
-          <div class="card-body no-padding">
-            <div class="data-viewer">
-              <div class="data-viewer-header">
-                <span class="data-viewer-title">Raw Data</span>
-                <span id="storageSize" style="font-size: 0.75rem; color: var(--text-muted)">0 KB</span>
-              </div>
-              <div class="data-viewer-content" id="storageData">Loading...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Units Panel -->
-      <div class="panel-content" id="panelUnits">
-        <h2 class="section-title">🏥 Units Configuration</h2>
-        
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Registered Units</div>
-          </div>
-          <div class="card-body no-padding">
-            <div class="data-viewer">
-              <div class="data-viewer-header">
-                <span class="data-viewer-title">Units Array</span>
-              </div>
-              <div class="data-viewer-content" id="unitsData">Loading...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Patients Panel -->
-      <div class="panel-content" id="panelPatients">
-        <h2 class="section-title">👥 Patient Records</h2>
-        
-        <div class="stats-grid">
-          <div class="stat-card" style="--stat-color: var(--teal)">
-            <div class="stat-icon">👥</div>
-            <div class="stat-value" id="patientTotal">0</div>
-            <div class="stat-label">Total Patients</div>
-          </div>
-          <div class="stat-card" style="--stat-color: var(--emerald)">
-            <div class="stat-icon">🆕</div>
-            <div class="stat-value" id="patientNew">0</div>
-            <div class="stat-label">New</div>
-          </div>
-          <div class="stat-card" style="--stat-color: var(--rose)">
-            <div class="stat-icon">🚨</div>
-            <div class="stat-value" id="patientCritical">0</div>
-            <div class="stat-label">Critical</div>
-          </div>
-          <div class="stat-card" style="--stat-color: var(--purple)">
-            <div class="stat-icon">💜</div>
-            <div class="stat-value" id="patientChronic">0</div>
-            <div class="stat-label">Chronic</div>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-body no-padding">
-            <div class="data-viewer">
-              <div class="data-viewer-header">
-                <span class="data-viewer-title">Patient Data</span>
-              </div>
-              <div class="data-viewer-content" id="patientsData">Loading...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Logs Panel -->
-      <div class="panel-content" id="panelLogs">
-        <h2 class="section-title">📋 Console Logs</h2>
-        
-        <div class="log-viewer">
-          <div class="log-toolbar">
-            <select class="log-filter" id="logFilter" onchange="filterLogs()">
-              <option value="all">All Levels</option>
-              <option value="error">Errors Only</option>
-              <option value="warn">Warnings</option>
-              <option value="info">Info</option>
-            </select>
-            <button class="btn btn-secondary" onclick="clearLogs()">🗑️ Clear</button>
-            <button class="btn btn-secondary" onclick="exportLogs()">📥 Export</button>
-          </div>
-          <div class="log-content" id="logContent">
-            <div class="empty-state">
-              <div class="empty-state-icon">📋</div>
-              <div class="empty-state-title">No logs captured</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Network Panel -->
-      <div class="panel-content" id="panelNetwork">
-        <h2 class="section-title">🌐 Network Requests</h2>
-        
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Recent Requests</div>
-            <button class="btn btn-secondary" onclick="clearNetwork()">🗑️ Clear</button>
-          </div>
-          <div class="card-body">
-            <div class="status-list" id="networkRequests">
-              <div class="empty-state">
-                <div class="empty-state-icon">🌐</div>
-                <div class="empty-state-title">No requests captured</div>
-                <div>Network activity will appear here</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Right Panel -->
-    <aside class="panel-right">
-      <h3 style="font-size: 0.9rem; margin-bottom: 16px;">⚡ Quick Actions</h3>
-      
-      <div class="quick-actions">
-        <div class="quick-action" onclick="runFullDiagnostics()">
-          <span class="quick-action-icon">🔍</span>
-          <span>Full Scan</span>
-        </div>
-        <div class="quick-action" onclick="refreshStorage()">
-          <span class="quick-action-icon">🔄</span>
-          <span>Refresh Data</span>
-        </div>
-        <div class="quick-action" onclick="clearStorage()">
-          <span class="quick-action-icon">🗑️</span>
-          <span>Clear Storage</span>
-        </div>
-        <div class="quick-action" onclick="exportDiagnostics()">
-          <span class="quick-action-icon">📥</span>
-          <span>Export Report</span>
-        </div>
-        <div class="quick-action" onclick="openSettings()">
-          <span class="quick-action-icon">⚙️</span>
-          <span>Settings</span>
-        </div>
-        <div class="quick-action" onclick="window.location.href='index.html'">
-          <span class="quick-action-icon">🏠</span>
-          <span>Main App</span>
-        </div>
-      </div>
-      
-      <h3 style="font-size: 0.9rem; margin-bottom: 16px;">📈 System Metrics</h3>
-      
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-title">Memory Usage</span>
-          <span id="memoryValue" style="font-size: 0.8rem; color: var(--emerald)">—</span>
-        </div>
-        <div class="metric-bar">
-          <div class="metric-bar-fill green" id="memoryBar" style="width: 0%"></div>
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-title">Storage Used</span>
-          <span id="storageValue" style="font-size: 0.8rem; color: var(--gold)">—</span>
-        </div>
-        <div class="metric-bar">
-          <div class="metric-bar-fill gold" id="storageBar" style="width: 0%"></div>
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-title">Scripts Loaded</span>
-          <span id="scriptsValue" style="font-size: 0.8rem; color: var(--purple)">—</span>
-        </div>
-        <div class="metric-bar">
-          <div class="metric-bar-fill purple" id="scriptsBar" style="width: 0%"></div>
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-title">API Health</span>
-          <span id="apiHealthValue" style="font-size: 0.8rem; color: var(--text-muted)">Unknown</span>
-        </div>
-        <div class="metric-bar">
-          <div class="metric-bar-fill" id="apiHealthBar" style="width: 0%"></div>
-        </div>
-      </div>
-      
-      <h3 style="font-size: 0.9rem; margin: 20px 0 16px;">🔧 Environment</h3>
-      
-      <div style="font-size: 0.75rem; color: var(--text-secondary);">
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
-          <span>Browser</span>
-          <span class="mono" id="envBrowser">—</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
-          <span>Platform</span>
-          <span class="mono" id="envPlatform">—</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
-          <span>Screen</span>
-          <span class="mono" id="envScreen">—</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
-          <span>Online</span>
-          <span class="mono" id="envOnline">—</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-          <span>Timestamp</span>
-          <span class="mono" id="envTimestamp">—</span>
-        </div>
-      </div>
-    </aside>
+<!-- OVERVIEW -->
+<div class="panel active" id="overview">
+  <div class="card">
+    <header>System Status</header>
+    <section id="systemStatus"></section>
   </div>
 </div>
 
-<!-- Settings Modal -->
-<div class="modal" id="settingsModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">⚙️ Debug Settings</div>
-      <button class="btn btn-ghost" onclick="closeModal('settingsModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">API Endpoint URL</label>
-        <input type="text" id="settingsApiUrl" class="form-input" placeholder="https://script.google.com/...">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Storage Key</label>
-        <input type="text" id="settingsStorageKey" class="form-input" value="medward_pro_v11">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
-    </div>
+<!-- UI INTERACTION -->
+<div class="panel" id="ui">
+  <div class="card">
+    <header>UI Interaction Diagnostics</header>
+    <section>
+      <button class="btn primary" onclick="runUIDiagnostics()">▶ Run UI Check</button>
+      <div id="uiResults" style="margin-top:16px;"></div>
+    </section>
   </div>
+
+  <div class="card">
+    <header>🎯 Live Hit-Test</header>
+    <section>
+      <button class="btn secondary" onclick="enableHitTest()">Enable Hit-Test Mode</button>
+      <p style="margin-top:10px;font-size:.8rem;color:var(--muted)">
+        Tap where a button does not respond.
+      </p>
+    </section>
+  </div>
+</div>
+
+<!-- STORAGE -->
+<div class="panel" id="storage">
+  <div class="card">
+    <header>LocalStorage</header>
+    <section id="storageData"></section>
+  </div>
+</div>
+
+<!-- NETWORK -->
+<div class="panel" id="network">
+  <div class="card">
+    <header>Network Requests</header>
+    <section id="networkData"></section>
+  </div>
+</div>
+
+</main>
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
-// CONFIGURATION
-// ═══════════════════════════════════════════════════════════════════
-
-const DEBUG_CONFIG = {
-  STORAGE_KEY: 'medward_pro_v11',
-  SCRIPTS: [
-    { name: 'config.js', path: 'js/config.js', required: true },
-    { name: 'utils.js', path: 'js/utils.js', required: true },
-    { name: 'storage.js', path: 'js/storage.js', required: true },
-    { name: 'patients.js', path: 'js/patients.js', required: false },
-    { name: 'analysis.js', path: 'js/analysis.js', required: false },
-    { name: 'import.js', path: 'js/import.js', required: false },
-    { name: 'app.js', path: 'js/app.js', required: true }
-  ],
-  OBJECTS: [
-    { name: 'MedWard', check: () => typeof MedWard !== 'undefined' },
-    { name: 'MedWard.CONFIG', check: () => typeof MedWard !== 'undefined' && MedWard.CONFIG },
-    { name: 'MedWard.DEFAULT_UNITS', check: () => typeof MedWard !== 'undefined' && MedWard.DEFAULT_UNITS },
-    { name: 'MedWard.Utils', check: () => typeof MedWard !== 'undefined' && MedWard.Utils },
-    { name: 'MedWard.Storage', check: () => typeof MedWard !== 'undefined' && MedWard.Storage },
-    { name: 'MedWard.Patients', check: () => typeof MedWard !== 'undefined' && MedWard.Patients },
-    { name: 'MedWard.Analysis', check: () => typeof MedWard !== 'undefined' && MedWard.Analysis },
-    { name: 'MedWard.Import', check: () => typeof MedWard !== 'undefined' && MedWard.Import },
-    { name: 'MedWard.App', check: () => typeof MedWard !== 'undefined' && MedWard.App }
-  ]
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════════
-
-const state = {
-  logs: [],
-  networkRequests: [],
-  diagnosticResults: {
-    passed: 0,
-    failed: 0,
-    warnings: 0
-  },
-  apiUrl: localStorage.getItem('debug_api_url') || ''
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// UTILITIES
-// ═══════════════════════════════════════════════════════════════════
-
+/* ==============================
+   UTIL
+============================== */
 const $ = id => document.getElementById(id);
-
-function toast(msg, type = 'success') {
+const toast = msg => {
   const t = $('toast');
-  t.innerHTML = `${type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✅'} ${msg}`;
-  t.className = `toast show ${type}`;
-  setTimeout(() => t.className = 'toast', 3000);
-}
-
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function formatTime(date) {
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function syntaxHighlight(json) {
-  if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
-  return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, match => {
-      let cls = 'json-string';
-      if (/:$/.test(match)) cls = 'json-key';
-      return `<span class="${cls}">${match}</span>`;
-    })
-    .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
-    .replace(/\b(null)\b/g, '<span class="json-null">$1</span>')
-    .replace(/\b(-?\d+\.?\d*)\b/g, '<span class="json-number">$1</span>');
-}
-
-function openModal(id) { $(id).classList.add('active'); }
-function closeModal(id) { $(id).classList.remove('active'); }
-
-// ═══════════════════════════════════════════════════════════════════
-// CONSOLE CAPTURE
-// ═══════════════════════════════════════════════════════════════════
-
-const originalConsole = {
-  log: console.log,
-  warn: console.warn,
-  error: console.error,
-  info: console.info
+  t.textContent = msg;
+  t.className = 'toast show';
+  setTimeout(()=>t.className='toast',3000);
 };
 
-function captureLog(level, args) {
-  const entry = {
-    time: new Date(),
-    level,
-    message: Array.from(args).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')
-  };
-  state.logs.push(entry);
-  updateLogsBadge();
-}
-
-console.log = (...args) => { captureLog('info', args); originalConsole.log(...args); };
-console.warn = (...args) => { captureLog('warn', args); originalConsole.warn(...args); };
-console.error = (...args) => { captureLog('error', args); originalConsole.error(...args); };
-console.info = (...args) => { captureLog('info', args); originalConsole.info(...args); };
-
-window.onerror = (msg, url, line, col, error) => {
-  captureLog('error', [`${msg} at ${url}:${line}:${col}`]);
-  return false;
-};
-
-window.onunhandledrejection = (event) => {
-  captureLog('error', [`Unhandled Promise: ${event.reason}`]);
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// NETWORK CAPTURE
-// ═══════════════════════════════════════════════════════════════════
-
-const originalFetch = window.fetch;
-window.fetch = async (...args) => {
-  const start = Date.now();
-  const url = typeof args[0] === 'string' ? args[0] : args[0].url;
-  const method = args[1]?.method || 'GET';
-  
-  try {
-    const response = await originalFetch(...args);
-    const duration = Date.now() - start;
-    
-    state.networkRequests.push({
-      time: new Date(),
-      method,
-      url: url.substring(0, 60) + (url.length > 60 ? '...' : ''),
-      status: response.status,
-      duration,
-      success: response.ok
-    });
-    
-    updateNetworkBadge();
-    return response;
-  } catch (error) {
-    state.networkRequests.push({
-      time: new Date(),
-      method,
-      url: url.substring(0, 60) + (url.length > 60 ? '...' : ''),
-      status: 'Error',
-      duration: Date.now() - start,
-      success: false,
-      error: error.message
-    });
-    updateNetworkBadge();
-    throw error;
+/* ==============================
+   NAV
+============================== */
+document.querySelectorAll('.nav button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    b.classList.add('active');
+    $(b.dataset.panel).classList.add('active');
   }
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════════════════
-
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
-    
-    item.classList.add('active');
-    const panelId = 'panel' + item.dataset.panel.charAt(0).toUpperCase() + item.dataset.panel.slice(1);
-    $(panelId)?.classList.add('active');
-  });
 });
 
-// ═══════════════════════════════════════════════════════════════════
-// DIAGNOSTICS
-// ═══════════════════════════════════════════════════════════════════
+/* ==============================
+   UI DIAGNOSTICS
+============================== */
+function runUIDiagnostics() {
+  const out = $('uiResults');
+  out.innerHTML = '';
+  let issues = 0;
 
-async function runFullDiagnostics() {
-  const btn = $('runBtnText');
-  btn.innerHTML = '<span class="spinner"></span> Running...';
-  
-  state.diagnosticResults = { passed: 0, failed: 0, warnings: 0 };
-  
-  await checkScripts();
-  await new Promise(r => setTimeout(r, 500));
-  checkObjects();
-  checkStorage();
-  updateEnvironment();
-  updateMetrics();
-  updateSystemStatus();
-  generateRecommendations();
-  
-  $('statPassed').textContent = state.diagnosticResults.passed;
-  $('statFailed').textContent = state.diagnosticResults.failed;
-  $('statWarnings').textContent = state.diagnosticResults.warnings;
-  $('statTime').textContent = formatTime(new Date());
-  
-  btn.textContent = '🔍 Run Diagnostics';
-  toast('Diagnostics complete!');
-}
-
-async function checkScripts() {
-  const container = $('scriptsStatus');
-  let html = '';
-  let loaded = 0;
-  
-  for (const script of DEBUG_CONFIG.SCRIPTS) {
-    try {
-      const response = await fetch(script.path);
-      const success = response.ok;
-      
-      if (success) {
-        loaded++;
-        state.diagnosticResults.passed++;
-      } else if (script.required) {
-        state.diagnosticResults.failed++;
-      } else {
-        state.diagnosticResults.warnings++;
-      }
-      
-      html += `
-        <div class="status-item ${success ? 'success' : script.required ? 'error' : 'warning'}">
-          <span class="status-item-icon">${success ? '✅' : script.required ? '❌' : '⚠️'}</span>
-          <span class="status-item-text">${script.name}</span>
-          <span class="status-item-meta">${success ? response.status : 'Not Found'}</span>
-        </div>
-      `;
-    } catch (e) {
-      html += `
-        <div class="status-item error">
-          <span class="status-item-icon">❌</span>
-          <span class="status-item-text">${script.name}</span>
-          <span class="status-item-meta">Error</span>
-        </div>
-      `;
-      if (script.required) state.diagnosticResults.failed++;
+  document.querySelectorAll('button').forEach(btn=>{
+    const r = btn.getBoundingClientRect();
+    const top = document.elementFromPoint(r.left+5,r.top+5);
+    if (top !== btn) {
+      issues++;
+      out.innerHTML += `
+        <div class="status err">
+          ❌ Button blocked by <strong>${top.tagName}.${top.className}</strong>
+        </div>`;
     }
-  }
-  
-  container.innerHTML = html;
-  $('scriptsBadge').textContent = loaded;
-  $('scriptsValue').textContent = `${loaded}/${DEBUG_CONFIG.SCRIPTS.length}`;
-  $('scriptsBar').style.width = `${(loaded / DEBUG_CONFIG.SCRIPTS.length) * 100}%`;
-}
+  });
 
-function checkObjects() {
-  const container = $('objectsStatus');
-  let html = '';
-  let found = 0;
-  
-  for (const obj of DEBUG_CONFIG.OBJECTS) {
-    try {
-      const exists = obj.check();
-      if (exists) {
-        found++;
-        state.diagnosticResults.passed++;
-      } else {
-        state.diagnosticResults.warnings++;
-      }
-      
-      html += `
-        <div class="status-item ${exists ? 'success' : 'warning'}">
-          <span class="status-item-icon">${exists ? '✅' : '⚠️'}</span>
-          <span class="status-item-text">${obj.name}</span>
-          <span class="status-item-meta">${exists ? 'Defined' : 'Undefined'}</span>
-        </div>
-      `;
-    } catch (e) {
-      html += `
-        <div class="status-item error">
-          <span class="status-item-icon">❌</span>
-          <span class="status-item-text">${obj.name}</span>
-          <span class="status-item-meta">Error</span>
-        </div>
-      `;
-      state.diagnosticResults.failed++;
-    }
-  }
-  
-  container.innerHTML = html;
-  $('objectsBadge').textContent = found;
-}
-
-function checkStorage() {
-  try {
-    const data = localStorage.getItem(DEBUG_CONFIG.STORAGE_KEY);
-    const size = data ? new Blob([data]).size : 0;
-    
-    $('storageSize').textContent = formatBytes(size);
-    $('storageValue').textContent = formatBytes(size);
-    $('storageBar').style.width = `${Math.min((size / 5242880) * 100, 100)}%`;
-    
-    if (data) {
-      const parsed = JSON.parse(data);
-      $('storageData').innerHTML = syntaxHighlight(parsed);
-      
-      // Update units
-      if (parsed.units) {
-        $('unitsData').innerHTML = syntaxHighlight(parsed.units);
-      }
-      
-      // Update patients
-      if (parsed.patients) {
-        const patients = parsed.patients;
-        $('patientTotal').textContent = patients.length;
-        $('patientNew').textContent = patients.filter(p => p.status === 'new').length;
-        $('patientCritical').textContent = patients.filter(p => p.status === 'critical').length;
-        $('patientChronic').textContent = patients.filter(p => p.status === 'chronic').length;
-        $('patientsData').innerHTML = syntaxHighlight(patients);
-      }
-      
-      state.diagnosticResults.passed++;
-    } else {
-      $('storageData').innerHTML = '<span style="color: var(--text-muted)">// No data stored (first run)</span>';
-      $('unitsData').innerHTML = '<span style="color: var(--text-muted)">// No units configured</span>';
-      $('patientsData').innerHTML = '<span style="color: var(--text-muted)">// No patients</span>';
-    }
-  } catch (e) {
-    $('storageData').innerHTML = `<span style="color: var(--rose)">Error: ${e.message}</span>`;
-    state.diagnosticResults.failed++;
+  if (!issues) {
+    out.innerHTML = `
+      <div class="status ok">
+        ✅ No UI interaction issues detected
+      </div>`;
   }
 }
 
-function refreshStorage() {
-  checkStorage();
-  toast('Storage refreshed!');
-}
+/* ==============================
+   HIT TEST
+============================== */
+function enableHitTest() {
+  const overlay = document.createElement('div');
+  overlay.className = 'hit-overlay';
+  overlay.textContent = 'Tap anywhere to detect blocking element';
+  document.body.appendChild(overlay);
 
-function clearStorage() {
-  if (!confirm('Clear all LocalStorage data? This cannot be undone.')) return;
-  
-  try {
-    localStorage.removeItem(DEBUG_CONFIG.STORAGE_KEY);
-    checkStorage();
-    toast('Storage cleared!');
-  } catch (e) {
-    toast('Failed to clear storage', 'error');
-  }
-}
-
-function updateEnvironment() {
-  const ua = navigator.userAgent;
-  let browser = 'Unknown';
-  if (ua.includes('Chrome')) browser = 'Chrome';
-  else if (ua.includes('Firefox')) browser = 'Firefox';
-  else if (ua.includes('Safari')) browser = 'Safari';
-  else if (ua.includes('Edge')) browser = 'Edge';
-  
-  $('envBrowser').textContent = browser;
-  $('envPlatform').textContent = navigator.platform;
-  $('envScreen').textContent = `${screen.width}×${screen.height}`;
-  $('envOnline').textContent = navigator.onLine ? '✅ Yes' : '❌ No';
-  $('envTimestamp').textContent = formatTime(new Date());
-}
-
-function updateMetrics() {
-  // Memory (if available)
-  if (performance.memory) {
-    const used = performance.memory.usedJSHeapSize;
-    const total = performance.memory.jsHeapSizeLimit;
-    const pct = Math.round((used / total) * 100);
-    $('memoryValue').textContent = `${formatBytes(used)} / ${formatBytes(total)}`;
-    $('memoryBar').style.width = `${pct}%`;
-  } else {
-    $('memoryValue').textContent = 'N/A';
-  }
-}
-
-function updateSystemStatus() {
-  const dot = $('systemStatusDot');
-  const text = $('systemStatusText');
-  
-  if (state.diagnosticResults.failed > 0) {
-    dot.className = 'status-dot offline';
-    text.textContent = 'Issues Detected';
-  } else if (state.diagnosticResults.warnings > 0) {
-    dot.className = 'status-dot warning';
-    text.textContent = 'Warnings';
-  } else {
-    dot.className = 'status-dot online';
-    text.textContent = 'All Systems OK';
-  }
-  
-  // Update critical checks
-  const criticalHtml = `
-    <div class="status-item ${state.diagnosticResults.failed === 0 ? 'success' : 'error'}">
-      <span class="status-item-icon">${state.diagnosticResults.failed === 0 ? '✅' : '❌'}</span>
-      <span class="status-item-text">Core Scripts</span>
-      <span class="status-item-meta">${state.diagnosticResults.failed === 0 ? 'Loaded' : 'Missing'}</span>
-    </div>
-    <div class="status-item ${navigator.onLine ? 'success' : 'error'}">
-      <span class="status-item-icon">${navigator.onLine ? '✅' : '❌'}</span>
-      <span class="status-item-text">Network Connection</span>
-      <span class="status-item-meta">${navigator.onLine ? 'Online' : 'Offline'}</span>
-    </div>
-    <div class="status-item success">
-      <span class="status-item-icon">✅</span>
-      <span class="status-item-text">LocalStorage</span>
-      <span class="status-item-meta">Available</span>
-    </div>
-  `;
-  $('criticalChecks').innerHTML = criticalHtml;
-}
-
-function generateRecommendations() {
-  const recs = [];
-  
-  if (state.diagnosticResults.failed > 0) {
-    recs.push({ type: 'error', text: 'Some required scripts failed to load. Check file paths and server configuration.' });
-  }
-  
-  if (!navigator.onLine) {
-    recs.push({ type: 'warning', text: 'You are offline. Some features may not work correctly.' });
-  }
-  
-  const storage = localStorage.getItem(DEBUG_CONFIG.STORAGE_KEY);
-  if (!storage) {
-    recs.push({ type: 'info', text: 'No stored data found. This is normal for first-time use.' });
-  }
-  
-  if (recs.length === 0) {
-    recs.push({ type: 'success', text: 'All systems are functioning correctly!' });
-  }
-  
-  $('recommendations').innerHTML = recs.map(r => `
-    <div class="status-item ${r.type}">
-      <span class="status-item-icon">${r.type === 'error' ? '❌' : r.type === 'warning' ? '⚠️' : r.type === 'success' ? '✅' : 'ℹ️'}</span>
-      <span class="status-item-text">${r.text}</span>
-    </div>
-  `).join('');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// LOGS
-// ═══════════════════════════════════════════════════════════════════
-
-function updateLogsBadge() {
-  const errors = state.logs.filter(l => l.level === 'error').length;
-  $('logsBadge').textContent = errors || state.logs.length;
-  if (errors > 0) $('logsBadge').style.background = 'var(--rose)';
-}
-
-function renderLogs() {
-  const filter = $('logFilter').value;
-  const filtered = filter === 'all' ? state.logs : state.logs.filter(l => l.level === filter);
-  
-  if (filtered.length === 0) {
-    $('logContent').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📋</div>
-        <div class="empty-state-title">No logs</div>
-      </div>
-    `;
-    return;
-  }
-  
-  $('logContent').innerHTML = filtered.map(log => `
-    <div class="log-entry">
-      <span class="log-time">${formatTime(log.time)}</span>
-      <span class="log-level ${log.level}">${log.level}</span>
-      <span class="log-message">${log.message}</span>
-    </div>
-  `).join('');
-}
-
-function filterLogs() { renderLogs(); }
-function clearLogs() { state.logs = []; renderLogs(); updateLogsBadge(); toast('Logs cleared'); }
-function exportLogs() {
-  const data = state.logs.map(l => `[${formatTime(l.time)}] [${l.level.toUpperCase()}] ${l.message}`).join('\n');
-  const blob = new Blob([data], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `medward-logs-${Date.now()}.txt`;
-  a.click();
-  toast('Logs exported!');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// NETWORK
-// ═══════════════════════════════════════════════════════════════════
-
-function updateNetworkBadge() {
-  $('networkBadge').textContent = state.networkRequests.length;
-  renderNetwork();
-}
-
-function renderNetwork() {
-  if (state.networkRequests.length === 0) {
-    $('networkRequests').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🌐</div>
-        <div class="empty-state-title">No requests</div>
-      </div>
-    `;
-    return;
-  }
-  
-  $('networkRequests').innerHTML = state.networkRequests.slice(-20).reverse().map(req => `
-    <div class="status-item ${req.success ? 'success' : 'error'}">
-      <span class="status-item-icon">${req.success ? '✅' : '❌'}</span>
-      <span class="status-item-text" style="font-size: 0.8rem;">
-        <strong>${req.method}</strong> ${req.url}
-      </span>
-      <span class="status-item-meta">${req.status} • ${req.duration}ms</span>
-    </div>
-  `).join('');
-}
-
-function clearNetwork() {
-  state.networkRequests = [];
-  renderNetwork();
-  updateNetworkBadge();
-  toast('Network history cleared');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// API TESTER
-// ═══════════════════════════════════════════════════════════════════
-
-async function testApi() {
-  const url = $('apiUrl').value.trim();
-  const action = $('apiAction').value;
-  
-  if (!url) {
-    toast('Please enter API URL', 'error');
-    return;
-  }
-  
-  $('apiResponse').innerHTML = '<span class="spinner"></span> Sending request...';
-  
-  try {
-    const start = Date.now();
-    const response = await originalFetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action })
-    });
-    
-    const data = await response.json();
-    const duration = Date.now() - start;
-    
-    $('apiResponse').innerHTML = `<span style="color: var(--text-muted)">// ${response.status} OK (${duration}ms)</span>\n\n` + syntaxHighlight(data);
-    
-    // Update API health
-    $('apiHealthValue').textContent = 'Healthy';
-    $('apiHealthValue').style.color = 'var(--emerald)';
-    $('apiHealthBar').className = 'metric-bar-fill green';
-    $('apiHealthBar').style.width = '100%';
-    
-    toast('API request successful!');
-  } catch (e) {
-    $('apiResponse').innerHTML = `<span style="color: var(--rose)">Error: ${e.message}</span>`;
-    
-    $('apiHealthValue').textContent = 'Error';
-    $('apiHealthValue').style.color = 'var(--rose)';
-    $('apiHealthBar').className = 'metric-bar-fill rose';
-    $('apiHealthBar').style.width = '100%';
-    
-    toast('API request failed', 'error');
-  }
-}
-
-function copyResponse() {
-  const text = $('apiResponse').textContent;
-  navigator.clipboard.writeText(text);
-  toast('Copied to clipboard!');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// SETTINGS
-// ═══════════════════════════════════════════════════════════════════
-
-function openSettings() {
-  $('settingsApiUrl').value = state.apiUrl;
-  $('settingsStorageKey').value = DEBUG_CONFIG.STORAGE_KEY;
-  openModal('settingsModal');
-}
-
-function saveSettings() {
-  state.apiUrl = $('settingsApiUrl').value.trim();
-  localStorage.setItem('debug_api_url', state.apiUrl);
-  $('apiUrl').value = state.apiUrl;
-  closeModal('settingsModal');
-  toast('Settings saved!');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// EXPORT
-// ═══════════════════════════════════════════════════════════════════
-
-function exportDiagnostics() {
-  const report = {
-    timestamp: new Date().toISOString(),
-    results: state.diagnosticResults,
-    environment: {
-      browser: $('envBrowser').textContent,
-      platform: $('envPlatform').textContent,
-      screen: $('envScreen').textContent,
-      online: navigator.onLine
-    },
-    logs: state.logs,
-    networkRequests: state.networkRequests
+  const handler = e => {
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const el = document.elementFromPoint(x,y);
+    toast(`Blocking element: ${el.tagName}.${el.className}`);
+    overlay.remove();
+    document.removeEventListener('click',handler,true);
+    document.removeEventListener('touchstart',handler,true);
   };
-  
-  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `medward-diagnostics-${Date.now()}.json`;
-  a.click();
-  toast('Report exported!');
+
+  document.addEventListener('click',handler,true);
+  document.addEventListener('touchstart',handler,true);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// INITIALIZATION
-// ═══════════════════════════════════════════════════════════════════
-
-function init() {
-  // Load saved API URL
-  if (state.apiUrl) $('apiUrl').value = state.apiUrl;
-  
-  // Run initial diagnostics
-  setTimeout(() => runFullDiagnostics(), 500);
-  
-  // Set up log rendering interval
-  setInterval(renderLogs, 2000);
-  
-  // Update environment periodically
-  setInterval(updateEnvironment, 10000);
-  
-  console.info('🔧 MedWard Debug Console initialized');
-}
-
-init();
+/* ==============================
+   INIT
+============================== */
+$('systemStatus').innerHTML = `
+  <div class="status ok">Console loaded successfully</div>
+  <div class="status ok">Touch support: ${'ontouchstart' in window}</div>
+`;
 </script>
-
-<!-- Load MedWard scripts for testing -->
-<script src="js/config.js" onerror="console.error('Failed to load config.js')"></script>
-<script src="js/utils.js" onerror="console.error('Failed to load utils.js')"></script>
-<script src="js/storage.js" onerror="console.error('Failed to load storage.js')"></script>
-<script src="js/patients.js" onerror="console.error('Failed to load patients.js')"></script>
-<script src="js/analysis.js" onerror="console.error('Failed to load analysis.js')"></script>
-<script src="js/import.js" onerror="console.error('Failed to load import.js')"></script>
-<script src="js/app.js" onerror="console.error('Failed to load app.js')"></script>
 
 </body>
 </html>
