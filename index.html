@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px;--shadow:0 25px 50px -12px rgba(0,0,0,0.5)}
+:root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
@@ -33,10 +33,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .form-group{margin-bottom:20px}
 .form-label{display:block;font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
 .form-input,.form-select,.form-textarea{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:0.9rem;transition:all 0.2s}
-.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,158,11,0.1)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--gold)}
 .form-textarea{min-height:100px;resize:vertical}
 .form-input-sm{padding:10px 14px;font-size:0.85rem}
-.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.03em}
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:700;text-transform:uppercase}
 .badge-gold{background:rgba(245,158,11,0.15);color:var(--gold)}
 .badge-teal{background:rgba(20,184,166,0.15);color:var(--teal)}
 .badge-purple{background:rgba(139,92,246,0.15);color:var(--purple)}
@@ -58,7 +58,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .landing-logo{width:88px;height:88px;background:linear-gradient(135deg,var(--gold),var(--orange));border-radius:24px;display:grid;place-items:center;margin-bottom:28px;box-shadow:0 20px 40px rgba(245,158,11,0.3)}
 .landing-logo svg{width:48px;height:48px;stroke:#000;stroke-width:2.5;fill:none}
 .landing-title{font-size:2rem;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.landing-subtitle{color:var(--text-muted);margin-bottom:48px}
+.landing-subtitle{color:var(--text-muted);margin-bottom:8px}
+.landing-version{color:var(--teal);font-size:0.75rem;font-weight:600;margin-bottom:48px}
 .units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;width:100%;max-width:800px}
 .unit-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
 .unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--unit-color,var(--gold));transform:scaleX(0);transition:transform 0.3s}
@@ -146,56 +147,68 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .section-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .section-title{font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:10px}
 .section-body{padding:20px}
-.section-empty{text-align:center;padding:40px 20px;color:var(--text-muted)}
-.section-empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:0.5}
-/* Professional Lab Section */
-.lab-upload-area{background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(20,184,166,0.1));border:2px dashed var(--border-light);border-radius:var(--radius);padding:32px 24px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:24px}
-.lab-upload-area:hover{border-color:var(--gold);background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(20,184,166,0.15))}
+/* Lab Upload Area */
+.lab-upload-area{background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(20,184,166,0.08));border:2px dashed var(--border-light);border-radius:var(--radius);padding:32px 24px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:24px}
+.lab-upload-area:hover{border-color:var(--gold);background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(20,184,166,0.12))}
 .lab-upload-area.analyzing{pointer-events:none;opacity:0.7}
 .lab-upload-icon{font-size:2.5rem;margin-bottom:12px}
 .lab-upload-title{font-weight:700;font-size:1rem;margin-bottom:4px}
 .lab-upload-subtitle{color:var(--text-muted);font-size:0.85rem}
-.lab-analysis-status{display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:20px}
-.lab-analysis-status .spinner-sm{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.lab-interpretation-card{background:linear-gradient(135deg,rgba(20,184,166,0.1),rgba(59,130,246,0.1));border:1px solid rgba(20,184,166,0.2);border-radius:var(--radius);padding:20px;margin-bottom:24px}
-.lab-interpretation-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-weight:700;color:var(--teal)}
-.lab-interpretation-text{color:var(--text-secondary);font-size:0.9rem;line-height:1.7}
-.lab-critical-alert{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
-.lab-critical-icon{font-size:1.25rem}
-.lab-critical-content{flex:1}
-.lab-critical-title{font-weight:700;color:var(--rose);margin-bottom:4px}
-.lab-critical-values{font-size:0.85rem;color:var(--text-secondary)}
-.lab-date-group{margin-bottom:28px}
-.lab-date-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-bottom:16px}
-.lab-date-title{font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px}
-.lab-date-badge{background:var(--bg);padding:4px 12px;border-radius:20px;font-size:0.75rem;color:var(--text-muted)}
-.lab-categories{display:flex;flex-direction:column;gap:20px}
-.lab-category{background:var(--bg);border-radius:var(--radius-sm);overflow:hidden}
-.lab-category-header{padding:12px 16px;background:rgba(245,158,11,0.1);font-weight:600;font-size:0.8rem;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;display:flex;align-items:center;gap:8px}
+/* AI Interpretation Card with Feedback */
+.ai-interpretation{background:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(59,130,246,0.08));border:1px solid rgba(20,184,166,0.2);border-radius:var(--radius);padding:20px;margin-bottom:24px}
+.ai-interpretation-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ai-interpretation-title{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--teal)}
+.ai-badge{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font-size:0.6rem;padding:4px 8px;border-radius:4px;font-weight:700}
+.ai-interpretation-text{color:var(--text-secondary);font-size:0.9rem;line-height:1.7;margin-bottom:16px}
+.ai-details{background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px}
+.ai-details-title{font-size:0.75rem;font-weight:600;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+.ai-details-list{list-style:none;padding:0;margin:0}
+.ai-details-list li{font-size:0.85rem;color:var(--text-secondary);padding:6px 0;border-bottom:1px solid var(--border)}
+.ai-details-list li:last-child{border-bottom:none}
+/* Feedback Buttons */
+.feedback-section{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--border)}
+.feedback-label{font-size:0.75rem;color:var(--text-muted)}
+.feedback-buttons{display:flex;gap:8px}
+.feedback-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:grid;place-items:center;font-size:1.1rem;transition:all 0.2s}
+.feedback-btn:hover{transform:scale(1.1)}
+.feedback-btn.positive:hover,.feedback-btn.positive.active{background:rgba(16,185,129,0.2);border-color:var(--emerald)}
+.feedback-btn.negative:hover,.feedback-btn.negative.active{background:rgba(244,63,94,0.2);border-color:var(--rose)}
+.feedback-btn.active{transform:scale(1.1)}
+.feedback-sent{font-size:0.75rem;color:var(--emerald);display:none}
+.feedback-sent.show{display:block}
+/* Critical Alert */
+.critical-alert{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
+.critical-alert-icon{font-size:1.25rem}
+.critical-alert-content{flex:1}
+.critical-alert-title{font-weight:700;color:var(--rose);margin-bottom:4px}
+.critical-alert-values{font-size:0.85rem;color:var(--text-secondary)}
+/* Lab Categories */
+.lab-category{background:var(--bg);border-radius:var(--radius-sm);margin-bottom:16px;overflow:hidden}
+.lab-category-header{padding:12px 16px;background:rgba(245,158,11,0.08);font-weight:600;font-size:0.8rem;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;display:flex;align-items:center;gap:8px}
 .lab-category-body{padding:16px}
-.lab-values-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.lab-values-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .lab-value-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.2s}
-.lab-value-card:hover{border-color:var(--gold)}
 .lab-value-card.high{border-left:3px solid var(--rose);background:linear-gradient(135deg,rgba(244,63,94,0.05),transparent)}
 .lab-value-card.low{border-left:3px solid var(--blue);background:linear-gradient(135deg,rgba(59,130,246,0.05),transparent)}
 .lab-value-card.critical{border-left:3px solid var(--rose);background:rgba(244,63,94,0.1)}
 .lab-value-card.normal{border-left:3px solid var(--emerald)}
 .lab-value-name{font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
-.lab-value-status{font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px}
+.lab-value-status{font-size:0.55rem;font-weight:700;padding:2px 6px;border-radius:4px}
 .lab-value-status.high,.lab-value-status.critical{background:var(--rose);color:#fff}
 .lab-value-status.low{background:var(--blue);color:#fff}
-.lab-value-number{font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:600;margin-bottom:4px}
+.lab-value-number{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:600;margin-bottom:4px}
 .lab-value-card.high .lab-value-number{color:var(--rose)}
 .lab-value-card.low .lab-value-number{color:var(--blue)}
 .lab-value-card.normal .lab-value-number{color:var(--emerald)}
 .lab-value-unit{font-size:0.7rem;color:var(--text-muted)}
-.lab-value-range{font-size:0.65rem;color:var(--text-muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
-.lab-trend-section{margin-top:24px}
+.lab-value-range{font-size:0.65rem;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+/* Trend Section */
+.lab-trend-section{margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
 .lab-trend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .lab-trend-select{padding:10px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:0.85rem;min-width:180px}
 .lab-trend-chart{background:var(--bg);border-radius:var(--radius-sm);padding:20px;height:220px}
-.lab-manual-section{margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
+/* Other sections */
 .vitals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
 .vital-card{background:var(--bg);border-radius:var(--radius-sm);padding:16px;text-align:center}
 .vital-icon{font-size:1.5rem;margin-bottom:8px}
@@ -254,7 +267,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 <div class="page active" id="landing">
 <div class="landing-logo"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
 <h1 class="landing-title">MedWard Pro</h1>
-<p class="landing-subtitle">Clinical Management System</p>
+<p class="landing-subtitle">Neural Clinical Management System</p>
+<p class="landing-version">🧠 AI-Powered • Learning Enabled • v11.0</p>
 <div class="units-grid" id="unitsGrid"></div>
 <div class="fab sync-fab" id="syncFab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4-3-9s1.34-9 3-9"/></svg></div>
 <div class="fab admin-fab" id="adminFab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
@@ -506,20 +520,20 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 'use strict';
 
 const CONFIG = {
-  STORAGE_KEY: 'medward_pro_v10',
+  STORAGE_KEY: 'medward_pro_v11',
   ADMIN_PASSWORD: 'admin123',
-  API_URL: 'https://script.google.com/macros/s/AKfycbwnPMayEKM6rHJB2qZ-DDECoVB4Kte1EcoBiea0pmcasfyAeW7RGeADiH5DMXGRJOSJ/exec',
+  API_URL: 'YOUR_API_URL_HERE',
   MAX_IMAGE_SIZE: 1200000,
   IMAGE_QUALITY: 0.75,
   MAX_DIM: 1600,
   VALID_WARDS: ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned'],
   LAB_CATEGORIES: {
-    'Renal Function': ['Urea', 'Creatinine', 'Creat', 'eGFR', 'BUN'],
-    'Electrolytes': ['Na', 'Sodium', 'K', 'Potassium', 'Cl', 'Chloride', 'CO2', 'Bicarbonate', 'Mg', 'Magnesium', 'Ca', 'Calcium', 'Phosphate', 'Phos'],
-    'Glucose & Metabolic': ['Glucose', 'Gluc', 'FBG', 'RBG', 'HbA1c', 'Lactate'],
-    'Liver Function': ['ALT', 'AST', 'ALP', 'GGT', 'Bilirubin', 'Albumin', 'Total Protein'],
-    'Complete Blood Count': ['Hgb', 'Hemoglobin', 'WBC', 'Platelets', 'RBC', 'MCV', 'Hct'],
-    'Other': ['Urate', 'Uric Acid', 'Anion Gap', 'Osmolality', 'CRP', 'ESR', 'Procalcitonin', 'Troponin']
+    'Renal Function': { icon: '🫘', terms: ['Urea', 'Creatinine', 'Creat', 'eGFR', 'BUN'] },
+    'Electrolytes': { icon: '⚡', terms: ['Na', 'Sodium', 'K', 'Potassium', 'Cl', 'Chloride', 'CO2', 'Bicarbonate', 'Mg', 'Magnesium', 'Ca', 'Calcium', 'Phosphate', 'Phos'] },
+    'Glucose & Metabolic': { icon: '🍬', terms: ['Glucose', 'Gluc', 'FBG', 'RBG', 'HbA1c', 'Lactate'] },
+    'Liver Function': { icon: '🫀', terms: ['ALT', 'AST', 'ALP', 'GGT', 'Bilirubin', 'Albumin', 'Total Protein'] },
+    'Complete Blood Count': { icon: '🩸', terms: ['Hgb', 'Hemoglobin', 'WBC', 'Platelets', 'RBC', 'MCV', 'Hct'] },
+    'Other': { icon: '🔬', terms: ['Urate', 'Uric Acid', 'Anion Gap', 'Osmolality', 'CRP', 'ESR', 'Procalcitonin', 'Troponin'] }
   },
   REFS: [
     { title: '🚨 Critical Labs', content: '<b>K:</b> <2.5 or >6.5<br><b>Na:</b> <120 or >160<br><b>Glucose:</b> <40 or >500' },
@@ -534,8 +548,12 @@ const CONFIG = {
 const state = {
   units: [], settings: {}, patients: [], currentUnit: null, currentUser: null, currentPatient: null,
   selectedUnitId: null, editingUnitId: null, importImage: null, importPatients: [], currentFilter: 'all',
-  fluidChart: null, trendChart: null, addDataType: null, isAnalyzingLab: false, isAnalyzingImaging: false
+  fluidChart: null, trendChart: null, addDataType: null, isAnalyzingLab: false, isAnalyzingImaging: false,
+  currentInteractionId: null, sessionId: null
 };
+
+// Generate session ID
+state.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
@@ -610,13 +628,16 @@ function smartWard(raw) {
 
 function getLabCategory(name) {
   const n = (name || '').toLowerCase();
-  for (const [cat, terms] of Object.entries(CONFIG.LAB_CATEGORIES)) {
-    if (terms.some(t => n.includes(t.toLowerCase()))) return cat;
+  for (const [cat, data] of Object.entries(CONFIG.LAB_CATEGORIES)) {
+    if (data.terms.some(t => n.includes(t.toLowerCase()))) return cat;
   }
   return 'Other';
 }
 
-// Storage
+// ═══════════════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════════════
+
 let isSyncing = false;
 
 function loadLocal() {
@@ -643,7 +664,7 @@ function saveLocal() {
 }
 
 async function syncCloud() {
-  if (isSyncing) return;
+  if (isSyncing || !state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') return;
   isSyncing = true;
   try {
     const res = await fetch(state.settings.apiUrl, {
@@ -665,6 +686,7 @@ async function syncCloud() {
 
 async function saveCloud() {
   saveLocal();
+  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') return;
   try {
     await fetch(state.settings.apiUrl, {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
@@ -678,6 +700,51 @@ async function saveCloud() {
 
 function getUnit(id) { return state.units.find(u => u.id === id); }
 function getPatient(id) { return state.patients.find(p => p.id === id); }
+
+// ═══════════════════════════════════════════════════════════════════
+// FEEDBACK SYSTEM (RLHF)
+// ═══════════════════════════════════════════════════════════════════
+
+async function sendFeedback(rating, interpretationType = 'lab') {
+  if (!state.currentInteractionId || !state.currentPatient) return;
+  
+  const p = state.currentPatient;
+  
+  try {
+    await fetch(state.settings.apiUrl, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'recordFeedback',
+        interactionId: state.currentInteractionId,
+        patientId: p.id,
+        interpretationType,
+        rating,
+        interpretation: p.labData?.interpretation?.summary || '',
+        labValues: p.labData?.parameters?.map(param => ({
+          name: param.name,
+          value: param.values?.[0]?.value,
+          status: param.values?.[0]?.status
+        })) || [],
+        sessionId: state.sessionId
+      })
+    });
+    
+    // Update UI
+    $$('.feedback-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.feedback-btn.${rating > 0 ? 'positive' : 'negative'}`)?.classList.add('active');
+    document.querySelector('.feedback-sent')?.classList.add('show');
+    
+    toast(rating > 0 ? 'Thanks! This helps improve accuracy.' : 'Feedback noted. We\'ll improve.');
+  } catch (e) {
+    console.error('Feedback error:', e);
+  }
+}
+
+window.sendFeedback = sendFeedback;
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
 
 function renderUnits() {
   $('unitsGrid').innerHTML = state.units.map(u => `
@@ -752,24 +819,28 @@ function renderRef() {
   $('refGrid').innerHTML = CONFIG.REFS.map(r => `<div class="ref-card"><h4>${r.title}</h4><p>${r.content}</p></div>`).join('');
 }
 
-// Patient Profile
+// ═══════════════════════════════════════════════════════════════════
+// PATIENT PROFILE
+// ═══════════════════════════════════════════════════════════════════
+
 window.openPatientProfile = function(id) {
   const p = getPatient(id);
   if (!p) return;
   state.currentPatient = p;
+  state.currentInteractionId = null;
   if (!p.labData) p.labData = { dates: [], parameters: [], interpretation: null };
   if (!p.imaging) p.imaging = [];
   if (!p.fluids) p.fluids = [];
   if (!p.plans) p.plans = [];
   if (!p.vitals) p.vitals = {};
   if (!p.history) p.history = '';
-  if (!p.examination) p.examination = '';
   renderPatientProfile();
   showPage('patientProfile');
 };
 
 window.closePatientProfile = function() {
   state.currentPatient = null;
+  state.currentInteractionId = null;
   if (state.trendChart) { state.trendChart.destroy(); state.trendChart = null; }
   if (state.fluidChart) { state.fluidChart.destroy(); state.fluidChart = null; }
   showPage('dashboard');
@@ -823,9 +894,9 @@ function renderProfileOverview() {
       </div>
     </div>
     <div class="section-card">
-      <div class="section-header"><div class="section-title">📝 History & Examination</div><button class="btn btn-secondary btn-xs" onclick="openEditText('history', 'History & Examination')">Edit</button></div>
+      <div class="section-header"><div class="section-title">📝 History & Examination</div><button class="btn btn-secondary btn-xs" onclick="openEditText('history', 'History')">Edit</button></div>
       <div class="section-body">
-        <div style="font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;min-height:60px">${esc(p.history) || 'Tap Edit to add history and examination findings...'}</div>
+        <div style="font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;min-height:60px">${esc(p.history) || 'Tap Edit to add...'}</div>
       </div>
     </div>
   `;
@@ -839,28 +910,21 @@ function renderProfileLabs() {
     <div class="section-card">
       <div class="section-header"><div class="section-title">🧪 Laboratory Results</div></div>
       <div class="section-body">
-        <!-- Upload Area -->
         <div class="lab-upload-area ${state.isAnalyzingLab ? 'analyzing' : ''}" onclick="triggerLabUpload()">
           ${state.isAnalyzingLab ? `
             <div class="lab-upload-icon">⏳</div>
             <div class="lab-upload-title">Analyzing Lab Report...</div>
-            <div class="lab-upload-subtitle">AI is extracting values</div>
+            <div class="lab-upload-subtitle">AI is extracting and interpreting values</div>
           ` : `
             <div class="lab-upload-icon">📷</div>
             <div class="lab-upload-title">Upload Lab Report</div>
-            <div class="lab-upload-subtitle">Take a photo or upload image • AI auto-extracts values</div>
+            <div class="lab-upload-subtitle">Take photo or upload • AI auto-extracts & interprets</div>
           `}
         </div>
   `;
   
   if (!labData.parameters?.length) {
-    html += `
-        <div class="section-empty" style="padding:20px">
-          <div style="color:var(--text-muted);font-size:0.9rem">No lab results yet</div>
-        </div>
-      </div>
-    </div>
-    `;
+    html += `<div style="text-align:center;padding:20px;color:var(--text-muted)">No lab results yet</div></div></div>`;
     $('profileLabs').innerHTML = html;
     return;
   }
@@ -876,31 +940,69 @@ function renderProfileLabs() {
   
   if (criticals.length) {
     html += `
-        <div class="lab-critical-alert">
-          <div class="lab-critical-icon">⚠️</div>
-          <div class="lab-critical-content">
-            <div class="lab-critical-title">Critical / Abnormal Values</div>
-            <div class="lab-critical-values">${criticals.join(' • ')}</div>
+        <div class="critical-alert">
+          <div class="critical-alert-icon">⚠️</div>
+          <div class="critical-alert-content">
+            <div class="critical-alert-title">Abnormal Values Detected</div>
+            <div class="critical-alert-values">${criticals.join(' • ')}</div>
           </div>
         </div>
     `;
   }
   
-  // Interpretation
+  // AI Interpretation with Feedback
   if (labData.interpretation?.summary) {
+    const interp = labData.interpretation;
     html += `
-        <div class="lab-interpretation-card">
-          <div class="lab-interpretation-header">🤖 AI Interpretation</div>
-          <div class="lab-interpretation-text">${esc(labData.interpretation.summary)}</div>
+        <div class="ai-interpretation">
+          <div class="ai-interpretation-header">
+            <div class="ai-interpretation-title">🤖 AI Interpretation <span class="ai-badge">NEURAL</span></div>
+          </div>
+          <div class="ai-interpretation-text">${esc(interp.summary)}</div>
+          
+          ${interp.clinicalCorrelation ? `
+          <div class="ai-details">
+            <div class="ai-details-title">Clinical Correlation</div>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin:0">${esc(interp.clinicalCorrelation)}</p>
+          </div>
+          ` : ''}
+          
+          ${interp.trends?.length ? `
+          <div class="ai-details">
+            <div class="ai-details-title">📈 Trends</div>
+            <ul class="ai-details-list">
+              ${interp.trends.map(t => `<li>${esc(t)}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+          
+          ${interp.recommendations?.length ? `
+          <div class="ai-details">
+            <div class="ai-details-title">💡 Recommendations</div>
+            <ul class="ai-details-list">
+              ${interp.recommendations.map(r => `<li>${esc(r)}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+          
+          <div class="feedback-section">
+            <div>
+              <div class="feedback-label">Was this interpretation helpful?</div>
+              <div class="feedback-sent">✓ Feedback recorded</div>
+            </div>
+            <div class="feedback-buttons">
+              <button class="feedback-btn positive" onclick="sendFeedback(1, 'lab')" title="Helpful">👍</button>
+              <button class="feedback-btn negative" onclick="sendFeedback(-1, 'lab')" title="Not helpful">👎</button>
+            </div>
+          </div>
         </div>
     `;
   }
   
-  // Group by date (most recent first)
+  // Lab Values by Category
   const sortedDates = [...(labData.dates || [])].sort((a, b) => new Date(b) - new Date(a));
-  
-  // Group parameters by category for the most recent date
   const latestDate = sortedDates[0];
+  
   if (latestDate) {
     const categories = {};
     labData.parameters.forEach(param => {
@@ -912,110 +1014,56 @@ function renderProfileLabs() {
       }
     });
     
-    html += `
-        <div class="lab-date-group">
-          <div class="lab-date-header">
-            <div class="lab-date-title">📅 ${formatShortDate(latestDate)}</div>
-            <div class="lab-date-badge">${labData.parameters.filter(p => p.values?.some(v => v.date === latestDate)).length} tests</div>
-          </div>
-          <div class="lab-categories">
-    `;
+    html += `<div style="margin-bottom:8px;font-size:0.75rem;color:var(--text-muted)">📅 Results from ${formatShortDate(latestDate)}</div>`;
     
     const catOrder = ['Renal Function', 'Electrolytes', 'Glucose & Metabolic', 'Liver Function', 'Complete Blood Count', 'Other'];
     catOrder.forEach(cat => {
       if (!categories[cat]?.length) return;
-      
-      const icons = { 'Renal Function': '🫘', 'Electrolytes': '⚡', 'Glucose & Metabolic': '🍬', 'Liver Function': '🫀', 'Complete Blood Count': '🩸', 'Other': '🔬' };
+      const catData = CONFIG.LAB_CATEGORIES[cat];
       
       html += `
-            <div class="lab-category">
-              <div class="lab-category-header">${icons[cat] || '🔬'} ${cat}</div>
-              <div class="lab-category-body">
-                <div class="lab-values-grid">
+        <div class="lab-category">
+          <div class="lab-category-header">${catData?.icon || '🔬'} ${cat}</div>
+          <div class="lab-category-body">
+            <div class="lab-values-grid">
       `;
       
       categories[cat].forEach(param => {
         const v = param.latestValue;
         const status = v.status || 'normal';
         html += `
-                  <div class="lab-value-card ${status}">
-                    <div class="lab-value-name">
-                      ${esc(param.name)}
-                      ${status !== 'normal' ? `<span class="lab-value-status ${status}">${status === 'high' ? 'H' : status === 'low' ? 'L' : '!'}</span>` : ''}
-                    </div>
-                    <div class="lab-value-number">${esc(v.value)}</div>
-                    <div class="lab-value-unit">${esc(param.unit || '')}</div>
-                    ${param.refMin !== undefined && param.refMax !== undefined ? `<div class="lab-value-range">Ref: ${param.refMin} - ${param.refMax}</div>` : ''}
-                  </div>
+          <div class="lab-value-card ${status}">
+            <div class="lab-value-name">
+              ${esc(param.name)}
+              ${status !== 'normal' ? `<span class="lab-value-status ${status}">${status === 'high' ? 'HIGH' : status === 'low' ? 'LOW' : '!'}</span>` : ''}
+            </div>
+            <div class="lab-value-number">${esc(v.value)}</div>
+            <div class="lab-value-unit">${esc(param.unit || '')}</div>
+            ${param.refMin !== undefined && param.refMax !== undefined ? `<div class="lab-value-range">Reference: ${param.refMin} - ${param.refMax}</div>` : ''}
+          </div>
         `;
       });
       
-      html += `
-                </div>
-              </div>
-            </div>
-      `;
+      html += `</div></div></div>`;
     });
-    
-    html += `
-          </div>
-        </div>
-    `;
   }
   
-  // Trend Chart Section
+  // Trend Chart
   if (labData.parameters.length > 0) {
     html += `
-        <div class="lab-trend-section">
-          <div class="lab-trend-header">
-            <div class="section-title">📈 Trends</div>
-            <select class="lab-trend-select" id="labTrendSelect" onchange="renderLabTrendChart()">
-              ${labData.parameters.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="lab-trend-chart"><canvas id="labTrendChart"></canvas></div>
+      <div class="lab-trend-section">
+        <div class="lab-trend-header">
+          <div class="section-title">📈 Trends</div>
+          <select class="lab-trend-select" id="labTrendSelect" onchange="renderLabTrendChart()">
+            ${labData.parameters.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('')}
+          </select>
         </div>
-    `;
-  }
-  
-  // Historical dates (older)
-  if (sortedDates.length > 1) {
-    html += `
-        <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
-          <div style="font-weight:600;color:var(--text-muted);font-size:0.8rem;margin-bottom:16px">📜 Previous Results</div>
-    `;
-    
-    sortedDates.slice(1, 4).forEach(date => {
-      const params = labData.parameters.filter(p => p.values?.some(v => v.date === date));
-      if (params.length) {
-        html += `
-          <div style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">
-            <div style="font-weight:600;margin-bottom:12px;color:var(--gold)">${formatShortDate(date)}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:12px">
-        `;
-        
-        params.forEach(p => {
-          const v = p.values.find(x => x.date === date);
-          if (v) {
-            html += `<div style="font-size:0.8rem"><span style="color:var(--text-muted)">${esc(p.name)}:</span> <span class="mono" style="color:${v.status === 'high' || v.status === 'critical' ? 'var(--rose)' : v.status === 'low' ? 'var(--blue)' : 'var(--emerald)'}">${esc(v.value)}</span></div>`;
-          }
-        });
-        
-        html += `
-            </div>
-          </div>
-        `;
-      }
-    });
-    
-    html += '</div>';
-  }
-  
-  html += `
+        <div class="lab-trend-chart"><canvas id="labTrendChart"></canvas></div>
       </div>
-    </div>
-  `;
+    `;
+  }
   
+  html += '</div></div>';
   $('profileLabs').innerHTML = html;
   
   if (labData.parameters.length > 0) {
@@ -1080,12 +1128,25 @@ async function handleLabUpload(file) {
   state.isAnalyzingLab = true;
   renderProfileLabs();
   
+  // Build context for RAG
+  const p = state.currentPatient;
+  const patientContext = {
+    previousLabs: (p.labData?.dates || []).slice(0, 3).map(d => ({
+      date: d,
+      summary: `${p.labData.parameters.filter(param => param.values?.some(v => v.date === d)).length} parameters`
+    }))
+  };
+  
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
       const res = await fetch(state.settings.apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'analyzeLabs', image: imageData })
+        body: JSON.stringify({ 
+          action: 'analyzeLabs', 
+          image: imageData,
+          patientContext
+        })
       });
       const data = await res.json();
       
@@ -1097,17 +1158,19 @@ async function handleLabUpload(file) {
         return;
       }
       
+      // Store interaction ID for feedback
+      if (data.meta?.interactionId) {
+        state.currentInteractionId = data.meta.interactionId;
+      }
+      
       // Merge lab data
-      const p = state.currentPatient;
       const ld = data.labData;
       
-      // Merge dates
       (ld.dates || []).forEach(d => {
         if (!p.labData.dates.includes(d)) p.labData.dates.push(d);
       });
       p.labData.dates.sort((a, b) => new Date(b) - new Date(a));
       
-      // Merge parameters
       (ld.parameters || []).forEach(newParam => {
         let existing = p.labData.parameters.find(ep => 
           ep.name.toLowerCase() === newParam.name.toLowerCase() ||
@@ -1132,7 +1195,7 @@ async function handleLabUpload(file) {
       
       saveCloud();
       renderProfileLabs();
-      toast('Lab results added!');
+      toast('Lab results analyzed!');
     } catch (e) {
       state.isAnalyzingLab = false;
       toast('Analysis failed', true);
@@ -1152,7 +1215,7 @@ function renderProfileImaging() {
         <div class="lab-upload-area ${state.isAnalyzingImaging ? 'analyzing' : ''}" onclick="triggerImagingUpload()">
           ${state.isAnalyzingImaging ? `
             <div class="lab-upload-icon">⏳</div>
-            <div class="lab-upload-title">Analyzing Image...</div>
+            <div class="lab-upload-title">Analyzing...</div>
           ` : `
             <div class="lab-upload-icon">🩻</div>
             <div class="lab-upload-title">Upload Study</div>
@@ -1189,8 +1252,7 @@ async function handleImagingUpload(file) {
   state.isAnalyzingImaging = true;
   renderProfileImaging();
   
-  // Show type selector
-  const type = prompt('Enter type: echo, ecg, xray, or ct') || 'xray';
+  const type = prompt('Enter study type:\n• echo\n• ecg\n• xray\n• ct') || 'xray';
   
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
@@ -1209,7 +1271,7 @@ async function handleImagingUpload(file) {
       p.imaging.push({
         date: new Date().toISOString(),
         type: type,
-        summary: data.interpretation?.summary || data.interpretation?.conclusion || 'Analysis complete'
+        summary: data.interpretation?.summary || data.interpretation?.impression || data.interpretation?.conclusion || 'Analysis complete'
       });
       
       saveCloud();
@@ -1239,7 +1301,7 @@ function renderProfileFluids() {
   
   $('profileFluids').innerHTML = `
     <div class="section-card">
-      <div class="section-header"><div class="section-title">💧 Fluid Balance</div><button class="btn btn-primary btn-xs" onclick="openAddFluid()">+ Add Entry</button></div>
+      <div class="section-header"><div class="section-title">💧 Fluid Balance</div><button class="btn btn-primary btn-xs" onclick="openAddFluid()">+ Add</button></div>
       <div class="section-body">
         <div class="fluid-summary">
           <div class="fluid-stat"><div class="fluid-stat-value intake">${totalIntake}</div><div class="fluid-stat-label">Intake (mL)</div></div>
@@ -1286,7 +1348,7 @@ function renderProfilePlans() {
   
   $('profilePlans').innerHTML = `
     <div class="section-card">
-      <div class="section-header"><div class="section-title">📝 Management Plans</div><button class="btn btn-primary btn-xs" onclick="openAddPlan()">+ Add Plan</button></div>
+      <div class="section-header"><div class="section-title">📝 Management Plans</div><button class="btn btn-primary btn-xs" onclick="openAddPlan()">+ Add</button></div>
       <div class="section-body">
         ${plans.length ? plans.slice().reverse().map((plan, idx) => `
           <div class="plan-item">
@@ -1309,7 +1371,10 @@ window.deletePlan = function(idx) {
   renderProfilePlans();
 };
 
-// Add Data Modals
+// ═══════════════════════════════════════════════════════════════════
+// DATA MODALS
+// ═══════════════════════════════════════════════════════════════════
+
 window.openEditText = function(type, title) {
   $('editTextTitle').textContent = 'Edit ' + title;
   $('editTextType').value = type;
@@ -1402,7 +1467,10 @@ window.deleteCurrentPatient = function() {
   toast('Deleted');
 };
 
-// Unit Access
+// ═══════════════════════════════════════════════════════════════════
+// UNIT ACCESS & AUTH
+// ═══════════════════════════════════════════════════════════════════
+
 function openUnitAccess(id) {
   const u = getUnit(id);
   if (!u) return;
@@ -1476,263 +1544,46 @@ function showProfileTab(tabName) {
   $('profile' + tabName.charAt(0).toUpperCase() + tabName.slice(1))?.classList.add('active');
 }
 
-// Admin
-window.openAdminLogin = function() {
-  $('adminPwd').value = '';
-  $('adminError').classList.remove('show');
-  openModal('adminModal');
-};
-
-window.loginAdmin = function() {
-  if ($('adminPwd').value === state.settings.adminPassword) {
-    closeModal('adminModal');
-    showPage('adminPanel');
-    $('apiUrl').value = state.settings.apiUrl || '';
-    renderUnitsTable();
-  } else $('adminError').classList.add('show');
-};
-
+// Admin functions
+window.openAdminLogin = function() { $('adminPwd').value = ''; $('adminError').classList.remove('show'); openModal('adminModal'); };
+window.loginAdmin = function() { if ($('adminPwd').value === state.settings.adminPassword) { closeModal('adminModal'); showPage('adminPanel'); $('apiUrl').value = state.settings.apiUrl || ''; renderUnitsTable(); } else $('adminError').classList.add('show'); };
 window.exitAdmin = function() { showPage('landing'); };
-
-window.addUnit = function() {
-  state.editingUnitId = null;
-  $('unitModalTitle').textContent = 'Add Unit';
-  $('uName').value = ''; $('uIcon').value = '🏥'; $('uCode').value = ''; $('uDesc').value = '';
-  openModal('unitModal');
-};
-
-window.editUnit = function(id) {
-  const u = getUnit(id);
-  if (!u) return;
-  state.editingUnitId = id;
-  $('unitModalTitle').textContent = 'Edit Unit';
-  $('uName').value = u.name; $('uIcon').value = u.icon; $('uCode').value = u.code; $('uDesc').value = u.desc || '';
-  openModal('unitModal');
-};
-
-window.saveUnit = function() {
-  const name = $('uName').value.trim(), icon = $('uIcon').value.trim() || '🏥', code = $('uCode').value.trim(), desc = $('uDesc').value.trim();
-  if (!name || !/^\d{4}$/.test(code)) { toast('Invalid', true); return; }
-  if (state.editingUnitId) {
-    const i = state.units.findIndex(u => u.id === state.editingUnitId);
-    if (i !== -1) state.units[i] = { ...state.units[i], name, icon, code, desc };
-  } else {
-    state.units.push({ id: 'u' + Date.now(), name, icon, code, desc, color: ['#f59e0b', '#14b8a6', '#3b82f6', '#8b5cf6'][state.units.length % 4] });
-  }
-  saveCloud(); renderUnitsTable(); renderUnits(); closeModal('unitModal'); toast('Saved!');
-};
-
-window.deleteUnit = function(id) {
-  if (!confirm('Delete?')) return;
-  state.units = state.units.filter(u => u.id !== id);
-  saveCloud(); renderUnitsTable(); renderUnits();
-};
-
-window.saveSettings = function() {
-  const p = $('newAdminPwd').value.trim(), u = $('apiUrl').value.trim();
-  if (p) state.settings.adminPassword = p;
-  if (u) state.settings.apiUrl = u;
-  saveCloud(); toast('Saved!'); $('newAdminPwd').value = '';
-};
+window.addUnit = function() { state.editingUnitId = null; $('unitModalTitle').textContent = 'Add Unit'; $('uName').value = ''; $('uIcon').value = '🏥'; $('uCode').value = ''; $('uDesc').value = ''; openModal('unitModal'); };
+window.editUnit = function(id) { const u = getUnit(id); if (!u) return; state.editingUnitId = id; $('unitModalTitle').textContent = 'Edit Unit'; $('uName').value = u.name; $('uIcon').value = u.icon; $('uCode').value = u.code; $('uDesc').value = u.desc || ''; openModal('unitModal'); };
+window.saveUnit = function() { const name = $('uName').value.trim(), icon = $('uIcon').value.trim() || '🏥', code = $('uCode').value.trim(), desc = $('uDesc').value.trim(); if (!name || !/^\d{4}$/.test(code)) { toast('Invalid', true); return; } if (state.editingUnitId) { const i = state.units.findIndex(u => u.id === state.editingUnitId); if (i !== -1) state.units[i] = { ...state.units[i], name, icon, code, desc }; } else { state.units.push({ id: 'u' + Date.now(), name, icon, code, desc, color: ['#f59e0b', '#14b8a6', '#3b82f6', '#8b5cf6'][state.units.length % 4] }); } saveCloud(); renderUnitsTable(); renderUnits(); closeModal('unitModal'); toast('Saved!'); };
+window.deleteUnit = function(id) { if (!confirm('Delete?')) return; state.units = state.units.filter(u => u.id !== id); saveCloud(); renderUnitsTable(); renderUnits(); };
+window.saveSettings = function() { const p = $('newAdminPwd').value.trim(), u = $('apiUrl').value.trim(); if (p) state.settings.adminPassword = p; if (u) state.settings.apiUrl = u; saveCloud(); toast('Saved!'); $('newAdminPwd').value = ''; };
 
 // Patient CRUD
-window.openAddPatient = function() {
-  $('patientModalTitle').textContent = 'Add Patient';
-  $('ptId').value = ''; $('ptName').value = ''; $('ptWard').value = 'Ward 14';
-  $('ptRoom').value = ''; $('ptDx').value = ''; $('ptDoctor').value = state.currentUser?.name || ''; $('ptStatus').value = 'new';
-  openModal('patientModal');
-};
-
-window.savePatient = function() {
-  const id = $('ptId').value, name = $('ptName').value.trim();
-  if (!name) { toast('Name required', true); return; }
-  
-  const data = { name, ward: $('ptWard').value, room: $('ptRoom').value.trim() || '—', diagnosis: $('ptDx').value.trim() || 'Pending', doctor: $('ptDoctor').value.trim() || 'Unassigned', status: $('ptStatus').value };
-  
-  if (id) {
-    const i = state.patients.findIndex(p => p.id === parseInt(id));
-    if (i !== -1) {
-      state.patients[i] = { ...state.patients[i], ...data };
-      if (state.currentPatient?.id === parseInt(id)) {
-        state.currentPatient = state.patients[i];
-        renderPatientProfile();
-      }
-    }
-  } else {
-    state.patients.push({ id: Date.now(), ...data, labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', examination: '', vitals: {} });
-  }
-  
-  saveCloud(); renderPatients(); closeModal('patientModal'); toast('Saved!');
-};
+window.openAddPatient = function() { $('patientModalTitle').textContent = 'Add Patient'; $('ptId').value = ''; $('ptName').value = ''; $('ptWard').value = 'Ward 14'; $('ptRoom').value = ''; $('ptDx').value = ''; $('ptDoctor').value = state.currentUser?.name || ''; $('ptStatus').value = 'new'; openModal('patientModal'); };
+window.savePatient = function() { const id = $('ptId').value, name = $('ptName').value.trim(); if (!name) { toast('Name required', true); return; } const data = { name, ward: $('ptWard').value, room: $('ptRoom').value.trim() || '—', diagnosis: $('ptDx').value.trim() || 'Pending', doctor: $('ptDoctor').value.trim() || 'Unassigned', status: $('ptStatus').value }; if (id) { const i = state.patients.findIndex(p => p.id === parseInt(id)); if (i !== -1) { state.patients[i] = { ...state.patients[i], ...data }; if (state.currentPatient?.id === parseInt(id)) { state.currentPatient = state.patients[i]; renderPatientProfile(); } } } else { state.patients.push({ id: Date.now(), ...data, labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: {} }); } saveCloud(); renderPatients(); closeModal('patientModal'); toast('Saved!'); };
 
 // Import
-window.openImport = function() {
-  state.importImage = null; state.importPatients = [];
-  $('importUpload').style.display = 'block';
-  $('importPreview').style.display = 'none';
-  $('importLoading').style.display = 'none';
-  $('importResults').style.display = 'none';
-  $('importError').style.display = 'none';
-  $('importConfirmBtn').disabled = true;
-  openModal('importModal');
-};
+window.openImport = function() { state.importImage = null; state.importPatients = []; $('importUpload').style.display = 'block'; $('importPreview').style.display = 'none'; $('importLoading').style.display = 'none'; $('importResults').style.display = 'none'; $('importError').style.display = 'none'; $('importConfirmBtn').disabled = true; openModal('importModal'); };
+window.resetImport = function() { state.importImage = null; state.importPatients = []; $('importUpload').style.display = 'block'; $('importPreview').style.display = 'none'; $('importLoading').style.display = 'none'; $('importResults').style.display = 'none'; $('importError').style.display = 'none'; $('importConfirmBtn').disabled = true; };
+window.extractPatients = async function() { if (!state.importImage) return; $('importPreview').style.display = 'none'; $('importLoading').style.display = 'block'; try { const res = await fetch(state.settings.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'extractPatients', image: state.importImage }) }); const d = await res.json(); $('importLoading').style.display = 'none'; if (!d.success || !d.patients?.length) { $('importError').style.display = 'block'; $('importErrorMsg').textContent = d.error || 'No patients found'; return; } state.importPatients = d.patients.map((p, i) => ({ id: Date.now() + i, name: p.name, ward: smartWard(p.ward), room: p.room || '—', diagnosis: p.diagnosis || 'Pending', doctor: p.doctor || state.currentUser?.name || 'Unassigned', status: p.status === 'chronic' ? 'chronic' : 'active', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: {} })); $('importResults').style.display = 'block'; $('importCount').textContent = state.importPatients.length; $('importList').innerHTML = state.importPatients.map(p => `<div class="import-item"><div style="flex:1"><b>${esc(p.name)}</b><div style="font-size:0.75rem;color:var(--text-muted)">${esc(p.room)}</div></div><select class="import-ward-select" onchange="state.importPatients.find(x=>x.id===${p.id}).ward=this.value">${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}</select></div>`).join(''); $('importConfirmBtn').disabled = false; } catch (e) { $('importLoading').style.display = 'none'; $('importError').style.display = 'block'; $('importErrorMsg').textContent = 'Failed'; } };
+window.confirmImport = function() { if (!state.importPatients.length) return; let added = 0; state.importPatients.forEach(p => { if (!state.patients.some(ep => ep.name.toLowerCase() === p.name.toLowerCase())) { state.patients.push(p); added++; } }); saveCloud(); renderPatients(); closeModal('importModal'); toast(`Imported ${added}!`); };
+window.exportPDF = function() { const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' }); const pts = state.currentFilter === 'all' ? [...state.patients] : state.patients.filter(p => p.status === state.currentFilter); if (!pts.length) { toast('No patients', true); return; } doc.setFillColor(245, 158, 11); doc.rect(0, 0, 297, 18, 'F'); doc.setFontSize(16); doc.setTextColor(0); doc.text(state.currentUnit.name + ' - Patient Report', 14, 12); doc.text(formatDate(), 283, 12, 'right'); let y = 28; const wards = {}; pts.forEach(p => { const w = p.ward || 'Unassigned'; if (!wards[w]) wards[w] = []; wards[w].push(p); }); Object.keys(wards).forEach(ward => { if (y > 185) { doc.addPage(); y = 15; } doc.setFillColor(20, 184, 166); doc.rect(14, y, 269, 7, 'F'); doc.setFontSize(9); doc.setTextColor(255); doc.text(ward + ' (' + wards[ward].length + ')', 16, y + 5); y += 10; wards[ward].forEach(p => { if (y > 190) { doc.addPage(); y = 15; } doc.setFillColor(248, 250, 252); doc.rect(14, y, 269, 10, 'F'); doc.setFontSize(8); doc.setTextColor(30); doc.text(p.room || '—', 16, y + 6); doc.text(p.name, 40, y + 6); doc.text((p.diagnosis || '').substring(0, 60), 100, y + 6); doc.text(p.doctor || '', 220, y + 6); y += 12; }); y += 5; }); doc.save(state.currentUnit.name.replace(/\s+/g, '_') + '_Report.pdf'); toast('PDF exported!'); };
 
-window.resetImport = function() {
-  state.importImage = null; state.importPatients = [];
-  $('importUpload').style.display = 'block';
-  $('importPreview').style.display = 'none';
-  $('importLoading').style.display = 'none';
-  $('importResults').style.display = 'none';
-  $('importError').style.display = 'none';
-  $('importConfirmBtn').disabled = true;
-};
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
 
-window.extractPatients = async function() {
-  if (!state.importImage) return;
-  $('importPreview').style.display = 'none';
-  $('importLoading').style.display = 'block';
-  
-  try {
-    const res = await fetch(state.settings.apiUrl, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'extractPatients', image: state.importImage })
-    });
-    const d = await res.json();
-    $('importLoading').style.display = 'none';
-    
-    if (!d.success || !d.patients?.length) {
-      $('importError').style.display = 'block';
-      $('importErrorMsg').textContent = d.error || 'No patients found';
-      return;
-    }
-    
-    state.importPatients = d.patients.map((p, i) => ({
-      id: Date.now() + i, name: p.name, ward: smartWard(p.ward), room: p.room || '—',
-      diagnosis: p.diagnosis || 'Pending', doctor: p.doctor || state.currentUser?.name || 'Unassigned',
-      status: p.status === 'chronic' ? 'chronic' : 'active',
-      labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', examination: '', vitals: {}
-    }));
-    
-    $('importResults').style.display = 'block';
-    $('importCount').textContent = state.importPatients.length;
-    $('importList').innerHTML = state.importPatients.map(p => `
-      <div class="import-item">
-        <div style="flex:1"><b>${esc(p.name)}</b><div style="font-size:0.75rem;color:var(--text-muted)">${esc(p.room)}</div></div>
-        <select class="import-ward-select" onchange="state.importPatients.find(x=>x.id===${p.id}).ward=this.value">
-          ${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}
-        </select>
-      </div>
-    `).join('');
-    $('importConfirmBtn').disabled = false;
-  } catch (e) {
-    $('importLoading').style.display = 'none';
-    $('importError').style.display = 'block';
-    $('importErrorMsg').textContent = 'Failed';
-  }
-};
-
-window.confirmImport = function() {
-  if (!state.importPatients.length) return;
-  let added = 0;
-  state.importPatients.forEach(p => {
-    if (!state.patients.some(ep => ep.name.toLowerCase() === p.name.toLowerCase())) { state.patients.push(p); added++; }
-  });
-  saveCloud(); renderPatients(); closeModal('importModal'); toast(`Imported ${added}!`);
-};
-
-// PDF Export
-window.exportPDF = function() {
-  const pts = [...state.patients];
-  const f = state.currentFilter;
-  let filtered = f === 'all' ? pts : pts.filter(p => p.status === f);
-  if (!filtered.length) { toast('No patients', true); return; }
-  
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  
-  doc.setFillColor(245, 158, 11);
-  doc.rect(0, 0, 297, 18, 'F');
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0);
-  doc.text(state.currentUnit.name + ' - Patient Report', 14, 12);
-  doc.setFontSize(10);
-  doc.text(formatDate(), 283, 12, 'right');
-  
-  let y = 28;
-  const wards = {};
-  filtered.forEach(p => { const w = p.ward || 'Unassigned'; if (!wards[w]) wards[w] = []; wards[w].push(p); });
-  
-  const order = ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned'];
-  Object.keys(wards).sort((a, b) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b))).forEach(ward => {
-    if (y > 185) { doc.addPage(); y = 15; }
-    doc.setFillColor(20, 184, 166);
-    doc.rect(14, y, 269, 7, 'F');
-    doc.setFontSize(9);
-    doc.setTextColor(255);
-    doc.text(ward + ' (' + wards[ward].length + ')', 16, y + 5);
-    y += 10;
-    
-    wards[ward].forEach((p) => {
-      if (y > 190) { doc.addPage(); y = 15; }
-      doc.setFillColor(248, 250, 252);
-      doc.rect(14, y, 269, 10, 'F');
-      doc.setFontSize(8);
-      doc.setTextColor(30);
-      doc.text(p.room || '—', 16, y + 6);
-      doc.text(p.name, 40, y + 6);
-      doc.text((p.diagnosis || '').substring(0, 60), 100, y + 6);
-      doc.text(p.doctor || '', 220, y + 6);
-      doc.text(p.status, 265, y + 6);
-      y += 12;
-    });
-    y += 5;
-  });
-  
-  doc.save(state.currentUnit.name.replace(/\s+/g, '_') + '_Report.pdf');
-  toast('PDF exported!');
-};
-
-// Init
 async function init() {
   loadLocal();
   renderUnits();
   
   $('adminFab').onclick = openAdminLogin;
-  $('syncFab').onclick = async () => {
-    $('syncFab').classList.add('syncing');
-    await syncCloud();
-    $('syncFab').classList.remove('syncing');
-    toast('Synced!');
-  };
-  
+  $('syncFab').onclick = async () => { $('syncFab').classList.add('syncing'); await syncCloud(); $('syncFab').classList.remove('syncing'); toast('Synced!'); };
   $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
   $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
-  
   $('mainTabs').onclick = e => { const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab); };
   $('profileTabs').onclick = e => { const t = e.target.closest('.profile-tab'); if (t) showProfileTab(t.dataset.ptab); };
   $('statsBar').onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
   
-  $('labFileInput').onchange = function() {
-    if (this.files[0]) handleLabUpload(this.files[0]);
-    this.value = '';
-  };
-  
-  $('imagingFileInput').onchange = function() {
-    if (this.files[0]) handleImagingUpload(this.files[0]);
-    this.value = '';
-  };
-  
-  $('importFile').onchange = function() {
-    if (this.files[0]) {
-      compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => {
-        state.importImage = url;
-        $('importImg').src = url;
-        $('importUpload').style.display = 'none';
-        $('importPreview').style.display = 'block';
-      });
-    }
-  };
+  $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
+  $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
+  $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
   
   $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
   
