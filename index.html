@@ -34,8 +34,8 @@
   --font:'Outfit',system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{height:100%;overflow:hidden}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;height:100%;overflow:hidden}
+html,body{height:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
@@ -78,10 +78,7 @@ button, a, input, select, textarea{touch-action:manipulation}
 
 .landing-scroll-container{
   flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
+  overflow:visible;
 }
 
 /* Animated Background */
@@ -1369,6 +1366,12 @@ button, a, input, select, textarea{touch-action:manipulation}
   .units-grid{grid-template-columns:1fr}
   .icon-selector{grid-template-columns:repeat(6,1fr)}
 }
+
+/* === MOBILE TOUCH FIX === */
+body {
+  touch-action: pan-y;
+}
+
 </style>
 </head>
 <body>
@@ -3609,6 +3612,12 @@ button, .btn, .unit-card, .request-unit-card, .fab {
   position: relative;
   z-index: 20;
 }
+
+/* === MOBILE TOUCH FIX === */
+body {
+  touch-action: pan-y;
+}
+
 </style>
 
 <script>
