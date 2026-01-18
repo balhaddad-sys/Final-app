@@ -8,8 +8,11 @@ MedWard.App = {
   init() {
     const { $, $$ } = MedWard.Utils;
     
+    console.log('[MedWard] Initializing...');
+    
     // Load data
     MedWard.Storage.load();
+    console.log('[MedWard] Units loaded:', MedWard.Storage.state.units.length);
     
     // Render units
     this.renderUnits();
@@ -47,17 +50,31 @@ MedWard.App = {
   renderUnits() {
     const { $ } = MedWard.Utils;
     const units = MedWard.Storage.state.units;
+    const container = $('unitsGrid');
+    
+    console.log('[MedWard] Rendering units:', units);
+    
+    if (!container) {
+      console.error('[MedWard] unitsGrid container not found!');
+      return;
+    }
+    
+    if (!units || units.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No units configured. Click the settings icon to add units.</div>';
+      return;
+    }
     
     let html = '';
     units.forEach(u => {
       html += `
-        <div class="unit-card" style="--unit-color:${u.color}" onclick="MedWard.App.openUnit('${u.id}')">
-          <div class="unit-card-icon">${u.icon}</div>
-          <div class="unit-card-name">${u.name}</div>
+        <div class="unit-card" style="--unit-color:${u.color || '#d4a437'}" onclick="MedWard.App.openUnit('${u.id}')">
+          <div class="unit-card-icon">${u.icon || '🏥'}</div>
+          <div class="unit-card-name">${u.name || 'Unknown Unit'}</div>
           <div class="unit-card-desc">${u.desc || ''}</div>
         </div>`;
     });
-    $('unitsGrid').innerHTML = html;
+    container.innerHTML = html;
+    console.log('[MedWard] Units rendered:', units.length);
   },
   
   openUnit(id) {
