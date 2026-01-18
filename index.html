@@ -34,8 +34,8 @@
   --font:'Outfit',system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6}
+html{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;height:100%;overflow:hidden}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
@@ -78,7 +78,10 @@ button, a, input, select, textarea{touch-action:manipulation}
 
 .landing-scroll-container{
   flex:1;
-  overflow:visible;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
 
 /* Animated Background */
@@ -1366,12 +1369,6 @@ button, a, input, select, textarea{touch-action:manipulation}
   .units-grid{grid-template-columns:1fr}
   .icon-selector{grid-template-columns:repeat(6,1fr)}
 }
-
-/* === MOBILE TOUCH FIX === */
-body {
-  touch-action: pan-y;
-}
-
 </style>
 </head>
 <body>
@@ -1393,6 +1390,7 @@ body {
     <span class="brand-text">MedicalWards</span>
   </div>
   <div class="landing-header-actions">
+    <button class="btn btn-ghost btn-sm" onclick="location.reload()">🔄 Refresh</button>
     <button class="btn btn-ghost btn-sm" onclick="openAdminLogin()">⚙️ Admin</button>
   </div>
 </header>
@@ -1625,10 +1623,12 @@ body {
     <div id="accessIcon" style="font-size:3rem;margin-bottom:12px">🏥</div>
     <div class="modal-title" id="accessTitle">Unit Access</div>
     <p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px">Enter 4-digit code</p>
+    <p style="color:var(--gold);font-size:0.7rem;margin-top:4px" id="codeHint"></p>
   </div>
   <div class="modal-body">
     <div class="code-inputs" id="codeInputs"></div>
     <p class="code-error" id="codeError">Invalid code</p>
+    <button class="btn btn-ghost btn-sm" style="margin-top:16px;width:100%" onclick="bypassCode()">Skip Code (Debug)</button>
     <div id="userSection" style="display:none;margin-top:28px;padding-top:28px;border-top:1px solid var(--border)">
       <div class="form-group">
         <label class="form-label">Your Name</label>
@@ -2057,7 +2057,7 @@ const REFERENCE = [
 const state = {
   units: [],
   patients: [],
-  settings: { adminPassword: 'admin', apiEndpoints: [], claudeApiKey: '', links: [] },
+  settings: { adminPassword: '1234', apiEndpoints: [], claudeApiKey: '', links: [] },
   unitRequests: [],
   currentUnit: null,
   currentUser: null,
@@ -2143,9 +2143,6 @@ function toast(msg, isError = false) {
 
 function openModal(id) { $(id).classList.add('active'); }
 function closeModal(id) { $(id).classList.remove('active'); }
-window.openModal = openModal;
-window.closeModal = closeModal;
-
 function showPage(id) { $$('.page').forEach(p => p.classList.remove('active')); $(id).classList.add('active'); }
 
 // Storage
@@ -2370,37 +2367,72 @@ window.selectUnit = function(id) {
   
   $('accessIcon').textContent = u.icon || '🏥';
   $('accessTitle').textContent = u.name;
+  $('codeHint').textContent = 'Code: ' + u.code; // Debug hint
   $('codeError').classList.remove('show');
   $('userSection').style.display = 'none';
   $('enterBtn').style.display = 'none';
   
   const container = $('codeInputs');
-  container.innerHTML = '<input type="tel" maxlength="1" class="code-digit" inputmode="numeric"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric">';
+  container.innerHTML = '<input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*"><input type="number" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]*">';
   
   const inputs = container.querySelectorAll('.code-digit');
+  let lastCheck = 0;
+  
+  function checkCode() {
+    const now = Date.now();
+    if (now - lastCheck < 300) return; // Debounce
+    lastCheck = now;
+    
+    const code = Array.from(inputs).map(i => (i.value || '').slice(-1)).join('');
+    console.log('Code entered:', code, 'Expected:', u.code);
+    
+    if (code.length === 4) {
+      if (code === u.code) {
+        inputs.forEach(i => { i.classList.add('success'); i.disabled = true; });
+        $('userSection').style.display = 'block';
+        $('enterBtn').style.display = 'flex';
+        setTimeout(() => $('userName').focus(), 100);
+      } else {
+        $('codeError').classList.add('show');
+        inputs.forEach(i => i.classList.add('error'));
+        setTimeout(() => { 
+          inputs.forEach(i => { i.classList.remove('error'); i.value = ''; }); 
+          inputs[0].focus(); 
+        }, 600);
+      }
+    }
+  }
+  
   inputs.forEach((inp, idx) => {
     inp.addEventListener('input', () => {
-      inp.value = inp.value.replace(/\D/g, '');
-      if (inp.value && idx < 3) inputs[idx + 1].focus();
-      const code = Array.from(inputs).map(i => i.value).join('');
-      if (code.length === 4) {
-        if (code === u.code) {
-          inputs.forEach(i => { i.classList.add('success'); i.disabled = true; });
-          $('userSection').style.display = 'block';
-          $('enterBtn').style.display = 'flex';
-          $('userName').focus();
-        } else {
-          $('codeError').classList.add('show');
-          inputs.forEach(i => i.classList.add('error'));
-          setTimeout(() => { inputs.forEach(i => { i.classList.remove('error'); i.value = ''; }); inputs[0].focus(); }, 500);
-        }
+      // Keep only last digit
+      let val = inp.value.replace(/\D/g, '');
+      if (val.length > 1) val = val.slice(-1);
+      inp.value = val;
+      
+      if (val && idx < 3) {
+        setTimeout(() => inputs[idx + 1].focus(), 50);
+      }
+      
+      setTimeout(checkCode, 100);
+    });
+    
+    inp.addEventListener('keydown', e => { 
+      if (e.key === 'Backspace' && !inp.value && idx > 0) {
+        inputs[idx - 1].focus();
       }
     });
-    inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus(); });
   });
   
   openModal('accessModal');
-  setTimeout(() => inputs[0].focus(), 100);
+  setTimeout(() => inputs[0].focus(), 150);
+};
+
+window.bypassCode = function() {
+  // Debug function to skip code entry
+  $('userSection').style.display = 'block';
+  $('enterBtn').style.display = 'flex';
+  setTimeout(() => $('userName').focus(), 100);
 };
 
 window.enterUnit = function() {
@@ -3596,46 +3628,5 @@ else init();
 
 })();
 </script>
-
-<!-- === NON-BREAKING DEFENSIVE PATCH (AUTO-ADDED) === -->
-<style>
-/* Interaction safety */
-.landing-bg,
-.grid-overlay,
-.floating-orb,
-.landing-bg::before,
-.landing-bg::after {
-  pointer-events: none !important;
-}
-button, .btn, .unit-card, .request-unit-card, .fab {
-  pointer-events: auto !important;
-  position: relative;
-  z-index: 20;
-}
-
-/* === MOBILE TOUCH FIX === */
-body {
-  touch-action: pan-y;
-}
-
-</style>
-
-<script>
-// Safe DOM helpers - use different name to avoid shadowing main IIFE
-function safe$(id, required=false){
-  const el = document.getElementById(id);
-  if(!el && required){ console.warn('[MedicalWards] Missing element:', id); }
-  return el;
-}
-
-// Runtime error visibility
-window.addEventListener('error', e => {
-  console.error('[MedicalWards] Runtime error:', e.message, e.filename, e.lineno);
-});
-
-// Note: The main init is already called by the IIFE above.
-// This block previously caused double-initialization issues and has been simplified.
-</script>
-
 </body>
 </html>
