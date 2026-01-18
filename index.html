@@ -7,27 +7,28 @@
 <title>MedWard Enterprise</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
-:root{--bg:#060a13;--bg-card:#0d1424;--bg-elevated:#111b2e;--text:#f8fafc;--text-muted:#64748b;--gold:#d4a437;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--lime:#84cc16;--border:rgba(148,163,184,0.12);--radius:12px}
+:root{--bg:#060a13;--bg-card:#0d1424;--bg-elevated:#111b2e;--text:#f8fafc;--text-muted:#64748b;--gold:#d4a437;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--lime:#84cc16;--orange:#f97316;--border:rgba(148,163,184,0.12);--radius:12px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;-webkit-tap-highlight-color:transparent}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:none;border-radius:var(--radius);font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn:active{transform:scale(0.98)}
 .btn-primary{background:linear-gradient(135deg,var(--gold),#fbbf24);color:#000}
 .btn-secondary{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text)}
 .btn-danger{background:rgba(244,63,94,0.15);border:1px solid var(--rose);color:var(--rose)}
 .btn-export{background:rgba(16,185,129,0.15);border:1px solid var(--emerald);color:var(--emerald)}
-.btn-sm{padding:8px 14px;font-size:0.8rem}
-.btn-xs{padding:6px 10px;font-size:0.7rem}
-.btn-icon{width:40px;height:40px;padding:0;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;display:grid;place-items:center}
+.btn-sm{padding:10px 16px;font-size:0.85rem}
+.btn-xs{padding:6px 12px;font-size:0.75rem}
+.btn-full{width:100%}
+.btn-icon{width:44px;height:44px;padding:0;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);cursor:pointer;display:grid;place-items:center}
 .form-group{margin-bottom:18px}
-.form-label{display:block;font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px}
-.form-input,.form-select,.form-textarea{width:100%;padding:12px;background:#0f172a;border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:inherit;font-size:0.9rem}
-.form-input:focus,.form-select:focus{outline:none;border-color:var(--gold)}
-.form-textarea{min-height:80px;resize:vertical}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.form-label{display:block;font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.form-input,.form-select,.form-textarea{width:100%;padding:14px;background:#0f172a;border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:inherit;font-size:0.95rem;transition:border-color 0.2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--gold)}
+.form-textarea{min-height:90px;resize:vertical}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
 .modal.active{display:flex}
-.modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
 .modal-header{padding:20px;border-bottom:1px solid var(--border)}
 .modal-title{font-size:1.1rem;font-weight:700}
 .modal-body{padding:20px}
@@ -35,194 +36,1313 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .modal-footer .btn{flex:1}
 #landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 #landing.hidden{display:none}
-.landing-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--gold),#fbbf24);border-radius:20px;display:grid;place-items:center;margin-bottom:24px}
+.landing-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--gold),#fbbf24);border-radius:20px;display:grid;place-items:center;margin-bottom:24px;box-shadow:0 8px 32px rgba(212,164,55,0.3)}
 .landing-logo svg{width:44px;height:44px;stroke:#000;stroke-width:2.5;fill:none}
-.landing-title{font-size:1.8rem;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.landing-title{font-size:1.8rem;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .landing-subtitle{color:var(--text-muted);margin-bottom:40px}
-.units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;width:100%;max-width:800px}
+.units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;width:100%;max-width:800px}
 .unit-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
 .unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--unit-color,var(--gold))}
-.unit-card:hover{border-color:var(--unit-color);transform:translateY(-2px)}
+.unit-card:hover{border-color:var(--unit-color,var(--gold));transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
 .unit-card-icon{font-size:2rem;margin-bottom:12px}
-.unit-card-name{font-size:1rem;font-weight:600}
-.unit-card-desc{color:var(--text-muted);font-size:0.75rem}
-.fab{position:fixed;width:50px;height:50px;background:var(--bg-card);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);z-index:50}
-.fab svg{width:20px;height:20px}
-.admin-fab{bottom:20px;right:20px}
-.sync-fab{bottom:20px;left:20px}
+.unit-card-name{font-size:1.05rem;font-weight:600}
+.unit-card-desc{color:var(--text-muted);font-size:0.8rem}
+.fab{position:fixed;width:52px;height:52px;background:var(--bg-card);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);z-index:50;transition:all 0.3s}
+.fab svg{width:22px;height:22px}
+.fab:hover{border-color:var(--gold);color:var(--gold)}
+.admin-fab{bottom:24px;right:24px}
+.sync-fab{bottom:24px;left:24px}
 .sync-fab.syncing{animation:rotate 1s linear infinite;border-color:var(--gold);color:var(--gold)}
 @keyframes rotate{to{transform:rotate(360deg)}}
-.code-inputs{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
-.code-digit{width:48px;height:56px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:var(--radius);font-family:monospace;font-size:1.5rem;font-weight:700;text-align:center;color:var(--text)}
+.code-inputs{display:flex;gap:12px;justify-content:center;margin-bottom:16px}
+.code-digit{width:52px;height:60px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:var(--radius);font-family:'SF Mono',monospace;font-size:1.6rem;font-weight:700;text-align:center;color:var(--text)}
 .code-digit:focus{outline:none;border-color:var(--gold)}
 .code-digit.error{border-color:var(--rose);animation:shake 0.3s}
 .code-digit.success{border-color:var(--emerald)}
 @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.code-error{color:var(--rose);font-size:0.8rem;text-align:center;display:none}
+.code-error{color:var(--rose);font-size:0.85rem;text-align:center;display:none}
 .code-error.show{display:block}
-#dashboard{display:none;min-height:100vh}
+#dashboard{display:none;min-height:100vh;padding-bottom:80px}
 #dashboard.active{display:block}
-.dash-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.dash-logo{display:flex;align-items:center;gap:10px}
-.dash-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),#fbbf24);border-radius:10px;display:grid;place-items:center}
-.dash-logo-icon svg{width:20px;height:20px;stroke:#000;fill:none}
-.dash-badge{padding:5px 12px;border-radius:100px;font-size:0.75rem;font-weight:600}
-.dash-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--teal),var(--emerald));border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:0.8rem}
-.dash-content{max-width:1100px;margin:0 auto;padding:16px}
-.date-header{background:linear-gradient(135deg,var(--gold),#f97316);color:#000;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;font-weight:700;font-size:0.95rem}
+.dash-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.dash-logo{display:flex;align-items:center;gap:12px}
+.dash-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),#fbbf24);border-radius:10px;display:grid;place-items:center}
+.dash-logo-icon svg{width:22px;height:22px;stroke:#000;fill:none}
+.dash-badge{padding:6px 14px;border-radius:100px;font-size:0.8rem;font-weight:600}
+.dash-avatar{width:40px;height:40px;background:linear-gradient(135deg,var(--teal),var(--emerald));border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:0.85rem}
+.dash-content{max-width:900px;margin:0 auto;padding:16px}
+.date-header{background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;padding:14px 18px;border-radius:var(--radius);margin-bottom:16px;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:10px}
 .tabs{display:flex;gap:4px;background:var(--bg-card);border-radius:var(--radius);padding:4px;margin-bottom:16px}
-.tab{flex:1;padding:10px;background:transparent;border:none;border-radius:8px;color:var(--text-muted);font-family:inherit;font-size:0.8rem;font-weight:500;cursor:pointer}
+.tab{flex:1;padding:12px;background:transparent;border:none;border-radius:8px;color:var(--text-muted);font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.tab:hover{color:var(--text)}
 .tab.active{background:var(--bg-elevated);color:var(--gold)}
+.panel{display:none}
+.panel.active{display:block}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
-.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 8px;text-align:center;cursor:pointer}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.2s}
 .stat:hover,.stat.active{border-color:var(--gold);background:rgba(212,164,55,0.1)}
-.stat-value{font-size:1.2rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.stat-label{font-size:0.55rem;color:var(--text-muted);text-transform:uppercase}
-.action-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
-.ward-group{margin-bottom:16px}
-.ward-header{background:var(--bg-elevated);padding:10px 14px;border-radius:8px;margin-bottom:10px;font-weight:600;font-size:0.85rem;display:flex;justify-content:space-between;color:var(--gold);border-left:4px solid var(--gold)}
-.ward-count{background:var(--gold);color:#000;padding:2px 10px;border-radius:100px;font-size:0.7rem}
-.patient{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;border-left:4px solid var(--teal);margin-bottom:8px}
+.stat-value{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;margin-top:2px}
+.action-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.ward-group{margin-bottom:20px}
+.ward-header{background:linear-gradient(135deg,var(--bg-elevated),var(--bg-card));padding:12px 16px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:0.9rem;display:flex;justify-content:space-between;align-items:center;color:var(--gold);border-left:4px solid var(--gold)}
+.ward-count{background:var(--gold);color:#000;padding:3px 12px;border-radius:100px;font-size:0.75rem;font-weight:700}
+.patient{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:4px solid var(--teal);transition:all 0.2s;margin-bottom:10px}
 .patient.critical{border-left-color:var(--rose);background:rgba(244,63,94,0.05)}
 .patient.chronic{border-left-color:var(--purple)}
 .patient.new{border-left-color:var(--lime);background:rgba(132,204,22,0.08);animation:pulseNew 2s infinite}
-@keyframes pulseNew{50%{box-shadow:0 0 8px rgba(132,204,22,0.3)}}
-.patient-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.patient-avatar{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:0.8rem;color:#000}
+@keyframes pulseNew{50%{box-shadow:0 0 12px rgba(132,204,22,0.3)}}
+.patient-header{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.patient-avatar{width:44px;height:44px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:0.85rem;color:#000;flex-shrink:0}
 .patient.new .patient-avatar{background:linear-gradient(135deg,var(--lime),var(--emerald))}
 .patient.chronic .patient-avatar{background:linear-gradient(135deg,var(--purple),#a855f7)}
-.patient.critical .patient-avatar{background:linear-gradient(135deg,var(--rose),#f97316)}
-.patient-info{flex:1}
-.patient-name{font-weight:600;font-size:0.95rem;display:flex;align-items:center;gap:8px}
-.new-badge{background:var(--lime);color:#000;padding:2px 6px;border-radius:4px;font-size:0.55rem;font-weight:700}
-.patient-meta{font-size:0.7rem;color:var(--text-muted);display:flex;gap:8px}
-.patient-status{padding:4px 10px;border-radius:100px;font-size:0.6rem;font-weight:600;text-transform:uppercase}
+.patient.critical .patient-avatar{background:linear-gradient(135deg,var(--rose),var(--orange))}
+.patient-info{flex:1;min-width:0}
+.patient-name{font-weight:600;font-size:1rem;display:flex;align-items:center;gap:8px}
+.new-badge{background:var(--lime);color:#000;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:700;text-transform:uppercase}
+.patient-meta{font-size:0.75rem;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:10px;margin-top:3px}
+.patient-status{padding:5px 12px;border-radius:100px;font-size:0.65rem;font-weight:600;text-transform:uppercase}
 .patient-status.active{background:rgba(20,184,166,0.15);color:var(--teal)}
 .patient-status.critical{background:rgba(244,63,94,0.15);color:var(--rose)}
 .patient-status.chronic{background:rgba(139,92,246,0.15);color:var(--purple)}
 .patient-status.new{background:rgba(132,204,22,0.15);color:var(--lime)}
-.patient-dx{font-size:0.8rem;color:#94a3b8;padding:10px;background:var(--bg-elevated);border-radius:8px;margin:10px 0}
-.patient-actions{display:flex;gap:6px}
+.patient-dx{font-size:0.85rem;color:#94a3b8;padding:12px;background:var(--bg-elevated);border-radius:10px;margin:12px 0}
+.patient-actions{display:flex;gap:8px}
 .patient-actions .btn{flex:1}
 .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px}
-.card-header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600}
+.card-header{padding:16px;border-bottom:1px solid var(--border);font-weight:600;font-size:0.95rem}
 .card-body{padding:16px}
-.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:30px;text-align:center;cursor:pointer}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s}
 .upload-zone:hover{border-color:var(--gold);background:rgba(212,164,55,0.1)}
-.analysis-types{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
-.analysis-type{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer}
-.analysis-type.active{border-color:var(--gold);background:rgba(212,164,55,0.1)}
-.analysis-type-icon{font-size:1.3rem}
-.analysis-type-name{font-size:0.7rem;font-weight:600;margin-top:4px}
-.result-card{background:var(--bg-elevated);border-radius:var(--radius);padding:16px;margin-top:12px}
-.result-card h4{font-size:0.85rem;margin-bottom:10px}
-.result-card p,.result-card li{font-size:0.8rem;color:#94a3b8}
+.analysis-types{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
+.analysis-type{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s}
+.analysis-type:hover{border-color:var(--gold)}
+.analysis-type.active{border-color:var(--gold);background:rgba(212,164,55,0.15)}
+.analysis-type-icon{font-size:1.5rem}
+.analysis-type-name{font-size:0.75rem;font-weight:600;margin-top:6px}
+.result-card{background:var(--bg-elevated);border-radius:var(--radius);padding:18px;margin-top:16px}
+.result-card h4{font-size:0.9rem;margin-bottom:12px;color:var(--gold)}
+.result-card p,.result-card li{font-size:0.85rem;color:#94a3b8;margin:6px 0}
+.result-card ul{padding-left:18px}
 .result-card b{color:var(--gold)}
 .abnormal{color:var(--rose)!important}
-.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.ref-card{background:var(--bg-elevated);border-radius:8px;padding:14px;border-left:3px solid var(--gold)}
-.ref-card h4{font-size:0.85rem;margin-bottom:8px}
-.ref-card p{font-size:0.75rem;color:#94a3b8}
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.ref-card{background:var(--bg-elevated);border-radius:10px;padding:16px;border-left:3px solid var(--gold)}
+.ref-card h4{font-size:0.9rem;margin-bottom:10px}
+.ref-card p{font-size:0.8rem;color:#94a3b8}
 #adminPanel{display:none;min-height:100vh}
 #adminPanel.active{display:block}
-.admin-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;justify-content:space-between}
-.admin-content{max-width:800px;margin:0 auto;padding:20px}
-.admin-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px}
-.admin-section-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
+.admin-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.admin-content{max-width:700px;margin:0 auto;padding:20px}
+.admin-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden}
+.admin-section-header{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .admin-section-body{padding:16px}
 .units-table{width:100%;border-collapse:collapse}
-.units-table th,.units-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
-.units-table th{font-size:0.65rem;color:var(--text-muted);text-transform:uppercase}
-.import-patient{display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg-elevated);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--teal)}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-card);border:1px solid var(--emerald);padding:12px 20px;border-radius:var(--radius);font-size:0.85rem;opacity:0;transition:0.3s;z-index:2000}
+.units-table th,.units-table td{padding:14px;text-align:left;border-bottom:1px solid var(--border)}
+.units-table th{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase}
+.import-patient{display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg-elevated);border-radius:10px;margin-bottom:8px;border-left:3px solid var(--teal)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-card);border:1px solid var(--emerald);padding:14px 24px;border-radius:var(--radius);font-size:0.9rem;opacity:0;transition:0.3s;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,0.3)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{border-color:var(--rose)}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto}
+.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-.image-gallery{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.image-thumb{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.image-gallery{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.image-thumb{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
 .image-thumb img{width:100%;height:100%;object-fit:cover}
-.image-thumb-remove{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:white;font-size:11px;cursor:pointer}
-@media(max-width:600px){.stats{grid-template-columns:repeat(3,1fr)}.action-bar{grid-template-columns:1fr}.patient-actions{flex-direction:column}}
+.image-thumb-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.8);border:none;color:white;font-size:12px;cursor:pointer}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state-icon{font-size:3rem;margin-bottom:16px;opacity:0.5}
+@media(max-width:600px){.stats{grid-template-columns:repeat(3,1fr)}.patient-actions{flex-direction:column}}
 </style>
 </head>
 <body>
+
 <div id="landing">
 <div class="landing-logo"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
 <h1 class="landing-title">MedWard Enterprise</h1>
-<p class="landing-subtitle">Select your unit</p>
+<p class="landing-subtitle">Select your unit to continue</p>
 <div class="units-grid" id="unitsGrid"></div>
-<div class="fab sync-fab" id="syncFab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4-3-9s1.34-9 3-9"/></svg></div>
-<div class="fab admin-fab" id="adminFab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+<div class="fab sync-fab" id="syncFab" title="Sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4-3-9s1.34-9 3-9"/></svg></div>
+<div class="fab admin-fab" id="adminFab" title="Admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
 </div>
-<div class="modal" id="accessModal"><div class="modal-box"><div class="modal-header" style="text-align:center"><div id="accessIcon" style="font-size:2.5rem;margin-bottom:8px">🏥</div><div class="modal-title" id="accessTitle">Unit</div><div style="color:var(--text-muted);font-size:0.8rem;margin-top:4px">Enter 4-digit code</div></div><div class="modal-body"><div class="code-inputs" id="codeInputs"></div><p class="code-error" id="codeError">Invalid code</p><div id="userSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)"><div class="form-group"><label class="form-label">Your Name</label><input type="text" id="userName" class="form-input" placeholder="Dr. Name"></div><div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-select"><option value="attending">Attending</option><option value="resident">Resident</option><option value="intern">Intern</option></select></div></div></div><div class="modal-footer"><button class="btn btn-secondary" id="accessCancelBtn">Cancel</button><button class="btn btn-primary" id="enterBtn" style="display:none">Enter</button></div></div></div>
-<div class="modal" id="adminModal"><div class="modal-box"><div class="modal-header" style="text-align:center"><div style="font-size:2.5rem;margin-bottom:8px">⚙️</div><div class="modal-title">Admin</div></div><div class="modal-body"><div class="form-group"><label class="form-label">Password</label><input type="password" id="adminPwd" class="form-input"></div><p class="code-error" id="adminError">Invalid</p></div><div class="modal-footer"><button class="btn btn-secondary" id="adminCancelBtn">Cancel</button><button class="btn btn-primary" id="adminLoginBtn">Login</button></div></div></div>
-<div id="adminPanel"><header class="admin-header"><div style="display:flex;align-items:center;gap:8px"><div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div><span style="font-weight:600">Admin</span></div><button class="btn btn-secondary btn-sm" id="exitAdminBtn">Exit</button></header><div class="admin-content"><div class="admin-section"><div class="admin-section-header"><div>🏥 Units</div><button class="btn btn-primary btn-sm" id="addUnitBtn">+ Add</button></div><div class="admin-section-body" style="padding:0"><table class="units-table"><thead><tr><th>Unit</th><th>Code</th><th>Actions</th></tr></thead><tbody id="unitsTable"></tbody></table></div></div><div class="admin-section"><div class="admin-section-header"><div>⚙️ Settings</div></div><div class="admin-section-body"><div class="form-group"><label class="form-label">Admin Password</label><input type="password" id="newAdminPwd" class="form-input"></div><div class="form-group"><label class="form-label">API URL</label><input type="text" id="apiUrl" class="form-input"></div><button class="btn btn-primary" id="saveSettingsBtn">Save</button></div></div></div></div>
-<div id="dashboard"><header class="dash-header"><div class="dash-logo"><div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div><span class="dash-badge" id="unitBadge">Unit</span></div><div style="display:flex;gap:10px"><div class="dash-avatar" id="dashAvatar">DR</div><button class="btn-icon" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header><div class="dash-content"><div class="date-header">📅 <span id="currentDate"></span></div><div class="tabs"><button class="tab active" data-tab="patients">👥 Patients</button><button class="tab" data-tab="analysis">🔬 Analysis</button><button class="tab" data-tab="reference">📚 Reference</button></div><div class="panel active" id="panelPatients"><div class="stats" id="statsBar"><div class="stat active" data-filter="all"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div><div class="stat" data-filter="new"><div class="stat-value" id="statNew">0</div><div class="stat-label">New</div></div><div class="stat" data-filter="active"><div class="stat-value" id="statActive">0</div><div class="stat-label">Active</div></div><div class="stat" data-filter="critical"><div class="stat-value" id="statCritical">0</div><div class="stat-label">Critical</div></div><div class="stat" data-filter="chronic"><div class="stat-value" id="statChronic">0</div><div class="stat-label">Chronic</div></div></div><div class="action-bar"><button class="btn btn-primary btn-sm" id="addPatientBtn">➕ Add</button><button class="btn btn-secondary btn-sm" id="importBtn">📥 Import</button><button class="btn btn-export btn-sm" id="exportBtn">📄 Export PDF</button></div><div id="patientsList"></div></div><div class="panel" id="panelAnalysis"><div class="card"><div class="card-header">🔬 Analysis</div><div class="card-body"><div class="upload-zone" id="uploadZone"><div style="font-size:2rem">📤</div><div style="font-weight:600;margin-top:10px">Upload Image</div></div><input type="file" id="analysisFile" accept="image/*" style="display:none"><div class="analysis-types"><div class="analysis-type active" data-type="lab"><div class="analysis-type-icon">🧪</div><div class="analysis-type-name">Labs</div></div><div class="analysis-type" data-type="xray"><div class="analysis-type-icon">🩻</div><div class="analysis-type-name">X-Ray</div></div><div class="analysis-type" data-type="ct"><div class="analysis-type-icon">🧠</div><div class="analysis-type-name">CT/MRI</div></div><div class="analysis-type" data-type="ecg"><div class="analysis-type-icon">💓</div><div class="analysis-type-name">ECG</div></div></div><div id="analysisPreview" style="display:none;margin-top:16px"></div></div></div><button class="btn btn-primary" style="width:100%" id="analyzeBtn" disabled>🤖 Analyze</button><div id="analysisLoading" style="display:none;text-align:center;padding:30px"><div class="spinner"></div><div style="margin-top:12px">Analyzing...</div><div id="analysisTimer" style="color:var(--text-muted)">0s</div></div><div id="analysisResults"></div></div><div class="panel" id="panelReference"><div class="card"><div class="card-header">📚 Reference</div><div class="card-body"><div class="ref-grid" id="refGrid"></div></div></div></div></div></div>
-<div class="modal" id="patientModal"><div class="modal-box"><div class="modal-header"><div class="modal-title" id="patientModalTitle">Add Patient</div></div><div class="modal-body"><input type="hidden" id="ptId"><div class="form-group"><label class="form-label">Name</label><input type="text" id="ptName" class="form-input"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="form-group"><label class="form-label">Ward</label><input type="text" id="ptWard" class="form-input" placeholder="Ward 14"></div><div class="form-group"><label class="form-label">Room</label><input type="text" id="ptRoom" class="form-input" placeholder="11-1"></div></div><div class="form-group"><label class="form-label">Diagnosis</label><textarea id="ptDx" class="form-textarea"></textarea></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="form-group"><label class="form-label">Doctor</label><input type="text" id="ptDoctor" class="form-input"></div><div class="form-group"><label class="form-label">Status</label><select id="ptStatus" class="form-select"><option value="new">🆕 New</option><option value="active">✅ Active</option><option value="critical">🚨 Critical</option><option value="chronic">💜 Chronic</option></select></div></div></div><div class="modal-footer"><button class="btn btn-secondary" id="patientCancelBtn">Cancel</button><button class="btn btn-primary" id="patientSaveBtn">Save</button></div></div></div>
-<div class="modal" id="unitModal"><div class="modal-box"><div class="modal-header"><div class="modal-title" id="unitModalTitle">Add Unit</div></div><div class="modal-body"><div class="form-group"><label class="form-label">Name</label><input type="text" id="uName" class="form-input"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="form-group"><label class="form-label">Icon</label><input type="text" id="uIcon" class="form-input" value="🏥" style="font-size:1.3rem;text-align:center"></div><div class="form-group"><label class="form-label">Code</label><input type="text" id="uCode" class="form-input" maxlength="4"></div></div><div class="form-group"><label class="form-label">Description</label><input type="text" id="uDesc" class="form-input"></div></div><div class="modal-footer"><button class="btn btn-secondary" id="unitCancelBtn">Cancel</button><button class="btn btn-primary" id="unitSaveBtn">Save</button></div></div></div>
-<div class="modal" id="importModal"><div class="modal-box"><div class="modal-header"><div class="modal-title">📥 Import</div></div><div class="modal-body"><div id="importUpload"><div class="upload-zone" id="importDropzone"><div style="font-size:2rem">📤</div><div style="font-weight:600;margin-top:8px">Upload Screenshot</div></div><input type="file" id="importFile" accept="image/*" style="display:none"></div><div id="importPreview" style="display:none"><img id="importImg" style="width:100%;max-height:150px;object-fit:contain;border-radius:8px"><div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-secondary btn-sm" id="importChangeBtn" style="flex:1">Change</button><button class="btn btn-primary btn-sm" id="importExtractBtn" style="flex:2">🤖 Extract</button></div></div><div id="importLoading" style="display:none;text-align:center;padding:30px"><div class="spinner"></div><div style="margin-top:12px">Extracting...</div></div><div id="importResults" style="display:none"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><b>Found:</b><span id="importCount" style="background:var(--emerald);color:white;padding:2px 10px;border-radius:100px;font-size:0.75rem">0</span></div><div id="importList" style="max-height:300px;overflow-y:auto"></div></div><div id="importError" style="display:none;text-align:center;padding:20px;color:var(--rose)"><div style="font-size:1.5rem">⚠️</div><div id="importErrorMsg">Error</div><button class="btn btn-secondary btn-sm" id="importRetryBtn" style="margin-top:12px">Retry</button></div></div><div class="modal-footer"><button class="btn btn-secondary" id="importCancelBtn">Cancel</button><button class="btn btn-primary" id="importConfirmBtn" disabled>Import</button></div></div></div>
+
+<div class="modal" id="accessModal">
+<div class="modal-box">
+<div class="modal-header" style="text-align:center">
+<div id="accessIcon" style="font-size:2.5rem;margin-bottom:10px">🏥</div>
+<div class="modal-title" id="accessTitle">Unit Access</div>
+<p style="color:var(--text-muted);font-size:0.85rem;margin-top:6px">Enter 4-digit code</p>
+</div>
+<div class="modal-body">
+<div class="code-inputs" id="codeInputs"></div>
+<p class="code-error" id="codeError">Invalid code. Try again.</p>
+<div id="userSection" style="display:none;margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+<div class="form-group"><label class="form-label">Your Name</label><input type="text" id="userName" class="form-input" placeholder="Dr. Name"></div>
+<div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-select"><option value="attending">Attending</option><option value="resident">Resident</option><option value="intern">Intern</option></select></div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('accessModal')">Cancel</button>
+<button class="btn btn-primary" id="enterBtn" style="display:none" onclick="enterUnit()">Enter Unit</button>
+</div>
+</div>
+</div>
+
+<div class="modal" id="adminModal">
+<div class="modal-box">
+<div class="modal-header" style="text-align:center">
+<div style="font-size:2.5rem;margin-bottom:10px">⚙️</div>
+<div class="modal-title">Admin Access</div>
+</div>
+<div class="modal-body">
+<div class="form-group"><label class="form-label">Password</label><input type="password" id="adminPwd" class="form-input" placeholder="Enter password"></div>
+<p class="code-error" id="adminError">Invalid password</p>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('adminModal')">Cancel</button>
+<button class="btn btn-primary" onclick="loginAdmin()">Login</button>
+</div>
+</div>
+</div>
+
+<div id="adminPanel">
+<header class="admin-header">
+<div style="display:flex;align-items:center;gap:10px">
+<div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div>
+<span style="font-weight:700">Admin Panel</span>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="exitAdmin()">Exit</button>
+</header>
+<div class="admin-content">
+<div class="admin-section">
+<div class="admin-section-header"><span style="font-weight:600">🏥 Units</span><button class="btn btn-primary btn-sm" onclick="addUnit()">+ Add Unit</button></div>
+<div class="admin-section-body" style="padding:0"><table class="units-table"><thead><tr><th>Unit</th><th>Code</th><th>Actions</th></tr></thead><tbody id="unitsTable"></tbody></table></div>
+</div>
+<div class="admin-section">
+<div class="admin-section-header"><span style="font-weight:600">⚙️ Settings</span></div>
+<div class="admin-section-body">
+<div class="form-group"><label class="form-label">Admin Password</label><input type="password" id="newAdminPwd" class="form-input" placeholder="Leave blank to keep current"></div>
+<div class="form-group"><label class="form-label">API Endpoint</label><input type="text" id="apiUrl" class="form-input"></div>
+<button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="dashboard">
+<header class="dash-header">
+<div class="dash-logo">
+<div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div>
+<span class="dash-badge" id="unitBadge">Unit</span>
+</div>
+<div style="display:flex;gap:12px;align-items:center">
+<div class="dash-avatar" id="dashAvatar">DR</div>
+<button class="btn-icon" onclick="logout()" title="Logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+</div>
+</header>
+<div class="dash-content">
+<div class="date-header">📅 <span id="currentDate"></span></div>
+
+<div class="tabs" id="mainTabs">
+<button class="tab active" data-tab="patients">👥 Patients</button>
+<button class="tab" data-tab="analysis">🔬 Analysis</button>
+<button class="tab" data-tab="reference">📚 Reference</button>
+</div>
+
+<div class="panel active" id="panelPatients">
+<div class="stats" id="statsBar">
+<div class="stat active" data-filter="all"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
+<div class="stat" data-filter="new"><div class="stat-value" id="statNew">0</div><div class="stat-label">New</div></div>
+<div class="stat" data-filter="active"><div class="stat-value" id="statActive">0</div><div class="stat-label">Active</div></div>
+<div class="stat" data-filter="critical"><div class="stat-value" id="statCritical">0</div><div class="stat-label">Critical</div></div>
+<div class="stat" data-filter="chronic"><div class="stat-value" id="statChronic">0</div><div class="stat-label">Chronic</div></div>
+</div>
+<div class="action-bar">
+<button class="btn btn-primary btn-sm btn-full" onclick="openAddPatient()">➕ Add Patient</button>
+<button class="btn btn-secondary btn-sm btn-full" onclick="openImport()">📥 Import from Screenshot</button>
+<button class="btn btn-export btn-sm btn-full" onclick="exportPDF()">📄 Export PDF</button>
+</div>
+<div id="patientsList"></div>
+</div>
+
+<div class="panel" id="panelAnalysis">
+<div class="card">
+<div class="card-header">🔬 AI Medical Image Analysis</div>
+<div class="card-body">
+<div class="upload-zone" id="uploadZone" onclick="document.getElementById('analysisFile').click()">
+<div style="font-size:2.5rem;margin-bottom:12px">📤</div>
+<div style="font-weight:600">Tap to Upload Image</div>
+<div style="color:var(--text-muted);font-size:0.85rem;margin-top:6px">Labs, X-rays, CT scans, ECGs</div>
+</div>
+<input type="file" id="analysisFile" accept="image/*" style="display:none">
+<div class="analysis-types">
+<div class="analysis-type active" data-type="lab"><div class="analysis-type-icon">🧪</div><div class="analysis-type-name">Labs</div></div>
+<div class="analysis-type" data-type="xray"><div class="analysis-type-icon">🩻</div><div class="analysis-type-name">X-Ray</div></div>
+<div class="analysis-type" data-type="ct"><div class="analysis-type-icon">🧠</div><div class="analysis-type-name">CT/MRI</div></div>
+<div class="analysis-type" data-type="ecg"><div class="analysis-type-icon">💓</div><div class="analysis-type-name">ECG</div></div>
+</div>
+<div id="analysisPreview" style="display:none;margin-top:20px"></div>
+</div>
+</div>
+<button class="btn btn-primary btn-full" id="analyzeBtn" onclick="runAnalysis()" disabled>🤖 Analyze with AI</button>
+<div id="analysisLoading" style="display:none;text-align:center;padding:40px"><div class="spinner"></div><div style="margin-top:16px;color:var(--text-muted)">Analyzing...</div></div>
+<div id="analysisResults"></div>
+</div>
+
+<div class="panel" id="panelReference">
+<div class="card">
+<div class="card-header">📚 Quick Reference</div>
+<div class="card-body">
+<div class="ref-grid" id="refGrid"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal" id="patientModal">
+<div class="modal-box">
+<div class="modal-header"><div class="modal-title" id="patientModalTitle">Add Patient</div></div>
+<div class="modal-body">
+<input type="hidden" id="ptId">
+<div class="form-group"><label class="form-label">Patient Name</label><input type="text" id="ptName" class="form-input" placeholder="Full name"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div class="form-group"><label class="form-label">Ward</label><select id="ptWard" class="form-select"><option value="Ward 14">Ward 14</option><option value="Ward 22">Ward 22</option><option value="Ward 27">Ward 27</option><option value="ICU">ICU</option><option value="ER/Unassigned">ER/Unassigned</option></select></div>
+<div class="form-group"><label class="form-label">Room/Bed</label><input type="text" id="ptRoom" class="form-input" placeholder="e.g. 11-1"></div>
+</div>
+<div class="form-group"><label class="form-label">Diagnosis</label><textarea id="ptDx" class="form-textarea" placeholder="Primary diagnosis"></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div class="form-group"><label class="form-label">Assigned Doctor</label><input type="text" id="ptDoctor" class="form-input" placeholder="Dr. Name"></div>
+<div class="form-group"><label class="form-label">Status</label><select id="ptStatus" class="form-select"><option value="new">🆕 New Admission</option><option value="active">✅ Active</option><option value="critical">🚨 Critical</option><option value="chronic">💜 Chronic</option></select></div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('patientModal')">Cancel</button>
+<button class="btn btn-primary" onclick="savePatient()">Save Patient</button>
+</div>
+</div>
+</div>
+
+<div class="modal" id="unitModal">
+<div class="modal-box">
+<div class="modal-header"><div class="modal-title" id="unitModalTitle">Add Unit</div></div>
+<div class="modal-body">
+<div class="form-group"><label class="form-label">Unit Name</label><input type="text" id="uName" class="form-input" placeholder="e.g. Neurology"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div class="form-group"><label class="form-label">Icon</label><input type="text" id="uIcon" class="form-input" value="🏥" style="font-size:1.5rem;text-align:center"></div>
+<div class="form-group"><label class="form-label">Access Code</label><input type="text" id="uCode" class="form-input" placeholder="4 digits" maxlength="4"></div>
+</div>
+<div class="form-group"><label class="form-label">Description</label><input type="text" id="uDesc" class="form-input" placeholder="Brief description"></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('unitModal')">Cancel</button>
+<button class="btn btn-primary" onclick="saveUnit()">Save</button>
+</div>
+</div>
+</div>
+
+<div class="modal" id="importModal">
+<div class="modal-box">
+<div class="modal-header">
+<div class="modal-title">📥 Import Patients</div>
+<p style="color:var(--text-muted);font-size:0.8rem;margin-top:4px">AI extracts from your spreadsheet screenshot</p>
+</div>
+<div class="modal-body">
+<div id="importUpload">
+<div class="upload-zone" onclick="document.getElementById('importFile').click()">
+<div style="font-size:2rem;margin-bottom:10px">📷</div>
+<div style="font-weight:600">Upload Screenshot</div>
+<div style="color:var(--text-muted);font-size:0.8rem;margin-top:6px">Take a screenshot of your patient list</div>
+</div>
+<input type="file" id="importFile" accept="image/*" style="display:none">
+</div>
+<div id="importPreview" style="display:none">
+<img id="importImg" style="width:100%;max-height:150px;object-fit:contain;border-radius:10px;margin-bottom:14px">
+<div style="display:flex;gap:10px">
+<button class="btn btn-secondary btn-sm" style="flex:1" onclick="resetImport()">Change</button>
+<button class="btn btn-primary btn-sm" style="flex:2" onclick="extractPatients()">🤖 Extract Patients</button>
+</div>
+</div>
+<div id="importLoading" style="display:none;text-align:center;padding:40px"><div class="spinner"></div><div style="margin-top:16px;color:var(--text-muted)">AI is extracting patients...</div></div>
+<div id="importResults" style="display:none">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+<span style="font-weight:600">✓ Found Patients</span>
+<span id="importCount" style="background:var(--emerald);color:white;padding:4px 14px;border-radius:100px;font-size:0.8rem;font-weight:600">0</span>
+</div>
+<div id="importList" style="max-height:320px;overflow-y:auto"></div>
+</div>
+<div id="importError" style="display:none;text-align:center;padding:30px">
+<div style="font-size:2rem;margin-bottom:12px">⚠️</div>
+<div id="importErrorMsg" style="color:var(--rose);margin-bottom:16px">Error</div>
+<button class="btn btn-secondary btn-sm" onclick="resetImport()">Try Again</button>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('importModal')">Cancel</button>
+<button class="btn btn-primary" id="importConfirmBtn" onclick="confirmImport()" disabled>Import All</button>
+</div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 (function(){
 'use strict';
-const CONFIG={STORAGE_KEY:'medward_v5',ADMIN_PASSWORD:'admin123',API_URL:'https://script.google.com/macros/s/AKfycbwnPMayEKM6rHJB2qZ-DDECoVB4Kte1EcoBiea0pmcasfyAeW7RGeADiH5DMXGRJOSJ/exec',MAX_IMAGE_SIZE:1024*1024,IMAGE_QUALITY:0.7,MAX_DIM:1400};
-const DEFAULT_UNITS=[{id:'neuro',name:'Neurology',icon:'🧠',desc:'Stroke & Neuro',code:'1234',color:'#a855f7'},{id:'cardio',name:'Cardiology',icon:'❤️',desc:'Cardiac Care',code:'5678',color:'#ef4444'},{id:'icu',name:'ICU',icon:'🏥',desc:'Intensive Care',code:'9012',color:'#f97316'}];
-const REFS=[{title:'🚨 Critical Labs',content:'<b>K:</b> <2.5/>6.5 <b>Na:</b> <120/>160 <b>Glucose:</b> <40/>500'},{title:'⚡ Hyperkalemia',content:'<b>Stabilize:</b> Ca gluconate <b>Shift:</b> Insulin+D50'},{title:'❤️ ACS',content:'<b>MONA:</b> Morphine,O₂,Nitrates,ASA'},{title:'🧠 Stroke',content:'<b>tPA:</b> ≤4.5h 0.9mg/kg'},{title:'🦠 Sepsis',content:'<b>Hour-1:</b> Lactate,cultures,abx'},{title:'💊 Seizure',content:'<b>1st:</b> Lorazepam 4mg IV'}];
-const state={units:[],settings:{},patients:[],currentUnit:null,currentUser:null,selectedUnitId:null,editingUnitId:null,analysisImages:[],analysisType:'lab',importImage:null,importPatients:[],currentFilter:'all'};
-const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel);
-function toast(m,e){const t=$('toast');t.textContent=m;t.className='toast show'+(e?' error':'');setTimeout(()=>t.className='toast',3000);}
-function initials(n){if(!n)return'?';const p=n.trim().split(/\s+/);return p.length>=2?(p[0][0]+p[p.length-1][0]).toUpperCase():n.substring(0,2).toUpperCase();}
-function esc(t){if(!t)return'';const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
-function openModal(id){$(id).classList.add('active');}
-function closeModal(id){$(id).classList.remove('active');}
-function formatDate(d){const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],months=['January','February','March','April','May','June','July','August','September','October','November','December'];d=d||new Date();const day=days[d.getDay()],date=d.getDate(),month=months[d.getMonth()],year=d.getFullYear(),suf=date===1||date===21||date===31?'st':date===2||date===22?'nd':date===3||date===23?'rd':'th';return day+', '+date+suf+' '+month+' '+year;}
-function compress(file,max,cb){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas'),ctx=c.getContext('2d');let w=img.width,h=img.height,q=CONFIG.IMAGE_QUALITY;if(w>CONFIG.MAX_DIM||h>CONFIG.MAX_DIM){if(w>h){h=Math.round(h*CONFIG.MAX_DIM/w);w=CONFIG.MAX_DIM;}else{w=Math.round(w*CONFIG.MAX_DIM/h);h=CONFIG.MAX_DIM;}}c.width=w;c.height=h;ctx.drawImage(img,0,0,w,h);let url=c.toDataURL('image/jpeg',q);while(url.length>max&&q>0.3){q-=0.1;url=c.toDataURL('image/jpeg',q);}cb(url);};img.src=e.target.result;};r.readAsDataURL(file);}
-let isSyncing=false,lastSync=0;
-async function loadStorage(){state.units=DEFAULT_UNITS.slice();state.settings={adminPassword:CONFIG.ADMIN_PASSWORD,apiUrl:CONFIG.API_URL};state.patients=[];loadLocal();await syncDrive(true);setInterval(()=>syncDrive(false),30000);}
-function loadLocal(){try{const s=localStorage.getItem(CONFIG.STORAGE_KEY);if(s){const d=JSON.parse(s);if(d.units&&d.units.length)state.units=d.units;if(d.settings)state.settings={...state.settings,...d.settings};if(d.patients)state.patients=d.patients;lastSync=d.lastUpdated?new Date(d.lastUpdated).getTime():0;}}catch(e){}if(!state.units.length)state.units=DEFAULT_UNITS.slice();}
-async function syncDrive(init){if(isSyncing)return;isSyncing=true;try{const res=await fetch(state.settings.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'loadData'})});const r=await res.json();if(r.success&&r.data){const d=r.data,t=d.lastUpdated?new Date(d.lastUpdated).getTime():0;if(t>lastSync||init){if(d.units&&d.units.length)state.units=d.units;if(d.settings)state.settings={...state.settings,...d.settings};if(d.patients)state.patients=d.patients;lastSync=t||Date.now();saveLocal();if(!init)renderUnits();}}}catch(e){}isSyncing=false;}
-function saveLocal(){try{localStorage.setItem(CONFIG.STORAGE_KEY,JSON.stringify({units:state.units,settings:state.settings,patients:state.patients,lastUpdated:new Date().toISOString()}));}catch(e){}}
-async function saveStorage(){lastSync=Date.now();saveLocal();try{await fetch(state.settings.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveData',payload:{units:state.units,settings:{adminPassword:state.settings.adminPassword},patients:state.patients,lastUpdated:new Date().toISOString()}})});}catch(e){}}
-function getUnit(id){return state.units.find(u=>u.id===id);}
-function renderUnits(){const c=$('unitsGrid');c.innerHTML=state.units.map(u=>'<div class="unit-card" style="--unit-color:'+(u.color||'#d4a437')+'" data-id="'+u.id+'"><div class="unit-card-icon">'+(u.icon||'🏥')+'</div><div class="unit-card-name">'+u.name+'</div><div class="unit-card-desc">'+(u.desc||'')+'</div></div>').join('');$$('.unit-card').forEach(c=>c.addEventListener('click',()=>openUnitAccess(c.dataset.id)));}
-function renderUnitsTable(){$('unitsTable').innerHTML=state.units.map(u=>'<tr><td>'+u.icon+' '+u.name+'</td><td><code style="background:var(--bg-elevated);padding:3px 8px;border-radius:4px">'+u.code+'</code></td><td><button class="btn-icon edit-unit" data-id="'+u.id+'">✏️</button><button class="btn-icon delete-unit" data-id="'+u.id+'">🗑️</button></td></tr>').join('');$$('.edit-unit').forEach(b=>b.addEventListener('click',()=>editUnit(b.dataset.id)));$$('.delete-unit').forEach(b=>b.addEventListener('click',()=>deleteUnit(b.dataset.id)));}
-function renderPatients(){const c=$('patientsList'),f=state.currentFilter;let filtered=f==='all'?state.patients:state.patients.filter(p=>p.status===f);const wards={};filtered.forEach(p=>{const w=p.ward||'Unassigned';if(!wards[w])wards[w]=[];wards[w].push(p);});if(!filtered.length){c.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">No patients</div>';return;}let h='';Object.keys(wards).sort().forEach(w=>{h+='<div class="ward-group"><div class="ward-header"><span>📍 '+esc(w)+'</span><span class="ward-count">'+wards[w].length+'</span></div>';wards[w].forEach(p=>{h+='<div class="patient '+p.status+'"><div class="patient-header"><div class="patient-avatar">'+initials(p.name)+'</div><div class="patient-info"><div class="patient-name">'+esc(p.name)+(p.status==='new'?' <span class="new-badge">New</span>':'')+'</div><div class="patient-meta"><span>🛏️ '+esc(p.room||'—')+'</span><span>👨‍⚕️ '+esc(p.doctor||'—')+'</span></div></div><span class="patient-status '+p.status+'">'+p.status+'</span></div><div class="patient-dx">'+esc(p.diagnosis||'Pending')+'</div><div class="patient-actions"><button class="btn btn-secondary btn-xs edit-pt" data-id="'+p.id+'">✏️ Edit</button><button class="btn btn-danger btn-xs delete-pt" data-id="'+p.id+'">🗑️</button></div></div>';});h+='</div>';});c.innerHTML=h;$$('.edit-pt').forEach(b=>b.addEventListener('click',()=>editPatient(parseInt(b.dataset.id))));$$('.delete-pt').forEach(b=>b.addEventListener('click',()=>deletePatient(parseInt(b.dataset.id))));updateStats();}
-function updateStats(){$('statTotal').textContent=state.patients.length;$('statNew').textContent=state.patients.filter(p=>p.status==='new').length;$('statActive').textContent=state.patients.filter(p=>p.status==='active').length;$('statCritical').textContent=state.patients.filter(p=>p.status==='critical').length;$('statChronic').textContent=state.patients.filter(p=>p.status==='chronic').length;$$('.stat').forEach(s=>s.classList.toggle('active',s.dataset.filter===state.currentFilter));}
-function renderRef(){$('refGrid').innerHTML=REFS.map(r=>'<div class="ref-card"><h4>'+r.title+'</h4><p>'+r.content+'</p></div>').join('');}
-function openUnitAccess(id){const u=getUnit(id);if(!u)return;state.selectedUnitId=id;$('accessIcon').textContent=u.icon;$('accessTitle').textContent=u.name;$('codeError').classList.remove('show');$('userSection').style.display='none';$('enterBtn').style.display='none';$('codeInputs').innerHTML=Array(4).fill(0).map((_,i)=>'<input type="tel" class="code-digit" maxlength="1" data-idx="'+i+'" inputmode="numeric">').join('');const inputs=$$('.code-digit');inputs.forEach((inp,idx)=>{inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'');if(inp.value&&idx<3)inputs[idx+1].focus();const code=Array.from(inputs).map(i=>i.value).join('');if(code.length===4){if(code===u.code){inputs.forEach(i=>{i.classList.add('success');i.disabled=true;});$('userSection').style.display='block';$('enterBtn').style.display='flex';$('userName').focus();}else{$('codeError').classList.add('show');inputs.forEach(i=>i.classList.add('error'));setTimeout(()=>{inputs.forEach(i=>{i.classList.remove('error');i.value='';});inputs[0].focus();},500);}}});inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!inp.value&&idx>0)inputs[idx-1].focus();});});openModal('accessModal');setTimeout(()=>inputs[0].focus(),100);}
-function enterUnit(){const name=$('userName').value.trim();if(!name){toast('Enter name',true);return;}state.currentUnit=getUnit(state.selectedUnitId);state.currentUser={name,role:$('userRole').value};closeModal('accessModal');showDash();}
-function showDash(){$('landing').classList.add('hidden');$('dashboard').classList.add('active');$('unitBadge').textContent=state.currentUnit.name;$('unitBadge').style.cssText='border:1px solid '+state.currentUnit.color+';color:'+state.currentUnit.color+';background:'+state.currentUnit.color+'20';$('dashAvatar').textContent=initials(state.currentUser.name);$('currentDate').textContent=formatDate();renderPatients();renderRef();toast('Welcome!');}
-function logout(){state.currentUnit=null;state.currentUser=null;state.currentFilter='all';$('dashboard').classList.remove('active');$('landing').classList.remove('hidden');}
-function showTab(n){$$('.tab').forEach(t=>t.classList.remove('active'));$$('.panel').forEach(p=>p.classList.remove('active'));document.querySelector('.tab[data-tab="'+n+'"]').classList.add('active');$('panel'+n.charAt(0).toUpperCase()+n.slice(1)).classList.add('active');}
-function openAdminLogin(){$('adminPwd').value='';$('adminError').classList.remove('show');openModal('adminModal');setTimeout(()=>$('adminPwd').focus(),100);}
-function loginAdmin(){if($('adminPwd').value===state.settings.adminPassword){closeModal('adminModal');showAdmin();}else $('adminError').classList.add('show');}
-function showAdmin(){$('landing').classList.add('hidden');$('adminPanel').classList.add('active');$('apiUrl').value=state.settings.apiUrl||'';renderUnitsTable();}
-function exitAdmin(){$('adminPanel').classList.remove('active');$('landing').classList.remove('hidden');}
-function addUnit(){state.editingUnitId=null;$('unitModalTitle').textContent='Add Unit';$('uName').value='';$('uIcon').value='🏥';$('uCode').value='';$('uDesc').value='';openModal('unitModal');}
-function editUnit(id){const u=getUnit(id);if(!u)return;state.editingUnitId=id;$('unitModalTitle').textContent='Edit';$('uName').value=u.name;$('uIcon').value=u.icon;$('uCode').value=u.code;$('uDesc').value=u.desc||'';openModal('unitModal');}
-function saveUnit(){const name=$('uName').value.trim(),icon=$('uIcon').value.trim()||'🏥',code=$('uCode').value.trim(),desc=$('uDesc').value.trim();if(!name||!/^\d{4}$/.test(code)){toast('Invalid',true);return;}if(state.editingUnitId){const i=state.units.findIndex(u=>u.id===state.editingUnitId);if(i!==-1)state.units[i]={...state.units[i],name,icon,code,desc};}else{state.units.push({id:'u'+Date.now(),name,icon,code,desc,color:['#d4a437','#14b8a6','#3b82f6','#a855f7','#ef4444'][state.units.length%5]});}saveStorage();renderUnitsTable();renderUnits();closeModal('unitModal');toast('Saved!');}
-function deleteUnit(id){if(!confirm('Delete?'))return;state.units=state.units.filter(u=>u.id!==id);saveStorage();renderUnitsTable();renderUnits();toast('Deleted');}
-function saveSettings(){const pwd=$('newAdminPwd').value.trim(),url=$('apiUrl').value.trim();if(pwd)state.settings.adminPassword=pwd;if(url)state.settings.apiUrl=url;saveStorage();toast('Saved!');$('newAdminPwd').value='';}
-function openAddPatient(){$('patientModalTitle').textContent='Add Patient';$('ptId').value='';$('ptName').value='';$('ptWard').value='';$('ptRoom').value='';$('ptDx').value='';$('ptDoctor').value=state.currentUser?.name||'';$('ptStatus').value='new';openModal('patientModal');}
-function editPatient(id){const p=state.patients.find(x=>x.id===id);if(!p)return;$('patientModalTitle').textContent='Edit';$('ptId').value=p.id;$('ptName').value=p.name;$('ptWard').value=p.ward||'';$('ptRoom').value=p.room;$('ptDx').value=p.diagnosis;$('ptDoctor').value=p.doctor||'';$('ptStatus').value=p.status;openModal('patientModal');}
-function savePatient(){const id=$('ptId').value,name=$('ptName').value.trim(),ward=$('ptWard').value.trim()||'Unassigned',room=$('ptRoom').value.trim()||'—',diagnosis=$('ptDx').value.trim()||'Pending',doctor=$('ptDoctor').value.trim()||'Unassigned',status=$('ptStatus').value;if(!name){toast('Name required',true);return;}if(id){const i=state.patients.findIndex(p=>p.id===parseInt(id));if(i!==-1)state.patients[i]={...state.patients[i],name,ward,room,diagnosis,doctor,status};}else{state.patients.push({id:Date.now(),name,ward,room,diagnosis,doctor,status});}saveStorage();renderPatients();closeModal('patientModal');toast('Saved!');}
-function deletePatient(id){if(!confirm('Delete?'))return;state.patients=state.patients.filter(p=>p.id!==id);saveStorage();renderPatients();toast('Deleted');}
-function exportPDF(){const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});const u=state.currentUnit,f=state.currentFilter;let pts=f==='all'?state.patients:state.patients.filter(p=>p.status===f);const wards={};pts.forEach(p=>{const w=p.ward||'Unassigned';if(!wards[w])wards[w]=[];wards[w].push(p);});doc.setFillColor(212,164,55);doc.rect(0,0,297,16,'F');doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);doc.text(u.name+' - Patient List',14,11);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(formatDate(),297-14,11,'right');doc.setTextColor(80,80,80);doc.text('Total: '+pts.length,14,22);let y=28;const cols=[28,18,42,78,35,22],hdrs=['Ward','Room','Patient Name','Diagnosis','Doctor','Status'];function drawHdr(yy){doc.setFillColor(255,140,0);doc.rect(14,yy,269,7,'F');doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);let x=14;hdrs.forEach((h,i)=>{doc.text(h,x+2,yy+5);x+=cols[i];});return yy+7;}y=drawHdr(y);const wardOrder=['Ward 14','Ward 22','Ward 27','ICU','ER/Unassigned'];Object.keys(wards).sort((a,b)=>{const ai=wardOrder.indexOf(a),bi=wardOrder.indexOf(b);if(ai===-1&&bi===-1)return a.localeCompare(b);if(ai===-1)return 1;if(bi===-1)return -1;return ai-bi;}).forEach(ward=>{wards[ward].forEach((p,idx)=>{if(y>190){doc.addPage();y=15;y=drawHdr(y);}if(p.status==='chronic')doc.setFillColor(230,220,250);else if(p.status==='new')doc.setFillColor(220,255,220);else if(p.status==='critical')doc.setFillColor(255,220,220);else doc.setFillColor(idx%2?245:255,idx%2?245:255,idx%2?245:255);doc.rect(14,y,269,6,'F');doc.setDrawColor(200,200,200);let x=14;cols.forEach(w=>{doc.rect(x,y,w,6);x+=w;});doc.setFontSize(6);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);x=14;const row=[ward,p.room||'—',p.name||'',p.diagnosis||'',p.doctor||'',p.status.charAt(0).toUpperCase()+p.status.slice(1)];row.forEach((cell,i)=>{let txt=String(cell);const maxW=cols[i]-3;if(doc.getTextWidth(txt)>maxW)txt=txt.substring(0,Math.floor(maxW/1.8))+'...';if(i===5){if(p.status==='chronic')doc.setTextColor(139,92,246);else if(p.status==='new')doc.setTextColor(34,197,94);else if(p.status==='critical')doc.setTextColor(239,68,68);else doc.setTextColor(20,184,166);doc.setFont('helvetica','bold');}doc.text(txt,x+1.5,y+4.2);doc.setTextColor(30,30,30);doc.setFont('helvetica','normal');x+=cols[i];});y+=6;});});const pc=doc.internal.getNumberOfPages();for(let i=1;i<=pc;i++){doc.setPage(i);doc.setFontSize(6);doc.setTextColor(150);doc.text('MedWard Enterprise',14,205);doc.text('Page '+i+'/'+pc,283,205,'right');}doc.save(u.name.replace(/\s+/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.pdf');toast('Exported!');}
-let aTimer=null,aSec=0;function startTimer(){aSec=0;$('analysisTimer').textContent='0s';aTimer=setInterval(()=>{aSec++;$('analysisTimer').textContent=aSec+'s';},1000);}function stopTimer(){if(aTimer){clearInterval(aTimer);aTimer=null;}}
-function addAnalysisImage(file){if(state.analysisImages.length>=5)return;compress(file,CONFIG.MAX_IMAGE_SIZE,url=>{state.analysisImages.push({id:Date.now(),data:url});renderAnalysisImages();$('analyzeBtn').disabled=false;});}
-function removeAnalysisImage(id){state.analysisImages=state.analysisImages.filter(i=>i.id!==id);renderAnalysisImages();if(!state.analysisImages.length)$('analyzeBtn').disabled=true;}
-function renderAnalysisImages(){const p=$('analysisPreview');if(!state.analysisImages.length){p.style.display='none';return;}p.innerHTML='<div class="image-gallery">'+state.analysisImages.map(i=>'<div class="image-thumb"><img src="'+i.data+'"><button class="image-thumb-remove" data-id="'+i.id+'">✕</button></div>').join('')+'</div>';p.style.display='block';$$('.image-thumb-remove').forEach(b=>b.addEventListener('click',()=>removeAnalysisImage(parseInt(b.dataset.id))));}
-async function runAnalysis(){if(!state.analysisImages.length)return;$('analyzeBtn').disabled=true;$('analysisLoading').style.display='block';$('analysisResults').innerHTML='';startTimer();try{const res=await fetch(state.settings.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'interpret',documentType:state.analysisType,image:state.analysisImages[0].data})});const d=await res.json();stopTimer();$('analysisLoading').style.display='none';$('analyzeBtn').disabled=false;if(d.error){$('analysisResults').innerHTML='<div class="result-card"><h4>⚠️ Error</h4><p>'+esc(d.error)+'</p></div>';return;}let h='<div class="result-card"><h4>📋 Analysis ('+aSec+'s)</h4>';if(d.interpretation){const i=d.interpretation;if(i.summary)h+='<p><b>Summary:</b> '+esc(i.summary)+'</p>';if(i.keyFindings&&i.keyFindings.length)h+='<ul>'+i.keyFindings.map(f=>'<li>'+esc(f)+'</li>').join('')+'</ul>';if(i.abnormalities&&i.abnormalities.length)h+='<p class="abnormal"><b>Abnormal:</b></p><ul>'+i.abnormalities.map(a=>'<li class="abnormal">'+esc(a)+'</li>').join('')+'</ul>';}h+='</div>';$('analysisResults').innerHTML=h;toast('Done!');}catch(e){stopTimer();$('analysisLoading').style.display='none';$('analyzeBtn').disabled=false;$('analysisResults').innerHTML='<div class="result-card"><h4>⚠️</h4><p>Failed</p></div>';}}
-function openImport(){state.importImage=null;state.importPatients=[];$('importUpload').style.display='block';$('importPreview').style.display='none';$('importLoading').style.display='none';$('importResults').style.display='none';$('importError').style.display='none';$('importConfirmBtn').disabled=true;openModal('importModal');}
-function resetImport(){state.importImage=null;state.importPatients=[];$('importUpload').style.display='block';$('importPreview').style.display='none';$('importLoading').style.display='none';$('importResults').style.display='none';$('importError').style.display='none';$('importConfirmBtn').disabled=true;}
-function handleImportFile(file){compress(file,CONFIG.MAX_IMAGE_SIZE,url=>{state.importImage=url;$('importImg').src=url;$('importUpload').style.display='none';$('importPreview').style.display='block';});}
-async function extractPatients(){if(!state.importImage)return;$('importPreview').style.display='none';$('importLoading').style.display='block';try{const res=await fetch(state.settings.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'extractPatients',image:state.importImage})});const d=await res.json();$('importLoading').style.display='none';if(!d.success||d.error){$('importError').style.display='block';$('importErrorMsg').textContent=d.error||'Failed';return;}if(!d.patients||!d.patients.length){$('importError').style.display='block';$('importErrorMsg').textContent='No patients found';return;}state.importPatients=d.patients.map((p,i)=>({id:Date.now()+i,name:p.name,ward:p.ward||'Unassigned',room:p.room||'—',diagnosis:p.diagnosis||'Pending',doctor:p.doctor||state.currentUser?.name||'Unassigned',status:p.status||'active'}));showImportResults();}catch(e){$('importLoading').style.display='none';$('importError').style.display='block';$('importErrorMsg').textContent='Connection failed';}}
-function showImportResults(){$('importResults').style.display='block';$('importCount').textContent=state.importPatients.length;const wards={};state.importPatients.forEach(p=>{const w=p.ward;if(!wards[w])wards[w]=[];wards[w].push(p);});let h='';Object.keys(wards).sort().forEach(w=>{h+='<div style="margin-bottom:10px"><div style="font-size:0.7rem;font-weight:600;color:var(--gold);margin-bottom:6px;padding:4px 8px;background:var(--bg-elevated);border-radius:4px;border-left:3px solid var(--gold)">📍 '+esc(w)+' ('+wards[w].length+')</div>';wards[w].forEach(p=>{const col=p.status==='chronic'?'var(--purple)':p.status==='critical'?'var(--rose)':p.status==='new'?'var(--lime)':'var(--teal)';h+='<div class="import-patient" style="border-left-color:'+col+'"><div style="width:26px;height:26px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:6px;display:grid;place-items:center;font-weight:600;font-size:0.6rem;color:#000">'+initials(p.name)+'</div><div style="flex:1"><div style="font-weight:600;font-size:0.75rem">'+esc(p.name)+'</div><div style="font-size:0.6rem;color:var(--text-muted)">🛏️'+esc(p.room)+' • '+p.status+'</div></div></div>';});h+='</div>';});$('importList').innerHTML=h;$('importConfirmBtn').disabled=false;toast('Found '+state.importPatients.length+' patients!');}
-function confirmImport(){if(!state.importPatients.length)return;let added=0;state.importPatients.forEach(p=>{if(!state.patients.some(ep=>ep.name.toLowerCase()===p.name.toLowerCase())){state.patients.push(p);added++;}});saveStorage();renderPatients();closeModal('importModal');toast('Imported '+added+'!');}
-function initEvents(){$('adminFab').addEventListener('click',openAdminLogin);$('adminLoginBtn').addEventListener('click',loginAdmin);$('adminCancelBtn').addEventListener('click',()=>closeModal('adminModal'));$('adminPwd').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdmin();});$('exitAdminBtn').addEventListener('click',exitAdmin);$('addUnitBtn').addEventListener('click',addUnit);$('unitSaveBtn').addEventListener('click',saveUnit);$('unitCancelBtn').addEventListener('click',()=>closeModal('unitModal'));$('saveSettingsBtn').addEventListener('click',saveSettings);$('syncFab').addEventListener('click',async()=>{$('syncFab').classList.add('syncing');lastSync=0;await syncDrive(true);renderUnits();$('syncFab').classList.remove('syncing');toast('Synced!');});$('accessCancelBtn').addEventListener('click',()=>closeModal('accessModal'));$('enterBtn').addEventListener('click',enterUnit);$('userName').addEventListener('keydown',e=>{if(e.key==='Enter')enterUnit();});$('logoutBtn').addEventListener('click',logout);document.querySelector('.tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(t)showTab(t.dataset.tab);});$('statsBar').addEventListener('click',e=>{const s=e.target.closest('.stat');if(s){state.currentFilter=s.dataset.filter;renderPatients();}});$('addPatientBtn').addEventListener('click',openAddPatient);$('patientSaveBtn').addEventListener('click',savePatient);$('patientCancelBtn').addEventListener('click',()=>closeModal('patientModal'));$('exportBtn').addEventListener('click',exportPDF);$('importBtn').addEventListener('click',openImport);$('importDropzone').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',function(){if(this.files[0])handleImportFile(this.files[0]);});$('importChangeBtn').addEventListener('click',resetImport);$('importExtractBtn').addEventListener('click',extractPatients);$('importRetryBtn').addEventListener('click',resetImport);$('importCancelBtn').addEventListener('click',()=>closeModal('importModal'));$('importConfirmBtn').addEventListener('click',confirmImport);$('uploadZone').addEventListener('click',()=>$('analysisFile').click());$('analysisFile').addEventListener('change',function(){Array.from(this.files).forEach(f=>{if(f.type.startsWith('image/'))addAnalysisImage(f);});this.value='';});document.querySelector('.analysis-types').addEventListener('click',e=>{const t=e.target.closest('.analysis-type');if(t){state.analysisType=t.dataset.type;$$('.analysis-type').forEach(x=>x.classList.remove('active'));t.classList.add('active');}});$('analyzeBtn').addEventListener('click',runAnalysis);$$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');}));}
-async function init(){await loadStorage();renderUnits();initEvents();}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+
+// Configuration
+const CONFIG = {
+  STORAGE_KEY: 'medward_v6',
+  ADMIN_PASSWORD: 'admin123',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwnPMayEKM6rHJB2qZ-DDECoVB4Kte1EcoBiea0pmcasfyAeW7RGeADiH5DMXGRJOSJ/exec',
+  MAX_IMAGE_SIZE: 1200000,
+  IMAGE_QUALITY: 0.75,
+  MAX_DIM: 1600
+};
+
+const REFS = [
+  { title: '🚨 Critical Labs', content: '<b>K:</b> <2.5 or >6.5 mEq/L<br><b>Na:</b> <120 or >160 mEq/L<br><b>Glucose:</b> <40 or >500 mg/dL' },
+  { title: '⚡ Hyperkalemia Rx', content: '<b>Stabilize:</b> Ca gluconate 1g IV<br><b>Shift:</b> Insulin 10U + D50<br><b>Remove:</b> Kayexalate, dialysis' },
+  { title: '❤️ ACS Protocol', content: '<b>MONA:</b> Morphine, O₂, Nitrates, ASA<br><b>STEMI:</b> PCI within 90 min' },
+  { title: '🧠 Stroke tPA', content: '<b>Window:</b> ≤4.5 hours from onset<br><b>Dose:</b> 0.9 mg/kg (max 90mg)' },
+  { title: '🦠 Sepsis Bundle', content: '<b>Hour-1:</b> Lactate, cultures, abx, fluids<br><b>Fluids:</b> 30 mL/kg crystalloid' },
+  { title: '💊 Status Epilepticus', content: '<b>1st line:</b> Lorazepam 4mg IV<br><b>2nd line:</b> Levetiracetam 60mg/kg' }
+];
+
+// State
+const state = {
+  units: [],
+  settings: {},
+  patients: [],
+  currentUnit: null,
+  currentUser: null,
+  selectedUnitId: null,
+  editingUnitId: null,
+  analysisImages: [],
+  analysisType: 'lab',
+  importImage: null,
+  importPatients: [],
+  currentFilter: 'all'
+};
+
+// Helpers
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+
+function toast(msg, isError = false) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return parts.length >= 2 
+    ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase()
+    : name.substring(0, 2).toUpperCase();
+}
+
+function esc(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function openModal(id) { $(id).classList.add('active'); }
+function closeModal(id) { $(id).classList.remove('active'); }
+
+function formatDate(d) {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  d = d || new Date();
+  const suf = [1,21,31].includes(d.getDate()) ? 'st' : [2,22].includes(d.getDate()) ? 'nd' : [3,23].includes(d.getDate()) ? 'rd' : 'th';
+  return `${days[d.getDay()]}, ${d.getDate()}${suf} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function compress(file, maxSize, cb) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let w = img.width, h = img.height, q = CONFIG.IMAGE_QUALITY;
+      if (w > CONFIG.MAX_DIM || h > CONFIG.MAX_DIM) {
+        if (w > h) { h = Math.round(h * CONFIG.MAX_DIM / w); w = CONFIG.MAX_DIM; }
+        else { w = Math.round(w * CONFIG.MAX_DIM / h); h = CONFIG.MAX_DIM; }
+      }
+      canvas.width = w; canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+      let url = canvas.toDataURL('image/jpeg', q);
+      while (url.length > maxSize && q > 0.3) { q -= 0.1; url = canvas.toDataURL('image/jpeg', q); }
+      cb(url);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Storage & Sync
+let isSyncing = false;
+
+function loadLocal() {
+  try {
+    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.units?.length) state.units = data.units;
+      if (data.settings) state.settings = { ...state.settings, ...data.settings };
+      if (data.patients) state.patients = data.patients;
+    }
+  } catch (e) { console.error('Load error:', e); }
+  
+  if (!state.units.length) {
+    state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine', code: '1234', color: '#14b8a6' }];
+  }
+  state.settings.adminPassword = state.settings.adminPassword || CONFIG.ADMIN_PASSWORD;
+  state.settings.apiUrl = state.settings.apiUrl || CONFIG.API_URL;
+}
+
+function saveLocal() {
+  try {
+    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
+      units: state.units,
+      settings: state.settings,
+      patients: state.patients,
+      lastUpdated: new Date().toISOString()
+    }));
+  } catch (e) { console.error('Save error:', e); }
+}
+
+async function syncFromCloud() {
+  if (isSyncing) return;
+  isSyncing = true;
+  try {
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'loadData' })
+    });
+    const data = await res.json();
+    if (data.success && data.data) {
+      if (data.data.units?.length) state.units = data.data.units;
+      if (data.data.settings) state.settings = { ...state.settings, ...data.data.settings };
+      if (data.data.patients) state.patients = data.data.patients;
+      saveLocal();
+      if (state.currentUnit) renderPatients();
+      else renderUnits();
+    }
+  } catch (e) { console.error('Sync error:', e); }
+  isSyncing = false;
+}
+
+async function saveToCloud() {
+  saveLocal();
+  try {
+    await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'saveData',
+        payload: {
+          units: state.units,
+          settings: { adminPassword: state.settings.adminPassword },
+          patients: state.patients,
+          lastUpdated: new Date().toISOString()
+        }
+      })
+    });
+  } catch (e) { console.error('Cloud save error:', e); }
+}
+
+// Unit functions
+function getUnit(id) { return state.units.find(u => u.id === id); }
+
+function renderUnits() {
+  const grid = $('unitsGrid');
+  grid.innerHTML = state.units.map(u => `
+    <div class="unit-card" style="--unit-color:${u.color || '#d4a437'}" data-id="${u.id}">
+      <div class="unit-card-icon">${u.icon || '🏥'}</div>
+      <div class="unit-card-name">${esc(u.name)}</div>
+      <div class="unit-card-desc">${esc(u.desc || '')}</div>
+    </div>
+  `).join('');
+  
+  $$('.unit-card').forEach(card => {
+    card.addEventListener('click', () => openUnitAccess(card.dataset.id));
+  });
+}
+
+function renderUnitsTable() {
+  $('unitsTable').innerHTML = state.units.map(u => `
+    <tr>
+      <td>${u.icon} <b>${esc(u.name)}</b></td>
+      <td><code style="background:var(--bg-elevated);padding:4px 10px;border-radius:6px">${u.code}</code></td>
+      <td>
+        <button class="btn-icon" onclick="editUnit('${u.id}')" style="width:36px;height:36px">✏️</button>
+        <button class="btn-icon" onclick="deleteUnit('${u.id}')" style="width:36px;height:36px">🗑️</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted)">No units configured</td></tr>';
+}
+
+// Patient functions
+function renderPatients() {
+  const container = $('patientsList');
+  const filter = state.currentFilter;
+  
+  let filtered = filter === 'all' ? state.patients : state.patients.filter(p => p.status === filter);
+  
+  // Group by ward
+  const wards = {};
+  filtered.forEach(p => {
+    const w = p.ward || 'Unassigned';
+    if (!wards[w]) wards[w] = [];
+    wards[w].push(p);
+  });
+  
+  if (!filtered.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <div>No patients ${filter !== 'all' ? `with status "${filter}"` : 'yet'}</div>
+        <div style="margin-top:8px;font-size:0.85rem">Add patients or import from screenshot</div>
+      </div>
+    `;
+    updateStats();
+    return;
+  }
+  
+  // Sort wards
+  const wardOrder = ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned', 'Unassigned'];
+  const sortedWards = Object.keys(wards).sort((a, b) => {
+    const ai = wardOrder.indexOf(a), bi = wardOrder.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  
+  let html = '';
+  sortedWards.forEach(ward => {
+    const pts = wards[ward];
+    html += `<div class="ward-group">
+      <div class="ward-header">
+        <span>📍 ${esc(ward)}</span>
+        <span class="ward-count">${pts.length}</span>
+      </div>`;
+    
+    pts.forEach(p => {
+      html += `
+        <div class="patient ${p.status}">
+          <div class="patient-header">
+            <div class="patient-avatar">${initials(p.name)}</div>
+            <div class="patient-info">
+              <div class="patient-name">
+                ${esc(p.name)}
+                ${p.status === 'new' ? '<span class="new-badge">New</span>' : ''}
+              </div>
+              <div class="patient-meta">
+                <span>🛏️ ${esc(p.room || '—')}</span>
+                <span>👨‍⚕️ ${esc(p.doctor || '—')}</span>
+              </div>
+            </div>
+            <span class="patient-status ${p.status}">${p.status}</span>
+          </div>
+          <div class="patient-dx">${esc(p.diagnosis || 'Pending diagnosis')}</div>
+          <div class="patient-actions">
+            <button class="btn btn-secondary btn-xs" onclick="editPatient(${p.id})">✏️ Edit</button>
+            <button class="btn btn-danger btn-xs" onclick="deletePatient(${p.id})">🗑️ Delete</button>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  });
+  
+  container.innerHTML = html;
+  updateStats();
+}
+
+function updateStats() {
+  const all = state.patients;
+  $('statTotal').textContent = all.length;
+  $('statNew').textContent = all.filter(p => p.status === 'new').length;
+  $('statActive').textContent = all.filter(p => p.status === 'active').length;
+  $('statCritical').textContent = all.filter(p => p.status === 'critical').length;
+  $('statChronic').textContent = all.filter(p => p.status === 'chronic').length;
+  
+  $$('.stat').forEach(s => s.classList.toggle('active', s.dataset.filter === state.currentFilter));
+}
+
+function renderReference() {
+  $('refGrid').innerHTML = REFS.map(r => `
+    <div class="ref-card">
+      <h4>${r.title}</h4>
+      <p>${r.content}</p>
+    </div>
+  `).join('');
+}
+
+// Unit Access
+function openUnitAccess(id) {
+  const unit = getUnit(id);
+  if (!unit) return;
+  
+  state.selectedUnitId = id;
+  $('accessIcon').textContent = unit.icon;
+  $('accessTitle').textContent = unit.name;
+  $('codeError').classList.remove('show');
+  $('userSection').style.display = 'none';
+  $('enterBtn').style.display = 'none';
+  
+  $('codeInputs').innerHTML = [0,1,2,3].map(i => 
+    `<input type="tel" class="code-digit" maxlength="1" data-idx="${i}" inputmode="numeric">`
+  ).join('');
+  
+  const inputs = $$('.code-digit');
+  inputs.forEach((inp, idx) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '');
+      if (inp.value && idx < 3) inputs[idx + 1].focus();
+      
+      const code = Array.from(inputs).map(i => i.value).join('');
+      if (code.length === 4) {
+        if (code === unit.code) {
+          inputs.forEach(i => { i.classList.add('success'); i.disabled = true; });
+          $('codeError').classList.remove('show');
+          $('userSection').style.display = 'block';
+          $('enterBtn').style.display = 'flex';
+          $('userName').focus();
+        } else {
+          $('codeError').classList.add('show');
+          inputs.forEach(i => i.classList.add('error'));
+          setTimeout(() => {
+            inputs.forEach(i => { i.classList.remove('error'); i.value = ''; });
+            inputs[0].focus();
+          }, 500);
+        }
+      }
+    });
+    
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus();
+    });
+  });
+  
+  openModal('accessModal');
+  setTimeout(() => inputs[0].focus(), 100);
+}
+
+window.enterUnit = function() {
+  const name = $('userName').value.trim();
+  if (!name) { toast('Please enter your name', true); return; }
+  
+  state.currentUnit = getUnit(state.selectedUnitId);
+  state.currentUser = { name, role: $('userRole').value };
+  closeModal('accessModal');
+  showDashboard();
+};
+
+function showDashboard() {
+  const unit = state.currentUnit;
+  $('landing').classList.add('hidden');
+  $('dashboard').classList.add('active');
+  $('unitBadge').textContent = unit.name;
+  $('unitBadge').style.cssText = `border:1px solid ${unit.color};color:${unit.color};background:${unit.color}20`;
+  $('dashAvatar').textContent = initials(state.currentUser.name);
+  $('currentDate').textContent = formatDate();
+  renderPatients();
+  renderReference();
+  toast(`Welcome to ${unit.name}!`);
+}
+
+window.logout = function() {
+  state.currentUnit = null;
+  state.currentUser = null;
+  state.currentFilter = 'all';
+  $('dashboard').classList.remove('active');
+  $('landing').classList.remove('hidden');
+};
+
+// Tab switching - FIXED
+function showTab(tabName) {
+  // Update tab buttons
+  $$('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+  
+  // Update panels
+  $$('.panel').forEach(p => p.classList.remove('active'));
+  const panelId = 'panel' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+  $(panelId).classList.add('active');
+}
+
+// Admin
+window.openAdminLogin = function() {
+  $('adminPwd').value = '';
+  $('adminError').classList.remove('show');
+  openModal('adminModal');
+  setTimeout(() => $('adminPwd').focus(), 100);
+};
+
+window.loginAdmin = function() {
+  if ($('adminPwd').value === state.settings.adminPassword) {
+    closeModal('adminModal');
+    showAdmin();
+  } else {
+    $('adminError').classList.add('show');
+  }
+};
+
+function showAdmin() {
+  $('landing').classList.add('hidden');
+  $('adminPanel').classList.add('active');
+  $('apiUrl').value = state.settings.apiUrl || '';
+  renderUnitsTable();
+}
+
+window.exitAdmin = function() {
+  $('adminPanel').classList.remove('active');
+  $('landing').classList.remove('hidden');
+};
+
+window.addUnit = function() {
+  state.editingUnitId = null;
+  $('unitModalTitle').textContent = 'Add Unit';
+  $('uName').value = '';
+  $('uIcon').value = '🏥';
+  $('uCode').value = '';
+  $('uDesc').value = '';
+  openModal('unitModal');
+};
+
+window.editUnit = function(id) {
+  const u = getUnit(id);
+  if (!u) return;
+  state.editingUnitId = id;
+  $('unitModalTitle').textContent = 'Edit Unit';
+  $('uName').value = u.name;
+  $('uIcon').value = u.icon;
+  $('uCode').value = u.code;
+  $('uDesc').value = u.desc || '';
+  openModal('unitModal');
+};
+
+window.saveUnit = function() {
+  const name = $('uName').value.trim();
+  const icon = $('uIcon').value.trim() || '🏥';
+  const code = $('uCode').value.trim();
+  const desc = $('uDesc').value.trim();
+  
+  if (!name || !/^\d{4}$/.test(code)) {
+    toast('Name required and code must be 4 digits', true);
+    return;
+  }
+  
+  if (state.editingUnitId) {
+    const idx = state.units.findIndex(u => u.id === state.editingUnitId);
+    if (idx !== -1) state.units[idx] = { ...state.units[idx], name, icon, code, desc };
+  } else {
+    const colors = ['#d4a437', '#14b8a6', '#3b82f6', '#a855f7', '#ef4444', '#f97316'];
+    state.units.push({ id: 'u' + Date.now(), name, icon, code, desc, color: colors[state.units.length % colors.length] });
+  }
+  
+  saveToCloud();
+  renderUnitsTable();
+  renderUnits();
+  closeModal('unitModal');
+  toast('Unit saved!');
+};
+
+window.deleteUnit = function(id) {
+  if (!confirm('Delete this unit?')) return;
+  state.units = state.units.filter(u => u.id !== id);
+  saveToCloud();
+  renderUnitsTable();
+  renderUnits();
+  toast('Unit deleted');
+};
+
+window.saveSettings = function() {
+  const pwd = $('newAdminPwd').value.trim();
+  const url = $('apiUrl').value.trim();
+  if (pwd) state.settings.adminPassword = pwd;
+  if (url) state.settings.apiUrl = url;
+  saveToCloud();
+  toast('Settings saved!');
+  $('newAdminPwd').value = '';
+};
+
+// Patient CRUD
+window.openAddPatient = function() {
+  $('patientModalTitle').textContent = 'Add Patient';
+  $('ptId').value = '';
+  $('ptName').value = '';
+  $('ptWard').value = 'Ward 14';
+  $('ptRoom').value = '';
+  $('ptDx').value = '';
+  $('ptDoctor').value = state.currentUser?.name || '';
+  $('ptStatus').value = 'new';
+  openModal('patientModal');
+};
+
+window.editPatient = function(id) {
+  const p = state.patients.find(x => x.id === id);
+  if (!p) return;
+  $('patientModalTitle').textContent = 'Edit Patient';
+  $('ptId').value = p.id;
+  $('ptName').value = p.name;
+  $('ptWard').value = p.ward || 'Ward 14';
+  $('ptRoom').value = p.room || '';
+  $('ptDx').value = p.diagnosis || '';
+  $('ptDoctor').value = p.doctor || '';
+  $('ptStatus').value = p.status || 'active';
+  openModal('patientModal');
+};
+
+window.savePatient = function() {
+  const id = $('ptId').value;
+  const name = $('ptName').value.trim();
+  const ward = $('ptWard').value;
+  const room = $('ptRoom').value.trim() || '—';
+  const diagnosis = $('ptDx').value.trim() || 'Pending';
+  const doctor = $('ptDoctor').value.trim() || 'Unassigned';
+  const status = $('ptStatus').value;
+  
+  if (!name) { toast('Patient name is required', true); return; }
+  
+  if (id) {
+    const idx = state.patients.findIndex(p => p.id === parseInt(id));
+    if (idx !== -1) state.patients[idx] = { ...state.patients[idx], name, ward, room, diagnosis, doctor, status };
+    toast('Patient updated!');
+  } else {
+    state.patients.push({ id: Date.now(), name, ward, room, diagnosis, doctor, status, createdAt: new Date().toISOString() });
+    toast('Patient added!');
+  }
+  
+  saveToCloud();
+  renderPatients();
+  closeModal('patientModal');
+};
+
+window.deletePatient = function(id) {
+  if (!confirm('Delete this patient?')) return;
+  state.patients = state.patients.filter(p => p.id !== id);
+  saveToCloud();
+  renderPatients();
+  toast('Patient deleted');
+};
+
+// PDF Export with ward headers
+window.exportPDF = function() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const unit = state.currentUnit;
+  
+  let pts = state.currentFilter === 'all' ? state.patients : state.patients.filter(p => p.status === state.currentFilter);
+  
+  const wards = {};
+  pts.forEach(p => {
+    const w = p.ward || 'Unassigned';
+    if (!wards[w]) wards[w] = [];
+    wards[w].push(p);
+  });
+  
+  // Title
+  doc.setFillColor(212, 164, 55);
+  doc.rect(0, 0, 297, 16, 'F');
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text(unit.name + ' - Patient List', 14, 11);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(formatDate(), 283, 11, 'right');
+  doc.setTextColor(80, 80, 80);
+  doc.text('Total: ' + pts.length + ' patients', 14, 22);
+  
+  let y = 28;
+  const cols = [22, 48, 85, 40, 28];
+  const hdrs = ['Room', 'Patient Name', 'Diagnosis', 'Doctor', 'Status'];
+  
+  function drawColHeader(yy) {
+    doc.setFillColor(255, 140, 0);
+    doc.rect(14, yy, 269, 7, 'F');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    let x = 14;
+    hdrs.forEach((h, i) => { doc.text(h, x + 2, yy + 5); x += cols[i]; });
+    return yy + 7;
+  }
+  
+  function drawWardHeader(yy, wardName, count) {
+    doc.setFillColor(0, 128, 0);
+    doc.rect(14, yy, 269, 6, 'F');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text(wardName + ' (' + count + ' patients)', 16, yy + 4.3);
+    return yy + 6;
+  }
+  
+  y = drawColHeader(y);
+  
+  const wardOrder = ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned', 'Unassigned'];
+  const sortedWards = Object.keys(wards).sort((a, b) => {
+    const ai = wardOrder.indexOf(a), bi = wardOrder.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  
+  sortedWards.forEach(ward => {
+    const wardPts = wards[ward];
+    if (y > 185) { doc.addPage(); y = 15; y = drawColHeader(y); }
+    y = drawWardHeader(y, ward, wardPts.length);
+    
+    wardPts.forEach((p, idx) => {
+      if (y > 190) { doc.addPage(); y = 15; y = drawColHeader(y); }
+      
+      if (p.status === 'chronic') doc.setFillColor(230, 220, 250);
+      else if (p.status === 'new') doc.setFillColor(220, 255, 220);
+      else if (p.status === 'critical') doc.setFillColor(255, 220, 220);
+      else doc.setFillColor(idx % 2 ? 250 : 255, idx % 2 ? 250 : 255, idx % 2 ? 250 : 255);
+      doc.rect(14, y, 269, 6, 'F');
+      
+      doc.setDrawColor(200, 200, 200);
+      let x = 14;
+      cols.forEach(w => { doc.rect(x, y, w, 6); x += w; });
+      
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      x = 14;
+      
+      const row = [p.room || '—', p.name || '', p.diagnosis || '', p.doctor || '', p.status.charAt(0).toUpperCase() + p.status.slice(1)];
+      row.forEach((cell, i) => {
+        let txt = String(cell);
+        const maxW = cols[i] - 3;
+        if (doc.getTextWidth(txt) > maxW) txt = txt.substring(0, Math.floor(maxW / 1.8)) + '...';
+        if (i === 4) {
+          if (p.status === 'chronic') doc.setTextColor(139, 92, 246);
+          else if (p.status === 'new') doc.setTextColor(34, 197, 94);
+          else if (p.status === 'critical') doc.setTextColor(239, 68, 68);
+          else doc.setTextColor(20, 184, 166);
+          doc.setFont('helvetica', 'bold');
+        }
+        doc.text(txt, x + 1.5, y + 4.2);
+        doc.setTextColor(30, 30, 30);
+        doc.setFont('helvetica', 'normal');
+        x += cols[i];
+      });
+      y += 6;
+    });
+    y += 2;
+  });
+  
+  const pages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(6);
+    doc.setTextColor(150);
+    doc.text('MedWard Enterprise', 14, 205);
+    doc.text('Page ' + i + '/' + pages, 283, 205, 'right');
+  }
+  
+  doc.save(unit.name.replace(/\s+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.pdf');
+  toast('PDF exported!');
+};
+
+// Analysis
+function addAnalysisImage(file) {
+  if (state.analysisImages.length >= 5) { toast('Maximum 5 images', true); return; }
+  compress(file, CONFIG.MAX_IMAGE_SIZE, url => {
+    state.analysisImages.push({ id: Date.now(), data: url });
+    renderAnalysisImages();
+    $('analyzeBtn').disabled = false;
+  });
+}
+
+function removeAnalysisImage(id) {
+  state.analysisImages = state.analysisImages.filter(i => i.id !== id);
+  renderAnalysisImages();
+  if (!state.analysisImages.length) $('analyzeBtn').disabled = true;
+}
+
+function renderAnalysisImages() {
+  const preview = $('analysisPreview');
+  if (!state.analysisImages.length) { preview.style.display = 'none'; return; }
+  preview.innerHTML = '<div class="image-gallery">' + state.analysisImages.map(i => `
+    <div class="image-thumb">
+      <img src="${i.data}">
+      <button class="image-thumb-remove" onclick="removeAnalysisImage(${i.id})">✕</button>
+    </div>
+  `).join('') + '</div>';
+  preview.style.display = 'block';
+}
+
+window.removeAnalysisImage = removeAnalysisImage;
+
+window.runAnalysis = async function() {
+  if (!state.analysisImages.length) return;
+  
+  $('analyzeBtn').disabled = true;
+  $('analysisLoading').style.display = 'block';
+  $('analysisResults').innerHTML = '';
+  
+  try {
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'interpret',
+        documentType: state.analysisType,
+        image: state.analysisImages[0].data
+      })
+    });
+    
+    const data = await res.json();
+    $('analysisLoading').style.display = 'none';
+    $('analyzeBtn').disabled = false;
+    
+    if (data.error) {
+      $('analysisResults').innerHTML = `<div class="result-card"><h4>⚠️ Error</h4><p>${esc(data.error)}</p></div>`;
+      return;
+    }
+    
+    let html = '<div class="result-card"><h4>📋 Analysis Results</h4>';
+    if (data.interpretation) {
+      const i = data.interpretation;
+      if (i.summary) html += `<p><b>Summary:</b> ${esc(i.summary)}</p>`;
+      if (i.keyFindings?.length) html += '<p><b>Key Findings:</b></p><ul>' + i.keyFindings.map(f => `<li>${esc(f)}</li>`).join('') + '</ul>';
+      if (i.abnormalities?.length) html += '<p class="abnormal"><b>Abnormalities:</b></p><ul>' + i.abnormalities.map(a => `<li class="abnormal">${esc(a)}</li>`).join('') + '</ul>';
+    }
+    html += '</div>';
+    $('analysisResults').innerHTML = html;
+    toast('Analysis complete!');
+  } catch (e) {
+    $('analysisLoading').style.display = 'none';
+    $('analyzeBtn').disabled = false;
+    $('analysisResults').innerHTML = '<div class="result-card"><h4>⚠️ Error</h4><p>Analysis failed. Please try again.</p></div>';
+  }
+};
+
+// Import
+window.openImport = function() {
+  state.importImage = null;
+  state.importPatients = [];
+  $('importUpload').style.display = 'block';
+  $('importPreview').style.display = 'none';
+  $('importLoading').style.display = 'none';
+  $('importResults').style.display = 'none';
+  $('importError').style.display = 'none';
+  $('importConfirmBtn').disabled = true;
+  $('importFile').value = '';
+  openModal('importModal');
+};
+
+window.resetImport = function() {
+  state.importImage = null;
+  state.importPatients = [];
+  $('importUpload').style.display = 'block';
+  $('importPreview').style.display = 'none';
+  $('importLoading').style.display = 'none';
+  $('importResults').style.display = 'none';
+  $('importError').style.display = 'none';
+  $('importConfirmBtn').disabled = true;
+};
+
+function handleImportFile(file) {
+  compress(file, CONFIG.MAX_IMAGE_SIZE, url => {
+    state.importImage = url;
+    $('importImg').src = url;
+    $('importUpload').style.display = 'none';
+    $('importPreview').style.display = 'block';
+  });
+}
+
+window.extractPatients = async function() {
+  if (!state.importImage) return;
+  
+  $('importPreview').style.display = 'none';
+  $('importLoading').style.display = 'block';
+  
+  try {
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'extractPatients', image: state.importImage })
+    });
+    
+    const data = await res.json();
+    $('importLoading').style.display = 'none';
+    
+    if (!data.success || data.error) {
+      $('importError').style.display = 'block';
+      $('importErrorMsg').textContent = data.error || 'Extraction failed';
+      return;
+    }
+    
+    if (!data.patients?.length) {
+      $('importError').style.display = 'block';
+      $('importErrorMsg').textContent = 'No patients found in image';
+      return;
+    }
+    
+    state.importPatients = data.patients.map((p, i) => ({
+      id: Date.now() + i,
+      name: p.name,
+      ward: p.ward || 'Unassigned',
+      room: p.room || '—',
+      diagnosis: p.diagnosis || 'Pending',
+      doctor: p.doctor || state.currentUser?.name || 'Unassigned',
+      status: p.status || 'active',
+      createdAt: new Date().toISOString()
+    }));
+    
+    showImportResults();
+  } catch (e) {
+    $('importLoading').style.display = 'none';
+    $('importError').style.display = 'block';
+    $('importErrorMsg').textContent = 'Connection failed. Please try again.';
+  }
+};
+
+function showImportResults() {
+  $('importResults').style.display = 'block';
+  $('importCount').textContent = state.importPatients.length;
+  
+  const wards = {};
+  state.importPatients.forEach(p => {
+    if (!wards[p.ward]) wards[p.ward] = [];
+    wards[p.ward].push(p);
+  });
+  
+  let html = '';
+  Object.keys(wards).sort().forEach(ward => {
+    html += `<div style="margin-bottom:12px">
+      <div style="font-size:0.75rem;font-weight:600;color:var(--gold);padding:6px 10px;background:var(--bg-elevated);border-radius:6px;border-left:3px solid var(--gold);margin-bottom:8px">
+        📍 ${esc(ward)} (${wards[ward].length})
+      </div>`;
+    
+    wards[ward].forEach(p => {
+      const statusColor = p.status === 'chronic' ? 'var(--purple)' : p.status === 'critical' ? 'var(--rose)' : p.status === 'new' ? 'var(--lime)' : 'var(--teal)';
+      html += `
+        <div class="import-patient" style="border-left-color:${statusColor}">
+          <div style="width:30px;height:30px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:0.7rem;color:#000">${initials(p.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted)">🛏️ ${esc(p.room)} • ${p.status}</div>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  });
+  
+  $('importList').innerHTML = html;
+  $('importConfirmBtn').disabled = false;
+  toast(`Found ${state.importPatients.length} patients!`);
+}
+
+window.confirmImport = function() {
+  if (!state.importPatients.length) return;
+  
+  let added = 0;
+  state.importPatients.forEach(p => {
+    const exists = state.patients.some(ep => ep.name.toLowerCase() === p.name.toLowerCase());
+    if (!exists) {
+      state.patients.push(p);
+      added++;
+    }
+  });
+  
+  saveToCloud();
+  renderPatients();
+  closeModal('importModal');
+  toast(`Imported ${added} new patients!`);
+};
+
+// Initialize
+async function init() {
+  loadLocal();
+  renderUnits();
+  
+  // Event listeners
+  $('adminFab').addEventListener('click', openAdminLogin);
+  $('syncFab').addEventListener('click', async () => {
+    $('syncFab').classList.add('syncing');
+    await syncFromCloud();
+    $('syncFab').classList.remove('syncing');
+    toast('Synced!');
+  });
+  
+  $('adminPwd').addEventListener('keydown', e => { if (e.key === 'Enter') loginAdmin(); });
+  $('userName').addEventListener('keydown', e => { if (e.key === 'Enter') enterUnit(); });
+  
+  // Tab switching - FIXED
+  $('mainTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if (tab) showTab(tab.dataset.tab);
+  });
+  
+  // Stats filter
+  $('statsBar').addEventListener('click', e => {
+    const stat = e.target.closest('.stat');
+    if (stat) {
+      state.currentFilter = stat.dataset.filter;
+      renderPatients();
+    }
+  });
+  
+  // Analysis
+  $('analysisFile').addEventListener('change', function() {
+    Array.from(this.files).forEach(f => {
+      if (f.type.startsWith('image/')) addAnalysisImage(f);
+    });
+    this.value = '';
+  });
+  
+  document.querySelector('.analysis-types').addEventListener('click', e => {
+    const type = e.target.closest('.analysis-type');
+    if (type) {
+      state.analysisType = type.dataset.type;
+      $$('.analysis-type').forEach(t => t.classList.remove('active'));
+      type.classList.add('active');
+    }
+  });
+  
+  // Import
+  $('importFile').addEventListener('change', function() {
+    if (this.files[0]) handleImportFile(this.files[0]);
+  });
+  
+  // Close modals on backdrop click
+  $$('.modal').forEach(modal => {
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+  });
+  
+  // Initial sync
+  await syncFromCloud();
+  
+  // Auto-sync every 30 seconds
+  setInterval(() => syncFromCloud(), 30000);
+}
+
+// Start
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
 })();
 </script>
 </body>
