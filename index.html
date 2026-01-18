@@ -7,8 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>MedWard Enterprise</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <style>
-    :root{--bg:#060a13;--bg-card:#0d1424;--bg-elevated:#111b2e;--bg-input:#0f172a;--text:#f8fafc;--text-secondary:#94a3b8;--text-muted:#64748b;--gold:#d4a437;--gold-light:#fbbf24;--gold-glow:rgba(212,164,55,0.15);--teal:#14b8a6;--blue:#3b82f6;--purple:#8b5cf6;--rose:#f43f5e;--orange:#f97316;--emerald:#10b981;--border:rgba(148,163,184,0.12);--radius:12px}
+    :root{--bg:#060a13;--bg-card:#0d1424;--bg-elevated:#111b2e;--bg-input:#0f172a;--text:#f8fafc;--text-secondary:#94a3b8;--text-muted:#64748b;--gold:#d4a437;--gold-light:#fbbf24;--gold-glow:rgba(212,164,55,0.15);--teal:#14b8a6;--blue:#3b82f6;--purple:#8b5cf6;--rose:#f43f5e;--orange:#f97316;--emerald:#10b981;--lime:#84cc16;--border:rgba(148,163,184,0.12);--radius:12px}
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;-webkit-tap-highlight-color:transparent}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:none;border-radius:var(--radius);font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s}
@@ -17,6 +19,7 @@
     .btn-secondary{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text)}
     .btn-danger{background:rgba(244,63,94,0.15);border:1px solid var(--rose);color:var(--rose)}
     .btn-sm{padding:8px 14px;font-size:0.8rem}
+    .btn-xs{padding:6px 10px;font-size:0.7rem}
     .btn-full{width:100%}
     .btn-icon{width:40px;height:40px;padding:0;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);cursor:pointer;display:grid;place-items:center}
     .form-group{margin-bottom:18px}
@@ -45,10 +48,11 @@
     .unit-card-icon{font-size:2rem;margin-bottom:12px}
     .unit-card-name{font-size:1.05rem;font-weight:600;margin-bottom:2px}
     .unit-card-desc{color:var(--text-muted);font-size:0.75rem}
-    .admin-fab{position:fixed;bottom:20px;right:20px;width:50px;height:50px;background:var(--bg-card);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);z-index:50}
-    .admin-fab svg{width:20px;height:20px}
-    .sync-fab{position:fixed;bottom:20px;left:20px;width:50px;height:50px;background:var(--bg-card);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);z-index:50;transition:all 0.3s}
-    .sync-fab svg{width:20px;height:20px}
+    .fab{position:fixed;width:50px;height:50px;background:var(--bg-card);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);z-index:50;transition:all 0.3s}
+    .fab svg{width:20px;height:20px}
+    .fab:hover{border-color:var(--gold);color:var(--gold)}
+    .admin-fab{bottom:20px;right:20px}
+    .sync-fab{bottom:20px;left:20px}
     .sync-fab.syncing{animation:rotate 1s linear infinite;border-color:var(--gold);color:var(--gold)}
     @keyframes rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
     .code-inputs{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
@@ -59,7 +63,7 @@
     @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
     .code-error{color:var(--rose);font-size:0.8rem;text-align:center;display:none}
     .code-error.show{display:block}
-    #dashboard{display:none;min-height:100vh}
+    #dashboard{display:none;min-height:100vh;padding-bottom:80px}
     #dashboard.active{display:block}
     .dash-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
     .dash-logo{display:flex;align-items:center;gap:10px}
@@ -69,31 +73,45 @@
     .dash-user{display:flex;align-items:center;gap:10px}
     .dash-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--teal),var(--emerald));border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:0.8rem}
     .dash-content{max-width:1100px;margin:0 auto;padding:16px}
+    .dash-date{text-align:center;padding:16px;background:linear-gradient(135deg,var(--gold),var(--orange));border-radius:var(--radius);margin-bottom:16px;font-weight:700;font-size:1.1rem;color:var(--bg)}
     .tabs{display:flex;gap:4px;background:var(--bg-card);border-radius:var(--radius);padding:4px;margin-bottom:20px;overflow-x:auto}
     .tab{flex:1;padding:10px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-muted);font-family:inherit;font-size:0.8rem;font-weight:500;cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px;min-width:80px}
     .tab.active{background:var(--bg-elevated);color:var(--gold)}
     .tab svg{width:16px;height:16px}
     .panel{display:none}
     .panel.active{display:block}
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-    .stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
-    .stat-value{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .stat-label{font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;margin-top:2px}
-    .patients-list{display:grid;gap:12px}
-    .patient{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:3px solid var(--teal)}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+    .stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.2s}
+    .stat:hover,.stat.active{border-color:var(--gold);background:var(--gold-glow)}
+    .stat-value{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stat-label{font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;margin-top:2px}
+    .action-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .action-bar .btn{flex:1;min-width:120px}
+    .patients-list{display:grid;gap:10px}
+    .patient{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;border-left:4px solid var(--teal);transition:all 0.2s}
+    .patient.new{border-left-color:var(--lime);background:linear-gradient(135deg,rgba(132,204,22,0.1),transparent);animation:pulse 2s infinite}
+    .patient.active{border-left-color:var(--teal)}
     .patient.critical{border-left-color:var(--rose)}
     .patient.chronic{border-left-color:var(--purple)}
-    .patient-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-    .patient-avatar{width:42px;height:42px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:0.85rem;color:var(--bg);flex-shrink:0}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.8}}
+    .patient-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .patient-avatar{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:0.8rem;color:var(--bg);flex-shrink:0}
+    .patient.new .patient-avatar{background:linear-gradient(135deg,var(--lime),var(--emerald))}
+    .patient.active .patient-avatar{background:linear-gradient(135deg,var(--teal),var(--emerald))}
+    .patient.critical .patient-avatar{background:linear-gradient(135deg,var(--rose),var(--orange))}
+    .patient.chronic .patient-avatar{background:linear-gradient(135deg,var(--purple),var(--blue))}
     .patient-info{flex:1;min-width:0}
-    .patient-name{font-weight:600;font-size:0.95rem}
-    .patient-meta{font-size:0.7rem;color:var(--text-muted)}
-    .patient-status{padding:3px 8px;border-radius:100px;font-size:0.6rem;font-weight:600;text-transform:uppercase}
+    .patient-name{font-weight:600;font-size:0.95rem;display:flex;align-items:center;gap:8px}
+    .patient-name .new-badge{background:var(--lime);color:var(--bg);padding:2px 6px;border-radius:4px;font-size:0.6rem;font-weight:700;text-transform:uppercase}
+    .patient-meta{font-size:0.75rem;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+    .patient-meta span{display:flex;align-items:center;gap:4px}
+    .patient-status{padding:4px 10px;border-radius:100px;font-size:0.65rem;font-weight:600;text-transform:uppercase;flex-shrink:0}
+    .patient-status.new{background:rgba(132,204,22,0.2);color:var(--lime)}
     .patient-status.active{background:rgba(20,184,166,0.15);color:var(--teal)}
     .patient-status.critical{background:rgba(244,63,94,0.15);color:var(--rose)}
     .patient-status.chronic{background:rgba(139,92,246,0.15);color:var(--purple)}
-    .patient-dx{font-size:0.8rem;color:var(--text-secondary);padding:10px;background:var(--bg-elevated);border-radius:8px;margin-bottom:10px}
-    .patient-actions{display:flex;gap:8px}
+    .patient-dx{font-size:0.8rem;color:var(--text-secondary);padding:10px;background:var(--bg-elevated);border-radius:8px;margin:8px 0}
+    .patient-actions{display:flex;gap:6px}
     .patient-actions .btn{flex:1}
     .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px}
     .card-header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:0.9rem}
@@ -133,6 +151,7 @@
     .import-dropzone:hover{border-color:var(--gold);background:var(--gold-glow)}
     .import-patient{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-elevated);border-radius:8px;margin-bottom:8px;border-left:3px solid var(--teal)}
     .import-patient.critical{border-left-color:var(--rose)}
+    .import-patient.new{border-left-color:var(--lime)}
     .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-card);border:1px solid var(--emerald);padding:12px 20px;border-radius:var(--radius);font-size:0.85rem;opacity:0;transition:0.3s;z-index:2000}
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
     .toast.error{border-color:var(--rose)}
@@ -142,7 +161,15 @@
     .image-thumb{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
     .image-thumb img{width:100%;height:100%;object-fit:cover}
     .image-thumb-remove{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:white;font-size:11px;cursor:pointer;display:grid;place-items:center}
-    @media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.analysis-types{grid-template-columns:repeat(2,1fr)}.tab span{display:none}.patient-actions{flex-direction:column}}
+    .filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+    .filter-pill{padding:6px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:100px;font-size:0.75rem;cursor:pointer;transition:all 0.2s}
+    .filter-pill:hover,.filter-pill.active{border-color:var(--gold);background:var(--gold-glow);color:var(--gold)}
+    .ward-group{margin-bottom:20px}
+    .ward-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg-elevated);border-radius:8px;margin-bottom:10px;cursor:pointer}
+    .ward-header h3{font-size:0.9rem;font-weight:600;display:flex;align-items:center;gap:8px}
+    .ward-header .count{background:var(--gold);color:var(--bg);padding:2px 8px;border-radius:100px;font-size:0.7rem}
+    .empty-state{text-align:center;padding:40px;color:var(--text-muted)}
+    @media(max-width:600px){.stats{grid-template-columns:repeat(3,1fr)}.stats .stat:nth-child(4),.stats .stat:nth-child(5){grid-column:span 1}.analysis-types{grid-template-columns:repeat(2,1fr)}.tab span{display:none}.patient-actions{flex-direction:column}}
   </style>
 </head>
 <body>
@@ -155,10 +182,10 @@
   <h1 class="landing-title">MedWard Enterprise</h1>
   <p class="landing-subtitle">Select your unit to continue</p>
   <div class="units-grid" id="unitsGrid"></div>
-  <div class="sync-fab" id="syncFab" title="Sync from cloud">
+  <div class="fab sync-fab" id="syncFab" title="Sync from cloud">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9"/></svg>
   </div>
-  <div class="admin-fab" id="adminFab">
+  <div class="fab admin-fab" id="adminFab">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </div>
 </div>
@@ -251,7 +278,7 @@
           <input type="password" id="newAdminPwd" class="form-input" placeholder="Leave blank to keep current">
         </div>
         <div class="form-group">
-          <label class="form-label">Claude API URL (Apps Script)</label>
+          <label class="form-label">API URL</label>
           <input type="text" id="apiUrl" class="form-input" placeholder="https://script.google.com/...">
         </div>
         <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
@@ -269,13 +296,15 @@
     </div>
     <div class="dash-user">
       <div class="dash-avatar" id="dashAvatar">DR</div>
-      <button class="btn-icon" id="logoutBtn">
+      <button class="btn-icon" id="logoutBtn" title="Logout">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </div>
   </header>
   
   <div class="dash-content">
+    <div class="dash-date" id="dashDate"></div>
+    
     <div class="tabs" id="tabs">
       <button class="tab active" data-tab="patients">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -283,7 +312,7 @@
       </button>
       <button class="tab" data-tab="analysis">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 3v5h5M16 13H8M16 17H8M10 9H8"/></svg>
-        <span>AI Analysis</span>
+        <span>Analysis</span>
       </button>
       <button class="tab" data-tab="reference">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -293,16 +322,20 @@
     
     <!-- PATIENTS PANEL -->
     <div class="panel active" id="panelPatients">
-      <div class="stats">
-        <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
-        <div class="stat"><div class="stat-value" id="statActive">0</div><div class="stat-label">Active</div></div>
-        <div class="stat"><div class="stat-value" id="statCritical">0</div><div class="stat-label">Critical</div></div>
-        <div class="stat"><div class="stat-value" id="statChronic">0</div><div class="stat-label">Chronic</div></div>
+      <div class="stats" id="statsBar">
+        <div class="stat active" data-filter="all"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
+        <div class="stat" data-filter="new"><div class="stat-value" id="statNew">0</div><div class="stat-label">New</div></div>
+        <div class="stat" data-filter="active"><div class="stat-value" id="statActive">0</div><div class="stat-label">Active</div></div>
+        <div class="stat" data-filter="critical"><div class="stat-value" id="statCritical">0</div><div class="stat-label">Critical</div></div>
+        <div class="stat" data-filter="chronic"><div class="stat-value" id="statChronic">0</div><div class="stat-label">Chronic</div></div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="btn btn-primary btn-sm" id="addPatientBtn" style="flex:1">+ Add Patient</button>
-        <button class="btn btn-secondary btn-sm" id="importBtn" style="flex:1">📥 Import</button>
+      
+      <div class="action-bar">
+        <button class="btn btn-primary btn-sm" id="addPatientBtn">+ Add Patient</button>
+        <button class="btn btn-secondary btn-sm" id="importBtn">📥 Import</button>
+        <button class="btn btn-secondary btn-sm" id="exportBtn">📄 Export PDF</button>
       </div>
+      
       <div class="patients-list" id="patientsList"></div>
     </div>
     
@@ -314,7 +347,7 @@
           <div class="upload-zone" id="uploadZone">
             <div class="upload-zone-icon">📤</div>
             <div style="font-weight:600">Upload Medical Images</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Labs, X-Rays, CT/MRI, ECG • Select multiple</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Labs, X-Rays, CT/MRI, ECG</div>
           </div>
           <input type="file" id="analysisFile" accept="image/*" multiple style="display:none">
           <div class="analysis-types" id="analysisTypes">
@@ -326,12 +359,11 @@
           <div id="analysisPreview" style="display:none;margin-top:16px"></div>
         </div>
       </div>
-      <button class="btn btn-primary btn-full" id="analyzeBtn" disabled>🤖 Analyze with Claude AI</button>
+      <button class="btn btn-primary btn-full" id="analyzeBtn" disabled>🤖 Analyze with AI</button>
       <div id="analysisLoading" style="display:none;text-align:center;padding:30px">
         <div class="spinner"></div>
         <div style="margin-top:12px;font-weight:600">Analyzing...</div>
         <div id="analysisTimer" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px">0s</div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Usually takes 5-15 seconds</div>
       </div>
       <div id="analysisResults" style="margin-top:16px"></div>
     </div>
@@ -357,26 +389,35 @@
     <div class="modal-body">
       <input type="hidden" id="ptId">
       <div class="form-group">
-        <label class="form-label">Name</label>
+        <label class="form-label">Patient Name</label>
         <input type="text" id="ptName" class="form-input" placeholder="Full name">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
-          <label class="form-label">Room</label>
-          <input type="text" id="ptRoom" class="form-input" placeholder="21-A">
+          <label class="form-label">Ward</label>
+          <input type="text" id="ptWard" class="form-input" placeholder="Ward 14">
         </div>
         <div class="form-group">
-          <label class="form-label">Status</label>
-          <select id="ptStatus" class="form-select">
-            <option value="active">Active</option>
-            <option value="critical">Critical</option>
-            <option value="chronic">Chronic</option>
-          </select>
+          <label class="form-label">Room/Bed</label>
+          <input type="text" id="ptRoom" class="form-input" placeholder="11-1">
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="ptStatus" class="form-select">
+          <option value="new">🆕 New</option>
+          <option value="active">✅ Active (Non-Chronic)</option>
+          <option value="critical">🚨 Critical</option>
+          <option value="chronic">💜 Chronic</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">Diagnosis</label>
         <textarea id="ptDx" class="form-textarea" placeholder="Primary diagnosis"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assigned Doctor</label>
+        <input type="text" id="ptDoctor" class="form-input" placeholder="Dr. Name">
       </div>
     </div>
     <div class="modal-footer">
@@ -439,7 +480,7 @@
         <img id="importImg" src="" style="width:100%;max-height:150px;object-fit:contain;border-radius:8px">
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="btn btn-secondary btn-sm" id="importChangeBtn" style="flex:1">Change</button>
-          <button class="btn btn-primary btn-sm" id="importExtractBtn" style="flex:2">🤖 Extract Patients</button>
+          <button class="btn btn-primary btn-sm" id="importExtractBtn" style="flex:2">🤖 Extract</button>
         </div>
       </div>
       <div id="importLoading" style="display:none;text-align:center;padding:30px">
@@ -474,13 +515,14 @@
   
   // ========== CONFIGURATION ==========
   const CONFIG = {
-    STORAGE_KEY: 'medward_enterprise_v2',
+    STORAGE_KEY: 'medward_enterprise_v3',
     ADMIN_PASSWORD: 'admin123',
     API_URL: 'https://script.google.com/macros/s/AKfycbwnPMayEKM6rHJB2qZ-DDECoVB4Kte1EcoBiea0pmcasfyAeW7RGeADiH5DMXGRJOSJ/exec',
     MAX_IMAGES: 5,
-    MAX_IMAGE_SIZE: 1024 * 1024,  // Reduced to 1MB for faster upload
-    IMAGE_QUALITY: 0.6,           // More compression for speed
-    MAX_IMAGE_DIMENSION: 1200     // Smaller images = faster processing
+    MAX_IMAGE_SIZE: 1024 * 1024,
+    IMAGE_QUALITY: 0.6,
+    MAX_IMAGE_DIMENSION: 1200,
+    SYNC_INTERVAL: 30000
   };
 
   const DEFAULT_UNITS = [
@@ -490,14 +532,12 @@
   ];
 
   const REFERENCES = [
-    { title: '🚨 Critical Labs', content: '<b>K:</b> <2.5 or >6.5 mEq/L<br><b>Na:</b> <120 or >160 mEq/L<br><b>Glucose:</b> <40 or >500 mg/dL<br><b>pH:</b> <7.2 or >7.6' },
-    { title: '⚡ Hyperkalemia', content: '<b>Stabilize:</b> Ca gluconate 10mL IV<br><b>Shift:</b> Insulin 10U + D50, Albuterol<br><b>Remove:</b> Kayexalate, Lasix, HD' },
-    { title: '❤️ ACS Protocol', content: '<b>MONA:</b> Morphine, O₂, Nitrates, Aspirin 325mg<br><b>STEMI:</b> PCI <90min or lytics<br><b>NSTEMI:</b> Anticoag + cath' },
-    { title: '🧠 Stroke tPA', content: '<b>Window:</b> ≤4.5h from LKW<br><b>Dose:</b> 0.9 mg/kg (max 90mg)<br><b>BP goal:</b> <185/110 pre-tPA' },
-    { title: '🦠 Sepsis Bundle', content: '<b>Hour-1:</b> Lactate, cultures, antibiotics<br><b>Fluids:</b> 30mL/kg if hypotensive<br><b>Pressors:</b> Norepi first line' },
-    { title: '💊 Seizure Rx', content: '<b>1st:</b> Lorazepam 4mg IV<br><b>2nd:</b> Levetiracetam 60mg/kg<br><b>Refractory:</b> Propofol or midazolam gtt' },
-    { title: '🫁 PE Treatment', content: '<b>Massive:</b> tPA 100mg over 2h<br><b>Submassive:</b> Anticoag ± lytics<br><b>Low-risk:</b> DOAC outpatient' },
-    { title: '💧 DKA Protocol', content: '<b>Fluids:</b> NS 1-2L/h initially<br><b>Insulin:</b> 0.1 U/kg/h gtt<br><b>K:</b> Replace if <5.3' }
+    { title: '🚨 Critical Labs', content: '<b>K:</b> <2.5 or >6.5<br><b>Na:</b> <120 or >160<br><b>Glucose:</b> <40 or >500<br><b>pH:</b> <7.2 or >7.6' },
+    { title: '⚡ Hyperkalemia', content: '<b>Stabilize:</b> Ca gluconate 10mL<br><b>Shift:</b> Insulin 10U + D50<br><b>Remove:</b> Kayexalate, HD' },
+    { title: '❤️ ACS Protocol', content: '<b>MONA:</b> Morphine, O₂, Nitrates, ASA<br><b>STEMI:</b> PCI <90min<br><b>NSTEMI:</b> Anticoag + cath' },
+    { title: '🧠 Stroke tPA', content: '<b>Window:</b> ≤4.5h<br><b>Dose:</b> 0.9 mg/kg (max 90)<br><b>BP:</b> <185/110' },
+    { title: '🦠 Sepsis Bundle', content: '<b>Hour-1:</b> Lactate, cultures, abx<br><b>Fluids:</b> 30mL/kg<br><b>Pressors:</b> Norepi' },
+    { title: '💊 Seizure Rx', content: '<b>1st:</b> Lorazepam 4mg<br><b>2nd:</b> Levetiracetam 60mg/kg<br><b>3rd:</b> Propofol gtt' }
   ];
 
   // ========== STATE ==========
@@ -512,7 +552,8 @@
     analysisImages: [],
     analysisType: 'lab',
     importImage: null,
-    importPatients: []
+    importPatients: [],
+    currentFilter: 'all'
   };
 
   // ========== UTILITIES ==========
@@ -542,6 +583,18 @@
   function openModal(id) { $(id).classList.add('active'); }
   function closeModal(id) { $(id).classList.remove('active'); }
   
+  function formatDate(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const d = date || new Date();
+    const day = days[d.getDay()];
+    const dateNum = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    const suffix = dateNum === 1 || dateNum === 21 || dateNum === 31 ? 'st' : dateNum === 2 || dateNum === 22 ? 'nd' : dateNum === 3 || dateNum === 23 ? 'rd' : 'th';
+    return `📅 ${day}, ${dateNum}${suffix} ${month} ${year}`;
+  }
+  
   function compressImage(file, maxSize, callback) {
     const reader = new FileReader();
     reader.onload = e => {
@@ -570,24 +623,17 @@
     reader.readAsDataURL(file);
   }
 
-  // ========== STORAGE (Google Drive + localStorage with auto-sync) ==========
+  // ========== STORAGE ==========
   let isSyncing = false;
   let lastSyncTime = 0;
-  const SYNC_INTERVAL = 30000; // Check for updates every 30 seconds
   
   async function loadStorage() {
     state.units = DEFAULT_UNITS.slice();
     state.settings = { adminPassword: CONFIG.ADMIN_PASSWORD, apiUrl: CONFIG.API_URL };
     state.patients = [];
-    
-    // First load from localStorage (instant)
     loadFromLocalStorage();
-    
-    // Then sync from Google Drive
     await syncFromDrive(true);
-    
-    // Start periodic sync
-    setInterval(() => syncFromDrive(false), SYNC_INTERVAL);
+    setInterval(() => syncFromDrive(false), CONFIG.SYNC_INTERVAL);
   }
   
   function loadFromLocalStorage() {
@@ -595,27 +641,24 @@
       const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
-        if (data.units && Array.isArray(data.units) && data.units.length > 0) {
-          const valid = data.units.filter(u => u && u.id && u.name && u.code);
+        if (data.units?.length > 0) {
+          const valid = data.units.filter(u => u?.id && u?.name && u?.code);
           if (valid.length > 0) state.units = valid;
         }
         if (data.settings) {
           state.settings.adminPassword = data.settings.adminPassword || CONFIG.ADMIN_PASSWORD;
           state.settings.apiUrl = data.settings.apiUrl || CONFIG.API_URL;
         }
-        if (data.patients && Array.isArray(data.patients)) state.patients = data.patients;
+        if (data.patients) state.patients = data.patients;
         lastSyncTime = data.lastUpdated ? new Date(data.lastUpdated).getTime() : 0;
       }
-    } catch (e) {
-      console.warn('LocalStorage load failed:', e);
-    }
-    if (!state.units || state.units.length === 0) state.units = DEFAULT_UNITS.slice();
+    } catch (e) { console.warn('LocalStorage load failed:', e); }
+    if (!state.units?.length) state.units = DEFAULT_UNITS.slice();
   }
   
   async function syncFromDrive(isInitial = false) {
     if (isSyncing) return;
     isSyncing = true;
-    
     try {
       const response = await fetch(state.settings.apiUrl, {
         method: 'POST',
@@ -623,79 +666,46 @@
         body: JSON.stringify({ action: 'loadData' })
       });
       const result = await response.json();
-      
       if (result.success && result.data) {
         const driveData = result.data;
         const driveTime = driveData.lastUpdated ? new Date(driveData.lastUpdated).getTime() : 0;
-        
-        // Only update if Drive data is newer
         if (driveTime > lastSyncTime || isInitial) {
           let hasChanges = false;
-          
-          // Update units
-          if (driveData.units && driveData.units.length > 0) {
-            const oldUnitsJson = JSON.stringify(state.units);
+          if (driveData.units?.length > 0) {
+            const oldJson = JSON.stringify(state.units);
             state.units = driveData.units;
-            if (JSON.stringify(state.units) !== oldUnitsJson) hasChanges = true;
+            if (JSON.stringify(state.units) !== oldJson) hasChanges = true;
           }
-          
-          // Update settings
-          if (driveData.settings) {
-            state.settings = { ...state.settings, ...driveData.settings };
-          }
-          
-          // Update patients
+          if (driveData.settings) state.settings = { ...state.settings, ...driveData.settings };
           if (driveData.patients) {
-            const oldPatientsJson = JSON.stringify(state.patients);
+            const oldJson = JSON.stringify(state.patients);
             state.patients = driveData.patients;
-            if (JSON.stringify(state.patients) !== oldPatientsJson) hasChanges = true;
+            if (JSON.stringify(state.patients) !== oldJson) hasChanges = true;
           }
-          
           lastSyncTime = driveTime || Date.now();
-          
-          // Save to localStorage
           saveToLocalStorage();
-          
-          // Re-render UI if there were changes
           if (hasChanges && !isInitial) {
-            console.log('[MedWard] New data from Drive - refreshing UI');
-            if (!state.currentUnit) {
-              renderUnits();
-              toast('Data synced from cloud');
-            } else {
-              renderPatients();
-            }
+            if (!state.currentUnit) renderUnits();
+            else renderPatients();
+            toast('Synced from cloud');
           }
-          
-          console.log('[MedWard] Synced from Google Drive');
         }
       }
-    } catch (e) {
-      console.warn('Drive sync failed:', e);
-    }
-    
+    } catch (e) { console.warn('Drive sync failed:', e); }
     isSyncing = false;
   }
   
   function saveToLocalStorage() {
     try {
       localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
-        units: state.units, 
-        settings: state.settings, 
-        patients: state.patients,
-        lastUpdated: new Date().toISOString()
+        units: state.units, settings: state.settings, patients: state.patients, lastUpdated: new Date().toISOString()
       }));
     } catch (e) { console.warn('LocalStorage save failed:', e); }
   }
   
   async function saveStorage() {
-    // Update timestamp
     lastSyncTime = Date.now();
-    
-    // Save to localStorage immediately
     saveToLocalStorage();
-    
-    // Save to Google Drive
     await saveToDrive();
   }
   
@@ -706,32 +716,17 @@
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           action: 'saveData',
-          payload: {
-            units: state.units,
-            settings: { adminPassword: state.settings.adminPassword },
-            patients: state.patients,
-            lastUpdated: new Date().toISOString()
-          }
+          payload: { units: state.units, settings: { adminPassword: state.settings.adminPassword }, patients: state.patients, lastUpdated: new Date().toISOString() }
         })
       });
       const result = await response.json();
-      if (result.success) {
-        console.log('[MedWard] Saved to Google Drive');
-      } else {
-        console.warn('Drive save failed:', result.error);
-        toast('Cloud sync failed', true);
-      }
-    } catch (e) {
-      console.warn('Drive save failed:', e);
-      toast('Cloud sync failed', true);
-    }
+      if (!result.success) toast('Cloud sync failed', true);
+    } catch (e) { toast('Cloud sync failed', true); }
   }
   
-  // Force sync from Drive (manual refresh)
   async function forceSync() {
     lastSyncTime = 0;
     await syncFromDrive(true);
-    toast('Synced from cloud');
   }
   
   function getUnit(id) { return state.units.find(u => u.id === id); }
@@ -739,8 +734,8 @@
   // ========== RENDERING ==========
   function renderUnits() {
     const container = $('unitsGrid');
-    if (!state.units || state.units.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No units configured.</div>';
+    if (!state.units?.length) {
+      container.innerHTML = '<div class="empty-state">No units configured.</div>';
       return;
     }
     container.innerHTML = state.units.map(u => `
@@ -750,15 +745,11 @@
         <div class="unit-card-desc">${u.desc||''}</div>
       </div>
     `).join('');
-    
-    $$('.unit-card').forEach(card => {
-      card.addEventListener('click', () => openUnitAccess(card.dataset.id));
-    });
+    $$('.unit-card').forEach(card => card.addEventListener('click', () => openUnitAccess(card.dataset.id)));
   }
   
   function renderUnitsTable() {
-    const tbody = $('unitsTable');
-    tbody.innerHTML = state.units.map(u => `
+    $('unitsTable').innerHTML = state.units.map(u => `
       <tr>
         <td>${u.icon} <b>${u.name}</b></td>
         <td><code style="background:var(--bg-elevated);padding:3px 8px;border-radius:4px">${u.code}</code></td>
@@ -767,52 +758,93 @@
           <button class="btn-icon delete-unit-btn" data-id="${u.id}">🗑️</button>
         </td>
       </tr>
-    `).join('') || '<tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted)">No units</td></tr>';
-    
+    `).join('') || '<tr><td colspan="3" class="empty-state">No units</td></tr>';
     $$('.edit-unit-btn').forEach(btn => btn.addEventListener('click', () => editUnit(btn.dataset.id)));
     $$('.delete-unit-btn').forEach(btn => btn.addEventListener('click', () => deleteUnit(btn.dataset.id)));
   }
   
   function renderPatients() {
     const container = $('patientsList');
-    if (!state.patients.length) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No patients yet. Click "+ Add" or "📥 Import".</div>';
+    const filter = state.currentFilter;
+    
+    // Filter patients
+    let filtered = state.patients;
+    if (filter !== 'all') {
+      filtered = state.patients.filter(p => p.status === filter);
+    }
+    
+    // Group by ward
+    const wardGroups = {};
+    filtered.forEach(p => {
+      const ward = p.ward || 'Unassigned';
+      if (!wardGroups[ward]) wardGroups[ward] = [];
+      wardGroups[ward].push(p);
+    });
+    
+    if (!filtered.length) {
+      container.innerHTML = `<div class="empty-state">No ${filter === 'all' ? '' : filter + ' '}patients found.</div>`;
     } else {
-      container.innerHTML = state.patients.map(p => `
-        <div class="patient ${p.status}" data-id="${p.id}">
-          <div class="patient-top">
-            <div class="patient-avatar">${initials(p.name)}</div>
-            <div class="patient-info">
-              <div class="patient-name">${escapeHtml(p.name)}</div>
-              <div class="patient-meta">Room ${escapeHtml(p.room)} • ${escapeHtml(p.doctor||'Unassigned')}</div>
-            </div>
-            <span class="patient-status ${p.status}">${p.status}</span>
+      let html = '';
+      Object.keys(wardGroups).sort().forEach(ward => {
+        const patients = wardGroups[ward];
+        html += `<div class="ward-group">
+          <div class="ward-header">
+            <h3>🏥 ${escapeHtml(ward)} <span class="count">${patients.length}</span></h3>
           </div>
-          <div class="patient-dx">${escapeHtml(p.diagnosis)}</div>
-          <div class="patient-actions">
-            <button class="btn btn-secondary btn-sm edit-patient-btn" data-id="${p.id}">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm delete-patient-btn" data-id="${p.id}">🗑️ Delete</button>
-          </div>
-        </div>
-      `).join('');
-      
+          <div class="ward-patients">`;
+        
+        patients.forEach(p => {
+          const isNew = p.status === 'new';
+          html += `
+            <div class="patient ${p.status}" data-id="${p.id}">
+              <div class="patient-header">
+                <div class="patient-avatar">${initials(p.name)}</div>
+                <div class="patient-info">
+                  <div class="patient-name">
+                    ${escapeHtml(p.name)}
+                    ${isNew ? '<span class="new-badge">NEW</span>' : ''}
+                  </div>
+                  <div class="patient-meta">
+                    <span>🛏️ ${escapeHtml(p.room || '—')}</span>
+                    <span>👨‍⚕️ ${escapeHtml(p.doctor || 'Unassigned')}</span>
+                  </div>
+                </div>
+                <span class="patient-status ${p.status}">${p.status}</span>
+              </div>
+              <div class="patient-dx">${escapeHtml(p.diagnosis || 'No diagnosis')}</div>
+              <div class="patient-actions">
+                <button class="btn btn-secondary btn-xs edit-patient-btn" data-id="${p.id}">✏️ Edit</button>
+                <button class="btn btn-danger btn-xs delete-patient-btn" data-id="${p.id}">🗑️</button>
+              </div>
+            </div>`;
+        });
+        
+        html += '</div></div>';
+      });
+      container.innerHTML = html;
       $$('.edit-patient-btn').forEach(btn => btn.addEventListener('click', () => editPatient(parseInt(btn.dataset.id))));
       $$('.delete-patient-btn').forEach(btn => btn.addEventListener('click', () => deletePatient(parseInt(btn.dataset.id))));
     }
+    
     updateStats();
   }
   
   function updateStats() {
-    $('statTotal').textContent = state.patients.length;
-    $('statActive').textContent = state.patients.filter(p => p.status === 'active').length;
-    $('statCritical').textContent = state.patients.filter(p => p.status === 'critical').length;
-    $('statChronic').textContent = state.patients.filter(p => p.status === 'chronic').length;
+    const all = state.patients.length;
+    const newCount = state.patients.filter(p => p.status === 'new').length;
+    const active = state.patients.filter(p => p.status === 'active').length;
+    const critical = state.patients.filter(p => p.status === 'critical').length;
+    const chronic = state.patients.filter(p => p.status === 'chronic').length;
+    
+    $('statTotal').textContent = all;
+    $('statNew').textContent = newCount;
+    $('statActive').textContent = active;
+    $('statCritical').textContent = critical;
+    $('statChronic').textContent = chronic;
   }
   
   function renderReference() {
-    $('refGrid').innerHTML = REFERENCES.map(r => `
-      <div class="ref-card"><h4>${r.title}</h4><p>${r.content}</p></div>
-    `).join('');
+    $('refGrid').innerHTML = REFERENCES.map(r => `<div class="ref-card"><h4>${r.title}</h4><p>${r.content}</p></div>`).join('');
   }
 
   // ========== UNIT ACCESS ==========
@@ -826,9 +858,7 @@
     $('userSection').style.display = 'none';
     $('enterBtn').style.display = 'none';
     
-    $('codeInputs').innerHTML = Array(4).fill(0).map((_, i) => 
-      `<input type="tel" class="code-digit" maxlength="1" data-idx="${i}" inputmode="numeric">`
-    ).join('');
+    $('codeInputs').innerHTML = Array(4).fill(0).map((_, i) => `<input type="tel" class="code-digit" maxlength="1" data-idx="${i}" inputmode="numeric">`).join('');
     
     const inputs = $$('.code-digit');
     inputs.forEach((inp, idx) => {
@@ -846,18 +876,12 @@
           } else {
             $('codeError').classList.add('show');
             inputs.forEach(i => i.classList.add('error'));
-            setTimeout(() => {
-              inputs.forEach(i => { i.classList.remove('error'); i.value = ''; });
-              inputs[0].focus();
-            }, 500);
+            setTimeout(() => { inputs.forEach(i => { i.classList.remove('error'); i.value = ''; }); inputs[0].focus(); }, 500);
           }
         }
       });
-      inp.addEventListener('keydown', e => {
-        if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus();
-      });
+      inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus(); });
     });
-    
     openModal('accessModal');
     setTimeout(() => inputs[0].focus(), 100);
   }
@@ -865,8 +889,7 @@
   function enterUnit() {
     const name = $('userName').value.trim();
     if (!name) { toast('Enter your name', true); return; }
-    const unit = getUnit(state.selectedUnitId);
-    state.currentUnit = unit;
+    state.currentUnit = getUnit(state.selectedUnitId);
     state.currentUser = { name, role: $('userRole').value };
     closeModal('accessModal');
     showDashboard();
@@ -881,14 +904,16 @@
     $('unitBadge').textContent = unit.name;
     $('unitBadge').style.cssText = `border:1px solid ${unit.color};color:${unit.color};background:${unit.color}20`;
     $('dashAvatar').textContent = initials(user.name);
+    $('dashDate').innerHTML = formatDate();
     renderPatients();
     renderReference();
-    toast('Welcome to ' + unit.name);
+    toast('Welcome, ' + user.name);
   }
   
   function logout() {
     state.currentUnit = null;
     state.currentUser = null;
+    state.currentFilter = 'all';
     $('dashboard').classList.remove('active');
     $('landing').classList.remove('hidden');
   }
@@ -898,6 +923,13 @@
     $$('.panel').forEach(p => p.classList.remove('active'));
     document.querySelector(`.tab[data-tab="${name}"]`).classList.add('active');
     $('panel' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  }
+  
+  function setFilter(filter) {
+    state.currentFilter = filter;
+    $$('.stat').forEach(s => s.classList.remove('active'));
+    document.querySelector(`.stat[data-filter="${filter}"]`)?.classList.add('active');
+    renderPatients();
   }
 
   // ========== ADMIN ==========
@@ -912,9 +944,7 @@
     if ($('adminPwd').value === state.settings.adminPassword) {
       closeModal('adminModal');
       showAdmin();
-    } else {
-      $('adminError').classList.add('show');
-    }
+    } else $('adminError').classList.add('show');
   }
   
   function showAdmin() {
@@ -932,10 +962,7 @@
   function addUnit() {
     state.editingUnitId = null;
     $('unitModalTitle').textContent = 'Add Unit';
-    $('uName').value = '';
-    $('uIcon').value = '🏥';
-    $('uCode').value = '';
-    $('uDesc').value = '';
+    $('uName').value = ''; $('uIcon').value = '🏥'; $('uCode').value = ''; $('uDesc').value = '';
     openModal('unitModal');
   }
   
@@ -944,21 +971,14 @@
     if (!unit) return;
     state.editingUnitId = id;
     $('unitModalTitle').textContent = 'Edit Unit';
-    $('uName').value = unit.name;
-    $('uIcon').value = unit.icon;
-    $('uCode').value = unit.code;
-    $('uDesc').value = unit.desc || '';
+    $('uName').value = unit.name; $('uIcon').value = unit.icon; $('uCode').value = unit.code; $('uDesc').value = unit.desc || '';
     openModal('unitModal');
   }
   
   function saveUnit() {
-    const name = $('uName').value.trim();
-    const icon = $('uIcon').value.trim() || '🏥';
-    const code = $('uCode').value.trim();
-    const desc = $('uDesc').value.trim();
+    const name = $('uName').value.trim(), icon = $('uIcon').value.trim() || '🏥', code = $('uCode').value.trim(), desc = $('uDesc').value.trim();
     if (!name) { toast('Name required', true); return; }
     if (!/^\d{4}$/.test(code)) { toast('Code must be 4 digits', true); return; }
-    
     if (state.editingUnitId) {
       const idx = state.units.findIndex(u => u.id === state.editingUnitId);
       if (idx !== -1) state.units[idx] = { ...state.units[idx], name, icon, code, desc };
@@ -977,159 +997,209 @@
   function deleteUnit(id) {
     if (!confirm('Delete this unit?')) return;
     state.units = state.units.filter(u => u.id !== id);
-    saveStorage();
-    renderUnitsTable();
-    renderUnits();
+    saveStorage(); renderUnitsTable(); renderUnits();
     toast('Unit deleted');
   }
   
   function saveSettings() {
-    const pwd = $('newAdminPwd').value.trim();
-    const url = $('apiUrl').value.trim();
+    const pwd = $('newAdminPwd').value.trim(), url = $('apiUrl').value.trim();
     if (pwd) state.settings.adminPassword = pwd;
     if (url) state.settings.apiUrl = url;
-    saveStorage();
-    toast('Settings saved!');
-    $('newAdminPwd').value = '';
+    saveStorage(); toast('Settings saved!'); $('newAdminPwd').value = '';
   }
 
   // ========== PATIENTS ==========
   function openAddPatient() {
     $('patientModalTitle').textContent = 'Add Patient';
-    $('ptId').value = '';
-    $('ptName').value = '';
-    $('ptRoom').value = '';
-    $('ptDx').value = '';
-    $('ptStatus').value = 'active';
+    $('ptId').value = ''; $('ptName').value = ''; $('ptWard').value = ''; $('ptRoom').value = '';
+    $('ptDx').value = ''; $('ptStatus').value = 'new';
+    $('ptDoctor').value = state.currentUser?.name || '';
     openModal('patientModal');
   }
   
   function editPatient(id) {
-    const patient = state.patients.find(p => p.id === id);
-    if (!patient) return;
+    const p = state.patients.find(p => p.id === id);
+    if (!p) return;
     $('patientModalTitle').textContent = 'Edit Patient';
-    $('ptId').value = patient.id;
-    $('ptName').value = patient.name;
-    $('ptRoom').value = patient.room;
-    $('ptDx').value = patient.diagnosis;
-    $('ptStatus').value = patient.status;
+    $('ptId').value = p.id; $('ptName').value = p.name; $('ptWard').value = p.ward || '';
+    $('ptRoom').value = p.room; $('ptDx').value = p.diagnosis; $('ptStatus').value = p.status;
+    $('ptDoctor').value = p.doctor || '';
     openModal('patientModal');
   }
   
   function savePatient() {
     const id = $('ptId').value;
     const name = $('ptName').value.trim();
+    const ward = $('ptWard').value.trim() || 'Unassigned';
     const room = $('ptRoom').value.trim() || '—';
     const diagnosis = $('ptDx').value.trim() || 'Pending evaluation';
     const status = $('ptStatus').value;
+    const doctor = $('ptDoctor').value.trim() || state.currentUser?.name || 'Unassigned';
+    
     if (!name) { toast('Name is required', true); return; }
     
     if (id) {
       const idx = state.patients.findIndex(p => p.id === parseInt(id));
-      if (idx !== -1) state.patients[idx] = { ...state.patients[idx], name, room, diagnosis, status };
+      if (idx !== -1) state.patients[idx] = { ...state.patients[idx], name, ward, room, diagnosis, status, doctor };
       toast('Patient updated!');
     } else {
-      state.patients.push({
-        id: Date.now(), name, room, diagnosis, status,
-        doctor: state.currentUser ? state.currentUser.name : 'Unassigned'
-      });
+      state.patients.push({ id: Date.now(), name, ward, room, diagnosis, status, doctor });
       toast('Patient added!');
     }
-    saveStorage();
-    renderPatients();
-    closeModal('patientModal');
+    saveStorage(); renderPatients(); closeModal('patientModal');
   }
   
   function deletePatient(id) {
     if (!confirm('Delete this patient?')) return;
     state.patients = state.patients.filter(p => p.id !== id);
-    saveStorage();
-    renderPatients();
-    toast('Patient deleted');
+    saveStorage(); renderPatients(); toast('Patient deleted');
+  }
+
+  // ========== PDF EXPORT ==========
+  function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape');
+    
+    // Title
+    const date = new Date();
+    const dateStr = formatDate(date).replace('📅 ', '');
+    
+    doc.setFontSize(18);
+    doc.setTextColor(212, 164, 55);
+    doc.text(state.currentUnit?.name || 'Patient List', 14, 15);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(dateStr, 14, 22);
+    
+    // Group by ward
+    const wardGroups = {};
+    state.patients.forEach(p => {
+      const ward = p.ward || 'Unassigned';
+      if (!wardGroups[ward]) wardGroups[ward] = [];
+      wardGroups[ward].push(p);
+    });
+    
+    // Build table data
+    const tableData = [];
+    Object.keys(wardGroups).sort().forEach(ward => {
+      wardGroups[ward].forEach(p => {
+        tableData.push([
+          ward,
+          p.room || '—',
+          p.name,
+          p.diagnosis || 'Pending',
+          p.doctor || 'Unassigned',
+          p.status.charAt(0).toUpperCase() + p.status.slice(1)
+        ]);
+      });
+    });
+    
+    // Create table
+    doc.autoTable({
+      startY: 28,
+      head: [['Ward', 'Room/Bed', 'Patient Name', 'Diagnosis', 'Assigned Doctor', 'Status']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [212, 164, 55],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        fontSize: 9
+      },
+      bodyStyles: { fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 45 },
+        3: { cellWidth: 70 },
+        4: { cellWidth: 35 },
+        5: { cellWidth: 25 }
+      },
+      didParseCell: function(data) {
+        if (data.section === 'body' && data.column.index === 5) {
+          const status = data.cell.raw.toLowerCase();
+          if (status === 'new') {
+            data.cell.styles.fillColor = [132, 204, 22];
+            data.cell.styles.textColor = [0, 0, 0];
+            data.cell.styles.fontStyle = 'bold';
+          } else if (status === 'critical') {
+            data.cell.styles.fillColor = [244, 63, 94];
+            data.cell.styles.textColor = [255, 255, 255];
+          } else if (status === 'chronic') {
+            data.cell.styles.fillColor = [139, 92, 246];
+            data.cell.styles.textColor = [255, 255, 255];
+          }
+        }
+      }
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`Generated by MedWard Enterprise • Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    // Save
+    const fileName = `${state.currentUnit?.name || 'PatientList'}_${date.toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    toast('PDF exported!');
   }
 
   // ========== ANALYSIS ==========
-  let analysisTimer = null;
-  let analysisSeconds = 0;
+  let analysisTimer = null, analysisSeconds = 0;
   
-  function startAnalysisTimer() {
+  function startTimer() {
     analysisSeconds = 0;
     $('analysisTimer').textContent = '0s';
-    analysisTimer = setInterval(() => {
-      analysisSeconds++;
-      $('analysisTimer').textContent = analysisSeconds + 's';
-    }, 1000);
+    analysisTimer = setInterval(() => { analysisSeconds++; $('analysisTimer').textContent = analysisSeconds + 's'; }, 1000);
   }
   
-  function stopAnalysisTimer() {
-    if (analysisTimer) {
-      clearInterval(analysisTimer);
-      analysisTimer = null;
-    }
-  }
+  function stopTimer() { if (analysisTimer) { clearInterval(analysisTimer); analysisTimer = null; } }
   
   function addAnalysisImage(file) {
-    if (state.analysisImages.length >= CONFIG.MAX_IMAGES) {
-      toast('Maximum ' + CONFIG.MAX_IMAGES + ' images', true);
-      return;
-    }
+    if (state.analysisImages.length >= CONFIG.MAX_IMAGES) { toast('Max ' + CONFIG.MAX_IMAGES + ' images', true); return; }
     compressImage(file, CONFIG.MAX_IMAGE_SIZE, dataUrl => {
-      state.analysisImages.push({ id: Date.now(), name: file.name, data: dataUrl });
+      state.analysisImages.push({ id: Date.now(), data: dataUrl });
       renderAnalysisImages();
       $('analyzeBtn').disabled = false;
-      toast('Image added (' + state.analysisImages.length + '/' + CONFIG.MAX_IMAGES + ')');
     });
   }
   
   function removeAnalysisImage(id) {
     state.analysisImages = state.analysisImages.filter(img => img.id !== id);
     renderAnalysisImages();
-    if (state.analysisImages.length === 0) $('analyzeBtn').disabled = true;
+    if (!state.analysisImages.length) $('analyzeBtn').disabled = true;
   }
   
   function renderAnalysisImages() {
     const preview = $('analysisPreview');
-    if (state.analysisImages.length === 0) { preview.style.display = 'none'; return; }
-    preview.innerHTML = `
-      <div class="image-gallery">
-        ${state.analysisImages.map(img => `
-          <div class="image-thumb">
-            <img src="${img.data}" alt="Preview">
-            <button class="image-thumb-remove" data-id="${img.id}">✕</button>
-          </div>
-        `).join('')}
-      </div>
-      <div style="font-size:0.75rem;color:var(--text-muted)">${state.analysisImages.length}/${CONFIG.MAX_IMAGES} images</div>
-    `;
+    if (!state.analysisImages.length) { preview.style.display = 'none'; return; }
+    preview.innerHTML = `<div class="image-gallery">${state.analysisImages.map(img => `
+      <div class="image-thumb"><img src="${img.data}"><button class="image-thumb-remove" data-id="${img.id}">✕</button></div>
+    `).join('')}</div>`;
     preview.style.display = 'block';
-    $$('.image-thumb-remove').forEach(btn => {
-      btn.addEventListener('click', () => removeAnalysisImage(parseInt(btn.dataset.id)));
-    });
+    $$('.image-thumb-remove').forEach(btn => btn.addEventListener('click', () => removeAnalysisImage(parseInt(btn.dataset.id))));
   }
   
   async function runAnalysis() {
-    if (state.analysisImages.length === 0) return;
+    if (!state.analysisImages.length) return;
     $('analyzeBtn').disabled = true;
     $('analysisLoading').style.display = 'block';
     $('analysisResults').innerHTML = '';
-    startAnalysisTimer();
-    
-    const typeNames = { lab: 'Laboratory Results', xray: 'X-Ray', ct: 'CT/MRI Scan', ecg: 'ECG' };
+    startTimer();
     
     try {
       const response = await fetch(state.settings.apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          action: 'interpret',
-          documentType: state.analysisType,
-          images: state.analysisImages.map(img => ({ data: img.data })),
-          image: state.analysisImages[0].data,
-          multiImage: state.analysisImages.length > 1
-        })
+        body: JSON.stringify({ action: 'interpret', documentType: state.analysisType, image: state.analysisImages[0].data })
       });
       const data = await response.json();
-      stopAnalysisTimer();
+      stopTimer();
       $('analysisLoading').style.display = 'none';
       $('analyzeBtn').disabled = false;
       
@@ -1138,49 +1208,41 @@
         return;
       }
       
-      let html = `<div class="result-card"><h4>📋 ${typeNames[state.analysisType]} Analysis</h4>`;
-      html += `<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:10px">Completed in ${analysisSeconds}s</div>`;
+      const types = { lab: 'Lab Results', xray: 'X-Ray', ct: 'CT/MRI', ecg: 'ECG' };
+      let html = `<div class="result-card"><h4>📋 ${types[state.analysisType]} Analysis</h4><p style="font-size:0.7rem;color:var(--text-muted)">Completed in ${analysisSeconds}s</p>`;
       if (data.interpretation) {
-        const interp = data.interpretation;
-        if (interp.summary) html += `<p><b>Summary:</b> ${escapeHtml(interp.summary)}</p>`;
-        if (interp.keyFindings && interp.keyFindings.length) {
-          html += '<p><b>Key Findings:</b></p><ul>' + interp.keyFindings.map(f => `<li>${escapeHtml(f)}</li>`).join('') + '</ul>';
-        }
-        if (interp.abnormalities && interp.abnormalities.length) {
-          html += '<p><b class="abnormal">Abnormalities:</b></p><ul>' + interp.abnormalities.map(a => `<li class="abnormal">${escapeHtml(a)}</li>`).join('') + '</ul>';
-        }
+        const i = data.interpretation;
+        if (i.summary) html += `<p><b>Summary:</b> ${escapeHtml(i.summary)}</p>`;
+        if (i.keyFindings?.length) html += '<p><b>Findings:</b></p><ul>' + i.keyFindings.map(f => `<li>${escapeHtml(f)}</li>`).join('') + '</ul>';
+        if (i.abnormalities?.length) html += '<p><b class="abnormal">Abnormalities:</b></p><ul>' + i.abnormalities.map(a => `<li class="abnormal">${escapeHtml(a)}</li>`).join('') + '</ul>';
       }
       html += '</div>';
       $('analysisResults').innerHTML = html;
-      toast('Analysis complete in ' + analysisSeconds + 's!');
-    } catch (error) {
-      stopAnalysisTimer();
+      toast('Analysis complete!');
+    } catch (e) {
+      stopTimer();
       $('analysisLoading').style.display = 'none';
       $('analyzeBtn').disabled = false;
-      $('analysisResults').innerHTML = '<div class="result-card"><h4>⚠️ Error</h4><p>Connection failed. Try again.</p></div>';
+      $('analysisResults').innerHTML = '<div class="result-card"><h4>⚠️ Error</h4><p>Connection failed.</p></div>';
     }
   }
 
   // ========== IMPORT ==========
   function openImport() {
-    state.importImage = null;
-    state.importPatients = [];
+    state.importImage = null; state.importPatients = [];
     $('importUpload').style.display = 'block';
     $('importPreview').style.display = 'none';
     $('importLoading').style.display = 'none';
     $('importResults').style.display = 'none';
     $('importError').style.display = 'none';
     $('importConfirmBtn').disabled = true;
-    $('importFile').value = '';
     openModal('importModal');
   }
   
   function resetImport() {
-    state.importImage = null;
-    state.importPatients = [];
+    state.importImage = null; state.importPatients = [];
     $('importUpload').style.display = 'block';
     $('importPreview').style.display = 'none';
-    $('importLoading').style.display = 'none';
     $('importResults').style.display = 'none';
     $('importError').style.display = 'none';
     $('importConfirmBtn').disabled = true;
@@ -1212,33 +1274,32 @@
       if (data.error) { showImportError(data.error); return; }
       
       let pts = data.patients || [];
-      if (!pts.length && data.extractedText) {
-        try { const match = data.extractedText.match(/\[[\s\S]*\]/); if (match) pts = JSON.parse(match[0]); } catch (e) {}
-      }
       if (!pts.length) { showImportError('No patients found.'); return; }
       
       state.importPatients = pts.map((p, i) => ({
         id: Date.now() + i,
         name: (p.name || 'Unknown').trim(),
+        ward: (p.ward || 'Unassigned').trim(),
         room: (p.room || p.bed || '—').trim(),
         diagnosis: (p.diagnosis || p.condition || 'Pending').trim(),
         status: normalizeStatus(p.status),
-        doctor: p.doctor || (state.currentUser ? state.currentUser.name : 'Unassigned')
+        doctor: p.doctor || state.currentUser?.name || 'Unassigned'
       })).filter(p => p.name && p.name !== 'Unknown');
       
-      if (!state.importPatients.length) { showImportError('No valid patient data.'); return; }
+      if (!state.importPatients.length) { showImportError('No valid data.'); return; }
       showImportResults();
-    } catch (error) {
+    } catch (e) {
       $('importLoading').style.display = 'none';
       showImportError('Connection failed.');
     }
   }
   
-  function normalizeStatus(status) {
-    if (!status) return 'active';
-    const s = String(status).toLowerCase();
-    if (s.match(/critical|icu|urgent/)) return 'critical';
-    if (s.match(/chronic|stable/)) return 'chronic';
+  function normalizeStatus(s) {
+    if (!s) return 'active';
+    const status = String(s).toLowerCase();
+    if (status.match(/new/)) return 'new';
+    if (status.match(/critical|icu|urgent/)) return 'critical';
+    if (status.match(/chronic/)) return 'chronic';
     return 'active';
   }
   
@@ -1250,27 +1311,26 @@
   function showImportResults() {
     $('importResults').style.display = 'block';
     $('importCount').textContent = state.importPatients.length;
-    $('importList').innerHTML = state.importPatients.slice(0, 8).map(p => `
-      <div class="import-patient ${p.status === 'critical' ? 'critical' : ''}">
-        <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:8px;display:grid;place-items:center;font-weight:600;font-size:0.75rem;color:var(--bg)">${initials(p.name)}</div>
-        <div style="flex:1"><div style="font-weight:600;font-size:0.85rem">${escapeHtml(p.name)}</div><div style="font-size:0.7rem;color:var(--text-muted)">Room ${escapeHtml(p.room)}</div></div>
+    $('importList').innerHTML = state.importPatients.slice(0, 10).map(p => `
+      <div class="import-patient ${p.status}">
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:8px;display:grid;place-items:center;font-weight:600;font-size:0.7rem;color:var(--bg)">${initials(p.name)}</div>
+        <div style="flex:1"><div style="font-weight:600;font-size:0.8rem">${escapeHtml(p.name)}</div><div style="font-size:0.7rem;color:var(--text-muted)">${escapeHtml(p.ward)} • ${escapeHtml(p.room)}</div></div>
       </div>
-    `).join('') + (state.importPatients.length > 8 ? `<div style="text-align:center;padding:8px;font-size:0.8rem;color:var(--text-muted)">+${state.importPatients.length - 8} more</div>` : '');
+    `).join('') + (state.importPatients.length > 10 ? `<div class="empty-state">+${state.importPatients.length - 10} more</div>` : '');
     $('importConfirmBtn').disabled = false;
-    toast('Found ' + state.importPatients.length + ' patients!');
   }
   
   function confirmImport() {
     if (!state.importPatients.length) return;
     let added = 0;
     state.importPatients.forEach(p => {
-      const exists = state.patients.some(ep => ep.name.toLowerCase() === p.name.toLowerCase());
-      if (!exists) { state.patients.push(p); added++; }
+      if (!state.patients.some(ep => ep.name.toLowerCase() === p.name.toLowerCase())) {
+        state.patients.push(p);
+        added++;
+      }
     });
-    saveStorage();
-    renderPatients();
-    closeModal('importModal');
-    toast('Imported ' + added + ' patients!');
+    saveStorage(); renderPatients(); closeModal('importModal');
+    toast(`Imported ${added} patients!`);
   }
 
   // ========== EVENT LISTENERS ==========
@@ -1286,7 +1346,7 @@
     $('unitCancelBtn').addEventListener('click', () => closeModal('unitModal'));
     $('saveSettingsBtn').addEventListener('click', saveSettings);
     
-    // Sync button
+    // Sync
     $('syncFab').addEventListener('click', async () => {
       $('syncFab').classList.add('syncing');
       await forceSync();
@@ -1306,10 +1366,22 @@
       if (tab) showTab(tab.dataset.tab);
     });
     
+    // Stats filter
+    $('statsBar').addEventListener('click', e => {
+      const stat = e.target.closest('.stat');
+      if (stat) {
+        state.currentFilter = stat.dataset.filter;
+        renderPatients();
+      }
+    });
+    
     // Patients
     $('addPatientBtn').addEventListener('click', openAddPatient);
     $('patientSaveBtn').addEventListener('click', savePatient);
     $('patientCancelBtn').addEventListener('click', () => closeModal('patientModal'));
+    
+    // Export
+    $('exportBtn').addEventListener('click', exportPDF);
     
     // Import
     $('importBtn').addEventListener('click', openImport);
@@ -1337,19 +1409,17 @@
     });
     $('analyzeBtn').addEventListener('click', runAnalysis);
     
-    // Modal close on background click
-    $$('.modal').forEach(m => {
-      m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
-    });
+    // Modal close on background
+    $$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); }));
   }
 
   // ========== INITIALIZATION ==========
   async function init() {
-    console.log('[MedWard] Initializing...');
+    console.log('[MedWard] Initializing v2...');
     await loadStorage();
     renderUnits();
     initEventListeners();
-    console.log('[MedWard] Ready - Units:', state.units.length);
+    console.log('[MedWard] Ready - Units:', state.units.length, 'Patients:', state.patients.length);
   }
   
   if (document.readyState === 'loading') {
@@ -1357,6 +1427,69 @@
   } else {
     init();
   }
+})();
+</script>
+</body>
+</html>').addEventListener('click', enterUnit);
+    $('userName').addEventListener('keydown', e => { if (e.key === 'Enter') enterUnit(); });
+    
+    // Dashboard
+    $('logoutBtn').addEventListener('click', logout);
+    $('tabs').addEventListener('click', e => { const tab = e.target.closest('.tab'); if (tab) showTab(tab.dataset.tab); });
+    
+    // Stats filter
+    $('statsBar').addEventListener('click', e => {
+      const stat = e.target.closest('.stat');
+      if (stat) setFilter(stat.dataset.filter);
+    });
+    
+    // Patients
+    $('addPatientBtn').addEventListener('click', openAddPatient);
+    $('patientSaveBtn').addEventListener('click', savePatient);
+    $('patientCancelBtn').addEventListener('click', () => closeModal('patientModal'));
+    $('exportBtn').addEventListener('click', exportPDF);
+    
+    // Import
+    $('importBtn').addEventListener('click', openImport);
+    $('importDropzone').addEventListener('click', () => $('importFile').click());
+    $('importFile').addEventListener('change', function() { if (this.files[0]) handleImportFile(this.files[0]); });
+    $('importChangeBtn').addEventListener('click', resetImport);
+    $('importExtractBtn').addEventListener('click', extractPatients);
+    $('importRetryBtn').addEventListener('click', resetImport);
+    $('importCancelBtn').addEventListener('click', () => closeModal('importModal'));
+    $('importConfirmBtn').addEventListener('click', confirmImport);
+    
+    // Analysis
+    $('uploadZone').addEventListener('click', () => $('analysisFile').click());
+    $('analysisFile').addEventListener('change', function() {
+      Array.from(this.files).forEach(f => { if (f.type.startsWith('image/')) addAnalysisImage(f); });
+      this.value = '';
+    });
+    $('analysisTypes').addEventListener('click', e => {
+      const type = e.target.closest('.analysis-type');
+      if (type) {
+        state.analysisType = type.dataset.type;
+        $$('.analysis-type').forEach(t => t.classList.remove('active'));
+        type.classList.add('active');
+      }
+    });
+    $('analyzeBtn').addEventListener('click', runAnalysis);
+    
+    // Modals
+    $$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); }));
+  }
+
+  // ========== INIT ==========
+  async function init() {
+    console.log('[MedWard] Initializing...');
+    await loadStorage();
+    renderUnits();
+    initEventListeners();
+    console.log('[MedWard] Ready');
+  }
+  
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
 </script>
 </body>
