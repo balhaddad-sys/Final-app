@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <meta name="theme-color" content="#060a13">
+  <title>MedWard Debug</title>
+  <style>
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #060a13;
+      color: #f8fafc;
+      padding: 20px;
+      font-size: 14px;
+    }
+    .status { padding: 10px; margin: 5px 0; border-radius: 8px; }
+    .success { background: #10b98133; border: 1px solid #10b981; }
+    .error { background: #f43f5e33; border: 1px solid #f43f5e; }
+    .pending { background: #64748b33; border: 1px solid #64748b; }
+    h2 { color: #d4a437; margin-top: 20px; }
+    pre { background: #111b2e; padding: 10px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+    button { background: #d4a437; color: #060a13; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin: 10px 5px 10px 0; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🔧 MedWard Debug Console</h1>
+  
+  <h2>1. Script Loading Status</h2>
+  <div id="scriptStatus"></div>
+  
+  <h2>2. MedWard Object Status</h2>
+  <div id="objectStatus"></div>
+  
+  <h2>3. Units Data</h2>
+  <pre id="unitsData">Checking...</pre>
+  
+  <h2>4. LocalStorage Data</h2>
+  <pre id="storageData">Checking...</pre>
+  
+  <h2>5. Actions</h2>
+  <button onclick="clearStorage()">🗑️ Clear LocalStorage</button>
+  <button onclick="location.reload()">🔄 Reload Page</button>
+  <button onclick="window.location.href='index.html'">🏠 Go to Main App</button>
+  
+  <h2>6. Console Errors</h2>
+  <pre id="consoleErrors">None captured</pre>
+
+  <!-- Test loading scripts in order -->
+  <script>
+    const scriptFiles = [
+      'js/config.js',
+      'js/utilis.js', 
+      'js/storage.js',
+      'js/patients.js',
+      'js/analysis.js',
+      'js/import.js',
+      'js/app.js'
+    ];
+    
+    const errors = [];
+    
+    // Capture console errors
+    window.onerror = function(msg, url, line) {
+      errors.push(`${msg} at ${url}:${line}`);
+      document.getElementById('consoleErrors').textContent = errors.join('\n');
+      return false;
+    };
+    
+    function checkScripts() {
+      const container = document.getElementById('scriptStatus');
+      let html = '';
+      
+      scriptFiles.forEach(file => {
+        // Try to fetch the file to see if it exists
+        fetch(file)
+          .then(response => {
+            const status = response.ok ? 'success' : 'error';
+            const text = response.ok ? `✅ ${file} - Loaded (${response.status})` : `❌ ${file} - Not Found (${response.status})`;
+            document.getElementById('script-' + file.replace(/[/.]/g, '-')).className = 'status ' + status;
+            document.getElementById('script-' + file.replace(/[/.]/g, '-')).textContent = text;
+          })
+          .catch(err => {
+            document.getElementById('script-' + file.replace(/[/.]/g, '-')).className = 'status error';
+            document.getElementById('script-' + file.replace(/[/.]/g, '-')).textContent = `❌ ${file} - Error: ${err.message}`;
+          });
+        
+        html += `<div id="script-${file.replace(/[/.]/g, '-')}" class="status pending">⏳ ${file} - Checking...</div>`;
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    function checkObjects() {
+      const container = document.getElementById('objectStatus');
+      let html = '';
+      
+      const checks = [
+        { name: 'MedWard', obj: () => typeof MedWard !== 'undefined' },
+        { name: 'MedWard.CONFIG', obj: () => typeof MedWard !== 'undefined' && MedWard.CONFIG },
+        { name: 'MedWard.DEFAULT_UNITS', obj: () => typeof MedWard !== 'undefined' && MedWard.DEFAULT_UNITS },
+        { name: 'MedWard.Utils', obj: () => typeof MedWard !== 'undefined' && MedWard.Utils },
+        { name: 'MedWard.Storage', obj: () => typeof MedWard !== 'undefined' && MedWard.Storage },
+        { name: 'MedWard.Patients', obj: () => typeof MedWard !== 'undefined' && MedWard.Patients },
+        { name: 'MedWard.Analysis', obj: () => typeof MedWard !== 'undefined' && MedWard.Analysis },
+        { name: 'MedWard.Import', obj: () => typeof MedWard !== 'undefined' && MedWard.Import },
+        { name: 'MedWard.App', obj: () => typeof MedWard !== 'undefined' && MedWard.App },
+      ];
+      
+      checks.forEach(check => {
+        try {
+          const exists = check.obj();
+          html += `<div class="status ${exists ? 'success' : 'error'}">${exists ? '✅' : '❌'} ${check.name}</div>`;
+        } catch (e) {
+          html += `<div class="status error">❌ ${check.name} - Error: ${e.message}</div>`;
+        }
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    function checkUnits() {
+      try {
+        if (typeof MedWard !== 'undefined' && MedWard.DEFAULT_UNITS) {
+          document.getElementById('unitsData').textContent = 
+            'DEFAULT_UNITS:\n' + JSON.stringify(MedWard.DEFAULT_UNITS, null, 2);
+          
+          if (MedWard.Storage && MedWard.Storage.state) {
+            document.getElementById('unitsData').textContent += 
+              '\n\nStorage.state.units:\n' + JSON.stringify(MedWard.Storage.state.units, null, 2);
+          }
+        } else {
+          document.getElementById('unitsData').textContent = 'MedWard or DEFAULT_UNITS not defined';
+        }
+      } catch (e) {
+        document.getElementById('unitsData').textContent = 'Error: ' + e.message;
+      }
+    }
+    
+    function checkStorage() {
+      try {
+        const key = 'medward_enterprise_v2';
+        const data = localStorage.getItem(key);
+        if (data) {
+          document.getElementById('storageData').textContent = JSON.stringify(JSON.parse(data), null, 2);
+        } else {
+          document.getElementById('storageData').textContent = 'No data stored (this is fine for first run)';
+        }
+      } catch (e) {
+        document.getElementById('storageData').textContent = 'Error reading storage: ' + e.message;
+      }
+    }
+    
+    function clearStorage() {
+      try {
+        localStorage.removeItem('medward_enterprise_v2');
+        alert('LocalStorage cleared! Click Reload to test again.');
+        checkStorage();
+      } catch (e) {
+        alert('Error clearing storage: ' + e.message);
+      }
+    }
+    
+    // Run checks
+    checkScripts();
+    checkStorage();
+    
+    // Wait for scripts to load then check objects
+    setTimeout(() => {
+      checkObjects();
+      checkUnits();
+    }, 1000);
+  </script>
+  
+  <!-- Now actually load the scripts to test them -->
+  <script src="js/config.js"></script>
+  <script src="js/utilis.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/patients.js"></script>
+  <script src="js/analysis.js"></script>
+  <script src="js/import.js"></script>
+  <script src="js/app.js"></script>
+  
+  <script>
+    // Re-check after all scripts should be loaded
+    setTimeout(() => {
+      checkObjects();
+      checkUnits();
+    }, 2000);
+  </script>
+</body>
+</html>
