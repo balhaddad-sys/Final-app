@@ -258,7 +258,7 @@ async function search(){
     const data=await res.json();
     if(data.error)throw new Error(data.error);
     if(!data.content)throw new Error('No content');
-    $('results').innerHTML=`<div class="result-card"><div class="result-header"><div class="result-icon">💊</div><div class="result-info"><h2>${esc(query)}</h2><p>AI Clinical Reference</p></div><div class="result-actions"><div class="result-action" onclick="copyResult()" title="Copy">📋</div><div class="result-action" onclick="shareResult()" title="Share">📤</div></div></div><div class="result-body"><div class="result-content">${data.content}</div></div></div><div class="disclaimer">⚠️ AI-generated. Verify with official references.</div>`;
+    $('results').innerHTML=`<div class="result-card"><div class="result-header"><div class="result-icon">💊</div><div class="result-info"><h2>${esc(query)}</h2><p>${data.cached?'⚡ Instant (cached)':'AI Clinical Reference'}</p></div><div class="result-actions"><div class="result-action" onclick="copyResult()" title="Copy">📋</div><div class="result-action" onclick="shareResult()" title="Share">📤</div></div></div><div class="result-body"><div class="result-content">${data.content}</div></div></div><div class="disclaimer">⚠️ AI-generated. Verify with official references.</div>`;
   }catch(e){$('results').innerHTML=`<div class="error-card"><h3>⚠️ Error</h3><p>${esc(e.message)}</p><button class="retry-btn" onclick="search()">Retry</button></div>`}
   finally{$('searchBtn').disabled=false}
 }
