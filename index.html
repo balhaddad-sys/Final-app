@@ -1004,6 +1004,11 @@ Request New Unit Access
 <input type="text" id="apiUrl" class="form-input" readonly style="background:rgba(20,184,166,0.1);border-color:var(--emerald);color:var(--text-secondary)">
 <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">API URL is hardcoded in the app for all users</p>
 </div>
+<div class="form-group">
+<label class="form-label">💊 Drug Reference URL</label>
+<input type="text" id="drugRefUrl" class="form-input" placeholder="https://example.com/drug.html">
+<p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">URL for the "Learn More" button on medications. Leave empty to disable.</p>
+</div>
 <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
 </div>
 </div>
@@ -3542,7 +3547,8 @@ function renderProfileMeds() {
 function renderMedCard(med, idx) {
   const statusClass = med.status || 'active';
   const statusLabels = { active: 'Active', new: 'New', prn: 'PRN', discontinued: 'Stopped' };
-  const drugUrl = `https://balhaddad-sys.github.io/Final-app/drug.html`;
+  const drugUrl = state.settings.drugRefUrl || '';
+  const showDrugLink = drugUrl && drugUrl.trim() !== '';
   
   return `
     <div class="med-card">
@@ -3555,7 +3561,7 @@ function renderMedCard(med, idx) {
           ${med.generic ? `<div class="med-card-generic">${esc(med.generic)}</div>` : ''}
         </div>
         <div class="med-card-actions">
-          <a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info">📚</a>
+          ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info">📚</a>` : ''}
           <button class="med-card-action" onclick="editMedication(${idx})" title="Edit">✏️</button>
           <button class="med-card-action delete" onclick="deleteMedication(${idx})" title="Delete">🗑️</button>
         </div>
@@ -3571,7 +3577,7 @@ function renderMedCard(med, idx) {
           <div class="med-indication-text">${esc(med.indication)}</div>
         </div>
       ` : ''}
-      <a href="${drugUrl}" target="_blank" class="btn btn-info btn-xs" style="margin-top:10px;width:100%;text-decoration:none;display:block;text-align:center">📖 Learn More (AI-Powered)</a>
+      ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="btn btn-info btn-xs" style="margin-top:10px;width:100%;text-decoration:none;display:block;text-align:center">📖 Learn More (AI-Powered)</a>` : ''}
     </div>
   `;
 }
@@ -4752,13 +4758,13 @@ function showProfileTab(tabName) {
 
 // Admin functions
 window.openAdminLogin = function() { $('adminPwd').value = ''; $('adminError').classList.remove('show'); openModal('adminModal'); };
-window.loginAdmin = function() { if ($('adminPwd').value === state.settings.adminPassword) { closeModal('adminModal'); showPage('adminPanel'); $('apiUrl').value = state.settings.apiUrl || ''; renderUnitsTable(); loadUnitRequests(); } else $('adminError').classList.add('show'); };
+window.loginAdmin = function() { if ($('adminPwd').value === state.settings.adminPassword) { closeModal('adminModal'); showPage('adminPanel'); $('apiUrl').value = state.settings.apiUrl || ''; $('drugRefUrl').value = state.settings.drugRefUrl || ''; renderUnitsTable(); loadUnitRequests(); } else $('adminError').classList.add('show'); };
 window.exitAdmin = function() { showPage('landing'); };
 window.addUnit = function() { state.editingUnitId = null; $('unitModalTitle').textContent = 'Add Unit'; $('uName').value = ''; $('uIcon').value = '🏥'; $('uCode').value = ''; $('uDesc').value = ''; openModal('unitModal'); };
 window.editUnit = function(id) { const u = getUnit(id); if (!u) return; state.editingUnitId = id; $('unitModalTitle').textContent = 'Edit Unit'; $('uName').value = u.name; $('uIcon').value = u.icon; $('uCode').value = u.code; $('uDesc').value = u.desc || ''; openModal('unitModal'); };
 window.saveUnit = function() { const name = $('uName').value.trim(), icon = $('uIcon').value.trim() || '🏥', code = $('uCode').value.trim(), desc = $('uDesc').value.trim(); if (!name || !/^\d{4}$/.test(code)) { toast('Invalid', true); return; } if (state.editingUnitId) { const i = state.units.findIndex(u => u.id === state.editingUnitId); if (i !== -1) state.units[i] = { ...state.units[i], name, icon, code, desc }; } else { state.units.push({ id: 'u' + Date.now(), name, icon, code, desc, color: ['#f59e0b', '#14b8a6', '#3b82f6', '#8b5cf6'][state.units.length % 4] }); } saveCloud(); renderUnitsTable(); renderUnits(); closeModal('unitModal'); toast('Saved!'); };
 window.deleteUnit = function(id) { if (!confirm('Delete?')) return; state.units = state.units.filter(u => u.id !== id); saveCloud(); renderUnitsTable(); renderUnits(); };
-window.saveSettings = function() { const p = $('newAdminPwd').value.trim(), u = $('apiUrl').value.trim(); if (p) state.settings.adminPassword = p; if (u) state.settings.apiUrl = u; saveCloud(); toast('Saved!'); $('newAdminPwd').value = ''; };
+window.saveSettings = function() { const p = $('newAdminPwd').value.trim(), u = $('apiUrl').value.trim(), d = $('drugRefUrl').value.trim(); if (p) state.settings.adminPassword = p; if (u) state.settings.apiUrl = u; state.settings.drugRefUrl = d; saveCloud(); toast('Saved!'); $('newAdminPwd').value = ''; };
 
 // Admin Tab Navigation
 $('adminTabs')?.addEventListener('click', e => {
