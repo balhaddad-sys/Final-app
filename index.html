@@ -95,6 +95,31 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .calc-tab{padding:12px 16px;font-size:0.9rem;background:#1f2937;border:2px solid #374151;border-radius:10px;min-height:44px;font-weight:600;color:#e5e7eb}
 .calc-tab.active{background:linear-gradient(135deg,var(--teal),#0d9488);color:#fff;border-color:var(--teal)}
 .calc-result{background:linear-gradient(135deg,rgba(20,184,166,0.1),rgba(6,182,212,0.05));border:1px solid rgba(20,184,166,0.2);border-radius:12px}
+.calc-input{font-size:1.25rem;text-align:center;padding:16px;height:auto}
+
+/* Bottom Sheet */
+.bottom-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-radius:24px 24px 0 0;padding:0 20px 34px;z-index:1001;box-shadow:0 -10px 40px rgba(0,0,0,0.5);transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);max-height:85vh;overflow-y:auto}
+.bottom-sheet.active{transform:translateY(0)}
+.bottom-sheet-handle{width:40px;height:5px;background:rgba(255,255,255,0.3);border-radius:3px;margin:12px auto 16px}
+.bottom-sheet-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.bottom-sheet-title{font-size:1.2rem;font-weight:700}
+.bottom-sheet-close{background:rgba(255,255,255,0.1);border:none;width:36px;height:36px;border-radius:50%;color:var(--text);font-size:1.2rem;cursor:pointer}
+.bottom-sheet-body{padding-bottom:20px}
+.bottom-sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;opacity:0;pointer-events:none;transition:opacity 0.3s}
+.bottom-sheet-backdrop.active{opacity:1;pointer-events:auto}
+
+/* Demo Overlay */
+.demo-overlay{position:fixed;inset:0;background:rgba(3,7,18,0.95);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.demo-overlay.active{display:flex}
+.demo-card{background:linear-gradient(135deg,#0d1117,#161b22);border:1px solid var(--border);border-radius:20px;padding:32px 24px;max-width:400px;text-align:center}
+.demo-icon{font-size:4rem;margin-bottom:16px}
+.demo-card h2{font-size:1.5rem;margin-bottom:8px;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.demo-subtitle{color:var(--text-muted);margin-bottom:24px}
+.demo-steps{text-align:left;margin:20px 0}
+.demo-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;font-size:0.9rem;color:var(--text-secondary)}
+.demo-step-num{background:var(--teal);color:#000;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0}
+.demo-hint{margin-top:16px;font-size:0.85rem;color:var(--text-muted)}
+.btn-lg{min-height:54px;font-size:1.1rem;padding:16px 28px}
 .btn-full{width:100%}
 .btn-icon{width:48px;height:48px;padding:0;border-radius:var(--radius-sm);min-height:48px}
 .form-group{margin-bottom:20px}
@@ -1500,6 +1525,7 @@ Request New Unit Access
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="bottom-sheet-backdrop" id="calcBackdrop" onclick="closeCalcSheet()"></div>
 
 <!-- Quick Drug Reference Modal -->
 <div class="modal" id="quickRefModal">
@@ -1517,71 +1543,85 @@ Request New Unit Access
 </div>
 </div>
 
-<!-- Clinical Calculator Modal -->
-<div class="modal" id="calcModal">
-<div class="modal-box" style="max-width:420px">
-<div class="modal-header">
-<div class="modal-title">🧮 Clinical Calculators</div>
-<button class="modal-close-btn" onclick="closeModal('calcModal')">✕</button>
+<!-- Clinical Calculator Bottom Sheet -->
+<div class="bottom-sheet" id="calcSheet">
+<div class="bottom-sheet-handle" onclick="closeCalcSheet()"></div>
+<div class="bottom-sheet-header">
+<div class="bottom-sheet-title">🧮 Clinical Calculators</div>
+<button class="bottom-sheet-close" onclick="closeCalcSheet()">✕</button>
 </div>
-<div class="modal-body">
-<div class="calc-tabs" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-<button class="btn btn-sm calc-tab active" data-calc="crcl" onclick="showCalcTab('crcl')">CrCl</button>
-<button class="btn btn-sm calc-tab" data-calc="egfr" onclick="showCalcTab('egfr')">eGFR</button>
-<button class="btn btn-sm calc-tab" data-calc="calcium" onclick="showCalcTab('calcium')">Ca²⁺</button>
-<button class="btn btn-sm calc-tab" data-calc="anion" onclick="showCalcTab('anion')">Anion Gap</button>
-<button class="btn btn-sm calc-tab" data-calc="bmi" onclick="showCalcTab('bmi')">BMI</button>
+<div class="bottom-sheet-body">
+<div class="calc-tabs" style="display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:8px">
+<button class="calc-tab active" data-calc="crcl" onclick="showCalcTab('crcl')">CrCl</button>
+<button class="calc-tab" data-calc="egfr" onclick="showCalcTab('egfr')">eGFR</button>
+<button class="calc-tab" data-calc="calcium" onclick="showCalcTab('calcium')">Ca²⁺</button>
+<button class="calc-tab" data-calc="anion" onclick="showCalcTab('anion')">Anion Gap</button>
+<button class="calc-tab" data-calc="bmi" onclick="showCalcTab('bmi')">BMI</button>
 </div>
 
 <!-- CrCl Calculator -->
 <div class="calc-panel active" id="calcCrcl">
-<div class="form-group"><label class="form-label">Age (years)</label><input type="number" id="calcAge" class="form-input" placeholder="65"></div>
-<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="calcWeight" class="form-input" placeholder="70"></div>
-<div class="form-group"><label class="form-label">Creatinine (mg/dL)</label><input type="number" id="calcCr" class="form-input" step="0.1" placeholder="1.2"></div>
-<div class="form-group"><label class="form-label"><input type="checkbox" id="calcFemale"> Female</label></div>
-<button class="btn btn-primary" onclick="runCrClCalc()" style="width:100%;margin-top:12px">Calculate CrCl</button>
-<div class="calc-result" id="resultCrcl" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+<div class="form-group"><label class="form-label">Age (years)</label><input type="number" id="calcAge" class="form-input calc-input" placeholder="65"></div>
+<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="calcWeight" class="form-input calc-input" placeholder="70"></div>
+<div class="form-group"><label class="form-label">Creatinine (mg/dL)</label><input type="number" id="calcCr" class="form-input calc-input" step="0.1" placeholder="1.2"></div>
+<div class="form-group" style="padding:12px 0"><label style="display:flex;align-items:center;gap:12px;font-size:1rem"><input type="checkbox" id="calcFemale" style="width:24px;height:24px;accent-color:var(--teal)"> Female</label></div>
+<button class="btn btn-primary btn-lg" onclick="runCrClCalc()" style="width:100%;margin-top:12px">Calculate CrCl</button>
+<div class="calc-result" id="resultCrcl" style="margin-top:16px;padding:20px;display:none"></div>
 </div>
 
 <!-- eGFR Calculator -->
 <div class="calc-panel" id="calcEgfr" style="display:none">
-<div class="form-group"><label class="form-label">Age (years)</label><input type="number" id="egfrAge" class="form-input" placeholder="65"></div>
-<div class="form-group"><label class="form-label">Creatinine (mg/dL)</label><input type="number" id="egfrCr" class="form-input" step="0.1" placeholder="1.2"></div>
-<div class="form-group"><label class="form-label"><input type="checkbox" id="egfrFemale"> Female</label></div>
-<button class="btn btn-primary" onclick="runEGFRCalc()" style="width:100%;margin-top:12px">Calculate eGFR</button>
-<div class="calc-result" id="resultEgfr" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+<div class="form-group"><label class="form-label">Age (years)</label><input type="number" id="egfrAge" class="form-input calc-input" placeholder="65"></div>
+<div class="form-group"><label class="form-label">Creatinine (mg/dL)</label><input type="number" id="egfrCr" class="form-input calc-input" step="0.1" placeholder="1.2"></div>
+<div class="form-group" style="padding:12px 0"><label style="display:flex;align-items:center;gap:12px;font-size:1rem"><input type="checkbox" id="egfrFemale" style="width:24px;height:24px;accent-color:var(--teal)"> Female</label></div>
+<button class="btn btn-primary btn-lg" onclick="runEGFRCalc()" style="width:100%;margin-top:12px">Calculate eGFR</button>
+<div class="calc-result" id="resultEgfr" style="margin-top:16px;padding:20px;display:none"></div>
 </div>
 
 <!-- Corrected Calcium -->
 <div class="calc-panel" id="calcCalcium" style="display:none">
-<div class="form-group"><label class="form-label">Calcium (mg/dL)</label><input type="number" id="calcCa" class="form-input" step="0.1" placeholder="8.5"></div>
-<div class="form-group"><label class="form-label">Albumin (g/dL)</label><input type="number" id="calcAlb" class="form-input" step="0.1" placeholder="3.5"></div>
-<button class="btn btn-primary" onclick="runCalciumCalc()" style="width:100%;margin-top:12px">Calculate Corrected Ca²⁺</button>
-<div class="calc-result" id="resultCalcium" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+<div class="form-group"><label class="form-label">Calcium (mg/dL)</label><input type="number" id="calcCa" class="form-input calc-input" step="0.1" placeholder="8.5"></div>
+<div class="form-group"><label class="form-label">Albumin (g/dL)</label><input type="number" id="calcAlb" class="form-input calc-input" step="0.1" placeholder="3.5"></div>
+<button class="btn btn-primary btn-lg" onclick="runCalciumCalc()" style="width:100%;margin-top:12px">Calculate Corrected Ca²⁺</button>
+<div class="calc-result" id="resultCalcium" style="margin-top:16px;padding:20px;display:none"></div>
 </div>
 
 <!-- Anion Gap -->
 <div class="calc-panel" id="calcAnion" style="display:none">
-<div class="form-group"><label class="form-label">Sodium (mEq/L)</label><input type="number" id="calcNa" class="form-input" placeholder="140"></div>
-<div class="form-group"><label class="form-label">Chloride (mEq/L)</label><input type="number" id="calcCl" class="form-input" placeholder="100"></div>
-<div class="form-group"><label class="form-label">Bicarbonate (mEq/L)</label><input type="number" id="calcHCO3" class="form-input" placeholder="24"></div>
-<button class="btn btn-primary" onclick="runAnionCalc()" style="width:100%;margin-top:12px">Calculate Anion Gap</button>
-<div class="calc-result" id="resultAnion" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+<div class="form-group"><label class="form-label">Sodium (mEq/L)</label><input type="number" id="calcNa" class="form-input calc-input" placeholder="140"></div>
+<div class="form-group"><label class="form-label">Chloride (mEq/L)</label><input type="number" id="calcCl" class="form-input calc-input" placeholder="100"></div>
+<div class="form-group"><label class="form-label">Bicarbonate (mEq/L)</label><input type="number" id="calcHCO3" class="form-input calc-input" placeholder="24"></div>
+<button class="btn btn-primary btn-lg" onclick="runAnionCalc()" style="width:100%;margin-top:12px">Calculate Anion Gap</button>
+<div class="calc-result" id="resultAnion" style="margin-top:16px;padding:20px;display:none"></div>
 </div>
 
 <!-- BMI -->
 <div class="calc-panel" id="calcBmi" style="display:none">
-<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="bmiWeight" class="form-input" placeholder="70"></div>
-<div class="form-group"><label class="form-label">Height (cm)</label><input type="number" id="bmiHeight" class="form-input" placeholder="170"></div>
-<button class="btn btn-primary" onclick="runBMICalc()" style="width:100%;margin-top:12px">Calculate BMI</button>
-<div class="calc-result" id="resultBmi" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
-</div>
-</div>
-<div class="modal-footer">
-<button class="btn btn-secondary" onclick="closeModal('calcModal')">Close</button>
+<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="bmiWeight" class="form-input calc-input" placeholder="70"></div>
+<div class="form-group"><label class="form-label">Height (cm)</label><input type="number" id="bmiHeight" class="form-input calc-input" placeholder="170"></div>
+<button class="btn btn-primary btn-lg" onclick="runBMICalc()" style="width:100%;margin-top:16px">Calculate BMI</button>
+<div class="calc-result" id="resultBmi" style="margin-top:16px;padding:20px;display:none"></div>
 </div>
 </div>
 </div>
+
+<!-- Demo/Onboarding Overlay -->
+<div class="demo-overlay" id="demoOverlay">
+<div class="demo-card">
+<div class="demo-icon">🏥</div>
+<h2>Welcome to MedWard Pro</h2>
+<p class="demo-subtitle">Neural Clinical Management System</p>
+<div class="demo-steps">
+<div class="demo-step"><span class="demo-step-num">1</span> Tap a <strong>unit card</strong> and enter the code to access</div>
+<div class="demo-step"><span class="demo-step-num">2</span> Add patients and manage their <strong>medications</strong></div>
+<div class="demo-step"><span class="demo-step-num">3</span> Upload <strong>lab reports</strong> for AI analysis</div>
+<div class="demo-step"><span class="demo-step-num">4</span> Use <strong>clinical calculators</strong> for quick assessments</div>
+</div>
+<button class="btn btn-primary btn-lg" onclick="closeDemo()" style="width:100%;margin-top:24px">Get Started</button>
+<p class="demo-hint">Demo Unit Code: <strong>1234</strong></p>
+</div>
+</div>
+
 <input type="file" id="labFileInput" accept="image/*" multiple style="display:none">
 
 <!-- Lab Override Modal -->
@@ -5258,7 +5298,13 @@ window.openUnitAccess = openUnitAccess;
 // ═══════════════════════════════════════════════════════════════════
 
 window.openCalculator = function() {
-  openModal('calcModal');
+  $('calcSheet').classList.add('active');
+  $('calcBackdrop').classList.add('active');
+};
+
+window.closeCalcSheet = function() {
+  $('calcSheet').classList.remove('active');
+  $('calcBackdrop').classList.remove('active');
 };
 
 window.showCalcTab = function(tab) {
@@ -5508,6 +5554,19 @@ window.logout = function() {
   state.currentFilter = 'all';
   showPage('landing');
   toast('Logged out');
+};
+
+// Demo/Onboarding check
+function checkFirstTimeUser() {
+  const hasSeenDemo = localStorage.getItem('medWard_hasSeenDemo');
+  if (!hasSeenDemo) {
+    $('demoOverlay').classList.add('active');
+  }
+}
+
+window.closeDemo = function() {
+  localStorage.setItem('medWard_hasSeenDemo', 'true');
+  $('demoOverlay').classList.remove('active');
 };
 
 // Auto-login check
@@ -6148,6 +6207,9 @@ async function init() {
     
     // Check for saved session (auto-login)
     const autoLoggedIn = checkAutoLogin();
+    
+    // Show onboarding for first-time users
+    checkFirstTimeUser();
     
     // Standard onclick for FABs
     $('adminFab').onclick = openAdminLogin;
