@@ -840,6 +840,7 @@ body {
 
 <script>
 const STORAGE_KEY = 'medward_drug_api_v2';
+const MEDWARD_STORAGE_KEY = 'medward_pro_v12';
 let apiUrl = '';
 let chatHistory = [];
 let isLoading = false;
@@ -851,13 +852,29 @@ const $ = id => document.getElementById(id);
 // ═══════════════════════════════════════════════════════════════════
 
 function init() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
+  // First try to get API from main MedWard app
+  const medwardData = localStorage.getItem(MEDWARD_STORAGE_KEY);
+  if (medwardData) {
     try {
-      const data = JSON.parse(saved);
-      apiUrl = data.apiUrl || '';
+      const data = JSON.parse(medwardData);
+      if (data.settings && data.settings.apiUrl) {
+        apiUrl = data.settings.apiUrl;
+        console.log('Using MedWard API:', apiUrl);
+      }
     } catch(e) {}
   }
+  
+  // Fallback to drug-specific storage
+  if (!apiUrl) {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        apiUrl = data.apiUrl || '';
+      } catch(e) {}
+    }
+  }
+  
   updateStatus();
 }
 
@@ -1011,7 +1028,7 @@ async function sendChat() {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ 
-        action: 'chat', 
+        action: 'drugChat', 
         message: msg,
         history: chatHistory.slice(-10)
       })
