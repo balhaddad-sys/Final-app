@@ -110,7 +110,7 @@ button,a,.btn,.unit-card,.patient-card,.med-card,.clickable,[onclick]{touch-acti
 .modal-title{font-size:1.1rem;font-weight:700}
 .modal-body{padding:24px;overflow-y:auto;flex:1}
 .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px}
-.modal-footer .btn{flex:1}
+.modal-footer .btn{flex:1;touch-action:manipulation;-webkit-user-select:none;user-select:none;position:relative;z-index:10;min-height:50px}
 .page{display:none;min-height:100vh}
 .page.active{display:flex;flex-direction:column}
 #landing{align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at top,#111827 0%,var(--bg) 50%)}
@@ -1071,8 +1071,8 @@ Request New Unit Access
 </div>
 </div>
 <div class="modal-footer">
-<button class="btn btn-secondary" onclick="closeModal('accessModal')">Cancel</button>
-<button class="btn btn-primary" id="enterBtn" style="display:none" onclick="enterUnit()">Enter</button>
+<button class="btn btn-secondary" id="cancelAccessBtn">Cancel</button>
+<button class="btn btn-primary" id="enterBtn" style="display:none">Enter</button>
 </div>
 </div>
 </div>
@@ -2412,6 +2412,34 @@ const $$ = sel => document.querySelectorAll(sel);
 const esc = t => { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
 const initials = n => { if (!n) return '?'; const p = n.trim().split(/\s+/); return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : n.substring(0, 2).toUpperCase(); };
 
+// ═══════════════════════════════════════════════════════════════════
+// TOUCH SUPPORT HELPER - Must be defined early!
+// ═══════════════════════════════════════════════════════════════════
+function addTouchSupport(element, handler) {
+  if (!element) return;
+  
+  let touchMoved = false;
+  
+  element.addEventListener('touchstart', () => {
+    touchMoved = false;
+  }, { passive: true });
+  
+  element.addEventListener('touchmove', () => {
+    touchMoved = true;
+  }, { passive: true });
+  
+  element.addEventListener('touchend', (e) => {
+    if (!touchMoved) {
+      e.preventDefault();
+      handler(e);
+    }
+  }, { passive: false });
+  
+  element.addEventListener('click', (e) => {
+    handler(e);
+  });
+}
+
 function toast(msg, isError = false) {
   const t = $('toast');
   t.textContent = msg;
@@ -2844,21 +2872,12 @@ window.sendFeedback = sendFeedback;
 // ═══════════════════════════════════════════════════════════════════
 
 function renderUnits() {
-  console.log('🔄 renderUnits called, units count:', state.units.length);
-
   // Ensure at least one default unit exists
   if (!state.units.length) {
-    console.log('⚠️ No units found, creating default unit');
     state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine • Tap to enter', code: '1234', color: '#14b8a6' }];
   }
-
-  const unitsGrid = $('unitsGrid');
-  if (!unitsGrid) {
-    console.error('❌ unitsGrid element not found!');
-    return;
-  }
-
-  unitsGrid.innerHTML = `
+  
+  $('unitsGrid').innerHTML = `
     <div class="units-prompt">👆 Tap a unit below to enter</div>
     ${state.units.map(u => `
     <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
@@ -2868,12 +2887,9 @@ function renderUnits() {
       <div class="unit-card-code-hint">🔐 Code: 1234</div>
     </div>
   `).join('')}`;
-
+  
   // Add touch support to each unit card
-  const unitCards = $$('.unit-card');
-  console.log('✅ Rendered', unitCards.length, 'unit cards, attaching event handlers...');
-
-  unitCards.forEach(card => {
+  $$('.unit-card').forEach(card => {
     addTouchSupport(card, () => {
       const unitId = card.dataset.id;
       console.log('Unit card tapped:', unitId);
@@ -5042,6 +5058,26 @@ function openUnitAccess(id) {
     inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus(); });
   });
   
+  // Add touch support for Cancel button
+  const cancelBtn = $('cancelAccessBtn');
+  if (cancelBtn) {
+    cancelBtn.onclick = null; // Remove any existing handler
+    addTouchSupport(cancelBtn, () => {
+      console.log('Cancel button pressed');
+      closeModal('accessModal');
+    });
+  }
+  
+  // Add touch support for Enter button
+  const enterBtn = $('enterBtn');
+  if (enterBtn) {
+    enterBtn.onclick = null; // Remove any existing handler
+    addTouchSupport(enterBtn, () => {
+      console.log('Enter button pressed');
+      enterUnit();
+    });
+  }
+  
   openModal('accessModal');
   setTimeout(() => inputs[0].focus(), 100);
 }
@@ -5665,34 +5701,43 @@ window.saveLabOverride = function() {
   toast('Lab value updated');
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// TOUCH SUPPORT HELPER
-// ═══════════════════════════════════════════════════════════════════
-
-function addTouchSupport(element, handler) {
-  if (!element) return;
-  
-  let touchMoved = false;
-  
-  element.addEventListener('touchstart', () => {
-    touchMoved = false;
-  }, { passive: true });
-  
-  element.addEventListener('touchmove', () => {
-    touchMoved = true;
-  }, { passive: true });
-  
-  element.addEventListener('touchend', (e) => {
-    if (!touchMoved) {
-      e.preventDefault();
-      handler(e);
+// Make all buttons touch-friendly globally
+function enableTouchForAllButtons() {
+  document.querySelectorAll('button, .btn, [onclick]').forEach(el => {
+    // Skip if already has touch handler
+    if (el.dataset.touchEnabled) return;
+    el.dataset.touchEnabled = 'true';
+    
+    const originalOnclick = el.onclick;
+    if (originalOnclick) {
+      el.onclick = null; // Remove original
+      
+      let touchMoved = false;
+      
+      el.addEventListener('touchstart', () => {
+        touchMoved = false;
+      }, { passive: true });
+      
+      el.addEventListener('touchend', (e) => {
+        if (!touchMoved) {
+          e.preventDefault();
+          e.stopPropagation();
+          originalOnclick.call(el, e);
+        }
+      }, { passive: false });
+      
+      el.addEventListener('click', (e) => {
+        originalOnclick.call(el, e);
+      });
     }
-  }, { passive: false });
-  
-  element.addEventListener('click', (e) => {
-    handler(e);
   });
 }
+
+// Run on DOM changes to catch dynamically added buttons
+const buttonObserver = new MutationObserver(() => {
+  enableTouchForAllButtons();
+});
+buttonObserver.observe(document.body, { childList: true, subtree: true });
 
 // ═══════════════════════════════════════════════════════════════════
 // INIT
@@ -5702,6 +5747,9 @@ async function init() {
   console.log('MedWard Pro initializing...');
   
   try {
+    // Enable touch support for all existing buttons
+    enableTouchForAllButtons();
+    
     loadLocal();
     renderUnits();
     renderScoresGrid();
@@ -5751,28 +5799,19 @@ async function init() {
     });
     
     console.log('MedWard Pro initialized successfully');
-
+    
     // Initial cloud sync (with error handling)
     try {
       await syncFromCloud();
-      // Re-render units after sync to reflect any changes from cloud
-      renderUnits();
-      console.log('✅ Units re-rendered after cloud sync');
     } catch (syncError) {
       console.warn('Cloud sync failed, using local data:', syncError);
       toast('Offline mode - using local data');
     }
-
+    
     // Periodic background sync (every 60 seconds) - only if no pending changes
-    setInterval(async () => {
+    setInterval(() => {
       if (!syncState.pendingChanges) {
-        try {
-          await syncFromCloud();
-          // Re-render units after background sync
-          renderUnits();
-        } catch (e) {
-          console.warn('Background sync failed:', e);
-        }
+        syncFromCloud().catch(e => console.warn('Background sync failed:', e));
       }
     }, 60000);
     
