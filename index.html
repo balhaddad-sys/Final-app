@@ -1042,6 +1042,83 @@ async function saveCloud() {
   markDirty();
 }
 
+// Force immediate sync - bypasses debounce for critical operations like lab saves
+async function forceSync() {
+  // Clear any pending debounced sync
+  if (syncState.syncTimeout) {
+    clearTimeout(syncState.syncTimeout);
+    syncState.syncTimeout = null;
+  }
+  
+  // Save locally first
+  saveLocal();
+  
+  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+    console.log('⚠️ No API URL configured - saved locally only');
+    updateSyncStatus('synced', 'Saved locally');
+    return true;
+  }
+  
+  updateSyncStatus('syncing', 'Saving to cloud...');
+  console.log('☁️ Force syncing to cloud...');
+  console.log('📦 Patients to save:', state.patients.length);
+  
+  // Log lab data for debugging
+  state.patients.forEach(p => {
+    if (p.labData?.parameters?.length) {
+      console.log(`   Patient ${p.name}: ${p.labData.parameters.length} lab parameters`);
+    }
+  });
+  
+  try {
+    const payload = { 
+      units: state.units, 
+      settings: { adminPassword: state.settings.adminPassword }, 
+      patients: state.patients,
+      unitRequests: state.unitRequests
+    };
+    
+    console.log('📤 Sending payload size:', JSON.stringify(payload).length, 'bytes');
+    
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'saveData',
+        payload: payload
+      })
+    });
+    
+    const responseText = await res.text();
+    console.log('📥 Response:', responseText);
+    
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      throw new Error('Invalid response: ' + responseText.substring(0, 100));
+    }
+    
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || 'Save failed');
+    }
+    
+    syncState.pendingChanges = false;
+    syncState.lastSyncTime = Date.now();
+    syncState.errorCount = 0;
+    updateSyncStatus('synced', 'Synced');
+    console.log('✅ Sync successful at', result.timestamp);
+    return true;
+    
+  } catch (e) {
+    console.error('❌ Sync error:', e);
+    syncState.errorCount++;
+    updateSyncStatus('error', 'Sync failed: ' + e.message);
+    toast('Failed to save to cloud: ' + e.message, true);
+    return false;
+  }
+}
+
 async function manualSync() {
   const syncFab = $('syncFab');
   syncFab.classList.add('syncing');
@@ -1062,6 +1139,8 @@ async function manualSync() {
 async function syncFromCloud() {
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') return;
   
+  console.log('🔄 Loading data from cloud...');
+  
   try {
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
@@ -1070,18 +1149,63 @@ async function syncFromCloud() {
     });
     
     const data = await res.json();
+    console.log('📥 Cloud data received:', data.success ? 'success' : 'failed');
     
     if (data.success && data.data) {
-      if (data.data.units?.length) state.units = data.data.units;
-      if (data.data.settings) state.settings = { ...state.settings, ...data.data.settings };
-      if (data.data.patients) state.patients = data.data.patients;
-      if (data.data.unitRequests) state.unitRequests = data.data.unitRequests;
+      // Update units
+      if (data.data.units?.length) {
+        state.units = data.data.units;
+        console.log('   Units loaded:', state.units.length);
+      }
+      
+      // Update settings
+      if (data.data.settings) {
+        state.settings = { ...state.settings, ...data.data.settings };
+      }
+      
+      // Update patients - THIS IS KEY FOR MULTI-USER SYNC
+      if (data.data.patients) {
+        state.patients = data.data.patients;
+        console.log('   Patients loaded:', state.patients.length);
+        
+        // Log lab data for debugging
+        state.patients.forEach(p => {
+          if (p.labData?.parameters?.length) {
+            console.log(`   → ${p.name}: ${p.labData.parameters.length} lab parameters`);
+          }
+        });
+        
+        // If we have a current patient open, refresh their reference
+        if (state.currentPatient) {
+          const refreshedPatient = state.patients.find(p => p.id === state.currentPatient.id);
+          if (refreshedPatient) {
+            state.currentPatient = refreshedPatient;
+            console.log('   Current patient refreshed:', state.currentPatient.name);
+          }
+        }
+      }
+      
+      // Update unit requests
+      if (data.data.unitRequests) {
+        state.unitRequests = data.data.unitRequests;
+      }
+      
+      // Save to local storage
       saveLocal();
-      if (state.currentUnit) renderPatients();
-      else renderUnits();
+      
+      // Re-render appropriate view
+      if (state.currentPatient) {
+        renderPatientProfile();
+      } else if (state.currentUnit) {
+        renderPatients();
+      } else {
+        renderUnits();
+      }
+      
+      console.log('✅ Cloud sync complete, last updated:', data.data.lastUpdated || 'unknown');
     }
   } catch (e) {
-    console.error('Load from cloud failed:', e);
+    console.error('❌ Load from cloud failed:', e);
   }
 }
 
@@ -1711,7 +1835,7 @@ function showLabExtractionPreview(data) {
   openModal('labPreviewModal');
 }
 
-window.confirmLabExtraction = function() {
+window.confirmLabExtraction = async function() {
   if (!state.pendingLabData || !state.currentPatient) return;
   
   const p = state.currentPatient;
@@ -1761,7 +1885,9 @@ window.confirmLabExtraction = function() {
   // Update interpretation
   if (ld.interpretation) p.labData.interpretation = ld.interpretation;
   
-  saveCloud();
+  // Force immediate sync (bypass debounce for lab data)
+  await forceSync();
+  
   renderProfileLabs();
   closeModal('labPreviewModal');
   toast('Lab results saved!');
