@@ -2730,6 +2730,37 @@ function getLabCategory(name) {
 
 let isSyncing = false;
 
+// Get unit-specific storage key for patient data
+function getUnitStorageKey() {
+  const unitId = state.currentUnit?.id || 'default';
+  return `medWard_patients_${unitId}`;
+}
+
+// Load patients for current unit only
+function loadUnitPatients() {
+  if (!state.currentUnit) return;
+  try {
+    const key = getUnitStorageKey();
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      state.patients = JSON.parse(saved);
+    } else {
+      state.patients = [];
+    }
+  } catch (e) {
+    state.patients = [];
+  }
+}
+
+// Save patients for current unit only
+function saveUnitPatients() {
+  if (!state.currentUnit) return;
+  try {
+    const key = getUnitStorageKey();
+    localStorage.setItem(key, JSON.stringify(state.patients));
+  } catch (e) {}
+}
+
 function loadLocal() {
   try {
     const s = localStorage.getItem(CONFIG.STORAGE_KEY);
@@ -2737,8 +2768,8 @@ function loadLocal() {
       const d = JSON.parse(s);
       if (d.units?.length) state.units = d.units;
       if (d.settings) state.settings = { ...state.settings, ...d.settings };
-      if (d.patients) state.patients = d.patients;
       if (d.unitRequests) state.unitRequests = d.unitRequests;
+      // Note: patients are now loaded per-unit via loadUnitPatients()
     }
   } catch (e) {}
   if (!state.units.length) state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine', code: '1234', color: '#14b8a6' }];
@@ -2750,8 +2781,10 @@ function loadLocal() {
 function saveLocal() {
   try {
     localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
-      units: state.units, settings: state.settings, patients: state.patients, unitRequests: state.unitRequests, lastUpdated: new Date().toISOString()
+      units: state.units, settings: state.settings, unitRequests: state.unitRequests, lastUpdated: new Date().toISOString()
     }));
+    // Also save unit-specific patients
+    saveUnitPatients();
   } catch (e) {}
 }
 
@@ -2804,7 +2837,7 @@ function markDirty() {
 async function performSync() {
   if (!syncState.pendingChanges) return;
   
-  // Always save locally first
+  // Always save locally first (now unit-specific)
   saveLocal();
   
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
@@ -2813,21 +2846,36 @@ async function performSync() {
     return;
   }
   
+  // Only sync if we have a current unit
+  if (!state.currentUnit) {
+    syncState.pendingChanges = false;
+    updateSyncStatus('synced', 'Saved locally');
+    return;
+  }
+  
   updateSyncStatus('syncing', 'Syncing to cloud...');
   
   try {
+    // Use unit-specific key for cloud storage
+    const unitKey = state.currentUnit.id;
+    
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
-        action: 'saveData',
+        action: 'saveUnitData',
+        unitKey: unitKey,
         payload: { 
+          patients: state.patients,
+          lastUpdated: new Date().toISOString()
+        },
+        // Also save global config separately
+        globalPayload: {
           units: state.units, 
           settings: { 
             adminPassword: state.settings.adminPassword,
-            apiUrl: state.settings.apiUrl  // Include API URL so all users get it
+            apiUrl: state.settings.apiUrl
           }, 
-          patients: state.patients,
           unitRequests: state.unitRequests
         }
       })
@@ -2865,7 +2913,7 @@ async function forceSync() {
     syncState.syncTimeout = null;
   }
   
-  // Save locally first
+  // Save locally first (now unit-specific)
   saveLocal();
   
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
@@ -2874,8 +2922,15 @@ async function forceSync() {
     return true;
   }
   
+  // Need a current unit to sync
+  if (!state.currentUnit) {
+    console.log('⚠️ No current unit - saved locally only');
+    updateSyncStatus('synced', 'Saved locally');
+    return true;
+  }
+  
   updateSyncStatus('syncing', 'Saving to cloud...');
-  console.log('☁️ Force syncing to cloud...');
+  console.log('☁️ Force syncing to cloud for unit:', state.currentUnit.name);
   console.log('📦 Patients to save:', state.patients.length);
   
   // Log lab data for debugging
@@ -2886,24 +2941,26 @@ async function forceSync() {
   });
   
   try {
-    const payload = { 
-      units: state.units, 
-      settings: { 
-        adminPassword: state.settings.adminPassword,
-        apiUrl: state.settings.apiUrl  // Include API URL so all users get it
-      }, 
-      patients: state.patients,
-      unitRequests: state.unitRequests
-    };
-    
-    console.log('📤 Sending payload size:', JSON.stringify(payload).length, 'bytes');
+    const unitKey = state.currentUnit.id;
     
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
-        action: 'saveData',
-        payload: payload
+        action: 'saveUnitData',
+        unitKey: unitKey,
+        payload: { 
+          patients: state.patients,
+          lastUpdated: new Date().toISOString()
+        },
+        globalPayload: {
+          units: state.units, 
+          settings: { 
+            adminPassword: state.settings.adminPassword,
+            apiUrl: state.settings.apiUrl
+          }, 
+          unitRequests: state.unitRequests
+        }
       })
     });
     
@@ -2960,37 +3017,54 @@ async function syncFromCloud() {
   console.log('🔄 Loading data from cloud...');
   
   try {
-    const res = await fetch(state.settings.apiUrl, {
+    // First load global data (units, settings)
+    const globalRes = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'loadData' })
     });
     
-    const data = await res.json();
-    console.log('📥 Cloud data received:', data.success ? 'success' : 'failed');
+    const globalData = await globalRes.json();
+    console.log('📥 Global data received:', globalData.success ? 'success' : 'failed');
     
-    if (data.success && data.data) {
+    if (globalData.success && globalData.data) {
       // Update units
-      if (data.data.units?.length) {
-        state.units = data.data.units;
+      if (globalData.data.units?.length) {
+        state.units = globalData.data.units;
         console.log('   Units loaded:', state.units.length);
       }
       
-      // Update settings - IMPORTANT: preserve local apiUrl if cloud doesn't have it
-      if (data.data.settings) {
-        const cloudApiUrl = data.data.settings.apiUrl;
-        state.settings = { ...state.settings, ...data.data.settings };
-        // If cloud has apiUrl, use it; otherwise keep local
+      // Update settings
+      if (globalData.data.settings) {
+        const cloudApiUrl = globalData.data.settings.apiUrl;
+        state.settings = { ...state.settings, ...globalData.data.settings };
         if (cloudApiUrl && cloudApiUrl !== 'YOUR_API_URL_HERE') {
           state.settings.apiUrl = cloudApiUrl;
         }
-        console.log('   Settings loaded, apiUrl:', state.settings.apiUrl ? 'configured' : 'not set');
       }
       
-      // Update patients - THIS IS KEY FOR MULTI-USER SYNC
-      if (data.data.patients) {
-        state.patients = data.data.patients;
-        console.log('   Patients loaded:', state.patients.length);
+      // Update unit requests
+      if (globalData.data.unitRequests) {
+        state.unitRequests = globalData.data.unitRequests;
+      }
+    }
+    
+    // Then load unit-specific patients if we have a current unit
+    if (state.currentUnit) {
+      const unitKey = state.currentUnit.id;
+      console.log('🔄 Loading patients for unit:', unitKey);
+      
+      const unitRes = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'loadUnitData', unitKey: unitKey })
+      });
+      
+      const unitData = await unitRes.json();
+      
+      if (unitData.success && unitData.data?.patients) {
+        state.patients = unitData.data.patients;
+        console.log('   Unit patients loaded:', state.patients.length);
         
         // Log lab data for debugging
         state.patients.forEach(p => {
@@ -2999,35 +3073,29 @@ async function syncFromCloud() {
           }
         });
         
-        // If we have a current patient open, refresh their reference
+        // Refresh current patient reference if open
         if (state.currentPatient) {
           const refreshedPatient = state.patients.find(p => p.id === state.currentPatient.id);
           if (refreshedPatient) {
             state.currentPatient = refreshedPatient;
-            console.log('   Current patient refreshed:', state.currentPatient.name);
           }
         }
       }
-      
-      // Update unit requests
-      if (data.data.unitRequests) {
-        state.unitRequests = data.data.unitRequests;
-      }
-      
-      // Save to local storage
-      saveLocal();
-      
-      // Re-render appropriate view
-      if (state.currentPatient) {
-        renderPatientProfile();
-      } else if (state.currentUnit) {
-        renderPatients();
-      } else {
-        renderUnits();
-      }
-      
-      console.log('✅ Cloud sync complete, last updated:', data.data.lastUpdated || 'unknown');
     }
+    
+    // Save to local storage
+    saveLocal();
+    
+    // Re-render appropriate view
+    if (state.currentPatient) {
+      renderPatientProfile();
+    } else if (state.currentUnit) {
+      renderPatients();
+    } else {
+      renderUnits();
+    }
+    
+    console.log('✅ Cloud sync complete');
   } catch (e) {
     console.error('❌ Load from cloud failed:', e);
   }
@@ -5526,6 +5594,9 @@ window.enterUnit = function() {
   state.currentUnit = getUnit(state.selectedUnitId);
   state.currentUser = { name: n, role: $('userRole').value };
   
+  // Load patients for this specific unit
+  loadUnitPatients();
+  
   // Save session for auto-login
   const rememberMe = $('rememberMe')?.checked;
   if (rememberMe) {
@@ -5579,6 +5650,10 @@ function checkAutoLogin() {
       if (unit && session.user) {
         state.currentUnit = unit;
         state.currentUser = session.user;
+        
+        // Load patients for this specific unit
+        loadUnitPatients();
+        
         showPage('dashboard');
         $('unitBadge').textContent = state.currentUnit.name;
         $('dashAvatar').textContent = initials(state.currentUser.name);
