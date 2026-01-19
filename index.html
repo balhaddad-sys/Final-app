@@ -165,11 +165,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .profile-avatar{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;font-size:1.5rem;font-weight:800;color:#000}
 .profile-details h2{font-size:1.4rem;font-weight:800;margin-bottom:6px}
 .profile-details .meta{display:flex;flex-wrap:wrap;gap:16px;color:var(--text-secondary);font-size:0.85rem}
-.profile-tabs{display:flex;gap:6px;padding:0 20px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.profile-tabs{display:flex;gap:4px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#0d1117;border-bottom:1px solid rgba(255,255,255,0.06)}
 .profile-tabs::-webkit-scrollbar{display:none}
-.profile-tab{padding:12px 20px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s}
-.profile-tab:hover{color:var(--text)}
-.profile-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.profile-tab{padding:8px 12px;background:transparent;border:none;border-radius:6px;color:#8b949e;font-family:inherit;font-size:0.75rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all 0.15s;display:flex;align-items:center;gap:4px}
+.profile-tab:hover{color:#c9d1d9;background:rgba(255,255,255,0.04)}
+.profile-tab.active{color:#e6edf3;background:rgba(255,255,255,0.08)}
 .profile-content{flex:1;padding:20px;overflow-y:auto}
 .profile-panel{display:none}
 .profile-panel.active{display:block}
@@ -587,6 +587,48 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .patient-score-chip .score-chip-value.low{color:#3fb950}
 .patient-score-chip .score-chip-value.moderate{color:#d29922}
 .patient-score-chip .score-chip-value.high{color:#f85149}
+
+/* ═══ CLINICAL HISTORY & NOTES ═══ */
+.history-upload-area{
+  padding:20px;background:#161b22;border:2px dashed #30363d;
+  border-radius:10px;text-align:center;cursor:pointer;
+  margin-bottom:16px;transition:all 0.15s
+}
+.history-upload-area:active{background:#1c2128;border-color:#388bfd}
+.clinical-notes-list{display:flex;flex-direction:column;gap:12px}
+.clinical-note-card{
+  background:#161b22;border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;overflow:hidden
+}
+.clinical-note-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 12px;background:#0d1117;
+  border-bottom:1px solid rgba(255,255,255,0.04)
+}
+.clinical-note-type{font-size:0.8rem;font-weight:600;color:#e6edf3}
+.clinical-note-date{font-size:0.7rem;color:#8b949e}
+.clinical-note-image{
+  width:100%;max-height:200px;object-fit:cover;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,0.04)
+}
+.clinical-note-ai{
+  padding:10px 12px;background:rgba(46,160,67,0.06);
+  border-bottom:1px solid rgba(255,255,255,0.04)
+}
+.clinical-note-ai-badge{
+  font-size:0.65rem;font-weight:600;color:#3fb950;
+  margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px
+}
+.clinical-note-ai-text{font-size:0.82rem;color:#c9d1d9;line-height:1.4}
+.clinical-note-text{padding:12px;font-size:0.85rem;color:#c9d1d9;line-height:1.5;white-space:pre-wrap}
+.clinical-note-author{padding:0 12px 10px;font-size:0.72rem;color:#8b949e;font-style:italic}
+.btn-icon-sm{
+  background:transparent;border:none;padding:4px;
+  font-size:0.85rem;cursor:pointer;opacity:0.6;transition:opacity 0.15s
+}
+.btn-icon-sm:hover{opacity:1}
+.btn-danger{background:#da3633!important;border-color:#da3633!important;color:#fff!important}
+.btn-danger:hover{background:#f85149!important}
 </style>
 </head>
 <body>
@@ -709,15 +751,17 @@ Request New Unit Access
 <div class="profile-patient" id="profilePatientInfo"></div>
 </div>
 <div class="profile-tabs" id="profileTabs">
-<button class="profile-tab active" data-ptab="overview">Overview</button>
-<button class="profile-tab" data-ptab="scores">Scores</button>
-<button class="profile-tab" data-ptab="labs">Labs</button>
-<button class="profile-tab" data-ptab="imaging">Imaging</button>
-<button class="profile-tab" data-ptab="fluids">Fluids</button>
-<button class="profile-tab" data-ptab="plans">Plans</button>
+<button class="profile-tab active" data-ptab="overview">📋 Overview</button>
+<button class="profile-tab" data-ptab="history">📜 History</button>
+<button class="profile-tab" data-ptab="scores">📊 Scores</button>
+<button class="profile-tab" data-ptab="labs">🧪 Labs</button>
+<button class="profile-tab" data-ptab="imaging">🩻 Imaging</button>
+<button class="profile-tab" data-ptab="fluids">💧 Fluids</button>
+<button class="profile-tab" data-ptab="plans">📝 Plans</button>
 </div>
 <div class="profile-content">
 <div class="profile-panel active" id="profileOverview"></div>
+<div class="profile-panel" id="profileHistory"></div>
 <div class="profile-panel" id="profileScores"></div>
 <div class="profile-panel" id="profileLabs"></div>
 <div class="profile-panel" id="profileImaging"></div>
@@ -3090,12 +3134,168 @@ function renderPatientProfile() {
   `;
   
   renderProfileOverview();
+  renderProfileHistory();
   renderProfileScores();
   renderProfileLabs();
   renderProfileImaging();
   renderProfileFluids();
   renderProfilePlans();
 }
+
+function renderProfileHistory() {
+  const p = state.currentPatient;
+  if (!p.clinicalNotes) p.clinicalNotes = [];
+  
+  let html = `
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">📜 Clinical Notes & Documents</div>
+        <button class="btn btn-primary btn-sm" onclick="addClinicalNote()">+ Add Note</button>
+      </div>
+      <div class="section-body">
+        <div class="history-upload-area" onclick="triggerHistoryUpload()">
+          <div style="font-size:1.5rem;margin-bottom:6px">📷</div>
+          <div style="font-weight:600;font-size:0.85rem">Upload Document</div>
+          <div style="font-size:0.75rem;color:#8b949e">Progress notes, referrals, consults, discharge summaries</div>
+        </div>
+  `;
+  
+  if (!p.clinicalNotes.length) {
+    html += `<div style="text-align:center;padding:24px;color:#8b949e">
+      <div style="font-size:1.5rem;margin-bottom:8px">📝</div>
+      <div>No clinical notes yet</div>
+      <div style="font-size:0.75rem;margin-top:4px">Add notes or upload documents</div>
+    </div>`;
+  } else {
+    html += `<div class="clinical-notes-list">`;
+    
+    p.clinicalNotes.slice().reverse().forEach((note, idx) => {
+      const realIdx = p.clinicalNotes.length - 1 - idx;
+      const typeIcons = { progress: '📝', consult: '👨‍⚕️', referral: '📤', discharge: '🏥', imaging: '🩻', other: '📄' };
+      const icon = typeIcons[note.type] || '📄';
+      
+      html += `
+        <div class="clinical-note-card">
+          <div class="clinical-note-header">
+            <div class="clinical-note-type">${icon} ${(note.type || 'Note').charAt(0).toUpperCase() + (note.type || 'note').slice(1)}</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="clinical-note-date">${formatDateTime(note.date)}</span>
+              <button class="btn-icon-sm" onclick="deleteClinicalNote(${realIdx})" title="Delete">🗑️</button>
+            </div>
+          </div>
+          ${note.image ? `<img src="${note.image}" class="clinical-note-image" onclick="viewNoteImage(${realIdx})">` : ''}
+          ${note.aiSummary ? `
+            <div class="clinical-note-ai">
+              <div class="clinical-note-ai-badge">🤖 AI Summary</div>
+              <div class="clinical-note-ai-text">${esc(note.aiSummary)}</div>
+            </div>
+          ` : ''}
+          ${note.text ? `<div class="clinical-note-text">${esc(note.text)}</div>` : ''}
+          ${note.author ? `<div class="clinical-note-author">— ${esc(note.author)}</div>` : ''}
+        </div>
+      `;
+    });
+    
+    html += `</div>`;
+  }
+  
+  html += `</div></div>`;
+  $('profileHistory').innerHTML = html;
+}
+
+window.addClinicalNote = function() {
+  const type = prompt('Note type:\\n• progress\\n• consult\\n• referral\\n• discharge\\n• other') || 'progress';
+  const text = prompt('Enter note text:');
+  if (!text) return;
+  
+  const p = state.currentPatient;
+  if (!p.clinicalNotes) p.clinicalNotes = [];
+  
+  p.clinicalNotes.push({
+    date: new Date().toISOString(),
+    type: type,
+    text: text,
+    author: state.settings.userName || 'Unknown'
+  });
+  
+  saveCloud();
+  renderProfileHistory();
+  toast('Note added');
+};
+
+window.triggerHistoryUpload = function() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => handleHistoryUpload(e.target.files[0]);
+  input.click();
+};
+
+async function handleHistoryUpload(file) {
+  if (!file) return;
+  
+  const type = prompt('Document type:\\n• progress\\n• consult\\n• referral\\n• discharge\\n• other') || 'other';
+  
+  toast('Analyzing document...');
+  
+  compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
+    try {
+      const res = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ 
+          action: 'interpret', 
+          documentType: 'clinical_note',
+          noteType: type,
+          image: imageData 
+        })
+      });
+      const data = await res.json();
+      
+      const p = state.currentPatient;
+      if (!p.clinicalNotes) p.clinicalNotes = [];
+      
+      p.clinicalNotes.push({
+        date: new Date().toISOString(),
+        type: type,
+        image: imageData,
+        aiSummary: data.interpretation?.summary || data.interpretation?.text || 'Document uploaded',
+        author: state.settings.userName || 'Unknown'
+      });
+      
+      saveCloud();
+      renderProfileHistory();
+      toast('Document analyzed and saved');
+    } catch (e) {
+      toast('Failed to analyze document', true);
+    }
+  });
+}
+
+window.deleteClinicalNote = function(idx) {
+  if (!confirm('Delete this note?')) return;
+  state.currentPatient.clinicalNotes.splice(idx, 1);
+  saveCloud();
+  renderProfileHistory();
+  toast('Note deleted');
+};
+
+window.viewNoteImage = function(idx) {
+  const note = state.currentPatient.clinicalNotes[idx];
+  if (!note?.image) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.style.cssText = 'padding:10px;z-index:9999';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:90%;max-height:90vh;padding:0;background:#000">
+      <img src="${note.image}" style="max-width:100%;max-height:85vh;object-fit:contain">
+      <button onclick="this.parentElement.parentElement.remove()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer">✕ Close</button>
+    </div>
+  `;
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+};
 
 function renderProfileOverview() {
   const p = state.currentPatient;
@@ -3131,7 +3331,10 @@ function renderProfileLabs() {
   
   let html = `
     <div class="section-card">
-      <div class="section-header"><div class="section-title">🧪 Laboratory Results</div></div>
+      <div class="section-header">
+        <div class="section-title">🧪 Laboratory Results</div>
+        ${labData.parameters?.length ? `<button class="btn btn-danger btn-sm" onclick="clearPatientLabs()" style="padding:4px 8px;font-size:0.7rem">🗑️ Clear</button>` : ''}
+      </div>
       <div class="section-body">
         <div class="lab-upload-area ${state.isAnalyzingLab ? 'analyzing' : ''}" onclick="triggerLabUpload()">
           ${state.isAnalyzingLab ? `
@@ -3141,7 +3344,7 @@ function renderProfileLabs() {
           ` : `
             <div class="lab-upload-icon">📷</div>
             <div class="lab-upload-title">Upload Lab Report</div>
-            <div class="lab-upload-subtitle">Smart OCR • Kuwait MOH format supported • Historical data extraction</div>
+            <div class="lab-upload-subtitle">Smart OCR • Kuwait MOH format supported</div>
           `}
         </div>
   `;
@@ -3698,10 +3901,19 @@ async function handleImagingUpload(file) {
 }
 
 window.deleteImaging = function(idx) {
-  if (!confirm('Delete?')) return;
+  if (!confirm('Delete this imaging study?')) return;
   state.currentPatient.imaging.splice(idx, 1);
   saveCloud();
   renderProfileImaging();
+  toast('Imaging deleted');
+};
+
+window.clearPatientLabs = function() {
+  if (!confirm('Delete all lab results for this patient?')) return;
+  state.currentPatient.labData = { dates: [], parameters: [] };
+  saveCloud();
+  renderProfileLabs();
+  toast('Lab data cleared');
 };
 
 function renderProfileFluids() {
