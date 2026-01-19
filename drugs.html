@@ -3,1114 +3,297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta name="theme-color" content="#030712">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
 <title>MedWard Drug Reference</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #030712;
-  --bg-card: #0d1320;
-  --bg-elevated: #151d2e;
-  --bg-hover: #1a2438;
-  --text: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --gold: #f59e0b;
-  --gold-dim: rgba(245,158,11,0.15);
-  --purple: #8b5cf6;
-  --purple-dim: rgba(139,92,246,0.15);
-  --blue: #3b82f6;
-  --rose: #f43f5e;
-  --emerald: #10b981;
-  --teal: #14b8a6;
-  --border: rgba(255,255,255,0.06);
-  --border-light: rgba(255,255,255,0.1);
-  --radius: 20px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.3);
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
-
-/* Container */
-.app {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-bottom: 100px;
-}
-
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0 20px;
-}
-
-.back-btn {
-  width: 44px;
-  height: 44px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 1.1rem;
-  display: grid;
-  place-items: center;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-.back-btn:hover { border-color: var(--gold); }
-
-.header-center {
-  flex: 1;
-  text-align: center;
-}
-.header-center h1 {
-  font-size: 1.3rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--gold), var(--purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.header-center p {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.config-btn {
-  width: 44px;
-  height: 44px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.config-btn:hover { border-color: var(--purple); color: var(--purple); }
-.config-btn.active { border-color: var(--emerald); color: var(--emerald); }
-
-/* Search Box */
-.search-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.search-row {
-  display: flex;
-  gap: 12px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 16px 20px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text);
-  font-size: 1rem;
-  font-family: inherit;
-  transition: all 0.2s;
-}
-.search-input:focus {
-  outline: none;
-  border-color: var(--purple);
-  box-shadow: 0 0 0 3px var(--purple-dim);
-}
-.search-input::placeholder { color: var(--text-muted); }
-
-.search-btn {
-  padding: 16px 28px;
-  background: linear-gradient(135deg, var(--purple), var(--blue));
-  border: none;
-  border-radius: var(--radius-md);
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-.search-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139,92,246,0.4); }
-.search-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-/* Section Headers */
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.section-header h2 {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.02em;
-}
-.section-line {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, var(--border-light), transparent);
-}
-
-/* Drug Chips */
-.chips-container {
-  margin-bottom: 24px;
-}
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.chip {
-  padding: 12px 18px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 25px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.chip:hover {
-  background: var(--purple-dim);
-  border-color: var(--purple);
-  color: var(--purple);
-  transform: translateY(-2px);
-}
-
-/* Protocol Cards */
-.protocols-container {
-  margin-bottom: 24px;
-}
-.protocols-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-.protocol-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 18px;
-  cursor: pointer;
-  transition: all 0.25s;
-  position: relative;
-  overflow: hidden;
-}
-.protocol-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--gold), var(--purple));
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.protocol-card:hover {
-  border-color: var(--gold);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-.protocol-card:hover::before { opacity: 1; }
-.protocol-icon {
-  font-size: 1.8rem;
-  margin-bottom: 10px;
-}
-.protocol-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.protocol-desc {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-/* Results Area */
-.results-container {
-  min-height: 100px;
-}
-
-.result-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-.result-header {
-  padding: 20px;
-  background: linear-gradient(135deg, var(--purple-dim), rgba(59,130,246,0.08));
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.result-icon {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--purple), var(--blue));
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  font-size: 1.8rem;
-  flex-shrink: 0;
-}
-.result-info h3 {
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-.result-info p {
-  font-size: 0.75rem;
-  color: var(--purple);
-  margin-top: 2px;
-}
-.result-body {
-  padding: 20px;
-  font-size: 0.88rem;
-  line-height: 1.8;
-  color: var(--text-secondary);
-}
-.result-body h4 {
-  color: var(--gold);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 20px 0 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border);
-}
-.result-body h4:first-child { margin-top: 0; }
-.result-body ul {
-  margin: 10px 0;
-  padding-left: 20px;
-}
-.result-body li { margin-bottom: 8px; }
-.result-body strong { color: var(--text); }
-.result-body code {
-  background: var(--bg);
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-family: 'SF Mono', monospace;
-  font-size: 0.82rem;
-  color: var(--teal);
-}
-
-.disclaimer {
-  text-align: center;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 16px;
-  padding: 12px;
-  background: var(--bg-card);
-  border-radius: var(--radius-sm);
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 50px 20px;
-}
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 16px;
-  opacity: 0.8;
-}
-.empty-state h3 {
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-}
-.empty-state p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* Loading */
-.loading {
-  text-align: center;
-  padding: 60px 20px;
-}
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid var(--border);
-  border-top-color: var(--purple);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 20px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-/* Error */
-.error-card {
-  background: rgba(244,63,94,0.08);
-  border: 1px solid rgba(244,63,94,0.3);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  text-align: center;
-}
-.error-card h3 {
-  color: var(--rose);
-  font-size: 1rem;
-  margin-bottom: 8px;
-}
-.error-card p {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-/* AI FAB */
-.ai-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, var(--purple), var(--blue));
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 4px 24px rgba(139,92,246,0.5);
-  display: grid;
-  place-items: center;
-  font-size: 1.6rem;
-  z-index: 50;
-  transition: all 0.3s;
-}
-.ai-fab:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 32px rgba(139,92,246,0.6);
-}
-
-/* Modals */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 100;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-}
-.modal.active { display: flex; }
-
-.modal-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  width: 100%;
-  max-width: 420px;
-  overflow: hidden;
-  animation: modalIn 0.25s ease;
-}
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.modal-header h3 {
-  flex: 1;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-.modal-close {
-  width: 36px;
-  height: 36px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all 0.2s;
-}
-.modal-close:hover { border-color: var(--rose); color: var(--rose); }
-
-.modal-body { padding: 24px; }
-
-.form-group { margin-bottom: 20px; }
-.form-label {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-.form-input {
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: 'SF Mono', monospace;
-  font-size: 0.85rem;
-}
-.form-input:focus {
-  outline: none;
-  border-color: var(--purple);
-}
-.form-hint {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 8px;
-  line-height: 1.5;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-.status-badge.ok {
-  background: rgba(16,185,129,0.1);
-  color: var(--emerald);
-}
-.status-badge.no {
-  background: rgba(244,63,94,0.1);
-  color: var(--rose);
-}
-
-.btn {
-  width: 100%;
-  padding: 16px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-primary {
-  background: linear-gradient(135deg, var(--purple), var(--blue));
-  color: white;
-}
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139,92,246,0.4); }
-
-/* Chat Modal */
-.chat-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 200;
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.chat-modal.active { display: flex; }
-
-.chat-box {
-  width: 100%;
-  max-width: 500px;
-  max-height: 85vh;
-  background: var(--bg-card);
-  border-radius: var(--radius) var(--radius) 0 0;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.3s ease;
-}
-@keyframes slideUp { from { transform: translateY(100%); } }
-
-.chat-header {
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.chat-avatar {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--purple), var(--blue));
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  font-size: 1.3rem;
-}
-.chat-header-info { flex: 1; }
-.chat-header-info h3 { font-size: 1rem; font-weight: 700; }
-.chat-header-info p { font-size: 0.72rem; color: var(--text-muted); }
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  min-height: 200px;
-  max-height: 55vh;
-}
-.msg {
-  margin-bottom: 16px;
-  display: flex;
-  gap: 12px;
-}
-.msg.user { flex-direction: row-reverse; }
-.msg-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-}
-.msg.assistant .msg-avatar { background: linear-gradient(135deg, var(--purple), var(--blue)); }
-.msg.user .msg-avatar { background: linear-gradient(135deg, var(--gold), #f97316); }
-.msg-content {
-  max-width: 80%;
-  padding: 12px 16px;
-  border-radius: 16px;
-  font-size: 0.88rem;
-  line-height: 1.6;
-}
-.msg.assistant .msg-content {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-top-left-radius: 4px;
-}
-.msg.user .msg-content {
-  background: var(--gold-dim);
-  border: 1px solid rgba(245,158,11,0.3);
-  border-top-right-radius: 4px;
-}
-.msg-content h4 { color: var(--gold); font-size: 0.75rem; margin: 10px 0 6px; }
-.msg-content ul { margin: 6px 0; padding-left: 18px; font-size: 0.82rem; }
-.msg-content li { margin-bottom: 4px; }
-
-.typing {
-  display: flex;
-  gap: 5px;
-  padding: 8px 0;
-}
-.typing span {
-  width: 8px;
-  height: 8px;
-  background: var(--purple);
-  border-radius: 50%;
-  animation: bounce 1.4s infinite;
-}
-.typing span:nth-child(2) { animation-delay: 0.2s; }
-.typing span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-8px); }
-}
-
-.chat-input-area {
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 12px;
-}
-.chat-input {
-  flex: 1;
-  padding: 14px 16px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 0.9rem;
-  font-family: inherit;
-  resize: none;
-}
-.chat-input:focus { outline: none; border-color: var(--purple); }
-.chat-send {
-  padding: 14px 24px;
-  background: linear-gradient(135deg, var(--purple), var(--blue));
-  border: none;
-  border-radius: var(--radius-sm);
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-}
-.chat-send:disabled { opacity: 0.5; }
-
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%) translateY(30px);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  padding: 14px 24px;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
-  font-weight: 500;
-  opacity: 0;
-  transition: all 0.3s;
-  z-index: 300;
-}
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.error { border-color: var(--rose); color: var(--rose); }
-
-/* Responsive */
-@media (max-width: 480px) {
-  .protocols-grid { grid-template-columns: 1fr; }
-  .search-row { flex-direction: column; }
-  .search-btn { width: 100%; }
-}
-@media (min-width: 601px) {
-  .chat-modal { align-items: center; padding: 20px; }
-  .chat-box { border-radius: var(--radius); max-height: 75vh; }
-}
+:root{--bg:#0a0a0f;--bg-card:#12121a;--bg-elevated:#1a1a24;--bg-input:#0e0e14;--text:#fff;--text-secondary:#a0a0b0;--text-muted:#606070;--accent:#6366f1;--accent-glow:rgba(99,102,241,0.25);--gold:#f59e0b;--emerald:#10b981;--rose:#f43f5e;--cyan:#06b6d4;--border:rgba(255,255,255,0.06);--gradient-1:linear-gradient(135deg,#6366f1,#8b5cf6);--gradient-2:linear-gradient(135deg,#f59e0b,#f97316);--radius:16px;--radius-lg:24px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.app{max-width:800px;margin:0 auto;padding:12px;padding-bottom:100px}
+.header{display:flex;align-items:center;padding:12px 0;gap:12px}
+.back-btn{width:40px;height:40px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:1.1rem;display:grid;place-items:center;text-decoration:none}
+.logo{flex:1;display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;background:var(--gradient-1);border-radius:12px;display:grid;place-items:center;font-size:1.2rem}
+.logo h1{font-size:1rem;font-weight:800}.logo p{font-size:0.6rem;color:var(--text-muted)}
+.settings-btn{width:40px;height:40px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;color:var(--text-muted);font-size:1rem;cursor:pointer}
+.settings-btn.active{border-color:var(--emerald);color:var(--emerald)}
+.hero{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-30%;width:250px;height:250px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.search-row{display:flex;gap:10px;margin-bottom:14px;position:relative;z-index:1}
+.search-wrap{flex:1;position:relative}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:0.4}
+.search-input{width:100%;padding:14px 14px 14px 42px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:0.95rem;font-family:inherit}
+.search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.search-input::placeholder{color:var(--text-muted)}
+.search-btn{padding:14px 24px;background:var(--gradient-1);border:none;border-radius:12px;color:white;font-weight:700;cursor:pointer}
+.search-btn:disabled{opacity:0.5}
+.quick-pills{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
+.pill{padding:8px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;font-size:0.72rem;font-weight:600;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0;margin-bottom:12px}
+.tab{padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;font-size:0.75rem;font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab.active{background:var(--gradient-1);border-color:transparent;color:white}
+.section{margin-bottom:20px}
+.section-title{font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-title span{color:var(--gold)}
+.drug-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.drug-chip{padding:14px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;text-align:center;cursor:pointer;transition:all 0.15s}
+.drug-chip:hover{border-color:var(--accent);transform:translateY(-2px)}
+.drug-chip .icon{font-size:1.4rem;margin-bottom:6px;display:block}
+.drug-chip .name{font-size:0.7rem;font-weight:600}
+.drug-chip .class{font-size:0.55rem;color:var(--text-muted);margin-top:2px}
+.protocol-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.protocol-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all 0.15s;position:relative}
+.protocol-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.protocol-card .badge{position:absolute;top:10px;right:10px;padding:3px 8px;background:rgba(244,63,94,0.2);border-radius:6px;font-size:0.55rem;font-weight:700;color:var(--rose)}
+.protocol-card .icon{font-size:1.8rem;margin-bottom:8px}
+.protocol-card h3{font-size:0.85rem;font-weight:700;margin-bottom:4px}
+.protocol-card p{font-size:0.65rem;color:var(--text-muted);line-height:1.4}
+.calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.calc-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all 0.15s}
+.calc-card:hover{border-color:var(--cyan)}
+.calc-card .icon{font-size:1.3rem;margin-bottom:6px}
+.calc-card .name{font-size:0.7rem;font-weight:600}
+.results{min-height:100px}
+.result-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;animation:fadeIn 0.25s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}}
+.result-header{padding:18px;background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(139,92,246,0.05));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.result-icon{width:50px;height:50px;background:var(--gradient-1);border-radius:14px;display:grid;place-items:center;font-size:1.6rem}
+.result-info{flex:1}.result-info h2{font-size:1.1rem;font-weight:800}.result-info p{font-size:0.7rem;color:var(--accent)}
+.result-actions{display:flex;gap:8px}
+.result-action{width:36px;height:36px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;font-size:0.9rem}
+.result-body{padding:18px}
+.result-content{font-size:0.85rem;line-height:1.8;color:var(--text-secondary)}
+.result-content h4{color:var(--gold);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.result-content h4:first-child{margin-top:0}
+.result-content ul{margin:8px 0;padding-left:18px}
+.result-content li{margin-bottom:5px}
+.result-content strong{color:var(--text)}
+.result-content code{background:var(--bg-input);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.8rem;color:var(--cyan)}
+.disclaimer{text-align:center;font-size:0.65rem;color:var(--text-muted);padding:14px;background:var(--bg-card);border-radius:10px;margin-top:12px}
+.loading{text-align:center;padding:50px 20px}
+.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--text-muted);font-size:0.85rem}
+.error-card{background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.3);border-radius:var(--radius);padding:24px;text-align:center}
+.error-card h3{color:var(--rose);margin:8px 0}.error-card p{color:var(--text-muted);font-size:0.85rem}
+.retry-btn{margin-top:14px;padding:10px 20px;background:var(--rose);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer}
+.fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;background:var(--gradient-1);border:none;border-radius:50%;cursor:pointer;box-shadow:0 4px 20px var(--accent-glow);display:grid;place-items:center;font-size:1.4rem;z-index:50}
+.fab:hover{transform:scale(1.08)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
+.modal.active{display:flex}
+.modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:420px;overflow:hidden;animation:modalIn 0.2s}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95)}}
+.modal-header{padding:18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.modal-header h3{flex:1;font-size:1rem}
+.modal-close{width:34px;height:34px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;display:grid;place-items:center}
+.modal-body{padding:18px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.form-input{width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:monospace;font-size:0.8rem}
+.form-input:focus{outline:none;border-color:var(--accent)}
+.form-hint{font-size:0.65rem;color:var(--text-muted);margin-top:6px}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;margin-bottom:14px}
+.status-badge.ok{background:rgba(16,185,129,0.15);color:var(--emerald)}
+.status-badge.no{background:rgba(244,63,94,0.15);color:var(--rose)}
+.btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:700;cursor:pointer;background:var(--gradient-1);color:white}
+.chat-modal{align-items:flex-end}
+.chat-modal .modal-box{max-width:480px;max-height:80vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;display:flex;flex-direction:column}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;min-height:200px;max-height:50vh}
+.msg{margin-bottom:12px;display:flex;gap:10px}
+.msg.user{flex-direction:row-reverse}
+.msg-avatar{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:0.85rem}
+.msg.assistant .msg-avatar{background:var(--gradient-1)}
+.msg.user .msg-avatar{background:var(--gradient-2)}
+.msg-bubble{max-width:80%;padding:10px 14px;border-radius:14px;font-size:0.85rem;line-height:1.6}
+.msg.assistant .msg-bubble{background:var(--bg-elevated);border:1px solid var(--border)}
+.msg.user .msg-bubble{background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.3)}
+.typing{display:flex;gap:4px;padding:6px 0}
+.typing span{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:bounce 1.4s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.chat-input-area{padding:14px;border-top:1px solid var(--border);display:flex;gap:10px}
+.chat-input{flex:1;padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.85rem;font-family:inherit;resize:none}
+.chat-input:focus{outline:none;border-color:var(--accent)}
+.chat-send{padding:12px 18px;background:var(--gradient-1);border:none;border-radius:10px;color:white;font-weight:700;cursor:pointer}
+.chat-send:disabled{opacity:0.5}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-elevated);border:1px solid var(--border);padding:12px 20px;border-radius:10px;font-size:0.85rem;opacity:0;transition:all 0.25s;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{border-color:var(--rose);color:var(--rose)}
+.toast.success{border-color:var(--emerald);color:var(--emerald)}
+@media(max-width:500px){.drug-grid{grid-template-columns:repeat(3,1fr)}.protocol-grid,.calc-grid{grid-template-columns:1fr 1fr}.search-row{flex-direction:column}.search-btn{width:100%}}
+@media(min-width:600px){.chat-modal{align-items:center}.chat-modal .modal-box{border-radius:var(--radius-lg)}}
 </style>
 </head>
 <body>
-
 <div class="app">
-  <!-- Header -->
   <div class="header">
-    <a href="https://balhaddad-sys.github.io/Final-app/index.html" class="back-btn">←</a>
-    <div class="header-center">
-      <h1>💊 Drug Reference</h1>
-      <p>AI-Powered Clinical Information</p>
-    </div>
-    <button class="config-btn" id="configBtn" onclick="openConfig()">⚙️</button>
+    <a href="index.html" class="back-btn">←</a>
+    <div class="logo"><div class="logo-icon">💊</div><div><h1>Drug Reference</h1><p>AI Clinical Pharmacology</p></div></div>
+    <button class="settings-btn" id="settingsBtn" onclick="openSettings()">⚙️</button>
   </div>
-
-  <!-- Search -->
-  <div class="search-card">
+  <div class="hero">
     <div class="search-row">
-      <input type="text" class="search-input" id="searchInput" placeholder="Search any medication..." onkeydown="if(event.key==='Enter')search()">
+      <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" id="searchInput" placeholder="Search medications, protocols, interactions..." onkeydown="if(event.key==='Enter')search()"></div>
       <button class="search-btn" id="searchBtn" onclick="search()">Search</button>
     </div>
-  </div>
-
-  <!-- Common Medications -->
-  <div class="chips-container">
-    <div class="section-header">
-      <h2>💊 Common Medications</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="chips">
-      <div class="chip" onclick="quickSearch('Metformin')">Metformin</div>
-      <div class="chip" onclick="quickSearch('Lisinopril')">Lisinopril</div>
-      <div class="chip" onclick="quickSearch('Amlodipine')">Amlodipine</div>
-      <div class="chip" onclick="quickSearch('Atorvastatin')">Atorvastatin</div>
-      <div class="chip" onclick="quickSearch('Omeprazole')">Omeprazole</div>
-      <div class="chip" onclick="quickSearch('Metoprolol')">Metoprolol</div>
-      <div class="chip" onclick="quickSearch('Furosemide')">Furosemide</div>
-      <div class="chip" onclick="quickSearch('Warfarin')">Warfarin</div>
-      <div class="chip" onclick="quickSearch('Insulin')">Insulin</div>
-      <div class="chip" onclick="quickSearch('Heparin')">Heparin</div>
-      <div class="chip" onclick="quickSearch('Aspirin')">Aspirin</div>
-      <div class="chip" onclick="quickSearch('Amoxicillin')">Amoxicillin</div>
+    <div class="quick-pills">
+      <div class="pill" onclick="quickSearch('drug interactions')">⚡ Interactions</div>
+      <div class="pill" onclick="quickSearch('IV compatibility')">💉 IV Compat</div>
+      <div class="pill" onclick="quickSearch('pregnancy safe medications')">🤰 Pregnancy</div>
+      <div class="pill" onclick="quickSearch('pediatric dosing')">👶 Pediatric</div>
+      <div class="pill" onclick="quickSearch('geriatric dosing')">👴 Geriatric</div>
     </div>
   </div>
-
-  <!-- Quick Protocols -->
-  <div class="protocols-container">
-    <div class="section-header">
-      <h2>⚡ Quick Protocols</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="protocols-grid">
-      <div class="protocol-card" onclick="quickSearch('Hyperkalemia emergency treatment protocol')">
-        <div class="protocol-icon">⚡</div>
-        <div class="protocol-title">Hyperkalemia</div>
-        <div class="protocol-desc">Calcium gluconate, Insulin + D50, Kayexalate protocols</div>
-      </div>
-      <div class="protocol-card" onclick="quickSearch('Anticoagulation reversal warfarin heparin DOAC')">
-        <div class="protocol-icon">🩸</div>
-        <div class="protocol-title">Anticoag Reversal</div>
-        <div class="protocol-desc">Warfarin, Heparin, DOAC reversal agents</div>
-      </div>
-      <div class="protocol-card" onclick="quickSearch('Insulin sliding scale and DKA management protocol')">
-        <div class="protocol-icon">💉</div>
-        <div class="protocol-title">Insulin Protocols</div>
-        <div class="protocol-desc">Sliding scale, DKA, correction factors</div>
-      </div>
-      <div class="protocol-card" onclick="quickSearch('Renal dose adjustments common medications CKD dialysis')">
-        <div class="protocol-icon">🫘</div>
-        <div class="protocol-title">Renal Dosing</div>
-        <div class="protocol-desc">CKD & dialysis dose adjustments</div>
-      </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showCat('all',this)">📋 All</div>
+    <div class="tab" onclick="showCat('cardiac',this)">❤️ Cardiac</div>
+    <div class="tab" onclick="showCat('abx',this)">🦠 Antibiotics</div>
+    <div class="tab" onclick="showCat('dm',this)">💉 Diabetes</div>
+    <div class="tab" onclick="showCat('neuro',this)">🧠 Neuro</div>
+    <div class="tab" onclick="showCat('pain',this)">💊 Pain</div>
+    <div class="tab" onclick="showCat('gi',this)">🫁 GI</div>
+  </div>
+  <div class="section"><div class="section-title"><span>⭐</span> Common Medications</div><div class="drug-grid" id="drugGrid"></div></div>
+  <div class="section">
+    <div class="section-title"><span>⚡</span> Emergency Protocols</div>
+    <div class="protocol-grid">
+      <div class="protocol-card" onclick="quickSearch('Hyperkalemia emergency treatment calcium gluconate insulin dextrose')"><div class="badge">CRITICAL</div><div class="icon">⚡</div><h3>Hyperkalemia</h3><p>Ca gluconate, Insulin+D50, Kayexalate</p></div>
+      <div class="protocol-card" onclick="quickSearch('Anticoagulation reversal warfarin heparin DOAC')"><div class="icon">🩸</div><h3>Anticoag Reversal</h3><p>Warfarin, Heparin, DOAC reversal</p></div>
+      <div class="protocol-card" onclick="quickSearch('DKA diabetic ketoacidosis protocol insulin fluids')"><div class="badge">CRITICAL</div><div class="icon">💉</div><h3>DKA Protocol</h3><p>Insulin, fluids, K+ replacement</p></div>
+      <div class="protocol-card" onclick="quickSearch('Renal dose adjustments CKD GFR dialysis')"><div class="icon">🫘</div><h3>Renal Dosing</h3><p>CKD & dialysis adjustments</p></div>
     </div>
   </div>
-
-  <!-- Results -->
-  <div class="results-container" id="results">
-    <div class="empty-state">
-      <div class="empty-icon">🔬</div>
-      <h3>Search for a Medication</h3>
-      <p>Tap any drug above or type in the search box to get AI-powered clinical information</p>
+  <div class="section">
+    <div class="section-title"><span>🧮</span> Quick Calculators</div>
+    <div class="calc-grid">
+      <div class="calc-card" onclick="quickSearch('Creatinine clearance CrCl Cockcroft-Gault')"><div class="icon">🧪</div><div class="name">CrCl</div></div>
+      <div class="calc-card" onclick="quickSearch('Corrected calcium albumin formula')"><div class="icon">🦴</div><div class="name">Corr Ca²⁺</div></div>
+      <div class="calc-card" onclick="quickSearch('Anion gap calculation')"><div class="icon">⚖️</div><div class="name">Anion Gap</div></div>
+      <div class="calc-card" onclick="quickSearch('Ideal body weight IBW')"><div class="icon">📏</div><div class="name">IBW</div></div>
+      <div class="calc-card" onclick="quickSearch('INR warfarin dose adjustment')"><div class="icon">🩸</div><div class="name">INR Adj</div></div>
+      <div class="calc-card" onclick="quickSearch('Sodium correction hyponatremia')"><div class="icon">💧</div><div class="name">Na⁺ Corr</div></div>
     </div>
   </div>
+  <div class="results" id="results"></div>
 </div>
-
-<!-- AI FAB -->
-<button class="ai-fab" onclick="openChat()">🤖</button>
-
-<!-- Config Modal -->
-<div class="modal" id="configModal" onclick="if(event.target===this)closeConfig()">
+<button class="fab" onclick="openChat()">🤖</button>
+<div class="modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
   <div class="modal-box">
-    <div class="modal-header">
-      <h3>⚙️ API Configuration</h3>
-      <button class="modal-close" onclick="closeConfig()">✕</button>
-    </div>
+    <div class="modal-header"><h3>⚙️ Settings</h3><button class="modal-close" onclick="closeSettings()">✕</button></div>
     <div class="modal-body">
       <div class="status-badge" id="apiStatus"></div>
-      
-      <div class="form-group">
-        <label class="form-label">Google Apps Script URL</label>
-        <input type="text" class="form-input" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
-        <p class="form-hint">Deploy DrugCode.gs as a Web App and paste the URL here. The URL is stored locally on your device.</p>
-      </div>
-      
-      <button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
+      <div class="form-group"><label class="form-label">API URL</label><input type="text" class="form-input" id="apiUrlInput" placeholder="https://script.google.com/..."><p class="form-hint">Your MedWard Google Apps Script URL</p></div>
+      <button class="btn" onclick="saveSettings()">Save</button>
     </div>
   </div>
 </div>
-
-<!-- Chat Modal -->
-<div class="chat-modal" id="chatModal" onclick="if(event.target===this)closeChat()">
-  <div class="chat-box">
-    <div class="chat-header">
-      <div class="chat-avatar">🤖</div>
-      <div class="chat-header-info">
-        <h3>Ask Claude AI</h3>
-        <p>Clinical pharmacology assistant</p>
-      </div>
+<div class="modal chat-modal" id="chatModal" onclick="if(event.target===this)closeChat()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div style="width:36px;height:36px;background:var(--gradient-1);border-radius:10px;display:grid;place-items:center">🤖</div>
+      <div style="flex:1"><h3>PharmAssist AI</h3><p style="font-size:0.65rem;color:var(--text-muted)">Ask anything about medications</p></div>
       <button class="modal-close" onclick="closeChat()">✕</button>
     </div>
-    <div class="chat-messages" id="chatMessages">
-      <div class="msg assistant">
-        <div class="msg-avatar">🤖</div>
-        <div class="msg-content">Hi! I can help with drug information, dosing, interactions, and clinical pharmacology questions. What would you like to know?</div>
-      </div>
-    </div>
+    <div class="chat-messages" id="chatMessages"><div class="msg assistant"><div class="msg-avatar">🤖</div><div class="msg-bubble">Hi! Ask me about drug dosing, interactions, mechanisms, or protocols.</div></div></div>
     <div class="chat-input-area">
-      <textarea class="chat-input" id="chatInput" placeholder="Ask a question..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+      <textarea class="chat-input" id="chatInput" placeholder="Ask about medications..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
       <button class="chat-send" id="chatSendBtn" onclick="sendChat()">Send</button>
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script>
-const STORAGE_KEY = 'medward_drug_api_v2';
-const MEDWARD_STORAGE_KEY = 'medward_pro_v12';
-let apiUrl = '';
-let chatHistory = [];
-let isLoading = false;
-
-const $ = id => document.getElementById(id);
-
-// ═══════════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════════
-
-function init() {
-  // First try to get API from main MedWard app
-  const medwardData = localStorage.getItem(MEDWARD_STORAGE_KEY);
-  if (medwardData) {
-    try {
-      const data = JSON.parse(medwardData);
-      if (data.settings && data.settings.apiUrl) {
-        apiUrl = data.settings.apiUrl;
-        console.log('Using MedWard API:', apiUrl);
-      }
-    } catch(e) {}
-  }
-  
-  // Fallback to drug-specific storage
-  if (!apiUrl) {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        apiUrl = data.apiUrl || '';
-      } catch(e) {}
-    }
-  }
-  
-  updateStatus();
+const STORAGE_KEY='medward_drug_v3',MEDWARD_KEY='medward_pro_v12';
+let apiUrl='',chatHistory=[],isLoading=false,lastQuery='';
+const $=id=>document.getElementById(id);
+const DRUGS={
+  all:[{n:'Metformin',c:'Antidiabetic',i:'💊'},{n:'Lisinopril',c:'ACE-I',i:'❤️'},{n:'Amlodipine',c:'CCB',i:'💓'},{n:'Atorvastatin',c:'Statin',i:'🩸'},{n:'Omeprazole',c:'PPI',i:'🫁'},{n:'Metoprolol',c:'β-blocker',i:'💗'},{n:'Furosemide',c:'Diuretic',i:'💧'},{n:'Warfarin',c:'Anticoag',i:'🩸'},{n:'Aspirin',c:'Antiplatelet',i:'💊'},{n:'Amoxicillin',c:'Antibiotic',i:'🦠'},{n:'Insulin',c:'Antidiabetic',i:'💉'},{n:'Heparin',c:'Anticoag',i:'🩸'}],
+  cardiac:[{n:'Lisinopril',c:'ACE-I',i:'❤️'},{n:'Amlodipine',c:'CCB',i:'❤️'},{n:'Metoprolol',c:'β-blocker',i:'❤️'},{n:'Carvedilol',c:'α/β-blocker',i:'❤️'},{n:'Digoxin',c:'Glycoside',i:'❤️'},{n:'Amiodarone',c:'Antiarrhythmic',i:'❤️'},{n:'Diltiazem',c:'CCB',i:'❤️'},{n:'Losartan',c:'ARB',i:'❤️'},{n:'Spironolactone',c:'MRA',i:'❤️'},{n:'Hydralazine',c:'Vasodilator',i:'❤️'},{n:'Isosorbide',c:'Nitrate',i:'❤️'},{n:'Nitroglycerin',c:'Nitrate',i:'❤️'}],
+  abx:[{n:'Amoxicillin',c:'Penicillin',i:'🦠'},{n:'Azithromycin',c:'Macrolide',i:'🦠'},{n:'Ciprofloxacin',c:'Quinolone',i:'🦠'},{n:'Levofloxacin',c:'Quinolone',i:'🦠'},{n:'Ceftriaxone',c:'Cephalosporin',i:'🦠'},{n:'Vancomycin',c:'Glycopeptide',i:'🦠'},{n:'Piperacillin',c:'Penicillin',i:'🦠'},{n:'Meropenem',c:'Carbapenem',i:'🦠'},{n:'Doxycycline',c:'Tetracycline',i:'🦠'},{n:'Metronidazole',c:'Nitroimidazole',i:'🦠'},{n:'Clindamycin',c:'Lincosamide',i:'🦠'},{n:'TMP-SMX',c:'Sulfonamide',i:'🦠'}],
+  dm:[{n:'Metformin',c:'Biguanide',i:'💉'},{n:'Glipizide',c:'Sulfonylurea',i:'💉'},{n:'Glyburide',c:'Sulfonylurea',i:'💉'},{n:'Sitagliptin',c:'DPP-4i',i:'💉'},{n:'Empagliflozin',c:'SGLT2i',i:'💉'},{n:'Liraglutide',c:'GLP-1',i:'💉'},{n:'Insulin Glargine',c:'Basal',i:'💉'},{n:'Insulin Lispro',c:'Rapid',i:'💉'},{n:'NPH Insulin',c:'Intermediate',i:'💉'},{n:'Pioglitazone',c:'TZD',i:'💉'},{n:'Canagliflozin',c:'SGLT2i',i:'💉'},{n:'Dulaglutide',c:'GLP-1',i:'💉'}],
+  neuro:[{n:'Levetiracetam',c:'Antiepileptic',i:'🧠'},{n:'Phenytoin',c:'Antiepileptic',i:'🧠'},{n:'Valproate',c:'Antiepileptic',i:'🧠'},{n:'Carbamazepine',c:'Antiepileptic',i:'🧠'},{n:'Gabapentin',c:'Anticonvulsant',i:'🧠'},{n:'Pregabalin',c:'Anticonvulsant',i:'🧠'},{n:'Lamotrigine',c:'Antiepileptic',i:'🧠'},{n:'Topiramate',c:'Antiepileptic',i:'🧠'},{n:'Levodopa',c:'Antiparkinsonian',i:'🧠'},{n:'Donepezil',c:'AChE Inhibitor',i:'🧠'},{n:'Memantine',c:'NMDA Antagonist',i:'🧠'},{n:'Baclofen',c:'Muscle Relaxant',i:'🧠'}],
+  pain:[{n:'Morphine',c:'Opioid',i:'💊'},{n:'Hydromorphone',c:'Opioid',i:'💊'},{n:'Fentanyl',c:'Opioid',i:'💊'},{n:'Oxycodone',c:'Opioid',i:'💊'},{n:'Tramadol',c:'Opioid',i:'💊'},{n:'Acetaminophen',c:'Analgesic',i:'💊'},{n:'Ibuprofen',c:'NSAID',i:'💊'},{n:'Ketorolac',c:'NSAID',i:'💊'},{n:'Naproxen',c:'NSAID',i:'💊'},{n:'Celecoxib',c:'COX-2',i:'💊'},{n:'Lidocaine',c:'Local',i:'💊'},{n:'Ketamine',c:'Dissociative',i:'💊'}],
+  gi:[{n:'Omeprazole',c:'PPI',i:'🫁'},{n:'Pantoprazole',c:'PPI',i:'🫁'},{n:'Famotidine',c:'H2 Blocker',i:'🫁'},{n:'Ondansetron',c:'Antiemetic',i:'🫁'},{n:'Metoclopramide',c:'Prokinetic',i:'🫁'},{n:'Lactulose',c:'Laxative',i:'🫁'},{n:'PEG 3350',c:'Laxative',i:'🫁'},{n:'Sucralfate',c:'Mucosal',i:'🫁'},{n:'Dicyclomine',c:'Antispasmodic',i:'🫁'},{n:'Loperamide',c:'Antidiarrheal',i:'🫁'},{n:'Mesalamine',c:'Anti-inflam',i:'🫁'},{n:'Prochlorperazine',c:'Antiemetic',i:'🫁'}]
+};
+function init(){
+  try{const m=localStorage.getItem(MEDWARD_KEY);if(m){const d=JSON.parse(m);if(d.settings?.apiUrl)apiUrl=d.settings.apiUrl}}catch(e){}
+  if(!apiUrl)try{const d=localStorage.getItem(STORAGE_KEY);if(d)apiUrl=JSON.parse(d).apiUrl||''}catch(e){}
+  updateStatus();showCat('all',document.querySelector('.tab.active'));
 }
-
-function updateStatus() {
-  const btn = $('configBtn');
-  const status = $('apiStatus');
-  
-  if (apiUrl) {
-    btn.classList.add('active');
-    if (status) {
-      status.className = 'status-badge ok';
-      status.innerHTML = '✓ API Connected';
-    }
-  } else {
-    btn.classList.remove('active');
-    if (status) {
-      status.className = 'status-badge no';
-      status.innerHTML = '⚠ Not Configured';
-    }
-  }
-  
-  if ($('apiUrlInput')) $('apiUrlInput').value = apiUrl;
+function updateStatus(){
+  const btn=$('settingsBtn'),status=$('apiStatus');
+  if(apiUrl){btn.classList.add('active');if(status){status.className='status-badge ok';status.innerHTML='✓ Connected'}}
+  else{btn.classList.remove('active');if(status){status.className='status-badge no';status.innerHTML='⚠ Not Configured'}}
+  if($('apiUrlInput'))$('apiUrlInput').value=apiUrl;
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════════════════════
-
-function openConfig() {
-  $('configModal').classList.add('active');
-  $('apiUrlInput').value = apiUrl;
-  updateStatus();
+function openSettings(){$('settingsModal').classList.add('active');$('apiUrlInput').value=apiUrl;updateStatus()}
+function closeSettings(){$('settingsModal').classList.remove('active')}
+function saveSettings(){
+  const url=$('apiUrlInput').value.trim();
+  if(!url)return toast('Enter API URL','error');
+  if(!url.startsWith('https://'))return toast('URL must start with https://','error');
+  apiUrl=url;localStorage.setItem(STORAGE_KEY,JSON.stringify({apiUrl}));
+  updateStatus();closeSettings();toast('Saved!','success');
 }
-
-function closeConfig() {
-  $('configModal').classList.remove('active');
+function showCat(cat,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const list=DRUGS[cat]||DRUGS.all;
+  $('drugGrid').innerHTML=list.map(d=>`<div class="drug-chip" onclick="quickSearch('${d.n}')"><span class="icon">${d.i}</span><div class="name">${d.n}</div><div class="class">${d.c}</div></div>`).join('');
 }
-
-function saveConfig() {
-  const url = $('apiUrlInput').value.trim();
-  
-  if (!url) {
-    toast('Please enter API URL', true);
-    return;
-  }
-  
-  if (!url.startsWith('https://')) {
-    toast('URL must start with https://', true);
-    return;
-  }
-  
-  apiUrl = url;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ apiUrl }));
-  updateStatus();
-  closeConfig();
-  toast('Configuration saved!');
+function quickSearch(q){$('searchInput').value=q;search()}
+async function search(){
+  const query=$('searchInput').value.trim();
+  if(!query)return;
+  if(!apiUrl){openSettings();return toast('Configure API first','error')}
+  lastQuery=query;
+  $('results').innerHTML=`<div class="loading"><div class="spinner"></div><p>Searching "${esc(query)}"...</p></div>`;
+  $('searchBtn').disabled=true;
+  try{
+    const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'drugQuery',query})});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    if(!data.content)throw new Error('No content');
+    $('results').innerHTML=`<div class="result-card"><div class="result-header"><div class="result-icon">💊</div><div class="result-info"><h2>${esc(query)}</h2><p>AI Clinical Reference</p></div><div class="result-actions"><div class="result-action" onclick="copyResult()" title="Copy">📋</div><div class="result-action" onclick="shareResult()" title="Share">📤</div></div></div><div class="result-body"><div class="result-content">${data.content}</div></div></div><div class="disclaimer">⚠️ AI-generated. Verify with official references.</div>`;
+  }catch(e){$('results').innerHTML=`<div class="error-card"><h3>⚠️ Error</h3><p>${esc(e.message)}</p><button class="retry-btn" onclick="search()">Retry</button></div>`}
+  finally{$('searchBtn').disabled=false}
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// SEARCH
-// ═══════════════════════════════════════════════════════════════════
-
-function quickSearch(query) {
-  $('searchInput').value = query;
-  search();
+function copyResult(){const c=document.querySelector('.result-content');if(c){navigator.clipboard.writeText(c.innerText);toast('Copied!','success')}}
+function shareResult(){if(navigator.share)navigator.share({title:'Drug: '+lastQuery,text:document.querySelector('.result-content')?.innerText||''});else copyResult()}
+function openChat(){if(!apiUrl){openSettings();return toast('Configure API first','error')}$('chatModal').classList.add('active')}
+function closeChat(){$('chatModal').classList.remove('active')}
+async function sendChat(){
+  const input=$('chatInput'),msg=input.value.trim();
+  if(!msg||isLoading)return;
+  isLoading=true;$('chatSendBtn').disabled=true;input.value='';
+  addMsg('user',msg);const lid=addLoading();
+  try{
+    const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'drugChat',message:msg,history:chatHistory.slice(-10)})});
+    const data=await res.json();
+    removeMsg(lid);
+    if(data.error)addMsg('assistant',`<span style="color:var(--rose)">Error: ${esc(data.error)}</span>`);
+    else{addMsg('assistant',data.content);chatHistory.push({role:'user',content:msg},{role:'assistant',content:data.content})}
+  }catch(e){removeMsg(lid);addMsg('assistant',`<span style="color:var(--rose)">Error: ${esc(e.message)}</span>`)}
+  finally{isLoading=false;$('chatSendBtn').disabled=false}
 }
-
-async function search() {
-  const query = $('searchInput').value.trim();
-  if (!query) return;
-  
-  if (!apiUrl) {
-    openConfig();
-    toast('Please configure API first', true);
-    return;
-  }
-  
-  const results = $('results');
-  results.innerHTML = `<div class="loading"><div class="spinner"></div><p>Searching for "${esc(query)}"...</p></div>`;
-  $('searchBtn').disabled = true;
-  
-  try {
-    console.log('Sending drugQuery to:', apiUrl);
-    console.log('Query:', query);
-    
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'drugQuery', query: query })
-    });
-    
-    const data = await response.json();
-    
-    if (data.error) throw new Error(data.error);
-    
-    results.innerHTML = `
-      <div class="result-card">
-        <div class="result-header">
-          <div class="result-icon">💊</div>
-          <div class="result-info">
-            <h3>${esc(query)}</h3>
-            <p>AI-Generated Clinical Information</p>
-          </div>
-        </div>
-        <div class="result-body">${data.content}</div>
-      </div>
-      <p class="disclaimer">⚠️ Always verify with official references. This is AI-generated content for educational purposes.</p>
-    `;
-    
-  } catch(e) {
-    results.innerHTML = `
-      <div class="error-card">
-        <h3>⚠️ Error</h3>
-        <p>${esc(e.message)}</p>
-      </div>
-    `;
-  } finally {
-    $('searchBtn').disabled = false;
-  }
+function addMsg(role,content){
+  const c=$('chatMessages'),id='msg_'+Date.now();
+  c.insertAdjacentHTML('beforeend',`<div class="msg ${role}" id="${id}"><div class="msg-avatar">${role==='user'?'👤':'🤖'}</div><div class="msg-bubble">${role==='assistant'?content:esc(content)}</div></div>`);
+  c.scrollTop=c.scrollHeight;return id;
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// CHAT
-// ═══════════════════════════════════════════════════════════════════
-
-function openChat() {
-  if (!apiUrl) {
-    openConfig();
-    toast('Please configure API first', true);
-    return;
-  }
-  $('chatModal').classList.add('active');
+function addLoading(){
+  const c=$('chatMessages'),id='ld_'+Date.now();
+  c.insertAdjacentHTML('beforeend',`<div class="msg assistant" id="${id}"><div class="msg-avatar">🤖</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>`);
+  c.scrollTop=c.scrollHeight;return id;
 }
-
-function closeChat() {
-  $('chatModal').classList.remove('active');
-}
-
-async function sendChat() {
-  const input = $('chatInput');
-  const msg = input.value.trim();
-  
-  if (!msg || isLoading) return;
-  
-  isLoading = true;
-  $('chatSendBtn').disabled = true;
-  input.value = '';
-  
-  addMsg('user', msg);
-  const loadingId = addLoading();
-  
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ 
-        action: 'drugChat', 
-        message: msg,
-        history: chatHistory.slice(-10)
-      })
-    });
-    
-    const data = await response.json();
-    removeMsg(loadingId);
-    
-    if (data.error) {
-      addMsg('assistant', `<span style="color:var(--rose)">Error: ${esc(data.error)}</span>`);
-    } else {
-      addMsg('assistant', data.content);
-      chatHistory.push({ role: 'user', content: msg });
-      chatHistory.push({ role: 'assistant', content: data.content });
-    }
-    
-  } catch(e) {
-    removeMsg(loadingId);
-    addMsg('assistant', `<span style="color:var(--rose)">Error: ${esc(e.message)}</span>`);
-  } finally {
-    isLoading = false;
-    $('chatSendBtn').disabled = false;
-  }
-}
-
-function addMsg(role, content) {
-  const container = $('chatMessages');
-  const id = 'msg_' + Date.now();
-  const avatar = role === 'user' ? '👤' : '🤖';
-  const html = role === 'assistant' ? content : esc(content);
-  
-  container.insertAdjacentHTML('beforeend', `
-    <div class="msg ${role}" id="${id}">
-      <div class="msg-avatar">${avatar}</div>
-      <div class="msg-content">${html}</div>
-    </div>
-  `);
-  container.scrollTop = container.scrollHeight;
-  return id;
-}
-
-function addLoading() {
-  const container = $('chatMessages');
-  const id = 'loading_' + Date.now();
-  container.insertAdjacentHTML('beforeend', `
-    <div class="msg assistant" id="${id}">
-      <div class="msg-avatar">🤖</div>
-      <div class="msg-content"><div class="typing"><span></span><span></span><span></span></div></div>
-    </div>
-  `);
-  container.scrollTop = container.scrollHeight;
-  return id;
-}
-
-function removeMsg(id) {
-  const el = $(id);
-  if (el) el.remove();
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════════════════════
-
-function esc(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function toast(msg, isError) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => t.className = 'toast', 3000);
-}
-
-// Init
+function removeMsg(id){const e=$(id);if(e)e.remove()}
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+function toast(m,type){const t=$('toast');t.textContent=m;t.className='toast show'+(type?' '+type:'');setTimeout(()=>t.className='toast',3000)}
 init();
 </script>
-
 </body>
 </html>
