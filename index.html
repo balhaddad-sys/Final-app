@@ -336,343 +336,553 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .approve-form-row .form-input{flex:1}
 
 /* ═══════════════════════════════════════════════════════════════════
-   CLINICAL SCORING SYSTEM - PRESTIGIOUS MEDICAL DESIGN
+   CLINICAL SCORING SYSTEM - MOBILE-FIRST PREMIUM DESIGN
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Score Calculator Modal - Premium Design */
-.score-calculator{padding:0;background:linear-gradient(180deg,#0c1220 0%,#070b14 100%)}
+/* Modal Override for Scores */
+#scoreCalcModal .modal-box{
+  max-width:100%;
+  width:100%;
+  height:100%;
+  max-height:100%;
+  border-radius:0;
+  margin:0;
+  display:flex;
+  flex-direction:column
+}
+@media(min-width:640px){
+  #scoreCalcModal .modal-box{
+    max-width:480px;
+    height:auto;
+    max-height:90vh;
+    border-radius:16px;
+    margin:20px
+  }
+}
 
-/* Header - Elegant Medical Style */
-.score-calc-header{
-  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
-  padding:28px 24px;
-  border-bottom:1px solid rgba(148,163,184,0.1);
-  position:relative;
+/* Score Calculator Container */
+.score-calculator{
+  padding:0;
+  background:#080c14;
+  display:flex;
+  flex-direction:column;
+  flex:1;
   overflow:hidden
 }
-.score-calc-header::before{
-  content:'';
-  position:absolute;
-  top:0;left:0;right:0;
-  height:1px;
-  background:linear-gradient(90deg,transparent,rgba(251,191,36,0.5),transparent)
+
+/* Header - Compact Mobile Design */
+.score-calc-header{
+  background:linear-gradient(180deg,#0f172a 0%,#0c1220 100%);
+  padding:20px 16px;
+  border-bottom:1px solid rgba(148,163,184,0.08);
+  flex-shrink:0
 }
 .score-calc-title{
-  font-size:1.4rem;
+  font-size:1.25rem;
   font-weight:700;
   color:#f8fafc;
   letter-spacing:-0.02em;
-  margin-bottom:6px
+  margin-bottom:4px
 }
 .score-calc-purpose{
-  font-size:0.9rem;
-  color:#94a3b8;
+  font-size:0.82rem;
+  color:#64748b;
   font-weight:400
 }
 .score-calc-category{
   display:inline-flex;
   align-items:center;
-  gap:6px;
-  background:rgba(251,191,36,0.08);
-  border:1px solid rgba(251,191,36,0.2);
+  gap:5px;
+  background:rgba(251,191,36,0.1);
   color:#fbbf24;
-  padding:6px 14px;
-  border-radius:6px;
-  font-size:0.7rem;
+  padding:5px 10px;
+  border-radius:5px;
+  font-size:0.65rem;
   font-weight:600;
   text-transform:uppercase;
-  letter-spacing:0.08em;
-  margin-top:12px
+  letter-spacing:0.06em;
+  margin-top:10px
 }
 
-/* Body - Clean Professional Layout */
+/* Body - Scrollable Content */
 .score-calc-body{
-  padding:20px;
-  max-height:45vh;
+  padding:12px;
+  flex:1;
   overflow-y:auto;
-  background:#070b14
+  background:#080c14;
+  -webkit-overflow-scrolling:touch
 }
-.score-calc-body::-webkit-scrollbar{width:4px}
-.score-calc-body::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.2);border-radius:2px}
+.score-calc-body::-webkit-scrollbar{width:3px}
+.score-calc-body::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.15);border-radius:2px}
 
-.score-calc-fields{display:flex;flex-direction:column;gap:8px}
+.score-calc-fields{display:flex;flex-direction:column;gap:6px}
 
-/* Field Cards - Sophisticated Design */
+/* Field Cards - Mobile Optimized */
 .score-field{
   display:flex;
   align-items:center;
-  gap:14px;
-  padding:14px 16px;
-  background:linear-gradient(135deg,#0f172a 0%,#131c2e 100%);
-  border:1px solid rgba(148,163,184,0.08);
+  gap:12px;
+  padding:12px 14px;
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.06);
   border-radius:10px;
-  transition:all 0.2s ease;
-  cursor:pointer
+  transition:all 0.15s ease;
+  cursor:pointer;
+  min-height:48px
 }
-.score-field:hover{
-  border-color:rgba(148,163,184,0.15);
-  background:linear-gradient(135deg,#131c2e 0%,#172033 100%)
+.score-field:active{
+  background:#1e293b;
+  transform:scale(0.99)
 }
 .score-field.checked{
-  background:linear-gradient(135deg,rgba(251,191,36,0.08) 0%,rgba(251,191,36,0.03) 100%);
-  border-color:rgba(251,191,36,0.25)
+  background:linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(16,185,129,0.04) 100%);
+  border-color:rgba(16,185,129,0.25)
 }
 
-/* Checkbox - Elegant Circle Design */
+/* Checkbox - Clean Circle */
 .score-field-checkbox{
-  width:24px;
-  height:24px;
+  width:22px;
+  height:22px;
+  min-width:22px;
   border:2px solid #334155;
   border-radius:50%;
   display:grid;
   place-items:center;
-  transition:all 0.2s ease;
-  flex-shrink:0;
+  transition:all 0.15s ease;
   background:transparent
 }
 .score-field-checkbox.checked{
-  background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);
-  border-color:#fbbf24;
-  box-shadow:0 0 12px rgba(251,191,36,0.3)
+  background:#10b981;
+  border-color:#10b981
 }
 .score-field-checkbox.checked::after{
   content:'✓';
-  color:#0f172a;
-  font-size:0.75rem;
+  color:#fff;
+  font-size:0.7rem;
   font-weight:700
 }
 
-/* Labels - Clear Typography */
+/* Labels */
 .score-field-label{
   flex:1;
-  font-size:0.88rem;
+  font-size:0.85rem;
   color:#e2e8f0;
   font-weight:500;
-  line-height:1.4
+  line-height:1.35
 }
 
-/* Points Badge - Subtle Professional */
+/* Points Badge */
 .score-field-points{
   font-family:'JetBrains Mono',monospace;
-  font-size:0.75rem;
-  color:#94a3b8;
+  font-size:0.72rem;
+  color:#64748b;
   font-weight:500;
-  padding:4px 10px;
-  background:rgba(148,163,184,0.08);
-  border-radius:4px;
-  border:1px solid rgba(148,163,184,0.1)
+  padding:3px 8px;
+  background:rgba(100,116,139,0.1);
+  border-radius:4px
 }
 .score-field.checked .score-field-points{
-  color:#fbbf24;
-  background:rgba(251,191,36,0.1);
-  border-color:rgba(251,191,36,0.2)
+  color:#10b981;
+  background:rgba(16,185,129,0.15)
 }
 
-/* Select Fields - Premium Dropdown */
-.score-field-select{flex:1}
+/* Select Fields */
+.score-field-select{width:100%}
 .score-field-select label{
   display:block;
-  font-size:0.8rem;
+  font-size:0.75rem;
   font-weight:600;
-  color:#94a3b8;
+  color:#64748b;
   margin-bottom:8px;
   text-transform:uppercase;
-  letter-spacing:0.05em
+  letter-spacing:0.04em
 }
 .score-field-select select{
   width:100%;
-  padding:12px 14px;
-  background:#0f172a;
-  border:1px solid rgba(148,163,184,0.15);
+  padding:12px 36px 12px 12px;
+  background:#0a0f1a;
+  border:1px solid rgba(148,163,184,0.12);
   border-radius:8px;
   color:#f1f5f9;
-  font-size:0.88rem;
+  font-size:0.85rem;
   font-family:inherit;
   cursor:pointer;
-  transition:all 0.2s ease;
   appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;
-  background-position:right 12px center
+  background-position:right 10px center
 }
 .score-field-select select:focus{
   outline:none;
-  border-color:rgba(251,191,36,0.5);
-  box-shadow:0 0 0 3px rgba(251,191,36,0.1)
-}
-.score-field-select select option{
-  background:#0f172a;
-  color:#f1f5f9;
-  padding:12px
+  border-color:#3b82f6
 }
 
-/* Number Input - Clean Design */
-.score-field-number{display:flex;align-items:center;gap:12px;width:100%}
-.score-field-number label{flex:1;font-size:0.88rem;color:#e2e8f0;font-weight:500}
+/* Number Input */
+.score-field-number{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%
+}
+.score-field-number label{
+  flex:1;
+  font-size:0.85rem;
+  color:#e2e8f0;
+  font-weight:500
+}
 .score-field-number input{
-  width:100px;
-  padding:12px 14px;
-  background:#0f172a;
-  border:1px solid rgba(148,163,184,0.15);
+  width:90px;
+  padding:10px 12px;
+  background:#0a0f1a;
+  border:1px solid rgba(148,163,184,0.12);
   border-radius:8px;
   color:#f1f5f9;
-  font-size:0.95rem;
+  font-size:0.9rem;
   font-family:'JetBrains Mono',monospace;
-  text-align:center;
-  transition:all 0.2s ease
+  text-align:center
 }
 .score-field-number input:focus{
   outline:none;
-  border-color:rgba(251,191,36,0.5);
-  box-shadow:0 0 0 3px rgba(251,191,36,0.1)
+  border-color:#3b82f6
 }
 
-/* Result Section - Premium Display */
+/* Auto-calculated indicator */
+.score-auto-calc{
+  background:linear-gradient(135deg,rgba(59,130,246,0.1) 0%,rgba(59,130,246,0.05) 100%);
+  border:1px solid rgba(59,130,246,0.2);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:8px
+}
+.score-auto-calc-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px
+}
+.score-auto-calc-title{
+  font-size:0.75rem;
+  font-weight:600;
+  color:#3b82f6;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  display:flex;
+  align-items:center;
+  gap:6px
+}
+.score-auto-calc-badge{
+  font-size:0.65rem;
+  background:#3b82f6;
+  color:#fff;
+  padding:2px 6px;
+  border-radius:3px;
+  font-weight:600
+}
+.score-auto-calc-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.5rem;
+  font-weight:700;
+  color:#f1f5f9;
+  text-align:center;
+  padding:8px 0
+}
+.score-auto-calc-source{
+  font-size:0.75rem;
+  color:#64748b;
+  text-align:center
+}
+.score-manual-toggle{
+  font-size:0.75rem;
+  color:#64748b;
+  background:none;
+  border:none;
+  text-decoration:underline;
+  cursor:pointer;
+  padding:0
+}
+.score-manual-toggle:hover{color:#94a3b8}
+
+/* Result Section - Compact */
 .score-calc-result{
-  padding:24px;
-  background:linear-gradient(180deg,#0c1220 0%,#0f172a 100%);
-  border-top:1px solid rgba(148,163,184,0.08)
+  padding:16px;
+  background:#0a0f1a;
+  border-top:1px solid rgba(148,163,184,0.06);
+  flex-shrink:0
 }
 
 .score-result-display{
-  text-align:center;
-  padding:20px 0;
-  margin-bottom:16px
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:12px
 }
 
 .score-result-value{
-  font-size:4rem;
+  font-size:3rem;
   font-weight:800;
   font-family:'JetBrains Mono',monospace;
-  background:linear-gradient(135deg,#f8fafc 0%,#cbd5e1 100%);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  line-height:1;
-  letter-spacing:-0.03em
+  color:#f8fafc;
+  line-height:1
 }
 
 .score-result-max{
   font-size:0.85rem;
-  color:#64748b;
-  margin-top:8px;
-  font-weight:500;
-  letter-spacing:0.02em
+  color:#475569;
+  font-weight:500
 }
 
-/* Risk Interpretation - Gradient Cards */
+/* Risk Interpretation Card */
 .score-result-interpretation{
-  padding:20px;
-  border-radius:12px;
-  position:relative;
-  overflow:hidden
-}
-.score-result-interpretation::before{
-  content:'';
-  position:absolute;
-  top:0;left:0;right:0;bottom:0;
-  background:inherit;
-  opacity:0.15;
-  filter:blur(20px)
+  padding:14px 16px;
+  border-radius:10px;
+  background:rgba(100,116,139,0.1);
+  border:1px solid rgba(100,116,139,0.15)
 }
 
 .score-result-risk{
-  font-size:1.15rem;
+  font-size:1rem;
   font-weight:700;
-  margin-bottom:8px;
-  position:relative;
-  letter-spacing:-0.01em
+  margin-bottom:4px
 }
 
 .score-result-action{
-  font-size:0.9rem;
-  opacity:0.95;
-  position:relative;
-  line-height:1.5;
-  font-weight:400
+  font-size:0.82rem;
+  color:#cbd5e1;
+  line-height:1.4
 }
 
 .score-result-stats{
   display:flex;
   justify-content:center;
-  gap:32px;
-  margin-top:20px;
-  padding-top:16px;
-  border-top:1px solid rgba(255,255,255,0.12);
-  position:relative
+  gap:20px;
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.08)
 }
 
 .score-result-stat{text-align:center}
 .score-result-stat-value{
-  font-size:1.2rem;
+  font-size:1rem;
   font-weight:700;
   font-family:'JetBrains Mono',monospace
 }
 .score-result-stat-label{
-  font-size:0.7rem;
-  color:rgba(255,255,255,0.6);
+  font-size:0.65rem;
+  color:#64748b;
   text-transform:uppercase;
-  letter-spacing:0.08em;
-  margin-top:4px
+  letter-spacing:0.05em;
+  margin-top:2px
 }
 
-/* ═══ SCORES TAB - DASHBOARD ═══ */
+/* Modal Footer Override */
+#scoreCalcModal .modal-footer{
+  background:#080c14;
+  border-top:1px solid rgba(148,163,184,0.06);
+  padding:12px 16px;
+  flex-shrink:0
+}
 
-.scores-search-wrapper{position:relative;margin-bottom:24px}
+/* ═══ SCORES TAB - DASHBOARD (Mobile First) ═══ */
+
+.scores-search-wrapper{position:relative;margin-bottom:16px}
 .scores-search-icon{
   position:absolute;
-  left:16px;
+  left:14px;
   top:50%;
   transform:translateY(-50%);
-  color:#64748b
+  color:#475569
 }
 .scores-search-input{
   width:100%;
-  padding:14px 20px 14px 48px;
+  padding:12px 16px 12px 42px;
   background:#0f172a;
-  border:1px solid rgba(148,163,184,0.1);
-  border-radius:12px;
+  border:1px solid rgba(148,163,184,0.08);
+  border-radius:10px;
   color:#f1f5f9;
-  font-size:0.9rem;
-  transition:all 0.2s ease
+  font-size:0.88rem
 }
 .scores-search-input:focus{
   outline:none;
-  border-color:rgba(251,191,36,0.4);
-  box-shadow:0 0 0 3px rgba(251,191,36,0.08)
+  border-color:rgba(59,130,246,0.4)
 }
 .scores-search-input::placeholder{color:#475569}
 
-/* Quick Access Cards */
+/* Quick Access Grid */
 .quick-score-ref{
-  background:linear-gradient(135deg,rgba(251,191,36,0.04) 0%,rgba(20,184,166,0.04) 100%);
-  border:1px solid rgba(148,163,184,0.08);
-  border-radius:14px;
-  padding:20px;
-  margin-bottom:24px
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.06);
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:16px
 }
 .quick-score-ref-title{
-  font-size:0.7rem;
-  font-weight:700;
-  color:#94a3b8;
-  margin-bottom:14px;
+  font-size:0.68rem;
+  font-weight:600;
+  color:#64748b;
+  margin-bottom:10px;
   text-transform:uppercase;
-  letter-spacing:0.1em;
+  letter-spacing:0.08em;
   display:flex;
   align-items:center;
-  gap:8px
+  gap:6px
 }
 .quick-score-ref-title::before{content:'⚡'}
 .quick-score-ref-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:10px
+  grid-template-columns:repeat(3,1fr);
+  gap:8px
+}
+@media(min-width:400px){
+  .quick-score-ref-grid{grid-template-columns:repeat(3,1fr)}
 }
 .quick-score-ref-item{
   display:flex;
   flex-direction:column;
+  align-items:center;
   gap:2px;
-  padding:12px 14px;
+  padding:10px 8px;
+  background:#0a0f1a;
+  border:1px solid rgba(148,163,184,0.06);
+  border-radius:8px;
+  cursor:pointer;
+  text-align:center
+}
+.quick-score-ref-item:active{background:#1e293b}
+.quick-score-ref-item-name{font-weight:600;font-size:0.82rem;color:#f1f5f9}
+.quick-score-ref-item-hint{font-size:0.68rem;color:#475569}
+
+/* Score Category Groups */
+.emergency-scores-grid{display:flex;flex-direction:column;gap:12px}
+
+.emergency-score-group{
   background:#0f172a;
+  border:1px solid rgba(148,163,184,0.06);
+  border-radius:12px;
+  overflow:hidden
+}
+
+.emergency-score-group-header{
+  padding:12px 14px;
+  background:rgba(15,23,42,0.5);
+  border-bottom:1px solid rgba(148,163,184,0.04);
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+.emergency-score-group-icon{font-size:1.1rem}
+.emergency-score-group-title{
+  font-weight:600;
+  font-size:0.88rem;
+  color:#e2e8f0
+}
+
+.emergency-score-group-body{padding:6px}
+
+.emergency-score-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:8px;
+  cursor:pointer;
+  gap:10px
+}
+.emergency-score-item:active{background:rgba(148,163,184,0.05)}
+
+.emergency-score-item-info{flex:1;min-width:0}
+.emergency-score-item-name{
+  font-weight:600;
+  font-size:0.85rem;
+  color:#f1f5f9;
+  margin-bottom:1px
+}
+.emergency-score-item-purpose{
+  font-size:0.72rem;
+  color:#475569;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+
+.emergency-score-item-btn{
+  padding:7px 12px;
+  background:#1e293b;
+  color:#94a3b8;
+  border:1px solid rgba(148,163,184,0.1);
+  border-radius:6px;
+  font-size:0.72rem;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap
+}
+.emergency-score-item-btn:active{
+  background:#3b82f6;
+  color:#fff;
+  border-color:transparent
+}
+
+/* ═══ PATIENT PROFILE SCORES ═══ */
+
+.patient-scores-section{margin-top:16px}
+.patient-scores-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px
+}
+.patient-scores-title{
+  font-size:0.7rem;
+  font-weight:600;
+  color:#475569;
+  text-transform:uppercase;
+  letter-spacing:0.06em
+}
+
+.patient-scores-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px
+}
+@media(min-width:400px){
+  .patient-scores-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+.patient-score-chip{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  padding:12px 10px;
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.06);
+  border-radius:10px;
+  cursor:pointer;
+  text-align:center
+}
+.patient-score-chip:active{background:#1e293b}
+.patient-score-chip.has-value{
+  border-color:rgba(16,185,129,0.25);
+  background:linear-gradient(135deg,rgba(16,185,129,0.08) 0%,transparent 100%)
+}
+.patient-score-chip.has-value .score-chip-value{display:block}
+
+.patient-score-chip .score-chip-icon{font-size:1.2rem}
+.patient-score-chip .score-chip-name{
+  font-size:0.75rem;
+  font-weight:600;
+  color:#cbd5e1
+}
+.patient-score-chip .score-chip-value{
+  display:none;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.9rem;
+  font-weight:700;
+  margin-top:2px
+}
+.patient-score-chip .score-chip-value.low{color:#10b981}
+.patient-score-chip .score-chip-value.moderate{color:#f59e0b}
+.patient-score-chip .score-chip-value.high{color:#ef4444}
   border:1px solid rgba(148,163,184,0.08);
   border-radius:10px;
   cursor:pointer;
@@ -1325,13 +1535,18 @@ Request New Unit Access
   </div>
 </div>
 
-<!-- Score Calculator Modal - Premium Design -->
-<div class="modal" id="scoreCalcModal">
-  <div class="modal-box wide" style="max-width:480px;border-radius:16px;border:1px solid rgba(148,163,184,0.1);overflow:hidden">
+<!-- Score Calculator Modal - Mobile-First Design -->
+<div class="modal" id="scoreCalcModal" style="padding:0">
+  <div class="modal-box wide" style="border:none;background:transparent">
     <div class="score-calculator">
       <div class="score-calc-header">
-        <div class="score-calc-title" id="scoreCalcTitle">Score Name</div>
-        <div class="score-calc-purpose" id="scoreCalcPurpose">Purpose description</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="score-calc-title" id="scoreCalcTitle">Score Name</div>
+            <div class="score-calc-purpose" id="scoreCalcPurpose">Purpose description</div>
+          </div>
+          <button onclick="closeModal('scoreCalcModal')" style="background:rgba(148,163,184,0.1);border:none;width:32px;height:32px;border-radius:8px;color:#94a3b8;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+        </div>
         <div class="score-calc-category" id="scoreCalcCategory">Category</div>
       </div>
       <div class="score-calc-body">
@@ -1340,17 +1555,17 @@ Request New Unit Access
       <div class="score-calc-result" id="scoreCalcResult">
         <div class="score-result-display">
           <div class="score-result-value" id="scoreResultValue">0</div>
-          <div class="score-result-max" id="scoreResultMax">/ 10 points</div>
+          <div class="score-result-max" id="scoreResultMax">of 10</div>
         </div>
         <div class="score-result-interpretation" id="scoreResultInterpretation">
           <div class="score-result-risk">Low Risk</div>
           <div class="score-result-action">Recommended action here</div>
         </div>
       </div>
-    </div>
-    <div class="modal-footer" style="background:#0c1220;border-top:1px solid rgba(148,163,184,0.08);padding:16px 20px">
-      <button class="btn btn-secondary" onclick="closeModal('scoreCalcModal')" style="background:#1e293b;border:1px solid rgba(148,163,184,0.15)">Close</button>
-      <button class="btn btn-primary" id="saveScoreBtn" onclick="savePatientScore()" style="display:none">💾 Save to Patient</button>
+      <div class="modal-footer" style="background:#080c14;border-top:1px solid rgba(148,163,184,0.06);padding:12px 16px;gap:10px">
+        <button class="btn btn-secondary" onclick="closeModal('scoreCalcModal')" style="background:#1e293b;border:1px solid rgba(148,163,184,0.12);flex:1">Close</button>
+        <button class="btn btn-primary" id="saveScoreBtn" onclick="savePatientScore()" style="display:none;flex:1">💾 Save</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2766,10 +2981,35 @@ window.openScoreCalculator = function(scoreId) {
   // Show save button only if patient is open
   $('saveScoreBtn').style.display = state.currentPatient ? 'block' : 'none';
   
+  // Get patient lab data for auto-calculation
+  const patientLabs = getPatientLabValues();
+  const autoCalcData = getAutoCalcForScore(scoreId, patientLabs);
+  
   // Render fields with improved design
   let fieldsHtml = '';
-  let fieldIndex = 0;
   
+  // If we have auto-calculated result, show it first
+  if (autoCalcData.hasAuto) {
+    fieldsHtml += `
+      <div class="score-auto-calc">
+        <div class="score-auto-calc-header">
+          <div class="score-auto-calc-title">
+            <span>🤖 Auto-calculated from Labs</span>
+            <span class="score-auto-calc-badge">SMART</span>
+          </div>
+          <button class="score-manual-toggle" onclick="toggleManualMode()">Enter manually</button>
+        </div>
+        <div class="score-auto-calc-value">${autoCalcData.display}</div>
+        <div class="score-auto-calc-source">${autoCalcData.source}</div>
+      </div>
+      <div id="manualScoreFields" style="display:none">
+    `;
+    
+    // Set the auto-calculated values
+    Object.assign(currentScoreValues, autoCalcData.values);
+  }
+  
+  let fieldIndex = 0;
   score.fields.forEach(field => {
     fieldIndex++;
     
@@ -2782,36 +3022,191 @@ window.openScoreCalculator = function(scoreId) {
           <div class="score-field-points">${pointsDisplay}</div>
         </div>
       `;
-      currentScoreValues[field.id] = 0;
+      currentScoreValues[field.id] = currentScoreValues[field.id] || 0;
     } else if (field.type === 'select') {
+      const preselectedValue = currentScoreValues[field.id] || '';
       fieldsHtml += `
-        <div class="score-field" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="score-field" style="flex-direction:column;align-items:stretch;gap:8px">
           <div class="score-field-select">
             <label>${fieldIndex}. ${field.label}</label>
-            <select onchange="updateScoreSelect('${field.id}', this.value)">
+            <select id="select_${field.id}" onchange="updateScoreSelect('${field.id}', this.value)">
               <option value="">Select an option...</option>
-              ${field.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+              ${field.options.map(o => `<option value="${o.value}" ${o.value == preselectedValue ? 'selected' : ''}>${o.label}</option>`).join('')}
             </select>
           </div>
         </div>
       `;
-      currentScoreValues[field.id] = 0;
+      currentScoreValues[field.id] = currentScoreValues[field.id] || 0;
     } else if (field.type === 'number') {
+      const prefilledValue = currentScoreValues[field.id] || '';
       fieldsHtml += `
-        <div class="score-field" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="score-field" style="flex-direction:column;align-items:stretch;gap:8px">
           <div class="score-field-number">
             <label>${field.label}</label>
-            <input type="number" id="num_${field.id}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="" placeholder="0" onchange="updateScoreNumber('${field.id}', this.value)" oninput="updateScoreNumber('${field.id}', this.value)">
+            <input type="number" id="num_${field.id}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="${prefilledValue}" placeholder="0" onchange="updateScoreNumber('${field.id}', this.value)" oninput="updateScoreNumber('${field.id}', this.value)">
           </div>
         </div>
       `;
-      currentScoreValues[field.id] = null;
+      if (currentScoreValues[field.id] === undefined) currentScoreValues[field.id] = null;
     }
   });
+  
+  if (autoCalcData.hasAuto) {
+    fieldsHtml += '</div>';
+  }
   
   $('scoreCalcFields').innerHTML = fieldsHtml;
   updateScoreResult();
   openModal('scoreCalcModal');
+};
+
+// Get patient's lab values in a normalized format
+function getPatientLabValues() {
+  if (!state.currentPatient?.labData?.parameters) return {};
+  
+  const labs = {};
+  const params = state.currentPatient.labData.parameters;
+  
+  params.forEach(p => {
+    const name = p.name.toLowerCase();
+    const value = parseFloat(p.value);
+    if (isNaN(value)) return;
+    
+    // Normalize common lab names
+    if (name.includes('creatinine') || name.includes('creat')) labs.creatinine = value;
+    if (name.includes('urea') || name === 'bun') labs.urea = value;
+    if (name.includes('egfr')) labs.egfr = value;
+    if (name.includes('bilirubin') && !name.includes('direct')) labs.bilirubin = value;
+    if (name.includes('inr')) labs.inr = value;
+    if (name.includes('albumin')) labs.albumin = value;
+    if (name.includes('sodium') || name === 'na') labs.sodium = value;
+    if (name.includes('potassium') || name === 'k') labs.potassium = value;
+    if (name.includes('hemoglobin') || name === 'hgb' || name === 'hb') labs.hemoglobin = value;
+    if (name.includes('platelet')) labs.platelets = value;
+    if (name.includes('wbc') || name.includes('white')) labs.wbc = value;
+    if (name.includes('lactate')) labs.lactate = value;
+    if (name.includes('glucose') || name === 'gluc') labs.glucose = value;
+  });
+  
+  return labs;
+}
+
+// Get auto-calculation data for specific scores
+function getAutoCalcForScore(scoreId, labs) {
+  const result = { hasAuto: false, display: '', source: '', values: {} };
+  
+  if (!state.currentPatient) return result;
+  
+  // KDIGO AKI - Auto-calculate from creatinine
+  if (scoreId === 'KDIGO-AKI' && labs.creatinine) {
+    const cr = labs.creatinine;
+    const baseline = state.currentPatient.baselineCreatinine || 1.0; // Default baseline
+    const ratio = cr / baseline;
+    
+    let stage = 1;
+    if (cr >= 4.0 || ratio >= 3) stage = 3;
+    else if (ratio >= 2) stage = 2;
+    else if (cr >= baseline + 0.3 || ratio >= 1.5) stage = 1;
+    else stage = 0;
+    
+    if (stage > 0) {
+      result.hasAuto = true;
+      result.display = `Stage ${stage}`;
+      result.source = `Based on Cr: ${cr} mg/dL (baseline: ${baseline})`;
+      result.values = { stage: stage };
+    }
+  }
+  
+  // MELD Score - Auto-calculate from labs
+  if (scoreId === 'MELD' && labs.creatinine && labs.bilirubin && labs.inr) {
+    result.hasAuto = true;
+    result.values = {
+      creatinine: labs.creatinine,
+      bilirubin: labs.bilirubin,
+      inr: labs.inr
+    };
+    
+    const cr = Math.min(Math.max(labs.creatinine, 1), 4);
+    const bili = Math.max(labs.bilirubin, 1);
+    const inr = Math.max(labs.inr, 1);
+    const meld = Math.round(10 * (0.957 * Math.log(cr) + 0.378 * Math.log(bili) + 1.12 * Math.log(inr) + 0.643));
+    
+    result.display = Math.min(Math.max(meld, 6), 40).toString();
+    result.source = `Cr: ${labs.creatinine} | Bili: ${labs.bilirubin} | INR: ${labs.inr}`;
+  }
+  
+  // Child-Pugh - Partial auto-fill
+  if (scoreId === 'Child-Pugh') {
+    if (labs.bilirubin || labs.albumin || labs.inr) {
+      result.hasAuto = true;
+      result.source = 'Partial data from labs';
+      
+      const parts = [];
+      if (labs.bilirubin) {
+        result.values.bilirubin = labs.bilirubin < 2 ? 1 : labs.bilirubin <= 3 ? 2 : 3;
+        parts.push(`Bili: ${labs.bilirubin}`);
+      }
+      if (labs.albumin) {
+        result.values.albumin = labs.albumin > 3.5 ? 1 : labs.albumin >= 2.8 ? 2 : 3;
+        parts.push(`Alb: ${labs.albumin}`);
+      }
+      if (labs.inr) {
+        result.values.inr = labs.inr < 1.7 ? 1 : labs.inr <= 2.3 ? 2 : 3;
+        parts.push(`INR: ${labs.inr}`);
+      }
+      
+      const total = (result.values.bilirubin || 0) + (result.values.albumin || 0) + (result.values.inr || 0);
+      result.display = `${total}+ pts`;
+      result.source = parts.join(' | ') + ' (complete manually)';
+    }
+  }
+  
+  // Glasgow-Blatchford - Auto-fill from labs
+  if (scoreId === 'Glasgow-Blatchford') {
+    if (labs.urea || labs.hemoglobin) {
+      result.hasAuto = true;
+      const parts = [];
+      
+      if (labs.urea) {
+        // BUN scoring
+        let bunScore = 0;
+        if (labs.urea >= 25) bunScore = 6;
+        else if (labs.urea >= 10) bunScore = 4;
+        else if (labs.urea >= 8) bunScore = 3;
+        else if (labs.urea >= 6.5) bunScore = 2;
+        result.values.bun = bunScore;
+        parts.push(`Urea: ${labs.urea}`);
+      }
+      
+      if (labs.hemoglobin) {
+        // Simplified - assuming male for now
+        let hgbScore = 0;
+        if (labs.hemoglobin < 10) hgbScore = 6;
+        else if (labs.hemoglobin < 12) hgbScore = 3;
+        else if (labs.hemoglobin < 13) hgbScore = 1;
+        result.values.hgb_male = hgbScore;
+        parts.push(`Hgb: ${labs.hemoglobin}`);
+      }
+      
+      result.display = 'Partial';
+      result.source = parts.join(' | ') + ' (add vitals)';
+    }
+  }
+  
+  return result;
+}
+
+window.toggleManualMode = function() {
+  const manualFields = $('manualScoreFields');
+  const autoCalc = document.querySelector('.score-auto-calc');
+  
+  if (manualFields.style.display === 'none') {
+    manualFields.style.display = 'block';
+    autoCalc.style.opacity = '0.5';
+  } else {
+    manualFields.style.display = 'none';
+    autoCalc.style.opacity = '1';
+  }
 };
 
 window.toggleScoreCheckbox = function(fieldId, points) {
