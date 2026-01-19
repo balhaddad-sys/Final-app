@@ -3547,8 +3547,14 @@ function renderProfileMeds() {
 function renderMedCard(med, idx) {
   const statusClass = med.status || 'active';
   const statusLabels = { active: 'Active', new: 'New', prn: 'PRN', discontinued: 'Stopped' };
-  const drugUrl = state.settings.drugRefUrl || '';
-  const showDrugLink = drugUrl && drugUrl.trim() !== '';
+  const drugBaseUrl = state.settings.drugRefUrl || '';
+  const showDrugLink = drugBaseUrl && drugBaseUrl.trim() !== '';
+  
+  // Build dynamic URL with drug name as query parameter
+  const drugName = encodeURIComponent(med.name || '');
+  const drugDose = encodeURIComponent(med.dose || '');
+  const drugIndication = encodeURIComponent(med.indication || '');
+  const drugUrl = showDrugLink ? `${drugBaseUrl}?drug=${drugName}&dose=${drugDose}&indication=${drugIndication}` : '';
   
   return `
     <div class="med-card">
