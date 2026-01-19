@@ -11,11 +11,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-html,body{height:100%}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
-/* Touch-friendly interactive elements */
-button,a,.btn,.unit-card,.patient-card,.med-card,.clickable,[onclick]{cursor:pointer;-webkit-user-select:none;user-select:none}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+/* Scrollable areas allow vertical pan */
+.page,.modal-body,.panel{touch-action:pan-y}
+/* Clickable elements are manipulation only */
+button,.btn,.unit-card,.patient-card,.card,.clickable{touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
