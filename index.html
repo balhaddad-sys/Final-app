@@ -334,6 +334,107 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .approve-form.show{display:block}
 .approve-form-row{display:flex;gap:12px;margin-bottom:12px}
 .approve-form-row .form-input{flex:1}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CLINICAL SCORING SYSTEM STYLES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Scoring Tab Styles */
+.scores-container{display:flex;flex-direction:column;gap:20px}
+.scores-category{margin-bottom:24px}
+.scores-category-title{font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;padding-left:4px}
+.scores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.score-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.score-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.score-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--orange));opacity:0;transition:opacity 0.2s}
+.score-card:hover::before{opacity:1}
+.score-card-icon{font-size:1.5rem;margin-bottom:8px}
+.score-card-name{font-size:0.9rem;font-weight:700;margin-bottom:4px}
+.score-card-purpose{font-size:0.7rem;color:var(--text-muted);line-height:1.4}
+.score-card.computed{border-color:var(--emerald)}
+.score-card.computed::after{content:'✓';position:absolute;top:8px;right:8px;background:var(--emerald);color:#fff;width:20px;height:20px;border-radius:50%;font-size:0.7rem;display:grid;place-items:center}
+
+/* Score Calculator Modal */
+.score-calculator{padding:0}
+.score-calc-header{background:linear-gradient(135deg,var(--bg-elevated),var(--bg-card));padding:24px;border-bottom:1px solid var(--border)}
+.score-calc-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
+.score-calc-purpose{font-size:0.85rem;color:var(--text-secondary)}
+.score-calc-category{display:inline-block;background:rgba(245,158,11,0.15);color:var(--gold);padding:4px 12px;border-radius:100px;font-size:0.7rem;font-weight:700;margin-top:8px}
+.score-calc-body{padding:24px;max-height:50vh;overflow-y:auto}
+.score-calc-fields{display:flex;flex-direction:column;gap:16px}
+.score-field{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);transition:all 0.2s}
+.score-field:hover{background:var(--bg-hover)}
+.score-field.checked{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)}
+.score-field-checkbox{width:22px;height:22px;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:grid;place-items:center;transition:all 0.2s;flex-shrink:0}
+.score-field-checkbox.checked{background:var(--gold);border-color:var(--gold)}
+.score-field-checkbox.checked::after{content:'✓';color:#000;font-size:0.8rem;font-weight:700}
+.score-field-label{flex:1;font-size:0.9rem}
+.score-field-points{font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--gold);font-weight:600;padding:4px 8px;background:rgba(245,158,11,0.1);border-radius:4px}
+.score-field-select{flex:1}
+.score-field-select select{width:100%;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+.score-field-select select:focus{outline:none;border-color:var(--gold)}
+.score-field-number{display:flex;align-items:center;gap:8px}
+.score-field-number input{width:100px;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;text-align:center}
+.score-field-number input:focus{outline:none;border-color:var(--gold)}
+
+/* Score Result */
+.score-calc-result{padding:24px;background:var(--bg-elevated);border-top:1px solid var(--border)}
+.score-result-display{text-align:center;margin-bottom:20px}
+.score-result-value{font-size:3.5rem;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
+.score-result-max{font-size:1rem;color:var(--text-muted);margin-top:4px}
+.score-result-interpretation{padding:16px;border-radius:var(--radius-sm);margin-top:16px}
+.score-result-risk{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.score-result-action{font-size:0.9rem;opacity:0.9}
+.score-result-stats{display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)}
+.score-result-stat{text-align:center}
+.score-result-stat-value{font-size:1.1rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+.score-result-stat-label{font-size:0.7rem;color:rgba(255,255,255,0.7);text-transform:uppercase}
+
+/* Patient Profile Scores Section */
+.patient-scores-section{margin-top:20px}
+.patient-scores-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.patient-scores-title{font-size:0.85rem;font-weight:700;color:var(--text-secondary)}
+.patient-scores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.patient-score-chip{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s}
+.patient-score-chip:hover{border-color:var(--gold);background:rgba(245,158,11,0.05)}
+.patient-score-chip.has-value{border-color:var(--emerald);background:rgba(16,185,129,0.08)}
+.patient-score-chip.has-value .score-chip-value{display:flex}
+.patient-score-chip .score-chip-icon{font-size:1.1rem}
+.patient-score-chip .score-chip-name{font-size:0.8rem;font-weight:600;flex:1}
+.patient-score-chip .score-chip-value{display:none;font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:700;padding:2px 8px;border-radius:4px}
+.patient-score-chip .score-chip-value.low{background:rgba(16,185,129,0.2);color:var(--emerald)}
+.patient-score-chip .score-chip-value.moderate{background:rgba(245,158,11,0.2);color:var(--gold)}
+.patient-score-chip .score-chip-value.high{background:rgba(244,63,94,0.2);color:var(--rose)}
+
+/* Emergency Scores Reference Tab */
+.emergency-scores-grid{display:grid;gap:16px}
+.emergency-score-group{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.emergency-score-group-header{padding:16px 20px;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.emergency-score-group-icon{font-size:1.5rem}
+.emergency-score-group-title{font-weight:700;font-size:1rem}
+.emergency-score-group-body{padding:12px}
+.emergency-score-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s}
+.emergency-score-item:hover{background:var(--bg-hover)}
+.emergency-score-item-info{flex:1}
+.emergency-score-item-name{font-weight:600;font-size:0.9rem}
+.emergency-score-item-purpose{font-size:0.75rem;color:var(--text-muted)}
+.emergency-score-item-btn{padding:8px 16px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border:none;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.2s}
+.emergency-score-item-btn:hover{transform:scale(1.05)}
+
+/* Scores Search */
+.scores-search{margin-bottom:20px}
+.scores-search-input{width:100%;padding:14px 20px 14px 48px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.9rem;transition:all 0.2s}
+.scores-search-input:focus{outline:none;border-color:var(--gold)}
+.scores-search-wrapper{position:relative}
+.scores-search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+
+/* Quick Score Reference Cards */
+.quick-score-ref{background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(20,184,166,0.1));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.quick-score-ref-title{font-size:0.8rem;font-weight:700;color:var(--gold);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
+.quick-score-ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.quick-score-ref-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:var(--radius-sm)}
+.quick-score-ref-item-name{font-weight:600;font-size:0.85rem}
+.quick-score-ref-item-hint{font-size:0.7rem;color:var(--text-muted)}
 </style>
 </head>
 <body>
@@ -374,6 +475,7 @@ Request New Unit Access
 <div class="date-banner">📅 <span id="currentDate"></span></div>
 <div class="tabs-container" id="mainTabs">
 <button class="tab active" data-tab="patients">👥 Patients</button>
+<button class="tab" data-tab="scores">📊 Scores</button>
 <button class="tab" data-tab="reference">📚 Reference</button>
 </div>
 <div class="panel active" id="panelPatients">
@@ -390,6 +492,47 @@ Request New Unit Access
 <button class="btn btn-secondary btn-sm btn-full" onclick="exportPDF()">📄 Export PDF</button>
 </div>
 <div id="patientsList"></div>
+</div>
+<div class="panel" id="panelScores">
+<div class="section-card">
+<div class="section-header"><div class="section-title">📊 Clinical Scoring Calculators</div></div>
+<div class="section-body">
+<div class="scores-search-wrapper">
+  <svg class="scores-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+  <input type="text" class="scores-search-input" id="scoresSearchInput" placeholder="Search scores (e.g., CURB-65, Wells, HEART)..." oninput="filterScores(this.value)">
+</div>
+<div class="quick-score-ref">
+  <div class="quick-score-ref-title">🚨 Common Emergency Scores</div>
+  <div class="quick-score-ref-grid">
+    <div class="quick-score-ref-item" onclick="openScoreCalculator('qSOFA')">
+      <span class="quick-score-ref-item-name">qSOFA</span>
+      <span class="quick-score-ref-item-hint">Sepsis screening</span>
+    </div>
+    <div class="quick-score-ref-item" onclick="openScoreCalculator('Glasgow-Coma')">
+      <span class="quick-score-ref-item-name">GCS</span>
+      <span class="quick-score-ref-item-hint">Consciousness</span>
+    </div>
+    <div class="quick-score-ref-item" onclick="openScoreCalculator('HEART')">
+      <span class="quick-score-ref-item-name">HEART</span>
+      <span class="quick-score-ref-item-hint">Chest pain</span>
+    </div>
+    <div class="quick-score-ref-item" onclick="openScoreCalculator('Wells-PE')">
+      <span class="quick-score-ref-item-name">Wells PE</span>
+      <span class="quick-score-ref-item-hint">PE probability</span>
+    </div>
+    <div class="quick-score-ref-item" onclick="openScoreCalculator('CURB-65')">
+      <span class="quick-score-ref-item-name">CURB-65</span>
+      <span class="quick-score-ref-item-hint">Pneumonia</span>
+    </div>
+    <div class="quick-score-ref-item" onclick="openScoreCalculator('NEWS2')">
+      <span class="quick-score-ref-item-name">NEWS2</span>
+      <span class="quick-score-ref-item-hint">Early warning</span>
+    </div>
+  </div>
+</div>
+<div id="scoresGrid" class="emergency-scores-grid"></div>
+</div>
+</div>
 </div>
 <div class="panel" id="panelReference">
 <div class="section-card">
@@ -415,6 +558,7 @@ Request New Unit Access
 </div>
 <div class="profile-tabs" id="profileTabs">
 <button class="profile-tab active" data-ptab="overview">Overview</button>
+<button class="profile-tab" data-ptab="scores">Scores</button>
 <button class="profile-tab" data-ptab="labs">Labs</button>
 <button class="profile-tab" data-ptab="imaging">Imaging</button>
 <button class="profile-tab" data-ptab="fluids">Fluids</button>
@@ -422,6 +566,7 @@ Request New Unit Access
 </div>
 <div class="profile-content">
 <div class="profile-panel active" id="profileOverview"></div>
+<div class="profile-panel" id="profileScores"></div>
 <div class="profile-panel" id="profileLabs"></div>
 <div class="profile-panel" id="profileImaging"></div>
 <div class="profile-panel" id="profileFluids"></div>
@@ -783,6 +928,36 @@ Request New Unit Access
   </div>
 </div>
 
+<!-- Score Calculator Modal -->
+<div class="modal" id="scoreCalcModal">
+  <div class="modal-box wide">
+    <div class="score-calculator">
+      <div class="score-calc-header">
+        <div class="score-calc-title" id="scoreCalcTitle">Score Name</div>
+        <div class="score-calc-purpose" id="scoreCalcPurpose">Purpose description</div>
+        <div class="score-calc-category" id="scoreCalcCategory">Category</div>
+      </div>
+      <div class="score-calc-body">
+        <div class="score-calc-fields" id="scoreCalcFields"></div>
+      </div>
+      <div class="score-calc-result" id="scoreCalcResult">
+        <div class="score-result-display">
+          <div class="score-result-value" id="scoreResultValue">0</div>
+          <div class="score-result-max" id="scoreResultMax">/ 10 points</div>
+        </div>
+        <div class="score-result-interpretation" id="scoreResultInterpretation" style="background:var(--emerald);color:#fff">
+          <div class="score-result-risk">Low Risk</div>
+          <div class="score-result-action">Recommended action here</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('scoreCalcModal')">Close</button>
+      <button class="btn btn-primary" id="saveScoreBtn" onclick="savePatientScore()" style="display:none">💾 Save to Patient</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <input type="file" id="labFileInput" accept="image/*" style="display:none">
 <input type="file" id="imagingFileInput" accept="image/*" style="display:none">
@@ -809,6 +984,764 @@ const CONFIG = {
     'Complete Blood Count': { icon: '🩸', terms: ['Hgb', 'Hemoglobin', 'WBC', 'Platelets', 'RBC', 'MCV', 'Hct'] },
     'Other': { icon: '🔬', terms: ['Urate', 'Uric Acid', 'Anion Gap', 'Osmolality', 'CRP', 'ESR', 'Procalcitonin'] }
   },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // CLINICAL SCORING SYSTEMS
+  // ═══════════════════════════════════════════════════════════════════
+  
+  // Patient-specific scores - appear in patient profile based on diagnosis
+  PATIENT_SCORES: {
+    // Cardiac
+    'heart failure': ['NYHA', 'MAGGIC', 'H2FPEF', 'HFA-PEFF'],
+    'hf': ['NYHA', 'MAGGIC', 'H2FPEF', 'HFA-PEFF'],
+    'chf': ['NYHA', 'MAGGIC', 'H2FPEF', 'HFA-PEFF'],
+    'atrial fibrillation': ['CHA2DS2-VASc', 'HAS-BLED', 'EHRA'],
+    'af': ['CHA2DS2-VASc', 'HAS-BLED', 'EHRA'],
+    'afib': ['CHA2DS2-VASc', 'HAS-BLED', 'EHRA'],
+    'acs': ['TIMI', 'GRACE', 'HEART', 'Killip'],
+    'stemi': ['TIMI', 'Killip', 'GRACE'],
+    'nstemi': ['TIMI', 'GRACE', 'HEART'],
+    'unstable angina': ['TIMI', 'HEART'],
+    'chest pain': ['HEART', 'TIMI', 'Wells-PE'],
+    'mi': ['TIMI', 'GRACE', 'Killip'],
+    
+    // Respiratory
+    'pneumonia': ['CURB-65', 'PSI', 'A-DROP'],
+    'cap': ['CURB-65', 'PSI'],
+    'copd': ['GOLD', 'BODE', 'mMRC'],
+    'copd exacerbation': ['GOLD', 'DECAF', 'BAP-65'],
+    'asthma': ['GINA', 'Asthma-Control'],
+    'pe': ['Wells-PE', 'Geneva', 'PESI', 'sPESI'],
+    'pulmonary embolism': ['Wells-PE', 'Geneva', 'PESI', 'sPESI'],
+    
+    // Neurological
+    'stroke': ['NIHSS', 'mRS', 'ABCD2', 'ICH'],
+    'cva': ['NIHSS', 'mRS', 'ABCD2'],
+    'tia': ['ABCD2', 'mRS'],
+    'ich': ['ICH', 'FUNC'],
+    'seizure': ['ILAE', 'Status-Epilepticus'],
+    
+    // GI/Hepatic
+    'gi bleed': ['Glasgow-Blatchford', 'Rockall', 'AIMS65'],
+    'gib': ['Glasgow-Blatchford', 'Rockall', 'AIMS65'],
+    'upper gi bleed': ['Glasgow-Blatchford', 'Rockall', 'AIMS65'],
+    'cirrhosis': ['Child-Pugh', 'MELD', 'MELD-Na'],
+    'liver failure': ['Child-Pugh', 'MELD', 'MELD-Na', 'CLIF-SOFA'],
+    'hepatic encephalopathy': ['West-Haven', 'Child-Pugh'],
+    'pancreatitis': ['Ranson', 'BISAP', 'Atlanta'],
+    'acute pancreatitis': ['Ranson', 'BISAP', 'APACHE-II'],
+    
+    // Renal
+    'aki': ['KDIGO-AKI', 'RIFLE', 'AKIN'],
+    'acute kidney injury': ['KDIGO-AKI', 'RIFLE', 'AKIN'],
+    'ckd': ['KDIGO-CKD', 'eGFR-Stage'],
+    
+    // Infectious
+    'sepsis': ['qSOFA', 'SOFA', 'NEWS2', 'SIRS'],
+    'septic shock': ['SOFA', 'APACHE-II', 'NEWS2'],
+    'meningitis': ['Glasgow-Coma', 'LAMP'],
+    'endocarditis': ['Duke', 'HACEK'],
+    
+    // Critical Care
+    'icu': ['APACHE-II', 'SOFA', 'SAPS-II', 'NEWS2'],
+    'critical': ['APACHE-II', 'SOFA', 'NEWS2', 'Glasgow-Coma'],
+    'intubated': ['RSBI', 'APACHE-II'],
+    'ventilator': ['RSBI', 'P/F-Ratio'],
+    
+    // Surgical/Trauma
+    'surgery': ['ASA', 'Caprini', 'RCRI'],
+    'post-op': ['ASA', 'Caprini', 'Surgical-Apgar'],
+    'trauma': ['ISS', 'RTS', 'GCS'],
+    'fall': ['Morse-Fall', 'STRATIFY'],
+    'fracture': ['FRAX', 'Caprini'],
+    
+    // VTE
+    'dvt': ['Wells-DVT', 'Caprini', 'Padua'],
+    'deep vein thrombosis': ['Wells-DVT', 'Caprini'],
+    'vte': ['Caprini', 'Padua', 'Wells-DVT'],
+    
+    // Diabetes
+    'dka': ['DKA-Severity', 'Anion-Gap'],
+    'diabetic ketoacidosis': ['DKA-Severity', 'Anion-Gap'],
+    'hhs': ['HHS-Severity', 'Osmolality'],
+    'diabetes': ['HbA1c-Control', 'UKPDS']
+  },
+  
+  // Complete scoring calculators with formulas
+  SCORING_CALCULATORS: {
+    // ═══ CARDIAC SCORES ═══
+    'CHA2DS2-VASc': {
+      name: 'CHA₂DS₂-VASc Score',
+      category: 'Cardiac',
+      purpose: 'Stroke risk in atrial fibrillation',
+      fields: [
+        { id: 'chf', label: 'CHF/LV dysfunction', points: 1, type: 'checkbox' },
+        { id: 'htn', label: 'Hypertension', points: 1, type: 'checkbox' },
+        { id: 'age75', label: 'Age ≥75', points: 2, type: 'checkbox' },
+        { id: 'dm', label: 'Diabetes mellitus', points: 1, type: 'checkbox' },
+        { id: 'stroke', label: 'Stroke/TIA/thromboembolism', points: 2, type: 'checkbox' },
+        { id: 'vascular', label: 'Vascular disease (MI, PAD, aortic plaque)', points: 1, type: 'checkbox' },
+        { id: 'age65', label: 'Age 65-74', points: 1, type: 'checkbox' },
+        { id: 'female', label: 'Sex category (female)', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 0, risk: 'Low', action: 'No anticoagulation (or ASA)', color: '#10b981', annual: '0%' },
+        { min: 1, max: 1, risk: 'Low-Moderate', action: 'Consider anticoagulation', color: '#f59e0b', annual: '1.3%' },
+        { min: 2, max: 9, risk: 'Moderate-High', action: 'Anticoagulation recommended', color: '#ef4444', annual: '≥2.2%' }
+      ]
+    },
+    
+    'HAS-BLED': {
+      name: 'HAS-BLED Score',
+      category: 'Cardiac',
+      purpose: 'Bleeding risk on anticoagulation',
+      fields: [
+        { id: 'htn', label: 'Hypertension (SBP >160)', points: 1, type: 'checkbox' },
+        { id: 'renal', label: 'Abnormal renal function', points: 1, type: 'checkbox' },
+        { id: 'liver', label: 'Abnormal liver function', points: 1, type: 'checkbox' },
+        { id: 'stroke', label: 'Stroke history', points: 1, type: 'checkbox' },
+        { id: 'bleeding', label: 'Bleeding history/predisposition', points: 1, type: 'checkbox' },
+        { id: 'inr', label: 'Labile INR (if on warfarin)', points: 1, type: 'checkbox' },
+        { id: 'elderly', label: 'Elderly (>65)', points: 1, type: 'checkbox' },
+        { id: 'drugs', label: 'Drugs (antiplatelets, NSAIDs)', points: 1, type: 'checkbox' },
+        { id: 'alcohol', label: 'Alcohol excess', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 2, risk: 'Low', action: 'Anticoagulation generally safe', color: '#10b981', annual: '1-2%' },
+        { min: 3, max: 9, risk: 'High', action: 'Caution - address modifiable risks', color: '#ef4444', annual: '≥3.7%' }
+      ]
+    },
+    
+    'HEART': {
+      name: 'HEART Score',
+      category: 'Cardiac',
+      purpose: 'Risk stratification for chest pain',
+      fields: [
+        { id: 'history', label: 'History', type: 'select', options: [
+          { value: 0, label: 'Slightly suspicious' },
+          { value: 1, label: 'Moderately suspicious' },
+          { value: 2, label: 'Highly suspicious' }
+        ]},
+        { id: 'ecg', label: 'ECG', type: 'select', options: [
+          { value: 0, label: 'Normal' },
+          { value: 1, label: 'Non-specific repolarization' },
+          { value: 2, label: 'Significant ST deviation' }
+        ]},
+        { id: 'age', label: 'Age', type: 'select', options: [
+          { value: 0, label: '<45 years' },
+          { value: 1, label: '45-64 years' },
+          { value: 2, label: '≥65 years' }
+        ]},
+        { id: 'risk', label: 'Risk Factors', type: 'select', options: [
+          { value: 0, label: 'No known risk factors' },
+          { value: 1, label: '1-2 risk factors' },
+          { value: 2, label: '≥3 risk factors or known CAD' }
+        ]},
+        { id: 'troponin', label: 'Initial Troponin', type: 'select', options: [
+          { value: 0, label: '≤ normal limit' },
+          { value: 1, label: '1-3x normal limit' },
+          { value: 2, label: '>3x normal limit' }
+        ]}
+      ],
+      interpretation: [
+        { min: 0, max: 3, risk: 'Low', action: 'Consider discharge with outpatient follow-up', color: '#10b981', mace: '0.9-1.7%' },
+        { min: 4, max: 6, risk: 'Intermediate', action: 'Admit for observation and serial troponins', color: '#f59e0b', mace: '12-16.6%' },
+        { min: 7, max: 10, risk: 'High', action: 'Early invasive strategy recommended', color: '#ef4444', mace: '50-65%' }
+      ]
+    },
+    
+    'TIMI': {
+      name: 'TIMI Risk Score (NSTEMI)',
+      category: 'Cardiac',
+      purpose: 'Risk stratification for NSTEMI/UA',
+      fields: [
+        { id: 'age', label: 'Age ≥65', points: 1, type: 'checkbox' },
+        { id: 'cad', label: '≥3 CAD risk factors', points: 1, type: 'checkbox' },
+        { id: 'known_cad', label: 'Known CAD (stenosis ≥50%)', points: 1, type: 'checkbox' },
+        { id: 'asa', label: 'ASA use in past 7 days', points: 1, type: 'checkbox' },
+        { id: 'angina', label: '≥2 angina episodes in 24h', points: 1, type: 'checkbox' },
+        { id: 'ecg', label: 'ST changes ≥0.5mm', points: 1, type: 'checkbox' },
+        { id: 'biomarker', label: 'Elevated cardiac biomarkers', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 2, risk: 'Low', action: 'Conservative management may be appropriate', color: '#10b981', events: '4.7-8.3%' },
+        { min: 3, max: 4, risk: 'Intermediate', action: 'Consider early invasive strategy', color: '#f59e0b', events: '13.2-19.9%' },
+        { min: 5, max: 7, risk: 'High', action: 'Early invasive strategy strongly recommended', color: '#ef4444', events: '26.2-40.9%' }
+      ]
+    },
+    
+    'Killip': {
+      name: 'Killip Classification',
+      category: 'Cardiac',
+      purpose: 'Heart failure severity in MI',
+      fields: [
+        { id: 'class', label: 'Clinical Findings', type: 'select', options: [
+          { value: 1, label: 'Class I: No heart failure signs' },
+          { value: 2, label: 'Class II: S3, rales <50% lung fields' },
+          { value: 3, label: 'Class III: Pulmonary edema, rales >50%' },
+          { value: 4, label: 'Class IV: Cardiogenic shock' }
+        ]}
+      ],
+      interpretation: [
+        { min: 1, max: 1, risk: 'Class I', action: 'Standard care', color: '#10b981', mortality: '6%' },
+        { min: 2, max: 2, risk: 'Class II', action: 'Monitor closely, diuretics PRN', color: '#f59e0b', mortality: '17%' },
+        { min: 3, max: 3, risk: 'Class III', action: 'ICU, aggressive treatment', color: '#ef4444', mortality: '38%' },
+        { min: 4, max: 4, risk: 'Class IV', action: 'ICU, vasopressors, consider MCS', color: '#7f1d1d', mortality: '81%' }
+      ]
+    },
+    
+    'NYHA': {
+      name: 'NYHA Functional Classification',
+      category: 'Cardiac',
+      purpose: 'Heart failure functional capacity',
+      fields: [
+        { id: 'class', label: 'Functional Limitation', type: 'select', options: [
+          { value: 1, label: 'Class I: No limitation of physical activity' },
+          { value: 2, label: 'Class II: Slight limitation; comfortable at rest' },
+          { value: 3, label: 'Class III: Marked limitation; comfortable only at rest' },
+          { value: 4, label: 'Class IV: Unable to carry on any activity without symptoms' }
+        ]}
+      ],
+      interpretation: [
+        { min: 1, max: 1, risk: 'Class I', action: 'Standard GDMT', color: '#10b981', mortality: '5-10%/yr' },
+        { min: 2, max: 2, risk: 'Class II', action: 'GDMT optimization', color: '#22c55e', mortality: '10-15%/yr' },
+        { min: 3, max: 3, risk: 'Class III', action: 'Consider device therapy', color: '#f59e0b', mortality: '15-25%/yr' },
+        { min: 4, max: 4, risk: 'Class IV', action: 'Advanced therapies, transplant evaluation', color: '#ef4444', mortality: '50-75%/yr' }
+      ]
+    },
+    
+    // ═══ RESPIRATORY SCORES ═══
+    'CURB-65': {
+      name: 'CURB-65 Score',
+      category: 'Respiratory',
+      purpose: 'Pneumonia severity assessment',
+      fields: [
+        { id: 'confusion', label: 'Confusion (new onset)', points: 1, type: 'checkbox' },
+        { id: 'urea', label: 'Urea >7 mmol/L (BUN >19)', points: 1, type: 'checkbox' },
+        { id: 'rr', label: 'Respiratory rate ≥30/min', points: 1, type: 'checkbox' },
+        { id: 'bp', label: 'BP: SBP <90 or DBP ≤60', points: 1, type: 'checkbox' },
+        { id: 'age', label: 'Age ≥65 years', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 1, risk: 'Low', action: 'Consider outpatient treatment', color: '#10b981', mortality: '0.6-2.7%' },
+        { min: 2, max: 2, risk: 'Moderate', action: 'Consider short hospitalization or close outpatient follow-up', color: '#f59e0b', mortality: '6.8%' },
+        { min: 3, max: 5, risk: 'Severe', action: 'Hospitalize; consider ICU if score 4-5', color: '#ef4444', mortality: '14-27.8%' }
+      ]
+    },
+    
+    'Wells-PE': {
+      name: 'Wells Score for PE',
+      category: 'Respiratory',
+      purpose: 'Pulmonary embolism probability',
+      fields: [
+        { id: 'dvt', label: 'Clinical signs/symptoms of DVT', points: 3, type: 'checkbox' },
+        { id: 'alternative', label: 'PE is #1 diagnosis OR equally likely', points: 3, type: 'checkbox' },
+        { id: 'hr', label: 'Heart rate >100', points: 1.5, type: 'checkbox' },
+        { id: 'immobile', label: 'Immobilization ≥3 days or surgery in past 4 weeks', points: 1.5, type: 'checkbox' },
+        { id: 'prior', label: 'Previous PE or DVT', points: 1.5, type: 'checkbox' },
+        { id: 'hemoptysis', label: 'Hemoptysis', points: 1, type: 'checkbox' },
+        { id: 'malignancy', label: 'Malignancy (treatment within 6 months)', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 1, risk: 'Low', action: 'D-dimer; if negative, PE excluded', color: '#10b981', probability: '1.3%' },
+        { min: 2, max: 6, risk: 'Moderate', action: 'D-dimer; if positive, CTPA', color: '#f59e0b', probability: '16.2%' },
+        { min: 7, max: 12.5, risk: 'High', action: 'CTPA recommended', color: '#ef4444', probability: '37.5%' }
+      ]
+    },
+    
+    'Wells-DVT': {
+      name: 'Wells Score for DVT',
+      category: 'Vascular',
+      purpose: 'Deep vein thrombosis probability',
+      fields: [
+        { id: 'cancer', label: 'Active cancer', points: 1, type: 'checkbox' },
+        { id: 'paralysis', label: 'Paralysis/paresis/recent cast', points: 1, type: 'checkbox' },
+        { id: 'bedridden', label: 'Bedridden >3 days or major surgery <12 weeks', points: 1, type: 'checkbox' },
+        { id: 'tenderness', label: 'Localized tenderness along deep veins', points: 1, type: 'checkbox' },
+        { id: 'swelling', label: 'Entire leg swollen', points: 1, type: 'checkbox' },
+        { id: 'calf', label: 'Calf swelling >3 cm vs other leg', points: 1, type: 'checkbox' },
+        { id: 'edema', label: 'Pitting edema (symptomatic leg only)', points: 1, type: 'checkbox' },
+        { id: 'collateral', label: 'Collateral superficial veins', points: 1, type: 'checkbox' },
+        { id: 'prior', label: 'Previously documented DVT', points: 1, type: 'checkbox' },
+        { id: 'alternative', label: 'Alternative diagnosis as likely as DVT', points: -2, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: -2, max: 0, risk: 'Low', action: 'D-dimer; if negative, DVT excluded', color: '#10b981', probability: '5%' },
+        { min: 1, max: 2, risk: 'Moderate', action: 'D-dimer; if positive, ultrasound', color: '#f59e0b', probability: '17%' },
+        { min: 3, max: 9, risk: 'High', action: 'Ultrasound recommended', color: '#ef4444', probability: '53%' }
+      ]
+    },
+    
+    'PESI': {
+      name: 'PESI Score (Simplified)',
+      category: 'Respiratory',
+      purpose: 'PE mortality risk stratification',
+      fields: [
+        { id: 'age', label: 'Age >80 years', points: 1, type: 'checkbox' },
+        { id: 'cancer', label: 'History of cancer', points: 1, type: 'checkbox' },
+        { id: 'chf', label: 'Chronic cardiopulmonary disease', points: 1, type: 'checkbox' },
+        { id: 'hr', label: 'Heart rate ≥110', points: 1, type: 'checkbox' },
+        { id: 'sbp', label: 'SBP <100 mmHg', points: 1, type: 'checkbox' },
+        { id: 'sao2', label: 'O₂ saturation <90%', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 0, risk: 'Low', action: 'Consider outpatient treatment', color: '#10b981', mortality: '1.0%' },
+        { min: 1, max: 6, risk: 'High', action: 'Hospitalization recommended', color: '#ef4444', mortality: '10.9%' }
+      ]
+    },
+    
+    // ═══ NEUROLOGICAL SCORES ═══
+    'Glasgow-Coma': {
+      name: 'Glasgow Coma Scale',
+      category: 'Neurological',
+      purpose: 'Level of consciousness assessment',
+      fields: [
+        { id: 'eye', label: 'Eye Opening', type: 'select', options: [
+          { value: 1, label: '1 - No response' },
+          { value: 2, label: '2 - To pain' },
+          { value: 3, label: '3 - To voice' },
+          { value: 4, label: '4 - Spontaneous' }
+        ]},
+        { id: 'verbal', label: 'Verbal Response', type: 'select', options: [
+          { value: 1, label: '1 - No response' },
+          { value: 2, label: '2 - Incomprehensible sounds' },
+          { value: 3, label: '3 - Inappropriate words' },
+          { value: 4, label: '4 - Confused' },
+          { value: 5, label: '5 - Oriented' }
+        ]},
+        { id: 'motor', label: 'Motor Response', type: 'select', options: [
+          { value: 1, label: '1 - No response' },
+          { value: 2, label: '2 - Extension to pain' },
+          { value: 3, label: '3 - Flexion to pain' },
+          { value: 4, label: '4 - Withdrawal from pain' },
+          { value: 5, label: '5 - Localizes pain' },
+          { value: 6, label: '6 - Obeys commands' }
+        ]}
+      ],
+      interpretation: [
+        { min: 3, max: 8, risk: 'Severe', action: 'Intubation usually indicated', color: '#ef4444', note: 'Coma' },
+        { min: 9, max: 12, risk: 'Moderate', action: 'Close monitoring required', color: '#f59e0b', note: 'Impaired' },
+        { min: 13, max: 15, risk: 'Minor', action: 'Generally good prognosis', color: '#10b981', note: 'Minor injury' }
+      ]
+    },
+    
+    'NIHSS': {
+      name: 'NIH Stroke Scale',
+      category: 'Neurological',
+      purpose: 'Stroke severity assessment',
+      fields: [
+        { id: 'loc', label: '1a. Level of Consciousness', type: 'select', options: [
+          { value: 0, label: '0 - Alert' },
+          { value: 1, label: '1 - Not alert, arousable' },
+          { value: 2, label: '2 - Not alert, requires repeated stimulation' },
+          { value: 3, label: '3 - Unresponsive' }
+        ]},
+        { id: 'loc_q', label: '1b. LOC Questions (month, age)', type: 'select', options: [
+          { value: 0, label: '0 - Both correct' },
+          { value: 1, label: '1 - One correct' },
+          { value: 2, label: '2 - Neither correct' }
+        ]},
+        { id: 'loc_c', label: '1c. LOC Commands (open/close eyes, grip)', type: 'select', options: [
+          { value: 0, label: '0 - Both correct' },
+          { value: 1, label: '1 - One correct' },
+          { value: 2, label: '2 - Neither correct' }
+        ]},
+        { id: 'gaze', label: '2. Best Gaze', type: 'select', options: [
+          { value: 0, label: '0 - Normal' },
+          { value: 1, label: '1 - Partial gaze palsy' },
+          { value: 2, label: '2 - Forced deviation' }
+        ]},
+        { id: 'visual', label: '3. Visual Fields', type: 'select', options: [
+          { value: 0, label: '0 - No visual loss' },
+          { value: 1, label: '1 - Partial hemianopia' },
+          { value: 2, label: '2 - Complete hemianopia' },
+          { value: 3, label: '3 - Bilateral hemianopia' }
+        ]},
+        { id: 'facial', label: '4. Facial Palsy', type: 'select', options: [
+          { value: 0, label: '0 - Normal' },
+          { value: 1, label: '1 - Minor paralysis' },
+          { value: 2, label: '2 - Partial paralysis' },
+          { value: 3, label: '3 - Complete paralysis' }
+        ]},
+        { id: 'motor_arm', label: '5. Motor Arm (worse side)', type: 'select', options: [
+          { value: 0, label: '0 - No drift' },
+          { value: 1, label: '1 - Drift before 10 seconds' },
+          { value: 2, label: '2 - Falls before 10 seconds' },
+          { value: 3, label: '3 - No effort against gravity' },
+          { value: 4, label: '4 - No movement' }
+        ]},
+        { id: 'motor_leg', label: '6. Motor Leg (worse side)', type: 'select', options: [
+          { value: 0, label: '0 - No drift' },
+          { value: 1, label: '1 - Drift before 5 seconds' },
+          { value: 2, label: '2 - Falls before 5 seconds' },
+          { value: 3, label: '3 - No effort against gravity' },
+          { value: 4, label: '4 - No movement' }
+        ]},
+        { id: 'ataxia', label: '7. Limb Ataxia', type: 'select', options: [
+          { value: 0, label: '0 - Absent' },
+          { value: 1, label: '1 - Present in one limb' },
+          { value: 2, label: '2 - Present in two limbs' }
+        ]},
+        { id: 'sensory', label: '8. Sensory', type: 'select', options: [
+          { value: 0, label: '0 - Normal' },
+          { value: 1, label: '1 - Mild-moderate loss' },
+          { value: 2, label: '2 - Severe or total loss' }
+        ]},
+        { id: 'language', label: '9. Best Language', type: 'select', options: [
+          { value: 0, label: '0 - Normal' },
+          { value: 1, label: '1 - Mild-moderate aphasia' },
+          { value: 2, label: '2 - Severe aphasia' },
+          { value: 3, label: '3 - Mute/global aphasia' }
+        ]},
+        { id: 'dysarthria', label: '10. Dysarthria', type: 'select', options: [
+          { value: 0, label: '0 - Normal' },
+          { value: 1, label: '1 - Mild-moderate' },
+          { value: 2, label: '2 - Severe/unintelligible' }
+        ]},
+        { id: 'neglect', label: '11. Extinction/Neglect', type: 'select', options: [
+          { value: 0, label: '0 - No abnormality' },
+          { value: 1, label: '1 - Mild (one modality)' },
+          { value: 2, label: '2 - Severe (more than one modality)' }
+        ]}
+      ],
+      interpretation: [
+        { min: 0, max: 4, risk: 'Minor', action: 'May not benefit from thrombolysis', color: '#10b981', outcome: 'Good' },
+        { min: 5, max: 15, risk: 'Moderate', action: 'Consider thrombolysis if eligible', color: '#f59e0b', outcome: 'Variable' },
+        { min: 16, max: 20, risk: 'Moderate-Severe', action: 'Thrombolysis if eligible; higher hemorrhage risk', color: '#f97316', outcome: 'Guarded' },
+        { min: 21, max: 42, risk: 'Severe', action: 'Poor prognosis; discuss goals of care', color: '#ef4444', outcome: 'Poor' }
+      ]
+    },
+    
+    'ABCD2': {
+      name: 'ABCD² Score',
+      category: 'Neurological',
+      purpose: 'Stroke risk after TIA',
+      fields: [
+        { id: 'age', label: 'Age ≥60 years', points: 1, type: 'checkbox' },
+        { id: 'bp', label: 'BP ≥140/90 mmHg', points: 1, type: 'checkbox' },
+        { id: 'weakness', label: 'Unilateral weakness', points: 2, type: 'checkbox' },
+        { id: 'speech', label: 'Speech impairment without weakness', points: 1, type: 'checkbox' },
+        { id: 'duration60', label: 'Duration ≥60 min', points: 2, type: 'checkbox' },
+        { id: 'duration10', label: 'Duration 10-59 min', points: 1, type: 'checkbox' },
+        { id: 'dm', label: 'Diabetes', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 3, risk: 'Low', action: 'Outpatient workup may be appropriate', color: '#10b981', stroke_2d: '1.0%' },
+        { min: 4, max: 5, risk: 'Moderate', action: 'Consider hospitalization', color: '#f59e0b', stroke_2d: '4.1%' },
+        { min: 6, max: 7, risk: 'High', action: 'Hospitalization recommended', color: '#ef4444', stroke_2d: '8.1%' }
+      ]
+    },
+    
+    // ═══ GI/HEPATIC SCORES ═══
+    'Glasgow-Blatchford': {
+      name: 'Glasgow-Blatchford Score',
+      category: 'GI',
+      purpose: 'Upper GI bleed risk stratification',
+      fields: [
+        { id: 'bun', label: 'BUN (mmol/L)', type: 'select', options: [
+          { value: 0, label: '<6.5' },
+          { value: 2, label: '6.5-7.9' },
+          { value: 3, label: '8.0-9.9' },
+          { value: 4, label: '10.0-24.9' },
+          { value: 6, label: '≥25' }
+        ]},
+        { id: 'hgb_male', label: 'Hemoglobin - Male (g/dL)', type: 'select', options: [
+          { value: 0, label: '≥13' },
+          { value: 1, label: '12.0-12.9' },
+          { value: 3, label: '10.0-11.9' },
+          { value: 6, label: '<10' }
+        ]},
+        { id: 'hgb_female', label: 'Hemoglobin - Female (g/dL)', type: 'select', options: [
+          { value: 0, label: '≥12' },
+          { value: 1, label: '10.0-11.9' },
+          { value: 6, label: '<10' }
+        ]},
+        { id: 'sbp', label: 'Systolic BP', type: 'select', options: [
+          { value: 0, label: '≥110' },
+          { value: 1, label: '100-109' },
+          { value: 2, label: '90-99' },
+          { value: 3, label: '<90' }
+        ]},
+        { id: 'pulse', label: 'Pulse ≥100', points: 1, type: 'checkbox' },
+        { id: 'melena', label: 'Melena', points: 1, type: 'checkbox' },
+        { id: 'syncope', label: 'Syncope', points: 2, type: 'checkbox' },
+        { id: 'liver', label: 'Hepatic disease', points: 2, type: 'checkbox' },
+        { id: 'hf', label: 'Heart failure', points: 2, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 0, risk: 'Very Low', action: 'May be managed as outpatient', color: '#10b981', intervention: '0.5%' },
+        { min: 1, max: 5, risk: 'Low', action: 'Consider admission, likely no intervention', color: '#22c55e', intervention: '5%' },
+        { min: 6, max: 11, risk: 'Moderate', action: 'Admission, endoscopy within 24h', color: '#f59e0b', intervention: '25%' },
+        { min: 12, max: 23, risk: 'High', action: 'ICU admission, urgent endoscopy', color: '#ef4444', intervention: '>50%' }
+      ]
+    },
+    
+    'Child-Pugh': {
+      name: 'Child-Pugh Score',
+      category: 'GI',
+      purpose: 'Cirrhosis severity and prognosis',
+      fields: [
+        { id: 'encephalopathy', label: 'Encephalopathy', type: 'select', options: [
+          { value: 1, label: 'None' },
+          { value: 2, label: 'Grade 1-2 (controlled)' },
+          { value: 3, label: 'Grade 3-4 (poorly controlled)' }
+        ]},
+        { id: 'ascites', label: 'Ascites', type: 'select', options: [
+          { value: 1, label: 'None' },
+          { value: 2, label: 'Mild/controlled with diuretics' },
+          { value: 3, label: 'Moderate-severe/refractory' }
+        ]},
+        { id: 'bilirubin', label: 'Bilirubin (mg/dL)', type: 'select', options: [
+          { value: 1, label: '<2' },
+          { value: 2, label: '2-3' },
+          { value: 3, label: '>3' }
+        ]},
+        { id: 'albumin', label: 'Albumin (g/dL)', type: 'select', options: [
+          { value: 1, label: '>3.5' },
+          { value: 2, label: '2.8-3.5' },
+          { value: 3, label: '<2.8' }
+        ]},
+        { id: 'inr', label: 'INR', type: 'select', options: [
+          { value: 1, label: '<1.7' },
+          { value: 2, label: '1.7-2.3' },
+          { value: 3, label: '>2.3' }
+        ]}
+      ],
+      interpretation: [
+        { min: 5, max: 6, risk: 'Class A', action: 'Well-compensated; standard care', color: '#10b981', survival_1y: '100%', survival_2y: '85%' },
+        { min: 7, max: 9, risk: 'Class B', action: 'Significant functional compromise', color: '#f59e0b', survival_1y: '81%', survival_2y: '57%' },
+        { min: 10, max: 15, risk: 'Class C', action: 'Decompensated; consider transplant evaluation', color: '#ef4444', survival_1y: '45%', survival_2y: '35%' }
+      ]
+    },
+    
+    'MELD': {
+      name: 'MELD Score',
+      category: 'GI',
+      purpose: 'End-stage liver disease severity',
+      fields: [
+        { id: 'creatinine', label: 'Creatinine (mg/dL)', type: 'number', min: 0.1, max: 10, step: 0.1 },
+        { id: 'bilirubin', label: 'Bilirubin (mg/dL)', type: 'number', min: 0.1, max: 50, step: 0.1 },
+        { id: 'inr', label: 'INR', type: 'number', min: 0.5, max: 10, step: 0.1 },
+        { id: 'dialysis', label: 'Dialysis (at least 2x/week)', points: 0, type: 'checkbox' }
+      ],
+      formula: 'MELD = 10 × (0.957 × ln(Cr) + 0.378 × ln(Bili) + 1.12 × ln(INR) + 0.643)',
+      interpretation: [
+        { min: 6, max: 9, risk: 'Low', action: 'Standard care', color: '#10b981', mortality_3m: '1.9%' },
+        { min: 10, max: 19, risk: 'Moderate', action: 'Close monitoring', color: '#f59e0b', mortality_3m: '6.0%' },
+        { min: 20, max: 29, risk: 'High', action: 'Consider transplant listing', color: '#f97316', mortality_3m: '19.6%' },
+        { min: 30, max: 40, risk: 'Very High', action: 'High priority for transplant', color: '#ef4444', mortality_3m: '52.6%' }
+      ]
+    },
+    
+    // ═══ SEPSIS/CRITICAL CARE SCORES ═══
+    'qSOFA': {
+      name: 'qSOFA Score',
+      category: 'Critical Care',
+      purpose: 'Quick sepsis screening',
+      fields: [
+        { id: 'rr', label: 'Respiratory rate ≥22/min', points: 1, type: 'checkbox' },
+        { id: 'mental', label: 'Altered mental status (GCS <15)', points: 1, type: 'checkbox' },
+        { id: 'sbp', label: 'Systolic BP ≤100 mmHg', points: 1, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 1, risk: 'Low', action: 'Low risk; monitor clinically', color: '#10b981', note: 'Not qSOFA positive' },
+        { min: 2, max: 3, risk: 'High', action: 'High risk of poor outcome; consider ICU, calculate full SOFA', color: '#ef4444', note: 'qSOFA positive' }
+      ]
+    },
+    
+    'SOFA': {
+      name: 'SOFA Score',
+      category: 'Critical Care',
+      purpose: 'Sequential Organ Failure Assessment',
+      fields: [
+        { id: 'pao2', label: 'PaO₂/FiO₂ (Respiration)', type: 'select', options: [
+          { value: 0, label: '≥400' },
+          { value: 1, label: '300-399' },
+          { value: 2, label: '200-299' },
+          { value: 3, label: '100-199 with respiratory support' },
+          { value: 4, label: '<100 with respiratory support' }
+        ]},
+        { id: 'platelets', label: 'Platelets (×10³/μL)', type: 'select', options: [
+          { value: 0, label: '≥150' },
+          { value: 1, label: '100-149' },
+          { value: 2, label: '50-99' },
+          { value: 3, label: '20-49' },
+          { value: 4, label: '<20' }
+        ]},
+        { id: 'bilirubin', label: 'Bilirubin (mg/dL)', type: 'select', options: [
+          { value: 0, label: '<1.2' },
+          { value: 1, label: '1.2-1.9' },
+          { value: 2, label: '2.0-5.9' },
+          { value: 3, label: '6.0-11.9' },
+          { value: 4, label: '≥12' }
+        ]},
+        { id: 'map', label: 'Cardiovascular (MAP/Vasopressors)', type: 'select', options: [
+          { value: 0, label: 'MAP ≥70, no vasopressors' },
+          { value: 1, label: 'MAP <70, no vasopressors' },
+          { value: 2, label: 'Dopamine ≤5 or dobutamine any dose' },
+          { value: 3, label: 'Dopamine >5 or epi/norepi ≤0.1' },
+          { value: 4, label: 'Dopamine >15 or epi/norepi >0.1' }
+        ]},
+        { id: 'gcs', label: 'Glasgow Coma Scale', type: 'select', options: [
+          { value: 0, label: '15' },
+          { value: 1, label: '13-14' },
+          { value: 2, label: '10-12' },
+          { value: 3, label: '6-9' },
+          { value: 4, label: '<6' }
+        ]},
+        { id: 'creatinine', label: 'Creatinine (mg/dL) or Urine Output', type: 'select', options: [
+          { value: 0, label: '<1.2' },
+          { value: 1, label: '1.2-1.9' },
+          { value: 2, label: '2.0-3.4' },
+          { value: 3, label: '3.5-4.9 or UO <500 mL/day' },
+          { value: 4, label: '≥5.0 or UO <200 mL/day' }
+        ]}
+      ],
+      interpretation: [
+        { min: 0, max: 6, risk: 'Low', action: 'Mortality <10%', color: '#10b981', mortality: '<10%' },
+        { min: 7, max: 9, risk: 'Moderate', action: 'Mortality 15-20%', color: '#f59e0b', mortality: '15-20%' },
+        { min: 10, max: 12, risk: 'High', action: 'Mortality 40-50%', color: '#f97316', mortality: '40-50%' },
+        { min: 13, max: 24, risk: 'Very High', action: 'Mortality >80%', color: '#ef4444', mortality: '>80%' }
+      ]
+    },
+    
+    'NEWS2': {
+      name: 'NEWS2 Score',
+      category: 'Critical Care',
+      purpose: 'National Early Warning Score',
+      fields: [
+        { id: 'rr', label: 'Respiratory Rate', type: 'select', options: [
+          { value: 3, label: '≤8' },
+          { value: 1, label: '9-11' },
+          { value: 0, label: '12-20' },
+          { value: 2, label: '21-24' },
+          { value: 3, label: '≥25' }
+        ]},
+        { id: 'spo2', label: 'SpO₂ Scale 1 (no COPD)', type: 'select', options: [
+          { value: 3, label: '≤91%' },
+          { value: 2, label: '92-93%' },
+          { value: 1, label: '94-95%' },
+          { value: 0, label: '≥96%' }
+        ]},
+        { id: 'air', label: 'Air or Oxygen', type: 'select', options: [
+          { value: 0, label: 'Air' },
+          { value: 2, label: 'Oxygen' }
+        ]},
+        { id: 'sbp', label: 'Systolic BP', type: 'select', options: [
+          { value: 3, label: '≤90' },
+          { value: 2, label: '91-100' },
+          { value: 1, label: '101-110' },
+          { value: 0, label: '111-219' },
+          { value: 3, label: '≥220' }
+        ]},
+        { id: 'pulse', label: 'Pulse', type: 'select', options: [
+          { value: 3, label: '≤40' },
+          { value: 1, label: '41-50' },
+          { value: 0, label: '51-90' },
+          { value: 1, label: '91-110' },
+          { value: 2, label: '111-130' },
+          { value: 3, label: '≥131' }
+        ]},
+        { id: 'consciousness', label: 'Consciousness', type: 'select', options: [
+          { value: 0, label: 'Alert' },
+          { value: 3, label: 'CVPU (Confusion, Voice, Pain, Unresponsive)' }
+        ]},
+        { id: 'temp', label: 'Temperature', type: 'select', options: [
+          { value: 3, label: '≤35.0°C' },
+          { value: 1, label: '35.1-36.0°C' },
+          { value: 0, label: '36.1-38.0°C' },
+          { value: 1, label: '38.1-39.0°C' },
+          { value: 2, label: '≥39.1°C' }
+        ]}
+      ],
+      interpretation: [
+        { min: 0, max: 4, risk: 'Low', action: 'Standard ward care; reassess per protocol', color: '#10b981', frequency: 'Q12h' },
+        { min: 5, max: 6, risk: 'Medium', action: 'Urgent ward-based response', color: '#f59e0b', frequency: 'Q1h' },
+        { min: 7, max: 20, risk: 'High', action: 'Emergency response; consider ICU', color: '#ef4444', frequency: 'Continuous' }
+      ]
+    },
+    
+    // ═══ RENAL SCORES ═══
+    'KDIGO-AKI': {
+      name: 'KDIGO AKI Staging',
+      category: 'Renal',
+      purpose: 'Acute kidney injury classification',
+      fields: [
+        { id: 'stage', label: 'AKI Stage', type: 'select', options: [
+          { value: 1, label: 'Stage 1: Cr ↑ ≥0.3 mg/dL or 1.5-1.9× baseline, UO <0.5 mL/kg/h for 6-12h' },
+          { value: 2, label: 'Stage 2: Cr 2.0-2.9× baseline, UO <0.5 mL/kg/h for ≥12h' },
+          { value: 3, label: 'Stage 3: Cr ≥3× baseline or ≥4 mg/dL, UO <0.3 mL/kg/h for ≥24h or anuria ≥12h, or RRT initiation' }
+        ]}
+      ],
+      interpretation: [
+        { min: 1, max: 1, risk: 'Stage 1', action: 'Optimize volume, avoid nephrotoxins, monitor', color: '#f59e0b', note: 'Mild AKI' },
+        { min: 2, max: 2, risk: 'Stage 2', action: 'Consider nephrology consult', color: '#f97316', note: 'Moderate AKI' },
+        { min: 3, max: 3, risk: 'Stage 3', action: 'Nephrology consult, consider RRT', color: '#ef4444', note: 'Severe AKI' }
+      ]
+    },
+    
+    // ═══ SURGICAL/PERIOPERATIVE SCORES ═══
+    'Caprini': {
+      name: 'Caprini VTE Risk Score',
+      category: 'Surgical',
+      purpose: 'VTE risk in surgical patients',
+      fields: [
+        { id: 'age41', label: 'Age 41-60', points: 1, type: 'checkbox' },
+        { id: 'age61', label: 'Age 61-74', points: 2, type: 'checkbox' },
+        { id: 'age75', label: 'Age ≥75', points: 3, type: 'checkbox' },
+        { id: 'minor_surgery', label: 'Minor surgery planned', points: 1, type: 'checkbox' },
+        { id: 'major_surgery', label: 'Major surgery (>45 min)', points: 2, type: 'checkbox' },
+        { id: 'obesity', label: 'BMI >25', points: 1, type: 'checkbox' },
+        { id: 'swelling', label: 'Leg swelling', points: 1, type: 'checkbox' },
+        { id: 'varicose', label: 'Varicose veins', points: 1, type: 'checkbox' },
+        { id: 'chf', label: 'Heart failure', points: 1, type: 'checkbox' },
+        { id: 'sepsis', label: 'Sepsis (<1 month)', points: 1, type: 'checkbox' },
+        { id: 'pneumonia', label: 'Serious lung disease', points: 1, type: 'checkbox' },
+        { id: 'pregnant', label: 'Pregnancy/postpartum', points: 1, type: 'checkbox' },
+        { id: 'bedrest', label: 'Bed rest', points: 1, type: 'checkbox' },
+        { id: 'immobile', label: 'Immobilizing cast', points: 2, type: 'checkbox' },
+        { id: 'central_line', label: 'Central venous access', points: 2, type: 'checkbox' },
+        { id: 'malignancy', label: 'Malignancy (present/previous)', points: 2, type: 'checkbox' },
+        { id: 'prior_vte', label: 'History of DVT/PE', points: 3, type: 'checkbox' },
+        { id: 'family_vte', label: 'Family history of VTE', points: 3, type: 'checkbox' },
+        { id: 'factor_v', label: 'Factor V Leiden or other thrombophilia', points: 3, type: 'checkbox' },
+        { id: 'stroke', label: 'Stroke (<1 month)', points: 5, type: 'checkbox' },
+        { id: 'hip_knee', label: 'Hip/knee arthroplasty', points: 5, type: 'checkbox' },
+        { id: 'fracture', label: 'Hip, pelvis, or leg fracture', points: 5, type: 'checkbox' },
+        { id: 'sci', label: 'Acute spinal cord injury', points: 5, type: 'checkbox' }
+      ],
+      interpretation: [
+        { min: 0, max: 1, risk: 'Very Low', action: 'Early ambulation', color: '#10b981', vte_risk: '0.5%' },
+        { min: 2, max: 2, risk: 'Low', action: 'Pneumatic compression devices', color: '#22c55e', vte_risk: '1.5%' },
+        { min: 3, max: 4, risk: 'Moderate', action: 'Pharmacologic prophylaxis', color: '#f59e0b', vte_risk: '3%' },
+        { min: 5, max: 100, risk: 'High', action: 'Pharmacologic prophylaxis + mechanical', color: '#ef4444', vte_risk: '6%' }
+      ]
+    },
+    
+    'ASA': {
+      name: 'ASA Physical Status',
+      category: 'Surgical',
+      purpose: 'Preoperative risk classification',
+      fields: [
+        { id: 'class', label: 'ASA Class', type: 'select', options: [
+          { value: 1, label: 'ASA I: Healthy patient' },
+          { value: 2, label: 'ASA II: Mild systemic disease' },
+          { value: 3, label: 'ASA III: Severe systemic disease' },
+          { value: 4, label: 'ASA IV: Life-threatening disease' },
+          { value: 5, label: 'ASA V: Moribund, not expected to survive' },
+          { value: 6, label: 'ASA VI: Brain-dead organ donor' }
+        ]}
+      ],
+      interpretation: [
+        { min: 1, max: 1, risk: 'ASA I', action: 'Proceed with standard care', color: '#10b981', mortality: '0.06%' },
+        { min: 2, max: 2, risk: 'ASA II', action: 'Proceed with standard care', color: '#22c55e', mortality: '0.5%' },
+        { min: 3, max: 3, risk: 'ASA III', action: 'Close perioperative monitoring', color: '#f59e0b', mortality: '2.2%' },
+        { min: 4, max: 4, risk: 'ASA IV', action: 'Consider risk vs benefit carefully', color: '#f97316', mortality: '7.8%' },
+        { min: 5, max: 5, risk: 'ASA V', action: 'Surgery only if life-saving', color: '#ef4444', mortality: '51%' }
+      ]
+    }
+  },
+  
   REFS: [
     { title: '🚨 Critical Labs', content: '<b>K:</b> <2.5 or >6.5<br><b>Na:</b> <120 or >160<br><b>Glucose:</b> <40 or >500' },
     { title: '⚡ Hyperkalemia', content: '<b>Stabilize:</b> Ca gluconate 1g<br><b>Shift:</b> Insulin + D50<br><b>Remove:</b> Kayexalate' },
@@ -1349,6 +2282,418 @@ function renderRef() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// CLINICAL SCORING SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+
+let currentScoreId = null;
+let currentScoreValues = {};
+
+const SCORE_CATEGORY_ICONS = {
+  'Cardiac': '❤️',
+  'Respiratory': '🫁',
+  'Neurological': '🧠',
+  'GI': '🫃',
+  'Critical Care': '🏥',
+  'Renal': '🫘',
+  'Vascular': '🩸',
+  'Surgical': '🔪'
+};
+
+function renderScoresGrid() {
+  const categories = {};
+  Object.entries(CONFIG.SCORING_CALCULATORS).forEach(([id, score]) => {
+    const cat = score.category || 'Other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push({ id, ...score });
+  });
+  
+  let html = '';
+  Object.entries(categories).forEach(([category, scores]) => {
+    const icon = SCORE_CATEGORY_ICONS[category] || '📊';
+    html += `
+      <div class="emergency-score-group">
+        <div class="emergency-score-group-header">
+          <span class="emergency-score-group-icon">${icon}</span>
+          <span class="emergency-score-group-title">${category}</span>
+        </div>
+        <div class="emergency-score-group-body">
+          ${scores.map(s => `
+            <div class="emergency-score-item" onclick="openScoreCalculator('${s.id}')">
+              <div class="emergency-score-item-info">
+                <div class="emergency-score-item-name">${s.name}</div>
+                <div class="emergency-score-item-purpose">${s.purpose}</div>
+              </div>
+              <button class="emergency-score-item-btn">Calculate</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+  
+  $('scoresGrid').innerHTML = html;
+}
+
+window.filterScores = function(query) {
+  const q = query.toLowerCase().trim();
+  const groups = $$('.emergency-score-group');
+  
+  groups.forEach(group => {
+    const items = group.querySelectorAll('.emergency-score-item');
+    let visibleCount = 0;
+    
+    items.forEach(item => {
+      const name = item.querySelector('.emergency-score-item-name').textContent.toLowerCase();
+      const purpose = item.querySelector('.emergency-score-item-purpose').textContent.toLowerCase();
+      const match = !q || name.includes(q) || purpose.includes(q);
+      item.style.display = match ? 'flex' : 'none';
+      if (match) visibleCount++;
+    });
+    
+    group.style.display = visibleCount > 0 ? 'block' : 'none';
+  });
+};
+
+window.openScoreCalculator = function(scoreId) {
+  const score = CONFIG.SCORING_CALCULATORS[scoreId];
+  if (!score) return;
+  
+  currentScoreId = scoreId;
+  currentScoreValues = {};
+  
+  $('scoreCalcTitle').textContent = score.name;
+  $('scoreCalcPurpose').textContent = score.purpose;
+  $('scoreCalcCategory').textContent = score.category;
+  
+  // Show save button only if patient is open
+  $('saveScoreBtn').style.display = state.currentPatient ? 'block' : 'none';
+  
+  // Render fields
+  let fieldsHtml = '';
+  score.fields.forEach(field => {
+    if (field.type === 'checkbox') {
+      fieldsHtml += `
+        <div class="score-field" onclick="toggleScoreCheckbox('${field.id}', ${field.points || 1})">
+          <div class="score-field-checkbox" id="check_${field.id}"></div>
+          <div class="score-field-label">${field.label}</div>
+          <div class="score-field-points">+${field.points || 1}</div>
+        </div>
+      `;
+      currentScoreValues[field.id] = 0;
+    } else if (field.type === 'select') {
+      fieldsHtml += `
+        <div class="score-field">
+          <div class="score-field-select">
+            <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px">${field.label}</label>
+            <select onchange="updateScoreSelect('${field.id}', this.value)">
+              <option value="">-- Select --</option>
+              ${field.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      `;
+      currentScoreValues[field.id] = 0;
+    } else if (field.type === 'number') {
+      fieldsHtml += `
+        <div class="score-field">
+          <div class="score-field-number">
+            <label style="font-size:0.85rem;flex:1">${field.label}</label>
+            <input type="number" id="num_${field.id}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="" placeholder="Enter value" onchange="updateScoreNumber('${field.id}', this.value)">
+          </div>
+        </div>
+      `;
+      currentScoreValues[field.id] = null;
+    }
+  });
+  
+  $('scoreCalcFields').innerHTML = fieldsHtml;
+  updateScoreResult();
+  openModal('scoreCalcModal');
+};
+
+window.toggleScoreCheckbox = function(fieldId, points) {
+  const checkbox = $('check_' + fieldId);
+  const field = checkbox.closest('.score-field');
+  
+  if (checkbox.classList.contains('checked')) {
+    checkbox.classList.remove('checked');
+    field.classList.remove('checked');
+    currentScoreValues[fieldId] = 0;
+  } else {
+    checkbox.classList.add('checked');
+    field.classList.add('checked');
+    currentScoreValues[fieldId] = points;
+  }
+  
+  updateScoreResult();
+};
+
+window.updateScoreSelect = function(fieldId, value) {
+  currentScoreValues[fieldId] = parseFloat(value) || 0;
+  updateScoreResult();
+};
+
+window.updateScoreNumber = function(fieldId, value) {
+  currentScoreValues[fieldId] = parseFloat(value) || null;
+  updateScoreResult();
+};
+
+function updateScoreResult() {
+  const score = CONFIG.SCORING_CALCULATORS[currentScoreId];
+  if (!score) return;
+  
+  // Calculate total
+  let total = 0;
+  let maxScore = 0;
+  
+  score.fields.forEach(field => {
+    const val = currentScoreValues[field.id];
+    if (field.type === 'checkbox') {
+      total += val || 0;
+      maxScore += field.points || 1;
+    } else if (field.type === 'select' && field.options) {
+      total += val || 0;
+      maxScore += Math.max(...field.options.map(o => o.value));
+    }
+  });
+  
+  // Special handling for MELD score calculation
+  if (currentScoreId === 'MELD') {
+    const cr = currentScoreValues.creatinine || 1;
+    const bili = currentScoreValues.bilirubin || 1;
+    const inr = currentScoreValues.inr || 1;
+    const dialysis = currentScoreValues.dialysis || 0;
+    
+    const crVal = Math.min(Math.max(dialysis ? 4 : cr, 1), 4);
+    const biliVal = Math.max(bili, 1);
+    const inrVal = Math.max(inr, 1);
+    
+    total = Math.round(10 * (0.957 * Math.log(crVal) + 0.378 * Math.log(biliVal) + 1.12 * Math.log(inrVal) + 0.643));
+    total = Math.min(Math.max(total, 6), 40);
+    maxScore = 40;
+  }
+  
+  $('scoreResultValue').textContent = total;
+  $('scoreResultMax').textContent = maxScore > 0 ? `/ ${maxScore} points` : '';
+  
+  // Find interpretation
+  const interp = score.interpretation.find(i => total >= i.min && total <= i.max) || score.interpretation[score.interpretation.length - 1];
+  
+  if (interp) {
+    const interpEl = $('scoreResultInterpretation');
+    interpEl.style.background = interp.color;
+    interpEl.style.color = '#fff';
+    
+    let statsHtml = '';
+    Object.entries(interp).forEach(([key, val]) => {
+      if (!['min', 'max', 'risk', 'action', 'color'].includes(key)) {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        statsHtml += `
+          <div class="score-result-stat">
+            <div class="score-result-stat-value">${val}</div>
+            <div class="score-result-stat-label">${label}</div>
+          </div>
+        `;
+      }
+    });
+    
+    interpEl.innerHTML = `
+      <div class="score-result-risk">${interp.risk}</div>
+      <div class="score-result-action">${interp.action}</div>
+      ${statsHtml ? `<div class="score-result-stats">${statsHtml}</div>` : ''}
+    `;
+  }
+}
+
+window.savePatientScore = function() {
+  if (!state.currentPatient || !currentScoreId) return;
+  
+  const score = CONFIG.SCORING_CALCULATORS[currentScoreId];
+  if (!score) return;
+  
+  // Calculate total
+  let total = 0;
+  score.fields.forEach(field => {
+    const val = currentScoreValues[field.id];
+    if (field.type === 'checkbox' || field.type === 'select') {
+      total += val || 0;
+    }
+  });
+  
+  // Handle MELD special calculation
+  if (currentScoreId === 'MELD') {
+    const cr = currentScoreValues.creatinine || 1;
+    const bili = currentScoreValues.bilirubin || 1;
+    const inr = currentScoreValues.inr || 1;
+    const dialysis = currentScoreValues.dialysis || 0;
+    const crVal = Math.min(Math.max(dialysis ? 4 : cr, 1), 4);
+    total = Math.round(10 * (0.957 * Math.log(crVal) + 0.378 * Math.log(Math.max(bili, 1)) + 1.12 * Math.log(Math.max(inr, 1)) + 0.643));
+    total = Math.min(Math.max(total, 6), 40);
+  }
+  
+  const interp = score.interpretation.find(i => total >= i.min && total <= i.max) || score.interpretation[score.interpretation.length - 1];
+  
+  // Initialize scores array if needed
+  if (!state.currentPatient.scores) state.currentPatient.scores = [];
+  
+  // Add or update score
+  const existingIdx = state.currentPatient.scores.findIndex(s => s.id === currentScoreId);
+  const scoreEntry = {
+    id: currentScoreId,
+    name: score.name,
+    value: total,
+    risk: interp?.risk || 'Unknown',
+    color: interp?.color || '#6b7280',
+    date: new Date().toISOString(),
+    values: { ...currentScoreValues }
+  };
+  
+  if (existingIdx >= 0) {
+    state.currentPatient.scores[existingIdx] = scoreEntry;
+  } else {
+    state.currentPatient.scores.push(scoreEntry);
+  }
+  
+  saveCloud();
+  closeModal('scoreCalcModal');
+  toast(`${score.name}: ${total} saved!`);
+  
+  if ($('profileScores')) renderProfileScores();
+};
+
+function getRelevantScoresForPatient(patient) {
+  if (!patient?.diagnosis) return [];
+  
+  const dx = patient.diagnosis.toLowerCase();
+  const relevantScores = new Set();
+  
+  // Check each diagnosis keyword
+  Object.entries(CONFIG.PATIENT_SCORES).forEach(([keyword, scores]) => {
+    if (dx.includes(keyword.toLowerCase())) {
+      scores.forEach(s => relevantScores.add(s));
+    }
+  });
+  
+  // Always include some universal scores
+  if (patient.status === 'critical') {
+    ['qSOFA', 'SOFA', 'NEWS2', 'Glasgow-Coma'].forEach(s => relevantScores.add(s));
+  }
+  
+  return Array.from(relevantScores).filter(s => CONFIG.SCORING_CALCULATORS[s]);
+}
+
+function renderProfileScores() {
+  const p = state.currentPatient;
+  if (!p) return;
+  
+  const relevantScores = getRelevantScoresForPatient(p);
+  const savedScores = p.scores || [];
+  
+  let html = `
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">📊 Clinical Scores</div>
+      </div>
+      <div class="section-body">
+  `;
+  
+  // Relevant scores based on diagnosis
+  if (relevantScores.length > 0) {
+    html += `
+      <div class="patient-scores-section">
+        <div class="patient-scores-header">
+          <div class="patient-scores-title">Recommended for this patient</div>
+        </div>
+        <div class="patient-scores-grid">
+    `;
+    
+    relevantScores.forEach(scoreId => {
+      const score = CONFIG.SCORING_CALCULATORS[scoreId];
+      const saved = savedScores.find(s => s.id === scoreId);
+      const icon = SCORE_CATEGORY_ICONS[score.category] || '📊';
+      
+      let valueClass = '';
+      if (saved) {
+        const interp = score.interpretation.find(i => saved.value >= i.min && saved.value <= i.max);
+        if (interp) {
+          if (interp.color === '#10b981' || interp.color === '#22c55e') valueClass = 'low';
+          else if (interp.color === '#f59e0b') valueClass = 'moderate';
+          else valueClass = 'high';
+        }
+      }
+      
+      html += `
+        <div class="patient-score-chip ${saved ? 'has-value' : ''}" onclick="openScoreCalculator('${scoreId}')">
+          <span class="score-chip-icon">${icon}</span>
+          <span class="score-chip-name">${score.name.replace(' Score', '').replace(' Classification', '')}</span>
+          ${saved ? `<span class="score-chip-value ${valueClass}">${saved.value}</span>` : ''}
+        </div>
+      `;
+    });
+    
+    html += '</div></div>';
+  }
+  
+  // Saved scores history
+  if (savedScores.length > 0) {
+    html += `
+      <div class="patient-scores-section" style="margin-top:24px">
+        <div class="patient-scores-header">
+          <div class="patient-scores-title">Calculated Scores</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+    `;
+    
+    savedScores.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(saved => {
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid ${saved.color}">
+          <div>
+            <div style="font-weight:600;font-size:0.9rem">${saved.name}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">${formatDateTime(saved.date)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:700;color:${saved.color}">${saved.value}</div>
+            <div style="font-size:0.7rem;color:${saved.color}">${saved.risk}</div>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div></div>';
+  }
+  
+  // Quick access to all scores
+  html += `
+    <div class="patient-scores-section" style="margin-top:24px">
+      <div class="patient-scores-header">
+        <div class="patient-scores-title">All Available Scores</div>
+      </div>
+      <div class="patient-scores-grid">
+  `;
+  
+  Object.entries(CONFIG.SCORING_CALCULATORS).slice(0, 12).forEach(([id, score]) => {
+    const icon = SCORE_CATEGORY_ICONS[score.category] || '📊';
+    const saved = savedScores.find(s => s.id === id);
+    
+    html += `
+      <div class="patient-score-chip ${saved ? 'has-value' : ''}" onclick="openScoreCalculator('${id}')">
+        <span class="score-chip-icon">${icon}</span>
+        <span class="score-chip-name">${score.name.replace(' Score', '').replace(' Classification', '').substring(0, 15)}</span>
+      </div>
+    `;
+  });
+  
+  html += `
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:12px;width:100%" onclick="showTab('scores')">View All Scores →</button>
+      </div>
+    </div>
+  </div>`;
+  
+  $('profileScores').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // PATIENT PROFILE
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1363,6 +2708,7 @@ window.openPatientProfile = function(id) {
   if (!p.plans) p.plans = [];
   if (!p.vitals) p.vitals = {};
   if (!p.history) p.history = '';
+  if (!p.scores) p.scores = [];
   renderPatientProfile();
   showPage('patientProfile');
 };
@@ -1397,6 +2743,7 @@ function renderPatientProfile() {
   `;
   
   renderProfileOverview();
+  renderProfileScores();
   renderProfileLabs();
   renderProfileImaging();
   renderProfileFluids();
@@ -2708,6 +4055,8 @@ window.exportPDF = function() { const { jsPDF } = window.jspdf; const doc = new 
 async function init() {
   loadLocal();
   renderUnits();
+  renderScoresGrid();
+  renderRef();
   
   $('adminFab').onclick = openAdminLogin;
   $('syncFab').onclick = manualSync;
