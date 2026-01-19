@@ -471,7 +471,11 @@ Request New Unit Access
 <div class="section-header"><div class="section-title">⚙️ System Settings</div></div>
 <div class="section-body">
 <div class="form-group"><label class="form-label">Admin Password</label><input type="password" id="newAdminPwd" class="form-input" placeholder="Enter new password"></div>
-<div class="form-group"><label class="form-label">API Endpoint</label><input type="text" id="apiUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec"></div>
+<div class="form-group">
+<label class="form-label">API Endpoint <span style="color:var(--emerald);font-size:0.75rem">(Hardcoded ✓)</span></label>
+<input type="text" id="apiUrl" class="form-input" readonly style="background:rgba(20,184,166,0.1);border-color:var(--emerald);color:var(--text-secondary)">
+<p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">API URL is hardcoded in the app for all users</p>
+</div>
 <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
 </div>
 </div>
@@ -789,7 +793,8 @@ Request New Unit Access
 const CONFIG = {
   STORAGE_KEY: 'medward_pro_v12',
   ADMIN_PASSWORD: 'admin123',
-  API_URL: 'YOUR_API_URL_HERE',
+  // Hardcoded API URL - central Google Apps Script for all users
+  API_URL: 'https://script.google.com/macros/s/AKfycbwnPMayEKM6rHJB2qZ-DDECoVB4Kte1EcoBiea0pmcasfyAeW7RGeADiH5DMXGRJOSJ/exec',
   MAX_IMAGE_SIZE: 1500000,
   IMAGE_QUALITY: 0.85,
   MAX_DIM: 2000,
@@ -932,7 +937,8 @@ function loadLocal() {
   } catch (e) {}
   if (!state.units.length) state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine', code: '1234', color: '#14b8a6' }];
   state.settings.adminPassword = state.settings.adminPassword || CONFIG.ADMIN_PASSWORD;
-  state.settings.apiUrl = state.settings.apiUrl || CONFIG.API_URL;
+  // Always use hardcoded API URL - this ensures all users have the correct endpoint
+  state.settings.apiUrl = CONFIG.API_URL;
 }
 
 function saveLocal() {
