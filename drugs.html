@@ -957,9 +957,13 @@ async function search() {
   $('searchBtn').disabled = true;
   
   try {
+    console.log('Sending drugQuery to:', apiUrl);
+    console.log('Query:', query);
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'drugQuery', query: query })
     });
     
@@ -1026,7 +1030,8 @@ async function sendChat() {
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         action: 'drugChat', 
         message: msg,
