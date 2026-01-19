@@ -3542,7 +3542,7 @@ function renderProfileMeds() {
 function renderMedCard(med, idx) {
   const statusClass = med.status || 'active';
   const statusLabels = { active: 'Active', new: 'New', prn: 'PRN', discontinued: 'Stopped' };
-  const drugUrl = `drug.html?drug=${encodeURIComponent(med.name)}`;
+  const drugUrl = `https://balhaddad-sys.github.io/Final-app/drug.html?drug=${encodeURIComponent(med.name)}`;
   
   return `
     <div class="med-card">
