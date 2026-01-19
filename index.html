@@ -12,14 +12,16 @@
 <style>
 :root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:rgba(245,158,11,0.3)}
-html,body{height:100%}
+html,body{height:100%;touch-action:manipulation}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+/* Touch-friendly interactive elements */
+button,a,.btn,.unit-card,.patient-card,.med-card,.clickable,[onclick]{touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
 .mono{font-family:'JetBrains Mono',monospace}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s}
-.btn:active{transform:scale(0.97)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s;position:relative;z-index:1}
+.btn:active{transform:scale(0.95);opacity:0.9}
 .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#000}
 .btn-secondary{background:var(--bg-elevated);border:1px solid var(--border-light);color:var(--text)}
 .btn-secondary:hover{border-color:var(--gold)}
@@ -37,7 +39,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .ward-suggestion{padding:12px 16px;cursor:pointer;font-size:0.9rem;transition:background 0.2s}
 .ward-suggestion:hover{background:var(--bg-hover);color:var(--gold)}
 /* Patient Card Discharge */
-.patient-card{position:relative}
+.patient-card{position:relative;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.patient-card:active{transform:scale(0.98);opacity:0.95}
 .patient-card-actions{position:absolute;top:12px;right:12px;display:flex;gap:6px}
 .patient-discharge-btn{padding:6px 12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:var(--emerald);font-size:0.7rem;font-weight:600;cursor:pointer;transition:all 0.2s}
 .patient-discharge-btn:hover{background:rgba(16,185,129,0.2);border-color:var(--emerald)}
@@ -49,8 +52,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .lab-value-card:hover{border-color:var(--gold);transform:translateY(-2px)}
 .lab-override-indicator{font-size:0.6rem;color:var(--gold);margin-left:4px}
 /* Med Card Drug Info Button */
+.med-card-action{touch-action:manipulation;position:relative;z-index:10}
+.med-card-action:active{transform:scale(0.9)}
 .med-card-action.info{background:rgba(56,139,253,0.1);border-color:rgba(56,139,253,0.3)}
-.med-card-action.info:hover{background:rgba(56,139,253,0.2);border-color:#58a6ff}
+.med-card-action.info:hover,.med-card-action.info:active{background:rgba(56,139,253,0.2);border-color:#58a6ff}
 /* Med Card Alerts */
 .med-card.has-alerts{border-left:3px solid var(--rose);background:linear-gradient(135deg,rgba(244,63,94,0.05),transparent)}
 .med-alerts{margin-bottom:12px}
@@ -64,8 +69,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .med-card-class{font-size:0.7rem;color:var(--teal);font-weight:600;margin-top:2px}
 .med-drug-icon{margin-right:4px}
 .med-monitor-labs{font-size:0.7rem;color:var(--text-muted);margin-top:8px;padding:6px 10px;background:var(--bg);border-radius:6px}
-.med-learn-more{position:relative;overflow:hidden}
-.med-learn-more:active{transform:scale(0.98)}
+.med-learn-more{position:relative;overflow:hidden;margin-top:10px;width:100%;text-decoration:none;display:block;text-align:center;z-index:10}
+.med-learn-more:active{transform:scale(0.98);opacity:0.9}
 .med-learn-more::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);transform:translateX(-100%);transition:transform 0.3s}
 .med-learn-more:hover::after{transform:translateX(100%)}
 /* Medication Search Filter */
@@ -2847,7 +2852,7 @@ function renderUnits() {
   $('unitsGrid').innerHTML = `
     <div class="units-prompt">👆 Tap a unit below to enter</div>
     ${state.units.map(u => `
-    <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
+    <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}" ontouchstart="">
       <div class="unit-card-icon">${u.icon || '🏥'}</div>
       <div class="unit-card-name">${esc(u.name)}</div>
       <div class="unit-card-desc">${esc(u.desc || 'Tap to enter')}</div>
@@ -2896,7 +2901,7 @@ function renderPatients() {
     const ps = wards[ward];
     html += `<div class="ward-section"><div class="ward-header"><div class="ward-title">📍 ${esc(ward)}</div><div class="ward-count">${ps.length}</div></div>`;
     ps.forEach(p => {
-      html += `<div class="patient-card ${p.status}" onclick="openPatientProfile(${p.id})">
+      html += `<div class="patient-card ${p.status}" onclick="openPatientProfile(${p.id})" ontouchstart="">
         <div class="patient-header">
           <div class="patient-avatar">${initials(p.name)}</div>
           <div class="patient-info">
@@ -3865,9 +3870,9 @@ function renderMedCard(med, idx) {
           ${drugInfo ? `<div class="med-card-class">${esc(drugInfo.class)}</div>` : ''}
         </div>
         <div class="med-card-actions">
-          ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info">📚</a>` : ''}
-          <button class="med-card-action" onclick="editMedication(${idx})" title="Edit">✏️</button>
-          <button class="med-card-action delete" onclick="deleteMedication(${idx})" title="Delete">🗑️</button>
+          ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info" ontouchstart="">📚</a>` : ''}
+          <button class="med-card-action" onclick="editMedication(${idx})" title="Edit" ontouchstart="">✏️</button>
+          <button class="med-card-action delete" onclick="deleteMedication(${idx})" title="Delete" ontouchstart="">🗑️</button>
         </div>
       </div>
       <div class="med-card-dose">
@@ -3882,7 +3887,7 @@ function renderMedCard(med, idx) {
         </div>
       ` : ''}
       ${monitorBadge}
-      ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="btn btn-info btn-xs med-learn-more" style="margin-top:10px;width:100%;text-decoration:none;display:block;text-align:center">📖 Learn More (AI-Powered)</a>` : ''}
+      ${showDrugLink ? `<a href="${drugUrl}" target="_blank" ontouchstart="" class="btn btn-info btn-xs med-learn-more">📖 Learn More (AI-Powered)</a>` : ''}
     </div>
   `;
 }
