@@ -131,7 +131,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 <body>
 <div class="app">
   <div class="header">
-    <a href="index.html" class="back-btn">←</a>
+    <a href="javascript:void(0)" class="back-btn" onclick="goBack()">←</a>
     <div class="logo"><div class="logo-icon">💊</div><div><h1>Drug Reference</h1><p>AI Clinical Pharmacology</p></div></div>
     <button class="settings-btn" id="settingsBtn" onclick="openSettings()">⚙️</button>
   </div>
@@ -210,6 +210,17 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 const STORAGE_KEY='medward_drug_v3',MEDWARD_KEY='medward_pro_v12';
 let apiUrl='',chatHistory=[],isLoading=false,lastQuery='';
 const $=id=>document.getElementById(id);
+
+// URL Parameter Handler - receives drug data from MedWard main app
+function getURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    drug: params.get('drug') || '',
+    dose: params.get('dose') || '',
+    indication: params.get('indication') || ''
+  };
+}
+
 const DRUGS={
   all:[{n:'Metformin',c:'Antidiabetic',i:'💊'},{n:'Lisinopril',c:'ACE-I',i:'❤️'},{n:'Amlodipine',c:'CCB',i:'💓'},{n:'Atorvastatin',c:'Statin',i:'🩸'},{n:'Omeprazole',c:'PPI',i:'🫁'},{n:'Metoprolol',c:'β-blocker',i:'💗'},{n:'Furosemide',c:'Diuretic',i:'💧'},{n:'Warfarin',c:'Anticoag',i:'🩸'},{n:'Aspirin',c:'Antiplatelet',i:'💊'},{n:'Amoxicillin',c:'Antibiotic',i:'🦠'},{n:'Insulin',c:'Antidiabetic',i:'💉'},{n:'Heparin',c:'Anticoag',i:'🩸'}],
   cardiac:[{n:'Lisinopril',c:'ACE-I',i:'❤️'},{n:'Amlodipine',c:'CCB',i:'❤️'},{n:'Metoprolol',c:'β-blocker',i:'❤️'},{n:'Carvedilol',c:'α/β-blocker',i:'❤️'},{n:'Digoxin',c:'Glycoside',i:'❤️'},{n:'Amiodarone',c:'Antiarrhythmic',i:'❤️'},{n:'Diltiazem',c:'CCB',i:'❤️'},{n:'Losartan',c:'ARB',i:'❤️'},{n:'Spironolactone',c:'MRA',i:'❤️'},{n:'Hydralazine',c:'Vasodilator',i:'❤️'},{n:'Isosorbide',c:'Nitrate',i:'❤️'},{n:'Nitroglycerin',c:'Nitrate',i:'❤️'}],
@@ -223,7 +234,76 @@ function init(){
   try{const m=localStorage.getItem(MEDWARD_KEY);if(m){const d=JSON.parse(m);if(d.settings?.apiUrl)apiUrl=d.settings.apiUrl}}catch(e){}
   if(!apiUrl)try{const d=localStorage.getItem(STORAGE_KEY);if(d)apiUrl=JSON.parse(d).apiUrl||''}catch(e){}
   updateStatus();showCat('all',document.querySelector('.tab.active'));
+  
+  // Check for URL parameters from MedWard main app
+  const params = getURLParams();
+  if (params.drug) {
+    // Pre-fill search and auto-search
+    $('searchInput').value = params.drug;
+    
+    // Show context banner if dose/indication provided
+    if (params.dose || params.indication) {
+      showPatientContext(params);
+    }
+    
+    // Auto-search after short delay to ensure API is configured
+    setTimeout(() => {
+      if (apiUrl) {
+        search();
+      } else {
+        // Show the drug name but prompt for API setup
+        $('results').innerHTML = `
+          <div class="result-card">
+            <div class="result-header">
+              <div class="result-icon">💊</div>
+              <div class="result-info">
+                <h2>${esc(params.drug)}</h2>
+                <p>Ready to search</p>
+              </div>
+            </div>
+            <div class="result-body">
+              <div style="text-align:center;padding:20px;color:var(--text-secondary)">
+                <p>Configure API in Settings to search for drug information.</p>
+                <button class="search-btn" style="margin-top:12px;width:auto" onclick="openSettings()">⚙️ Open Settings</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }, 300);
+  }
 }
+
+// Show patient context banner when coming from MedWard with context
+function showPatientContext(params) {
+  const contextHtml = `
+    <div class="patient-context-banner" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.05));border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <div style="font-size:1.5rem">📋</div>
+      <div style="flex:1">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.03em">Patient Context</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
+          ${params.dose ? `<span style="margin-right:12px">💊 <strong>Dose:</strong> ${esc(params.dose)}</span>` : ''}
+          ${params.indication ? `<span>📝 <strong>Indication:</strong> ${esc(params.indication)}</span>` : ''}
+        </div>
+      </div>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">✕</button>
+    </div>
+  `;
+  $('results').innerHTML = contextHtml;
+}
+// Smart back navigation - goes back to MedWard or history
+function goBack() {
+  // Check if we came from MedWard (via URL params)
+  const params = getURLParams();
+  if (params.drug && window.history.length > 1) {
+    window.history.back();
+  } else if (document.referrer && document.referrer.includes('index')) {
+    window.location.href = document.referrer;
+  } else {
+    window.location.href = 'index.html';
+  }
+}
+
 function updateStatus(){
   const btn=$('settingsBtn'),status=$('apiStatus');
   if(apiUrl){btn.classList.add('active');if(status){status.className='status-badge ok';status.innerHTML='✓ Connected'}}
@@ -251,15 +331,32 @@ async function search(){
   if(!query)return;
   if(!apiUrl){openSettings();return toast('Configure API first','error')}
   lastQuery=query;
-  $('results').innerHTML=`<div class="loading"><div class="spinner"></div><p>Searching "${esc(query)}"...</p></div>`;
+  
+  // Preserve patient context if it exists
+  const params = getURLParams();
+  const contextBanner = (params.dose || params.indication) ? `
+    <div class="patient-context-banner" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.05));border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <div style="font-size:1.5rem">📋</div>
+      <div style="flex:1">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.03em">Patient Context</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
+          ${params.dose ? `<span style="margin-right:12px">💊 <strong>Dose:</strong> ${esc(params.dose)}</span>` : ''}
+          ${params.indication ? `<span>📝 <strong>Indication:</strong> ${esc(params.indication)}</span>` : ''}
+        </div>
+      </div>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">✕</button>
+    </div>
+  ` : '';
+  
+  $('results').innerHTML=`${contextBanner}<div class="loading"><div class="spinner"></div><p>Searching "${esc(query)}"...</p></div>`;
   $('searchBtn').disabled=true;
   try{
     const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'drugQuery',query})});
     const data=await res.json();
     if(data.error)throw new Error(data.error);
     if(!data.content)throw new Error('No content');
-    $('results').innerHTML=`<div class="result-card"><div class="result-header"><div class="result-icon">💊</div><div class="result-info"><h2>${esc(query)}</h2><p>${data.cached?'⚡ Instant (cached)':'AI Clinical Reference'}</p></div><div class="result-actions"><div class="result-action" onclick="copyResult()" title="Copy">📋</div><div class="result-action" onclick="shareResult()" title="Share">📤</div></div></div><div class="result-body"><div class="result-content">${data.content}</div></div></div><div class="disclaimer">⚠️ AI-generated. Verify with official references.</div>`;
-  }catch(e){$('results').innerHTML=`<div class="error-card"><h3>⚠️ Error</h3><p>${esc(e.message)}</p><button class="retry-btn" onclick="search()">Retry</button></div>`}
+    $('results').innerHTML=`${contextBanner}<div class="result-card"><div class="result-header"><div class="result-icon">💊</div><div class="result-info"><h2>${esc(query)}</h2><p>${data.cached?'⚡ Instant (cached)':'AI Clinical Reference'}</p></div><div class="result-actions"><div class="result-action" onclick="copyResult()" title="Copy">📋</div><div class="result-action" onclick="shareResult()" title="Share">📤</div></div></div><div class="result-body"><div class="result-content">${data.content}</div></div></div><div class="disclaimer">⚠️ AI-generated. Verify with official references.</div>`;
+  }catch(e){$('results').innerHTML=`${contextBanner}<div class="error-card"><h3>⚠️ Error</h3><p>${esc(e.message)}</p><button class="retry-btn" onclick="search()">Retry</button></div>`}
   finally{$('searchBtn').disabled=false}
 }
 function copyResult(){const c=document.querySelector('.result-content');if(c){navigator.clipboard.writeText(c.innerText);toast('Copied!','success')}}
