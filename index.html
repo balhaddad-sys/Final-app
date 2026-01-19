@@ -185,6 +185,15 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 /* Lab Extraction Confidence */
 .extraction-confidence{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:12px;font-size:0.8rem}
+
+/* Lab Image Gallery */
+.lab-gallery{margin-bottom:16px}
+.lab-gallery-title{font-size:0.8rem;font-weight:600;color:#8b949e;margin-bottom:10px}
+.lab-gallery-scroll{display:flex;gap:10px;overflow-x:auto;padding:8px 0;-webkit-overflow-scrolling:touch}
+.lab-thumb{position:relative;width:70px;height:70px;border:2px solid var(--teal);border-radius:10px;overflow:hidden;flex-shrink:0;cursor:pointer;transition:all 0.15s}
+.lab-thumb:active{transform:scale(0.95);border-color:var(--gold)}
+.lab-thumb img{width:100%;height:100%;object-fit:cover}
+.lab-thumb-num{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-weight:600}
 .confidence-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
 .confidence-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
 .confidence-fill.high{background:var(--emerald)}
@@ -729,6 +738,52 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .btn-icon-sm:hover{opacity:1}
 .btn-danger{background:#da3633!important;border-color:#da3633!important;color:#fff!important}
 .btn-danger:hover{background:#f85149!important}
+
+/* History Sections */
+.history-section{margin-bottom:12px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden}
+.history-section-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 14px;background:#161b22;cursor:pointer;
+  font-size:0.9rem;font-weight:600;color:#e6edf3
+}
+.history-section-header:active{background:#1c2128}
+.history-section-toggle{font-size:0.7rem;color:#8b949e}
+.history-section-content{padding:12px;background:#0d1117}
+.history-section-content.collapsed{display:none}
+.history-item{padding:10px 12px;background:#161b22;border-radius:8px;margin-bottom:8px}
+.history-item:last-child{margin-bottom:0}
+.history-item-date{font-size:0.7rem;color:#8b949e;margin-bottom:4px}
+.history-item-content{font-size:0.85rem;color:#c9d1d9;white-space:pre-wrap;line-height:1.5}
+
+/* Ward Presentation Modal */
+.ward-ai-summary{background:linear-gradient(135deg,rgba(46,160,67,0.1),rgba(20,184,166,0.05));border:1px solid rgba(46,160,67,0.2);border-radius:12px;padding:16px}
+.ward-ai-badge{font-size:0.7rem;font-weight:700;color:#3fb950;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.ward-ai-content{font-size:0.9rem;color:#c9d1d9;line-height:1.6}
+.ward-section{margin-bottom:16px}
+.ward-section-title{font-size:0.8rem;font-weight:700;color:#8b949e;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.ward-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.9rem}
+.ward-vitals-row{display:flex;flex-wrap:wrap;gap:8px}
+.ward-vital{background:#161b22;padding:8px 12px;border-radius:8px;font-size:0.85rem;color:#e6edf3}
+.ward-vital.empty{color:#6e7681}
+.ward-labs-list{display:flex;flex-direction:column;gap:6px}
+.ward-lab{display:flex;justify-content:space-between;padding:8px 12px;background:#161b22;border-radius:8px;border-left:3px solid}
+.ward-lab.critical,.ward-lab.high{border-color:#f85149;background:rgba(248,81,73,0.1)}
+.ward-lab.low{border-color:#f0883e;background:rgba(240,136,62,0.1)}
+.ward-lab-name{font-size:0.85rem;color:#e6edf3}
+.ward-lab-value{font-size:0.85rem;font-weight:600;color:#e6edf3}
+.ward-meds-list{display:flex;flex-wrap:wrap;gap:6px}
+.ward-med{background:#161b22;padding:6px 10px;border-radius:6px;font-size:0.8rem;color:#c9d1d9}
+.ward-med-more{color:#8b949e;font-style:italic}
+.ward-plan{background:#161b22;padding:12px;border-radius:8px;font-size:0.9rem;color:#c9d1d9;white-space:pre-wrap;line-height:1.5}
+
+/* Note Type Buttons */
+.note-type-btn{
+  padding:12px 8px;background:#161b22;border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;color:#c9d1d9;font-size:0.8rem;cursor:pointer;
+  transition:all 0.15s;text-align:center
+}
+.note-type-btn:active{transform:scale(0.96)}
+.note-type-btn.active{background:var(--teal);border-color:var(--teal);color:#000;font-weight:600}
 
 /* ═══════════════════════════════════════════════════════════════════
    MEDICATIONS - PRISTINE PHARMACEUTICAL DESIGN
@@ -2539,7 +2594,7 @@ const state = {
   selectedUnitId: null, editingUnitId: null, importImage: null, importPatients: [], currentFilter: 'all',
   fluidChart: null, trendChart: null, addDataType: null, isAnalyzingLab: false, isAnalyzingImaging: false,
   currentInteractionId: null, sessionId: null, unitRequests: [], selectedRequestId: null, selectedIcon: '🏥',
-  pendingLabData: null, labExtractionConfidence: 0, isAnalyzingMeds: false, dischargePatientId: null,
+  pendingLabData: null, pendingLabImages: [], labExtractionConfidence: 0, isAnalyzingMeds: false, dischargePatientId: null,
   medSearchTerm: '', editingMedIdx: null
 };
 
@@ -2740,16 +2795,21 @@ function getUnitStorageKey() {
 
 // Load patients for current unit only
 function loadUnitPatients() {
-  if (!state.currentUnit) return;
+  if (!state.currentUnit) {
+    state.patients = [];
+    return;
+  }
   try {
     const key = getUnitStorageKey();
     const saved = localStorage.getItem(key);
     if (saved) {
       state.patients = JSON.parse(saved);
+      console.log('📂 Loaded', state.patients.length, 'patients from local storage for', state.currentUnit.name);
     } else {
       state.patients = [];
     }
   } catch (e) {
+    console.error('Load patients error:', e);
     state.patients = [];
   }
 }
@@ -2760,7 +2820,10 @@ function saveUnitPatients() {
   try {
     const key = getUnitStorageKey();
     localStorage.setItem(key, JSON.stringify(state.patients));
-  } catch (e) {}
+    console.log('💾 Saved', state.patients.length, 'patients to local storage for', state.currentUnit.name);
+  } catch (e) {
+    console.error('Save patients error:', e);
+  }
 }
 
 function loadLocal() {
@@ -2771,9 +2834,10 @@ function loadLocal() {
       if (d.units?.length) state.units = d.units;
       if (d.settings) state.settings = { ...state.settings, ...d.settings };
       if (d.unitRequests) state.unitRequests = d.unitRequests;
-      // Note: patients are now loaded per-unit via loadUnitPatients()
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('loadLocal error:', e);
+  }
   if (!state.units.length) state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine', code: '1234', color: '#14b8a6' }];
   state.settings.adminPassword = state.settings.adminPassword || CONFIG.ADMIN_PASSWORD;
   // Always use hardcoded API URL - this ensures all users have the correct endpoint
@@ -2782,12 +2846,19 @@ function loadLocal() {
 
 function saveLocal() {
   try {
+    // Save global config
     localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
-      units: state.units, settings: state.settings, unitRequests: state.unitRequests, lastUpdated: new Date().toISOString()
+      units: state.units, 
+      settings: state.settings, 
+      unitRequests: state.unitRequests, 
+      lastUpdated: new Date().toISOString()
     }));
-    // Also save unit-specific patients
+    // Save unit-specific patients
     saveUnitPatients();
-  } catch (e) {}
+    console.log('💾 Saved to local storage');
+  } catch (e) {
+    console.error('saveLocal error:', e);
+  }
 }
 
 async function syncCloud() {
@@ -2842,9 +2913,12 @@ async function performSync() {
   // Always save locally first
   saveLocal();
   
+  console.log('🔄 performSync called, API URL:', state.settings.apiUrl ? 'configured' : 'NOT SET');
+  
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
     syncState.pendingChanges = false;
     updateSyncStatus('synced', 'Saved locally');
+    console.log('⚠️ No API URL - saved locally only');
     return;
   }
   
@@ -2867,6 +2941,8 @@ async function performSync() {
       lastUpdated: new Date().toISOString()
     };
     
+    console.log('📤 Sending to Google Drive:', payload.patients.length, 'patients');
+    
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -2876,9 +2952,18 @@ async function performSync() {
       })
     });
     
+    const responseText = await res.text();
+    console.log('📥 Response:', responseText.substring(0, 200));
+    
     if (!res.ok) throw new Error('HTTP ' + res.status);
     
-    const result = await res.json();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      throw new Error('Invalid JSON response');
+    }
+    
     if (!result.success) throw new Error(result.error || 'Save failed');
     
     syncState.pendingChanges = false;
@@ -2886,9 +2971,10 @@ async function performSync() {
     syncState.errorCount = 0;
     updateSyncStatus('synced', 'Saved to Drive');
     console.log('✅ Synced to Google Drive');
+    toast('Saved to Google Drive');
     
   } catch (e) {
-    console.error('Sync error:', e);
+    console.error('❌ Sync error:', e);
     syncState.errorCount++;
     
     if (syncState.errorCount >= 3) {
@@ -4302,44 +4388,123 @@ function renderProfileHistory() {
   const p = state.currentPatient;
   if (!p.clinicalNotes) p.clinicalNotes = [];
   
+  // Organize notes by type
+  const notesByType = {
+    progress: [],
+    consult: [],
+    referral: [],
+    discharge: [],
+    imaging: [],
+    other: []
+  };
+  
+  p.clinicalNotes.forEach((note, idx) => {
+    const type = note.type || 'other';
+    if (notesByType[type]) {
+      notesByType[type].push({ ...note, idx });
+    } else {
+      notesByType.other.push({ ...note, idx });
+    }
+  });
+  
+  const typeLabels = {
+    progress: { icon: '📝', label: 'Progress Notes' },
+    consult: { icon: '👨‍⚕️', label: 'Consultations' },
+    referral: { icon: '📤', label: 'Referrals' },
+    discharge: { icon: '🏥', label: 'Discharge Summaries' },
+    imaging: { icon: '🩻', label: 'Imaging Reports' },
+    other: { icon: '📄', label: 'Other Documents' }
+  };
+  
   let html = `
     <div class="section-card">
       <div class="section-header">
-        <div class="section-title">📜 Clinical Notes & Documents</div>
-        <button class="btn btn-primary btn-sm" onclick="addClinicalNote()">+ Add Note</button>
+        <div class="section-title">📊 Ward Presentation</div>
       </div>
       <div class="section-body">
-        <div class="history-upload-area" onclick="triggerHistoryUpload()">
-          <div style="font-size:1.5rem;margin-bottom:6px">📷</div>
-          <div style="font-weight:600;font-size:0.85rem">Upload Document</div>
-          <div style="font-size:0.75rem;color:#8b949e">Progress notes, referrals, consults, discharge summaries</div>
+        <button class="btn btn-primary btn-lg" onclick="generateWardPresentation()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px">
+          <span style="font-size:1.3rem">🎯</span>
+          <span>Generate Ward Summary</span>
+        </button>
+        <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:10px">AI-powered summary of patient for ward rounds</p>
+      </div>
+    </div>
+    
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">📜 Clinical Notes & Documents</div>
+      </div>
+      <div class="section-body">
+        <div class="history-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <button class="btn btn-secondary" onclick="addClinicalNote()" style="padding:14px">
+            <span style="font-size:1.2rem">📝</span><br>
+            <span style="font-size:0.8rem">Add Note</span>
+          </button>
+          <button class="btn btn-secondary" onclick="triggerHistoryUpload()" style="padding:14px">
+            <span style="font-size:1.2rem">📷</span><br>
+            <span style="font-size:0.8rem">Upload Document</span>
+          </button>
         </div>
   `;
   
-  if (!p.clinicalNotes.length) {
-    html += `<div style="text-align:center;padding:24px;color:#8b949e">
-      <div style="font-size:1.5rem;margin-bottom:8px">📝</div>
-      <div>No clinical notes yet</div>
-      <div style="font-size:0.75rem;margin-top:4px">Add notes or upload documents</div>
-    </div>`;
-  } else {
-    html += `<div class="clinical-notes-list">`;
+  // Patient Clinical History Summary
+  if (p.history) {
+    html += `
+      <div class="history-section">
+        <div class="history-section-header" onclick="toggleHistorySection('hx')">
+          <span>📋 History & Examination</span>
+          <span class="history-section-toggle">▼</span>
+        </div>
+        <div class="history-section-content" id="historyHx">
+          <div style="font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;padding:12px;background:var(--bg);border-radius:8px">${esc(p.history)}</div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Plans section
+  if (p.plans?.length) {
+    html += `
+      <div class="history-section">
+        <div class="history-section-header" onclick="toggleHistorySection('plans')">
+          <span>📋 Management Plans (${p.plans.length})</span>
+          <span class="history-section-toggle">▼</span>
+        </div>
+        <div class="history-section-content" id="historyPlans">
+    `;
+    p.plans.slice().reverse().forEach((plan, idx) => {
+      html += `
+        <div class="history-item">
+          <div class="history-item-date">${formatDateTime(plan.date)}</div>
+          <div class="history-item-content">${esc(plan.content)}</div>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+  }
+  
+  // Clinical notes by type
+  Object.entries(notesByType).forEach(([type, notes]) => {
+    if (notes.length === 0) return;
     
-    p.clinicalNotes.slice().reverse().forEach((note, idx) => {
-      const realIdx = p.clinicalNotes.length - 1 - idx;
-      const typeIcons = { progress: '📝', consult: '👨‍⚕️', referral: '📤', discharge: '🏥', imaging: '🩻', other: '📄' };
-      const icon = typeIcons[note.type] || '📄';
-      
+    const { icon, label } = typeLabels[type];
+    html += `
+      <div class="history-section">
+        <div class="history-section-header" onclick="toggleHistorySection('${type}')">
+          <span>${icon} ${label} (${notes.length})</span>
+          <span class="history-section-toggle">▼</span>
+        </div>
+        <div class="history-section-content" id="history${type.charAt(0).toUpperCase() + type.slice(1)}">
+    `;
+    
+    notes.slice().reverse().forEach(note => {
       html += `
         <div class="clinical-note-card">
           <div class="clinical-note-header">
-            <div class="clinical-note-type">${icon} ${(note.type || 'Note').charAt(0).toUpperCase() + (note.type || 'note').slice(1)}</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span class="clinical-note-date">${formatDateTime(note.date)}</span>
-              <button class="btn-icon-sm" onclick="deleteClinicalNote(${realIdx})" title="Delete">🗑️</button>
-            </div>
+            <span class="clinical-note-date">${formatDateTime(note.date)}</span>
+            <button class="btn-icon-sm" onclick="deleteClinicalNote(${note.idx})" title="Delete">🗑️</button>
           </div>
-          ${note.image ? `<img src="${note.image}" class="clinical-note-image" onclick="viewNoteImage(${realIdx})">` : ''}
+          ${note.image ? `<img src="${note.image}" class="clinical-note-image" onclick="viewNoteImage(${note.idx})">` : ''}
           ${note.aiSummary ? `
             <div class="clinical-note-ai">
               <div class="clinical-note-ai-badge">🤖 AI Summary</div>
@@ -4352,17 +4517,371 @@ function renderProfileHistory() {
       `;
     });
     
-    html += `</div>`;
+    html += `</div></div>`;
+  });
+  
+  if (!p.clinicalNotes.length && !p.history && !p.plans?.length) {
+    html += `
+      <div style="text-align:center;padding:30px;color:#8b949e">
+        <div style="font-size:2rem;margin-bottom:12px">📝</div>
+        <div style="font-weight:600">No clinical documentation yet</div>
+        <div style="font-size:0.8rem;margin-top:6px">Add notes or upload documents to build the patient record</div>
+      </div>
+    `;
   }
   
   html += `</div></div>`;
   $('profileHistory').innerHTML = html;
 }
 
+window.toggleHistorySection = function(section) {
+  const el = document.getElementById('history' + section.charAt(0).toUpperCase() + section.slice(1));
+  if (el) {
+    el.classList.toggle('collapsed');
+    const toggle = el.previousElementSibling?.querySelector('.history-section-toggle');
+    if (toggle) toggle.textContent = el.classList.contains('collapsed') ? '▶' : '▼';
+  }
+};
+
+window.generateWardPresentation = async function() {
+  const p = state.currentPatient;
+  if (!p) return;
+  
+  // Show loading
+  const btn = event.target.closest('button');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span style="font-size:1.3rem">⏳</span> Generating...';
+  btn.disabled = true;
+  
+  try {
+    // Compile all patient data
+    const patientData = compilePatientDataForPresentation(p);
+    
+    // Use AI to generate summary
+    const summary = await generateAIWardSummary(patientData);
+    
+    // Show in modal
+    showWardPresentationModal(summary, patientData);
+    
+  } catch (e) {
+    console.error('Ward presentation error:', e);
+    // Fallback to manual compilation
+    const patientData = compilePatientDataForPresentation(p);
+    showWardPresentationModal(null, patientData);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+};
+
+function compilePatientDataForPresentation(p) {
+  // Get latest vitals
+  const vitals = p.vitals || {};
+  
+  // Get latest labs
+  const labs = [];
+  if (p.labData?.parameters) {
+    p.labData.parameters.forEach(param => {
+      const latest = param.values?.[0];
+      if (latest) {
+        labs.push({
+          name: param.name,
+          value: latest.value,
+          unit: param.unit || '',
+          status: latest.status,
+          ref: param.refRange
+        });
+      }
+    });
+  }
+  
+  // Get active medications
+  const meds = (p.medications || []).filter(m => m.status !== 'discontinued');
+  
+  // Get latest plans
+  const latestPlans = (p.plans || []).slice(-3).reverse();
+  
+  // Get recent notes
+  const recentNotes = (p.clinicalNotes || []).slice(-5).reverse();
+  
+  return {
+    name: p.name,
+    age: p.age || 'Unknown',
+    ward: p.ward,
+    room: p.room,
+    diagnosis: p.diagnosis,
+    admissionDate: p.admissionDate,
+    doctor: p.doctor,
+    history: p.history,
+    vitals,
+    labs,
+    meds,
+    latestPlans,
+    recentNotes
+  };
+}
+
+async function generateAIWardSummary(data) {
+  // Check if API key exists
+  if (!state.settings.apiKey) {
+    return null; // Will use fallback
+  }
+  
+  const prompt = `Generate a concise ward round presentation for this patient. Format it professionally for a medical team presentation.
+
+Patient: ${data.name}
+Diagnosis: ${data.diagnosis || 'Not specified'}
+Ward: ${data.ward} Room: ${data.room}
+
+History: ${data.history || 'Not documented'}
+
+Current Vitals:
+- HR: ${data.vitals.hr || '-'}, BP: ${data.vitals.bp || '-'}, Temp: ${data.vitals.temp || '-'}, RR: ${data.vitals.rr || '-'}, SpO2: ${data.vitals.spo2 || '-'}
+
+Key Labs:
+${data.labs.slice(0, 10).map(l => `- ${l.name}: ${l.value} ${l.unit} ${l.status === 'critical' || l.status === 'high' ? '⚠️' : ''}`).join('\n') || 'No labs'}
+
+Current Medications:
+${data.meds.slice(0, 8).map(m => `- ${m.name} ${m.dose || ''} ${m.frequency || ''}`).join('\n') || 'None'}
+
+Recent Plans:
+${data.latestPlans.map(p => `- ${p.content}`).join('\n') || 'None documented'}
+
+Provide: 1) One-liner summary, 2) Key issues, 3) Current plan, 4) Pending items`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.settings.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    
+    const result = await response.json();
+    return result.content?.[0]?.text || null;
+  } catch (e) {
+    console.error('AI summary error:', e);
+    return null;
+  }
+}
+
+function showWardPresentationModal(aiSummary, data) {
+  // Build manual summary if no AI
+  let content = '';
+  
+  if (aiSummary) {
+    content = `
+      <div class="ward-ai-summary">
+        <div class="ward-ai-badge">🤖 AI-Generated Summary</div>
+        <div class="ward-ai-content">${aiSummary.replace(/\n/g, '<br>')}</div>
+      </div>
+      <hr style="border-color:var(--border);margin:20px 0">
+    `;
+  }
+  
+  // Always show structured data
+  content += `
+    <div class="ward-section">
+      <div class="ward-section-title">👤 Patient Information</div>
+      <div class="ward-info-grid">
+        <div><strong>Name:</strong> ${esc(data.name)}</div>
+        <div><strong>Location:</strong> ${esc(data.ward)} • ${esc(data.room)}</div>
+        <div><strong>Diagnosis:</strong> ${esc(data.diagnosis || 'Pending')}</div>
+        <div><strong>Attending:</strong> ${esc(data.doctor || 'Unassigned')}</div>
+      </div>
+    </div>
+    
+    <div class="ward-section">
+      <div class="ward-section-title">🩺 Current Vitals</div>
+      <div class="ward-vitals-row">
+        <span class="ward-vital ${data.vitals.hr ? '' : 'empty'}">HR: ${data.vitals.hr || '—'}</span>
+        <span class="ward-vital ${data.vitals.bp ? '' : 'empty'}">BP: ${data.vitals.bp || '—'}</span>
+        <span class="ward-vital ${data.vitals.temp ? '' : 'empty'}">T: ${data.vitals.temp || '—'}</span>
+        <span class="ward-vital ${data.vitals.rr ? '' : 'empty'}">RR: ${data.vitals.rr || '—'}</span>
+        <span class="ward-vital ${data.vitals.spo2 ? '' : 'empty'}">SpO₂: ${data.vitals.spo2 || '—'}</span>
+      </div>
+    </div>
+  `;
+  
+  // Abnormal labs
+  const abnormalLabs = data.labs.filter(l => l.status === 'critical' || l.status === 'high' || l.status === 'low');
+  if (abnormalLabs.length) {
+    content += `
+      <div class="ward-section">
+        <div class="ward-section-title">⚠️ Abnormal Labs</div>
+        <div class="ward-labs-list">
+          ${abnormalLabs.map(l => `
+            <div class="ward-lab ${l.status}">
+              <span class="ward-lab-name">${esc(l.name)}</span>
+              <span class="ward-lab-value">${l.value} ${l.unit}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  // Medications
+  if (data.meds.length) {
+    content += `
+      <div class="ward-section">
+        <div class="ward-section-title">💊 Current Medications (${data.meds.length})</div>
+        <div class="ward-meds-list">
+          ${data.meds.slice(0, 10).map(m => `
+            <div class="ward-med">${esc(m.name)} ${m.dose || ''} ${m.frequency || ''}</div>
+          `).join('')}
+          ${data.meds.length > 10 ? `<div class="ward-med-more">+${data.meds.length - 10} more</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  
+  // Latest plan
+  if (data.latestPlans.length) {
+    content += `
+      <div class="ward-section">
+        <div class="ward-section-title">📋 Latest Plan</div>
+        <div class="ward-plan">${esc(data.latestPlans[0]?.content || 'No plan documented')}</div>
+      </div>
+    `;
+  }
+  
+  // Create modal
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'wardPresentationModal';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:600px;max-height:90vh">
+      <div class="modal-header">
+        <div class="modal-title">🎯 Ward Presentation: ${esc(data.name)}</div>
+        <button class="modal-close-btn" onclick="this.closest('.modal').remove()">✕</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;max-height:70vh">
+        ${content}
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="copyWardPresentation()">📋 Copy to Clipboard</button>
+        <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Store data for copy function
+  window.currentWardData = data;
+  window.currentAISummary = aiSummary;
+}
+
+window.copyWardPresentation = function() {
+  const data = window.currentWardData;
+  const aiSummary = window.currentAISummary;
+  
+  let text = `WARD PRESENTATION - ${data.name}\n`;
+  text += `${'='.repeat(40)}\n\n`;
+  
+  if (aiSummary) {
+    text += `AI SUMMARY:\n${aiSummary}\n\n`;
+  }
+  
+  text += `PATIENT: ${data.name}\n`;
+  text += `LOCATION: ${data.ward} • ${data.room}\n`;
+  text += `DIAGNOSIS: ${data.diagnosis || 'Pending'}\n`;
+  text += `ATTENDING: ${data.doctor || 'Unassigned'}\n\n`;
+  
+  text += `VITALS:\n`;
+  text += `HR: ${data.vitals.hr || '—'} | BP: ${data.vitals.bp || '—'} | T: ${data.vitals.temp || '—'} | RR: ${data.vitals.rr || '—'} | SpO₂: ${data.vitals.spo2 || '—'}\n\n`;
+  
+  const abnormalLabs = data.labs.filter(l => l.status === 'critical' || l.status === 'high' || l.status === 'low');
+  if (abnormalLabs.length) {
+    text += `ABNORMAL LABS:\n`;
+    abnormalLabs.forEach(l => {
+      text += `• ${l.name}: ${l.value} ${l.unit}\n`;
+    });
+    text += '\n';
+  }
+  
+  if (data.meds.length) {
+    text += `MEDICATIONS:\n`;
+    data.meds.forEach(m => {
+      text += `• ${m.name} ${m.dose || ''} ${m.frequency || ''}\n`;
+    });
+    text += '\n';
+  }
+  
+  if (data.latestPlans.length) {
+    text += `PLAN:\n${data.latestPlans[0]?.content || 'None'}\n`;
+  }
+  
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Copied to clipboard!');
+  }).catch(() => {
+    toast('Failed to copy', true);
+  });
+};
+
 window.addClinicalNote = function() {
-  const type = prompt('Note type:\\n• progress\\n• consult\\n• referral\\n• discharge\\n• other') || 'progress';
-  const text = prompt('Enter note text:');
-  if (!text) return;
+  // Create modal for adding note
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'addNoteModal';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:500px">
+      <div class="modal-header">
+        <div class="modal-title">📝 Add Clinical Note</div>
+        <button class="modal-close-btn" onclick="this.closest('.modal').remove()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Note Type</label>
+          <div class="note-type-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <button class="note-type-btn active" data-type="progress" onclick="selectNoteType(this)">📝 Progress</button>
+            <button class="note-type-btn" data-type="consult" onclick="selectNoteType(this)">👨‍⚕️ Consult</button>
+            <button class="note-type-btn" data-type="referral" onclick="selectNoteType(this)">📤 Referral</button>
+            <button class="note-type-btn" data-type="discharge" onclick="selectNoteType(this)">🏥 Discharge</button>
+            <button class="note-type-btn" data-type="imaging" onclick="selectNoteType(this)">🩻 Imaging</button>
+            <button class="note-type-btn" data-type="other" onclick="selectNoteType(this)">📄 Other</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note Content</label>
+          <textarea id="clinicalNoteText" class="form-textarea" placeholder="Enter clinical note..." style="min-height:150px"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveClinicalNote()">Save Note</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  // Focus textarea
+  setTimeout(() => document.getElementById('clinicalNoteText')?.focus(), 100);
+};
+
+window.selectNoteType = function(btn) {
+  document.querySelectorAll('.note-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+window.saveClinicalNote = function() {
+  const typeBtn = document.querySelector('.note-type-btn.active');
+  const type = typeBtn?.dataset.type || 'progress';
+  const text = document.getElementById('clinicalNoteText')?.value.trim();
+  
+  if (!text) {
+    toast('Please enter note content', true);
+    return;
+  }
   
   const p = state.currentPatient;
   if (!p.clinicalNotes) p.clinicalNotes = [];
@@ -4371,10 +4890,11 @@ window.addClinicalNote = function() {
     date: new Date().toISOString(),
     type: type,
     text: text,
-    author: state.settings.userName || 'Unknown'
+    author: state.currentUser?.name || 'Unknown'
   });
   
   saveCloud();
+  document.getElementById('addNoteModal')?.remove();
   renderProfileHistory();
   toast('Note added');
 };
@@ -4790,66 +5310,90 @@ Return a JSON object with this exact structure:
 
 RESPOND ONLY WITH VALID JSON. No markdown, no explanation.`;
 
-async function handleLabUpload(file) {
+// Multi-image lab upload handler
+async function handleLabUpload(files) {
+  const fileArray = Array.isArray(files) ? files : [files];
+  
+  if (fileArray.length === 0) return;
+  
   state.isAnalyzingLab = true;
+  state.pendingLabImages = [];
   renderProfileLabs();
   
-  compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
-    try {
-      console.log('🔬 Starting enhanced lab extraction...');
-      console.log('📡 API:', state.settings.apiUrl.substring(0, 50) + '...');
-      console.log('🖼️ Image size:', Math.round(imageData.length / 1024), 'KB');
-      
-      const res = await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ 
-          action: 'analyzeLabsEnhanced', 
-          image: imageData,
-          extractionPrompt: LAB_EXTRACTION_PROMPT,
-          patientContext: {
-            existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
-              name: p.name,
-              latestValue: p.values?.[0]?.value,
-              latestDate: p.values?.[0]?.date
-            })) || []
+  toast(`Analyzing ${fileArray.length} image(s)...`);
+  
+  try {
+    // Convert all images to base64 with compression
+    console.log(`🔬 Processing ${fileArray.length} lab images...`);
+    
+    const base64Images = await Promise.all(fileArray.map(file => {
+      return new Promise((resolve, reject) => {
+        compress(file, CONFIG.MAX_IMAGE_SIZE, (imageData) => {
+          if (imageData) {
+            resolve(imageData);
+          } else {
+            reject(new Error('Compression failed'));
           }
-        })
+        });
       });
-      
-      console.log('📥 Response status:', res.status);
-      
-      const data = await res.json();
-      console.log('📦 Extraction result:', data);
-      
-      state.isAnalyzingLab = false;
-      
-      if (data.error || !data.labData) {
-        console.error('❌ Extraction error:', data.error);
-        toast(data.error || 'Extraction failed', true);
-        renderProfileLabs();
-        return;
-      }
-      
-      // Store for preview before confirmation
-      state.pendingLabData = data.labData;
-      state.labExtractionConfidence = data.confidence || 0.8;
-      state.currentInteractionId = data.meta?.interactionId;
-      
-      console.log('✅ Extraction successful, showing preview...');
-      console.log('📊 Parameters found:', data.labData.parameters?.length || 0);
-      console.log('📅 Dates found:', data.labData.dates?.length || 0);
-      
-      // Show preview modal for user verification
-      showLabExtractionPreview(data);
-      
-    } catch (e) {
-      console.error('❌ Lab extraction error:', e);
-      state.isAnalyzingLab = false;
-      toast('Extraction failed - check connection', true);
+    }));
+    
+    console.log('📡 Sending to AI Bridge...');
+    console.log('🖼️ Total images:', base64Images.length);
+    
+    // Store for gallery display
+    state.pendingLabImages = base64Images;
+    
+    // Send all images to the API
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ 
+        action: 'analyzeLabsEnhanced', 
+        images: base64Images,  // Send as array
+        image: base64Images[0], // Backward compatibility
+        extractionPrompt: LAB_EXTRACTION_PROMPT,
+        patientContext: {
+          existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
+            name: p.name,
+            latestValue: p.values?.[0]?.value,
+            latestDate: p.values?.[0]?.date
+          })) || []
+        }
+      })
+    });
+    
+    console.log('📥 Response status:', res.status);
+    
+    const data = await res.json();
+    console.log('📦 Extraction result:', data);
+    
+    state.isAnalyzingLab = false;
+    
+    if (data.error || !data.labData) {
+      console.error('❌ Extraction error:', data.error);
+      toast(data.error || 'Extraction failed', true);
       renderProfileLabs();
+      return;
     }
-  });
+    
+    // Store for preview before confirmation
+    state.pendingLabData = data.labData;
+    state.labExtractionConfidence = data.confidence || 0.8;
+    state.currentInteractionId = data.meta?.interactionId;
+    
+    console.log('✅ Extraction successful');
+    console.log('📊 Parameters found:', data.labData.parameters?.length || 0);
+    
+    // Show preview modal with image gallery
+    showLabExtractionPreview(data);
+    
+  } catch (e) {
+    console.error('❌ Lab extraction error:', e);
+    state.isAnalyzingLab = false;
+    toast('Extraction failed - check connection', true);
+    renderProfileLabs();
+  }
 }
 
 function showLabExtractionPreview(data) {
@@ -4858,8 +5402,27 @@ function showLabExtractionPreview(data) {
   const confPercent = Math.round(confidence * 100);
   const confClass = confidence >= 0.8 ? 'high' : confidence >= 0.5 ? 'medium' : 'low';
   
+  // Build image gallery if multiple images
+  let galleryHtml = '';
+  if (state.pendingLabImages && state.pendingLabImages.length > 0) {
+    galleryHtml = `
+      <div class="lab-gallery">
+        <div class="lab-gallery-title">📷 Analyzed Images (${state.pendingLabImages.length})</div>
+        <div class="lab-gallery-scroll">
+          ${state.pendingLabImages.map((img, idx) => `
+            <div class="lab-thumb" onclick="viewLabImage(${idx})">
+              <img src="${img}" alt="Lab ${idx + 1}">
+              <span class="lab-thumb-num">${idx + 1}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
   // Build confidence indicator
   $('labExtractionConfidence').innerHTML = `
+    ${galleryHtml}
     <div class="extraction-confidence">
       <span>Extraction Confidence:</span>
       <div class="confidence-bar">
@@ -4908,6 +5471,30 @@ function showLabExtractionPreview(data) {
   $('labExtractionPreview').innerHTML = previewHtml;
   openModal('labPreviewModal');
 }
+
+// View a specific lab image in full screen
+window.viewLabImage = function(idx) {
+  if (!state.pendingLabImages || !state.pendingLabImages[idx]) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.style.cssText = 'padding:10px;z-index:9999';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:95%;max-height:95vh;padding:0;background:#000;position:relative">
+      <img src="${state.pendingLabImages[idx]}" style="max-width:100%;max-height:90vh;object-fit:contain;display:block;margin:auto">
+      <div style="position:absolute;top:10px;right:10px;display:flex;gap:8px">
+        ${idx > 0 ? `<button onclick="viewLabImage(${idx-1});this.closest('.modal').remove()" style="background:rgba(0,0,0,0.7);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer">◀ Prev</button>` : ''}
+        <button onclick="this.closest('.modal').remove()" style="background:rgba(0,0,0,0.7);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer">✕ Close</button>
+        ${idx < state.pendingLabImages.length - 1 ? `<button onclick="viewLabImage(${idx+1});this.closest('.modal').remove()" style="background:rgba(0,0,0,0.7);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer">Next ▶</button>` : ''}
+      </div>
+      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:6px 12px;border-radius:6px;font-size:0.85rem">
+        Image ${idx + 1} of ${state.pendingLabImages.length}
+      </div>
+    </div>
+  `;
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+};
 
 window.confirmLabExtraction = async function() {
   if (!state.pendingLabData || !state.currentPatient) return;
@@ -6373,15 +6960,8 @@ async function init() {
       const files = Array.from(this.files);
       if (files.length === 0) return;
       
-      if (files.length === 1) {
-        handleLabUpload(files[0]);
-      } else {
-        toast(`Processing ${files.length} images...`);
-        for (const file of files) {
-          await handleLabUpload(file);
-        }
-        toast(`${files.length} lab images processed!`);
-      }
+      // Pass all files to the handler at once
+      handleLabUpload(files);
       this.value = ''; 
     };
     $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
