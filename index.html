@@ -190,11 +190,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .profile-avatar{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;font-size:1.5rem;font-weight:800;color:#000}
 .profile-details h2{font-size:1.4rem;font-weight:800;margin-bottom:6px}
 .profile-details .meta{display:flex;flex-wrap:wrap;gap:16px;color:var(--text-secondary);font-size:0.85rem}
-.profile-tabs{display:flex;gap:4px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#0d1117;border-bottom:1px solid rgba(255,255,255,0.06)}
+.profile-tabs{display:flex;gap:6px;padding:12px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#0d1117 0%,#0a0f1a 100%);border-bottom:1px solid rgba(255,255,255,0.08);position:sticky;top:0;z-index:10}
 .profile-tabs::-webkit-scrollbar{display:none}
-.profile-tab{padding:8px 12px;background:transparent;border:none;border-radius:6px;color:#8b949e;font-family:inherit;font-size:0.75rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all 0.15s;display:flex;align-items:center;gap:4px}
-.profile-tab:hover{color:#c9d1d9;background:rgba(255,255,255,0.04)}
-.profile-tab.active{color:#e6edf3;background:rgba(255,255,255,0.08)}
+.profile-tab{padding:10px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#9ca3af;font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.profile-tab:hover{color:#e6edf3;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.12)}
+.profile-tab.active{color:#fff;background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.15));border-color:var(--gold)}
 .profile-content{flex:1;padding:20px;overflow-y:auto}
 .profile-panel{display:none}
 .profile-panel.active{display:block}
@@ -1160,6 +1160,86 @@ Request New Unit Access
 <div class="modal-footer">
 <button class="btn btn-secondary" onclick="closeModal('addDataModal')">Cancel</button>
 <button class="btn btn-primary" onclick="saveAddData()">Save</button>
+</div>
+</div>
+</div>
+
+<!-- MEDICATION MODAL -->
+<div class="modal" id="medicationModal">
+<div class="modal-box" style="max-width:480px">
+<div class="modal-header">
+<div style="display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;display:grid;place-items:center;font-size:1.5rem">💊</div>
+<div>
+<div class="modal-title" id="medicationModalTitle">Add Medication</div>
+<div style="font-size:0.75rem;color:var(--text-muted)">Enter medication details</div>
+</div>
+</div>
+<button class="btn btn-ghost" onclick="closeModal('medicationModal')" style="margin-left:auto">✕</button>
+</div>
+<div class="modal-body" style="padding:20px">
+<div class="form-group">
+<label class="form-label">Drug Name *</label>
+<input type="text" class="form-input" id="medName" placeholder="e.g., Metformin">
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group">
+<label class="form-label">Dose *</label>
+<input type="text" class="form-input" id="medDose" placeholder="e.g., 500mg">
+</div>
+<div class="form-group">
+<label class="form-label">Route</label>
+<select class="form-select" id="medRoute">
+<option value="PO">PO (Oral)</option>
+<option value="IV">IV</option>
+<option value="IM">IM</option>
+<option value="SC">SC</option>
+<option value="INH">INH (Inhaled)</option>
+<option value="TOP">Topical</option>
+<option value="PR">PR</option>
+<option value="SL">SL</option>
+</select>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group">
+<label class="form-label">Frequency *</label>
+<select class="form-select" id="medFreq">
+<option value="OD">OD (Once daily)</option>
+<option value="BD">BD (Twice daily)</option>
+<option value="TDS">TDS (3x daily)</option>
+<option value="QID">QID (4x daily)</option>
+<option value="PRN">PRN (As needed)</option>
+<option value="STAT">STAT</option>
+<option value="Q4H">Q4H</option>
+<option value="Q6H">Q6H</option>
+<option value="Q8H">Q8H</option>
+<option value="Q12H">Q12H</option>
+<option value="Weekly">Weekly</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">Status</label>
+<select class="form-select" id="medStatus">
+<option value="active">✅ Active</option>
+<option value="new">🆕 New</option>
+<option value="prn">⏰ PRN</option>
+<option value="discontinued">🛑 Discontinued</option>
+</select>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Indication</label>
+<input type="text" class="form-input" id="medIndication" placeholder="e.g., Type 2 Diabetes Mellitus">
+</div>
+<div class="form-group">
+<label class="form-label">Generic Name (Optional)</label>
+<input type="text" class="form-input" id="medGeneric" placeholder="e.g., Metformin Hydrochloride">
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('medicationModal')">Cancel</button>
+<button class="btn btn-primary" onclick="saveMedication()">💾 Save Medication</button>
 </div>
 </div>
 </div>
@@ -3329,7 +3409,7 @@ function renderProfileScores() {
 // PATIENT PROFILE
 // ═══════════════════════════════════════════════════════════════════
 
-window.openPatientProfile = function(id) {
+window.openPatientProfile = function(id, defaultTab = 'overview') {
   const p = getPatient(id);
   if (!p) return;
   state.currentPatient = p;
@@ -3343,6 +3423,9 @@ window.openPatientProfile = function(id) {
   if (!p.scores) p.scores = [];
   renderPatientProfile();
   showPage('patientProfile');
+  
+  // Switch to the specified tab
+  setTimeout(() => showProfileTab(defaultTab), 50);
 };
 
 window.closePatientProfile = function() {
@@ -3475,69 +3558,6 @@ function renderProfileMeds() {
   }
   
   html += `
-      <!-- Add Med Form (hidden by default) -->
-      <div class="med-add-form" id="medAddForm" style="display:none">
-        <div class="med-form-grid">
-          <div class="med-form-group med-form-full">
-            <label class="med-form-label">Drug Name *</label>
-            <input type="text" class="med-form-input" id="medName" placeholder="e.g., Metformin">
-          </div>
-          <div class="med-form-group">
-            <label class="med-form-label">Dose *</label>
-            <input type="text" class="med-form-input" id="medDose" placeholder="e.g., 500mg">
-          </div>
-          <div class="med-form-group">
-            <label class="med-form-label">Route</label>
-            <select class="med-form-select" id="medRoute">
-              <option value="PO">PO (Oral)</option>
-              <option value="IV">IV</option>
-              <option value="IM">IM</option>
-              <option value="SC">SC</option>
-              <option value="INH">INH (Inhaled)</option>
-              <option value="TOP">Topical</option>
-              <option value="PR">PR</option>
-              <option value="SL">SL</option>
-            </select>
-          </div>
-          <div class="med-form-group">
-            <label class="med-form-label">Frequency *</label>
-            <select class="med-form-select" id="medFreq">
-              <option value="OD">OD (Once daily)</option>
-              <option value="BD">BD (Twice daily)</option>
-              <option value="TDS">TDS (3x daily)</option>
-              <option value="QID">QID (4x daily)</option>
-              <option value="PRN">PRN (As needed)</option>
-              <option value="STAT">STAT</option>
-              <option value="Q4H">Q4H</option>
-              <option value="Q6H">Q6H</option>
-              <option value="Q8H">Q8H</option>
-              <option value="Q12H">Q12H</option>
-              <option value="Weekly">Weekly</option>
-            </select>
-          </div>
-          <div class="med-form-group med-form-full">
-            <label class="med-form-label">Indication</label>
-            <input type="text" class="med-form-input" id="medIndication" placeholder="e.g., Type 2 Diabetes Mellitus">
-          </div>
-          <div class="med-form-group">
-            <label class="med-form-label">Status</label>
-            <select class="med-form-select" id="medStatus">
-              <option value="active">Active</option>
-              <option value="new">New</option>
-              <option value="prn">PRN</option>
-              <option value="discontinued">Discontinued</option>
-            </select>
-          </div>
-          <div class="med-form-group">
-            <label class="med-form-label">Generic Name</label>
-            <input type="text" class="med-form-input" id="medGeneric" placeholder="Optional">
-          </div>
-        </div>
-        <div class="med-form-actions">
-          <button class="btn btn-secondary" style="flex:1" onclick="hideAddMedForm()">Cancel</button>
-          <button class="btn btn-primary" style="flex:1" onclick="saveMedication()">Save Medication</button>
-        </div>
-      </div>
     </div>
   `;
   
@@ -3652,7 +3672,7 @@ async function handleMedsUpload(file) {
 }
 
 window.showAddMedForm = function() {
-  $('medAddForm').style.display = 'block';
+  $('medicationModalTitle').textContent = 'Add Medication';
   $('medName').value = '';
   $('medDose').value = '';
   $('medRoute').value = 'PO';
@@ -3661,10 +3681,11 @@ window.showAddMedForm = function() {
   $('medStatus').value = 'active';
   $('medGeneric').value = '';
   state.editingMedIdx = null;
+  openModal('medicationModal');
 };
 
 window.hideAddMedForm = function() {
-  $('medAddForm').style.display = 'none';
+  closeModal('medicationModal');
 };
 
 window.saveMedication = function() {
@@ -3700,7 +3721,7 @@ window.saveMedication = function() {
   
   state.editingMedIdx = null;
   saveCloud();
-  hideAddMedForm();
+  closeModal('medicationModal');
   renderProfileMeds();
 };
 
@@ -3709,7 +3730,7 @@ window.editMedication = function(idx) {
   if (!med) return;
   
   state.editingMedIdx = idx;
-  $('medAddForm').style.display = 'block';
+  $('medicationModalTitle').textContent = 'Edit Medication';
   $('medName').value = med.name || '';
   $('medDose').value = med.dose || '';
   $('medRoute').value = med.route || 'PO';
@@ -3718,7 +3739,7 @@ window.editMedication = function(idx) {
   $('medStatus').value = med.status || 'active';
   $('medGeneric').value = med.generic || '';
   
-  $('medAddForm').scrollIntoView({ behavior: 'smooth' });
+  openModal('medicationModal');
 };
 
 window.deleteMedication = function(idx) {
