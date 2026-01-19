@@ -336,105 +336,502 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .approve-form-row .form-input{flex:1}
 
 /* ═══════════════════════════════════════════════════════════════════
-   CLINICAL SCORING SYSTEM STYLES
+   CLINICAL SCORING SYSTEM - PRESTIGIOUS MEDICAL DESIGN
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Scoring Tab Styles */
-.scores-container{display:flex;flex-direction:column;gap:20px}
-.scores-category{margin-bottom:24px}
-.scores-category-title{font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;padding-left:4px}
-.scores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.score-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
-.score-card:hover{border-color:var(--gold);transform:translateY(-2px)}
-.score-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--orange));opacity:0;transition:opacity 0.2s}
-.score-card:hover::before{opacity:1}
-.score-card-icon{font-size:1.5rem;margin-bottom:8px}
-.score-card-name{font-size:0.9rem;font-weight:700;margin-bottom:4px}
-.score-card-purpose{font-size:0.7rem;color:var(--text-muted);line-height:1.4}
-.score-card.computed{border-color:var(--emerald)}
-.score-card.computed::after{content:'✓';position:absolute;top:8px;right:8px;background:var(--emerald);color:#fff;width:20px;height:20px;border-radius:50%;font-size:0.7rem;display:grid;place-items:center}
+/* Score Calculator Modal - Premium Design */
+.score-calculator{padding:0;background:linear-gradient(180deg,#0c1220 0%,#070b14 100%)}
 
-/* Score Calculator Modal */
-.score-calculator{padding:0}
-.score-calc-header{background:linear-gradient(135deg,var(--bg-elevated),var(--bg-card));padding:24px;border-bottom:1px solid var(--border)}
-.score-calc-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
-.score-calc-purpose{font-size:0.85rem;color:var(--text-secondary)}
-.score-calc-category{display:inline-block;background:rgba(245,158,11,0.15);color:var(--gold);padding:4px 12px;border-radius:100px;font-size:0.7rem;font-weight:700;margin-top:8px}
-.score-calc-body{padding:24px;max-height:50vh;overflow-y:auto}
-.score-calc-fields{display:flex;flex-direction:column;gap:16px}
-.score-field{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);transition:all 0.2s}
-.score-field:hover{background:var(--bg-hover)}
-.score-field.checked{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)}
-.score-field-checkbox{width:22px;height:22px;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:grid;place-items:center;transition:all 0.2s;flex-shrink:0}
-.score-field-checkbox.checked{background:var(--gold);border-color:var(--gold)}
-.score-field-checkbox.checked::after{content:'✓';color:#000;font-size:0.8rem;font-weight:700}
-.score-field-label{flex:1;font-size:0.9rem}
-.score-field-points{font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--gold);font-weight:600;padding:4px 8px;background:rgba(245,158,11,0.1);border-radius:4px}
+/* Header - Elegant Medical Style */
+.score-calc-header{
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  padding:28px 24px;
+  border-bottom:1px solid rgba(148,163,184,0.1);
+  position:relative;
+  overflow:hidden
+}
+.score-calc-header::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(251,191,36,0.5),transparent)
+}
+.score-calc-title{
+  font-size:1.4rem;
+  font-weight:700;
+  color:#f8fafc;
+  letter-spacing:-0.02em;
+  margin-bottom:6px
+}
+.score-calc-purpose{
+  font-size:0.9rem;
+  color:#94a3b8;
+  font-weight:400
+}
+.score-calc-category{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(251,191,36,0.08);
+  border:1px solid rgba(251,191,36,0.2);
+  color:#fbbf24;
+  padding:6px 14px;
+  border-radius:6px;
+  font-size:0.7rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  margin-top:12px
+}
+
+/* Body - Clean Professional Layout */
+.score-calc-body{
+  padding:20px;
+  max-height:45vh;
+  overflow-y:auto;
+  background:#070b14
+}
+.score-calc-body::-webkit-scrollbar{width:4px}
+.score-calc-body::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.2);border-radius:2px}
+
+.score-calc-fields{display:flex;flex-direction:column;gap:8px}
+
+/* Field Cards - Sophisticated Design */
+.score-field{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 16px;
+  background:linear-gradient(135deg,#0f172a 0%,#131c2e 100%);
+  border:1px solid rgba(148,163,184,0.08);
+  border-radius:10px;
+  transition:all 0.2s ease;
+  cursor:pointer
+}
+.score-field:hover{
+  border-color:rgba(148,163,184,0.15);
+  background:linear-gradient(135deg,#131c2e 0%,#172033 100%)
+}
+.score-field.checked{
+  background:linear-gradient(135deg,rgba(251,191,36,0.08) 0%,rgba(251,191,36,0.03) 100%);
+  border-color:rgba(251,191,36,0.25)
+}
+
+/* Checkbox - Elegant Circle Design */
+.score-field-checkbox{
+  width:24px;
+  height:24px;
+  border:2px solid #334155;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  transition:all 0.2s ease;
+  flex-shrink:0;
+  background:transparent
+}
+.score-field-checkbox.checked{
+  background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);
+  border-color:#fbbf24;
+  box-shadow:0 0 12px rgba(251,191,36,0.3)
+}
+.score-field-checkbox.checked::after{
+  content:'✓';
+  color:#0f172a;
+  font-size:0.75rem;
+  font-weight:700
+}
+
+/* Labels - Clear Typography */
+.score-field-label{
+  flex:1;
+  font-size:0.88rem;
+  color:#e2e8f0;
+  font-weight:500;
+  line-height:1.4
+}
+
+/* Points Badge - Subtle Professional */
+.score-field-points{
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.75rem;
+  color:#94a3b8;
+  font-weight:500;
+  padding:4px 10px;
+  background:rgba(148,163,184,0.08);
+  border-radius:4px;
+  border:1px solid rgba(148,163,184,0.1)
+}
+.score-field.checked .score-field-points{
+  color:#fbbf24;
+  background:rgba(251,191,36,0.1);
+  border-color:rgba(251,191,36,0.2)
+}
+
+/* Select Fields - Premium Dropdown */
 .score-field-select{flex:1}
-.score-field-select select{width:100%;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
-.score-field-select select:focus{outline:none;border-color:var(--gold)}
-.score-field-number{display:flex;align-items:center;gap:8px}
-.score-field-number input{width:100px;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;text-align:center}
-.score-field-number input:focus{outline:none;border-color:var(--gold)}
+.score-field-select label{
+  display:block;
+  font-size:0.8rem;
+  font-weight:600;
+  color:#94a3b8;
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:0.05em
+}
+.score-field-select select{
+  width:100%;
+  padding:12px 14px;
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.15);
+  border-radius:8px;
+  color:#f1f5f9;
+  font-size:0.88rem;
+  font-family:inherit;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center
+}
+.score-field-select select:focus{
+  outline:none;
+  border-color:rgba(251,191,36,0.5);
+  box-shadow:0 0 0 3px rgba(251,191,36,0.1)
+}
+.score-field-select select option{
+  background:#0f172a;
+  color:#f1f5f9;
+  padding:12px
+}
 
-/* Score Result */
-.score-calc-result{padding:24px;background:var(--bg-elevated);border-top:1px solid var(--border)}
-.score-result-display{text-align:center;margin-bottom:20px}
-.score-result-value{font-size:3.5rem;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
-.score-result-max{font-size:1rem;color:var(--text-muted);margin-top:4px}
-.score-result-interpretation{padding:16px;border-radius:var(--radius-sm);margin-top:16px}
-.score-result-risk{font-size:1.1rem;font-weight:700;margin-bottom:4px}
-.score-result-action{font-size:0.9rem;opacity:0.9}
-.score-result-stats{display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)}
+/* Number Input - Clean Design */
+.score-field-number{display:flex;align-items:center;gap:12px;width:100%}
+.score-field-number label{flex:1;font-size:0.88rem;color:#e2e8f0;font-weight:500}
+.score-field-number input{
+  width:100px;
+  padding:12px 14px;
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.15);
+  border-radius:8px;
+  color:#f1f5f9;
+  font-size:0.95rem;
+  font-family:'JetBrains Mono',monospace;
+  text-align:center;
+  transition:all 0.2s ease
+}
+.score-field-number input:focus{
+  outline:none;
+  border-color:rgba(251,191,36,0.5);
+  box-shadow:0 0 0 3px rgba(251,191,36,0.1)
+}
+
+/* Result Section - Premium Display */
+.score-calc-result{
+  padding:24px;
+  background:linear-gradient(180deg,#0c1220 0%,#0f172a 100%);
+  border-top:1px solid rgba(148,163,184,0.08)
+}
+
+.score-result-display{
+  text-align:center;
+  padding:20px 0;
+  margin-bottom:16px
+}
+
+.score-result-value{
+  font-size:4rem;
+  font-weight:800;
+  font-family:'JetBrains Mono',monospace;
+  background:linear-gradient(135deg,#f8fafc 0%,#cbd5e1 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  line-height:1;
+  letter-spacing:-0.03em
+}
+
+.score-result-max{
+  font-size:0.85rem;
+  color:#64748b;
+  margin-top:8px;
+  font-weight:500;
+  letter-spacing:0.02em
+}
+
+/* Risk Interpretation - Gradient Cards */
+.score-result-interpretation{
+  padding:20px;
+  border-radius:12px;
+  position:relative;
+  overflow:hidden
+}
+.score-result-interpretation::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  background:inherit;
+  opacity:0.15;
+  filter:blur(20px)
+}
+
+.score-result-risk{
+  font-size:1.15rem;
+  font-weight:700;
+  margin-bottom:8px;
+  position:relative;
+  letter-spacing:-0.01em
+}
+
+.score-result-action{
+  font-size:0.9rem;
+  opacity:0.95;
+  position:relative;
+  line-height:1.5;
+  font-weight:400
+}
+
+.score-result-stats{
+  display:flex;
+  justify-content:center;
+  gap:32px;
+  margin-top:20px;
+  padding-top:16px;
+  border-top:1px solid rgba(255,255,255,0.12);
+  position:relative
+}
+
 .score-result-stat{text-align:center}
-.score-result-stat-value{font-size:1.1rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-.score-result-stat-label{font-size:0.7rem;color:rgba(255,255,255,0.7);text-transform:uppercase}
+.score-result-stat-value{
+  font-size:1.2rem;
+  font-weight:700;
+  font-family:'JetBrains Mono',monospace
+}
+.score-result-stat-label{
+  font-size:0.7rem;
+  color:rgba(255,255,255,0.6);
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  margin-top:4px
+}
 
-/* Patient Profile Scores Section */
+/* ═══ SCORES TAB - DASHBOARD ═══ */
+
+.scores-search-wrapper{position:relative;margin-bottom:24px}
+.scores-search-icon{
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#64748b
+}
+.scores-search-input{
+  width:100%;
+  padding:14px 20px 14px 48px;
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.1);
+  border-radius:12px;
+  color:#f1f5f9;
+  font-size:0.9rem;
+  transition:all 0.2s ease
+}
+.scores-search-input:focus{
+  outline:none;
+  border-color:rgba(251,191,36,0.4);
+  box-shadow:0 0 0 3px rgba(251,191,36,0.08)
+}
+.scores-search-input::placeholder{color:#475569}
+
+/* Quick Access Cards */
+.quick-score-ref{
+  background:linear-gradient(135deg,rgba(251,191,36,0.04) 0%,rgba(20,184,166,0.04) 100%);
+  border:1px solid rgba(148,163,184,0.08);
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:24px
+}
+.quick-score-ref-title{
+  font-size:0.7rem;
+  font-weight:700;
+  color:#94a3b8;
+  margin-bottom:14px;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  display:flex;
+  align-items:center;
+  gap:8px
+}
+.quick-score-ref-title::before{content:'⚡'}
+.quick-score-ref-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:10px
+}
+.quick-score-ref-item{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  padding:12px 14px;
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.08);
+  border-radius:10px;
+  cursor:pointer;
+  transition:all 0.2s ease
+}
+.quick-score-ref-item:hover{
+  border-color:rgba(251,191,36,0.3);
+  background:linear-gradient(135deg,rgba(251,191,36,0.05) 0%,transparent 100%)
+}
+.quick-score-ref-item-name{font-weight:600;font-size:0.9rem;color:#f1f5f9}
+.quick-score-ref-item-hint{font-size:0.75rem;color:#64748b}
+
+/* Score Category Groups */
+.emergency-scores-grid{display:flex;flex-direction:column;gap:16px}
+
+.emergency-score-group{
+  background:linear-gradient(135deg,#0f172a 0%,#131c2e 100%);
+  border:1px solid rgba(148,163,184,0.08);
+  border-radius:14px;
+  overflow:hidden
+}
+
+.emergency-score-group-header{
+  padding:16px 20px;
+  background:rgba(15,23,42,0.6);
+  border-bottom:1px solid rgba(148,163,184,0.06);
+  display:flex;
+  align-items:center;
+  gap:12px
+}
+.emergency-score-group-icon{font-size:1.3rem}
+.emergency-score-group-title{
+  font-weight:600;
+  font-size:0.95rem;
+  color:#e2e8f0;
+  letter-spacing:-0.01em
+}
+
+.emergency-score-group-body{padding:8px}
+
+.emergency-score-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+  gap:12px
+}
+.emergency-score-item:hover{background:rgba(148,163,184,0.05)}
+
+.emergency-score-item-info{flex:1;min-width:0}
+.emergency-score-item-name{
+  font-weight:600;
+  font-size:0.9rem;
+  color:#f1f5f9;
+  margin-bottom:2px
+}
+.emergency-score-item-purpose{
+  font-size:0.78rem;
+  color:#64748b;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+
+.emergency-score-item-btn{
+  padding:8px 16px;
+  background:linear-gradient(135deg,#1e293b 0%,#334155 100%);
+  color:#e2e8f0;
+  border:1px solid rgba(148,163,184,0.15);
+  border-radius:8px;
+  font-size:0.75rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  white-space:nowrap
+}
+.emergency-score-item-btn:hover{
+  background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);
+  color:#0f172a;
+  border-color:transparent
+}
+
+/* ═══ PATIENT PROFILE SCORES ═══ */
+
 .patient-scores-section{margin-top:20px}
-.patient-scores-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.patient-scores-title{font-size:0.85rem;font-weight:700;color:var(--text-secondary)}
-.patient-scores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-.patient-score-chip{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s}
-.patient-score-chip:hover{border-color:var(--gold);background:rgba(245,158,11,0.05)}
-.patient-score-chip.has-value{border-color:var(--emerald);background:rgba(16,185,129,0.08)}
+.patient-scores-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px
+}
+.patient-scores-title{
+  font-size:0.75rem;
+  font-weight:600;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:0.08em
+}
+
+.patient-scores-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:10px
+}
+
+.patient-score-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  background:#0f172a;
+  border:1px solid rgba(148,163,184,0.08);
+  border-radius:10px;
+  cursor:pointer;
+  transition:all 0.2s ease
+}
+.patient-score-chip:hover{
+  border-color:rgba(148,163,184,0.2);
+  background:#131c2e
+}
+.patient-score-chip.has-value{
+  border-color:rgba(16,185,129,0.3);
+  background:linear-gradient(135deg,rgba(16,185,129,0.06) 0%,transparent 100%)
+}
 .patient-score-chip.has-value .score-chip-value{display:flex}
-.patient-score-chip .score-chip-icon{font-size:1.1rem}
-.patient-score-chip .score-chip-name{font-size:0.8rem;font-weight:600;flex:1}
-.patient-score-chip .score-chip-value{display:none;font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:700;padding:2px 8px;border-radius:4px}
-.patient-score-chip .score-chip-value.low{background:rgba(16,185,129,0.2);color:var(--emerald)}
-.patient-score-chip .score-chip-value.moderate{background:rgba(245,158,11,0.2);color:var(--gold)}
-.patient-score-chip .score-chip-value.high{background:rgba(244,63,94,0.2);color:var(--rose)}
 
-/* Emergency Scores Reference Tab */
-.emergency-scores-grid{display:grid;gap:16px}
-.emergency-score-group{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.emergency-score-group-header{padding:16px 20px;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.emergency-score-group-icon{font-size:1.5rem}
-.emergency-score-group-title{font-weight:700;font-size:1rem}
-.emergency-score-group-body{padding:12px}
-.emergency-score-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s}
-.emergency-score-item:hover{background:var(--bg-hover)}
-.emergency-score-item-info{flex:1}
-.emergency-score-item-name{font-weight:600;font-size:0.9rem}
-.emergency-score-item-purpose{font-size:0.75rem;color:var(--text-muted)}
-.emergency-score-item-btn{padding:8px 16px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border:none;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.2s}
-.emergency-score-item-btn:hover{transform:scale(1.05)}
-
-/* Scores Search */
-.scores-search{margin-bottom:20px}
-.scores-search-input{width:100%;padding:14px 20px 14px 48px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.9rem;transition:all 0.2s}
-.scores-search-input:focus{outline:none;border-color:var(--gold)}
-.scores-search-wrapper{position:relative}
-.scores-search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
-
-/* Quick Score Reference Cards */
-.quick-score-ref{background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(20,184,166,0.1));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
-.quick-score-ref-title{font-size:0.8rem;font-weight:700;color:var(--gold);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
-.quick-score-ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.quick-score-ref-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:var(--radius-sm)}
-.quick-score-ref-item-name{font-weight:600;font-size:0.85rem}
-.quick-score-ref-item-hint{font-size:0.7rem;color:var(--text-muted)}
+.patient-score-chip .score-chip-icon{font-size:1rem}
+.patient-score-chip .score-chip-name{
+  font-size:0.8rem;
+  font-weight:600;
+  flex:1;
+  color:#e2e8f0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+.patient-score-chip .score-chip-value{
+  display:none;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.85rem;
+  font-weight:700;
+  padding:3px 8px;
+  border-radius:6px
+}
+.patient-score-chip .score-chip-value.low{
+  background:rgba(16,185,129,0.15);
+  color:#34d399
+}
+.patient-score-chip .score-chip-value.moderate{
+  background:rgba(251,191,36,0.15);
+  color:#fbbf24
+}
+.patient-score-chip .score-chip-value.high{
+  background:rgba(239,68,68,0.15);
+  color:#f87171
+}
 </style>
 </head>
 <body>
@@ -928,9 +1325,9 @@ Request New Unit Access
   </div>
 </div>
 
-<!-- Score Calculator Modal -->
+<!-- Score Calculator Modal - Premium Design -->
 <div class="modal" id="scoreCalcModal">
-  <div class="modal-box wide">
+  <div class="modal-box wide" style="max-width:480px;border-radius:16px;border:1px solid rgba(148,163,184,0.1);overflow:hidden">
     <div class="score-calculator">
       <div class="score-calc-header">
         <div class="score-calc-title" id="scoreCalcTitle">Score Name</div>
@@ -945,14 +1342,14 @@ Request New Unit Access
           <div class="score-result-value" id="scoreResultValue">0</div>
           <div class="score-result-max" id="scoreResultMax">/ 10 points</div>
         </div>
-        <div class="score-result-interpretation" id="scoreResultInterpretation" style="background:var(--emerald);color:#fff">
+        <div class="score-result-interpretation" id="scoreResultInterpretation">
           <div class="score-result-risk">Low Risk</div>
           <div class="score-result-action">Recommended action here</div>
         </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('scoreCalcModal')">Close</button>
+    <div class="modal-footer" style="background:#0c1220;border-top:1px solid rgba(148,163,184,0.08);padding:16px 20px">
+      <button class="btn btn-secondary" onclick="closeModal('scoreCalcModal')" style="background:#1e293b;border:1px solid rgba(148,163,184,0.15)">Close</button>
       <button class="btn btn-primary" id="saveScoreBtn" onclick="savePatientScore()" style="display:none">💾 Save to Patient</button>
     </div>
   </div>
@@ -2361,32 +2758,38 @@ window.openScoreCalculator = function(scoreId) {
   currentScoreId = scoreId;
   currentScoreValues = {};
   
+  const icon = SCORE_CATEGORY_ICONS[score.category] || '📊';
   $('scoreCalcTitle').textContent = score.name;
   $('scoreCalcPurpose').textContent = score.purpose;
-  $('scoreCalcCategory').textContent = score.category;
+  $('scoreCalcCategory').innerHTML = `${icon} ${score.category}`;
   
   // Show save button only if patient is open
   $('saveScoreBtn').style.display = state.currentPatient ? 'block' : 'none';
   
-  // Render fields
+  // Render fields with improved design
   let fieldsHtml = '';
+  let fieldIndex = 0;
+  
   score.fields.forEach(field => {
+    fieldIndex++;
+    
     if (field.type === 'checkbox') {
+      const pointsDisplay = field.points > 0 ? `+${field.points}` : field.points;
       fieldsHtml += `
         <div class="score-field" onclick="toggleScoreCheckbox('${field.id}', ${field.points || 1})">
           <div class="score-field-checkbox" id="check_${field.id}"></div>
           <div class="score-field-label">${field.label}</div>
-          <div class="score-field-points">+${field.points || 1}</div>
+          <div class="score-field-points">${pointsDisplay}</div>
         </div>
       `;
       currentScoreValues[field.id] = 0;
     } else if (field.type === 'select') {
       fieldsHtml += `
-        <div class="score-field">
+        <div class="score-field" style="flex-direction:column;align-items:stretch;gap:10px">
           <div class="score-field-select">
-            <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px">${field.label}</label>
+            <label>${fieldIndex}. ${field.label}</label>
             <select onchange="updateScoreSelect('${field.id}', this.value)">
-              <option value="">-- Select --</option>
+              <option value="">Select an option...</option>
               ${field.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
             </select>
           </div>
@@ -2395,10 +2798,10 @@ window.openScoreCalculator = function(scoreId) {
       currentScoreValues[field.id] = 0;
     } else if (field.type === 'number') {
       fieldsHtml += `
-        <div class="score-field">
+        <div class="score-field" style="flex-direction:column;align-items:stretch;gap:10px">
           <div class="score-field-number">
-            <label style="font-size:0.85rem;flex:1">${field.label}</label>
-            <input type="number" id="num_${field.id}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="" placeholder="Enter value" onchange="updateScoreNumber('${field.id}', this.value)">
+            <label>${field.label}</label>
+            <input type="number" id="num_${field.id}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="" placeholder="0" onchange="updateScoreNumber('${field.id}', this.value)" oninput="updateScoreNumber('${field.id}', this.value)">
           </div>
         </div>
       `;
@@ -2450,10 +2853,10 @@ function updateScoreResult() {
     const val = currentScoreValues[field.id];
     if (field.type === 'checkbox') {
       total += val || 0;
-      maxScore += field.points || 1;
+      maxScore += Math.abs(field.points) || 1;
     } else if (field.type === 'select' && field.options) {
       total += val || 0;
-      maxScore += Math.max(...field.options.map(o => o.value));
+      maxScore += Math.max(...field.options.map(o => Math.abs(o.value)));
     }
   });
   
@@ -2474,15 +2877,19 @@ function updateScoreResult() {
   }
   
   $('scoreResultValue').textContent = total;
-  $('scoreResultMax').textContent = maxScore > 0 ? `/ ${maxScore} points` : '';
+  $('scoreResultMax').textContent = maxScore > 0 ? `of ${maxScore}` : '';
   
   // Find interpretation
   const interp = score.interpretation.find(i => total >= i.min && total <= i.max) || score.interpretation[score.interpretation.length - 1];
   
   if (interp) {
     const interpEl = $('scoreResultInterpretation');
-    interpEl.style.background = interp.color;
-    interpEl.style.color = '#fff';
+    
+    // Create gradient based on risk color
+    const baseColor = interp.color;
+    interpEl.style.background = `linear-gradient(135deg, ${baseColor}22 0%, ${baseColor}11 100%)`;
+    interpEl.style.border = `1px solid ${baseColor}40`;
+    interpEl.style.color = '#f1f5f9';
     
     let statsHtml = '';
     Object.entries(interp).forEach(([key, val]) => {
@@ -2490,7 +2897,7 @@ function updateScoreResult() {
         const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         statsHtml += `
           <div class="score-result-stat">
-            <div class="score-result-stat-value">${val}</div>
+            <div class="score-result-stat-value" style="color:${baseColor}">${val}</div>
             <div class="score-result-stat-label">${label}</div>
           </div>
         `;
@@ -2498,7 +2905,7 @@ function updateScoreResult() {
     });
     
     interpEl.innerHTML = `
-      <div class="score-result-risk">${interp.risk}</div>
+      <div class="score-result-risk" style="color:${baseColor}">${interp.risk}</div>
       <div class="score-result-action">${interp.action}</div>
       ${statsHtml ? `<div class="score-result-stats">${statsHtml}</div>` : ''}
     `;
