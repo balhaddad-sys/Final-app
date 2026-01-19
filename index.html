@@ -51,6 +51,35 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 /* Med Card Drug Info Button */
 .med-card-action.info{background:rgba(56,139,253,0.1);border-color:rgba(56,139,253,0.3)}
 .med-card-action.info:hover{background:rgba(56,139,253,0.2);border-color:#58a6ff}
+/* Med Card Alerts */
+.med-card.has-alerts{border-left:3px solid var(--rose);background:linear-gradient(135deg,rgba(244,63,94,0.05),transparent)}
+.med-alerts{margin-bottom:12px}
+.med-alert{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;margin-bottom:6px;font-size:0.8rem}
+.med-alert.critical{background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.3)}
+.med-alert.warning{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3)}
+.med-alert-icon{font-size:1rem;flex-shrink:0}
+.med-alert-content{display:flex;flex-direction:column;gap:2px}
+.med-alert-lab{font-weight:700;color:var(--text)}
+.med-alert-message{color:var(--text-secondary);font-size:0.75rem;line-height:1.4}
+.med-card-class{font-size:0.7rem;color:var(--teal);font-weight:600;margin-top:2px}
+.med-drug-icon{margin-right:4px}
+.med-monitor-labs{font-size:0.7rem;color:var(--text-muted);margin-top:8px;padding:6px 10px;background:var(--bg);border-radius:6px}
+.med-learn-more{position:relative;overflow:hidden}
+.med-learn-more:active{transform:scale(0.98)}
+.med-learn-more::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);transform:translateX(-100%);transition:transform 0.3s}
+.med-learn-more:hover::after{transform:translateX(100%)}
+/* Medication Search Filter */
+.meds-search-bar{display:flex;gap:8px;margin-bottom:12px}
+.meds-search-input{flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.85rem}
+.meds-search-input:focus{outline:none;border-color:var(--gold)}
+.meds-search-input::placeholder{color:var(--text-muted)}
+/* Medication Alert Banner */
+.meds-alert-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(244,63,94,0.15),rgba(249,115,22,0.1));border:1px solid rgba(244,63,94,0.3);border-radius:var(--radius-sm);margin-bottom:16px;animation:alertPulse 2s ease-in-out infinite}
+@keyframes alertPulse{0%,100%{opacity:1}50%{opacity:0.85}}
+.meds-alert-icon{font-size:1.5rem}
+.meds-alert-text{display:flex;flex-direction:column;gap:2px}
+.meds-alert-text strong{color:var(--rose);font-size:0.9rem}
+.meds-alert-text span{color:var(--text-secondary);font-size:0.75rem}
 .btn-sm{padding:10px 16px;font-size:0.8rem}
 .btn-xs{padding:6px 12px;font-size:0.75rem}
 .btn-full{width:100%}
@@ -1497,6 +1526,80 @@ const CONFIG = {
   MAX_DIM: 2000,
   SYNC_DEBOUNCE_MS: 1500,
   VALID_WARDS: ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned'],
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // DRUG DATABASE - Local instant lookup with lab correlations
+  // ═══════════════════════════════════════════════════════════════════
+  DRUG_DATABASE: {
+    // Antidiabetics
+    'Metformin': { class: 'Biguanide', icon: '💊', monitorLabs: ['HbA1c', 'Glucose', 'Creatinine', 'eGFR', 'Lactate'], alerts: { 'eGFR': { operator: '<', value: 30, severity: 'critical', message: 'Contraindicated: eGFR <30 - risk of lactic acidosis' }, 'Lactate': { operator: '>', value: 2, severity: 'warning', message: 'Monitor for lactic acidosis' } }, reference: { HbA1c: { normal: '4.0-5.6%', target: '<7.0%' } } },
+    'Glipizide': { class: 'Sulfonylurea', icon: '💊', monitorLabs: ['Glucose', 'HbA1c'], alerts: { 'Glucose': { operator: '<', value: 70, severity: 'critical', message: 'Hypoglycemia risk - hold or reduce dose' } } },
+    'Insulin': { class: 'Hormone', icon: '💉', monitorLabs: ['Glucose', 'HbA1c', 'Potassium'], alerts: { 'Glucose': { operator: '<', value: 70, severity: 'critical', message: 'Hypoglycemia - reduce dose' }, 'Potassium': { operator: '<', value: 3.5, severity: 'warning', message: 'Insulin shifts K+ intracellularly' } } },
+    'Empagliflozin': { class: 'SGLT2i', icon: '💊', monitorLabs: ['Glucose', 'Creatinine', 'eGFR', 'Potassium'], alerts: { 'eGFR': { operator: '<', value: 20, severity: 'warning', message: 'Reduced efficacy at low eGFR' } } },
+    'Sitagliptin': { class: 'DPP-4 Inhibitor', icon: '💊', monitorLabs: ['HbA1c', 'Glucose', 'Creatinine'], alerts: {} },
+    
+    // Cardiovascular - ACE Inhibitors
+    'Lisinopril': { class: 'ACE Inhibitor', icon: '❤️', monitorLabs: ['Potassium', 'Creatinine', 'eGFR'], alerts: { 'Potassium': { operator: '>', value: 5.5, severity: 'critical', message: 'Hyperkalemia risk - consider dose reduction or discontinuation' }, 'Creatinine': { operator: '>', value: 3.0, severity: 'warning', message: 'Monitor renal function closely' } }, reference: { Potassium: { normal: '3.5-5.0 mEq/L' }, Creatinine: { normal: '0.7-1.3 mg/dL' } } },
+    'Enalapril': { class: 'ACE Inhibitor', icon: '❤️', monitorLabs: ['Potassium', 'Creatinine', 'eGFR'], alerts: { 'Potassium': { operator: '>', value: 5.5, severity: 'critical', message: 'Hyperkalemia risk' } } },
+    'Ramipril': { class: 'ACE Inhibitor', icon: '❤️', monitorLabs: ['Potassium', 'Creatinine', 'eGFR'], alerts: { 'Potassium': { operator: '>', value: 5.5, severity: 'critical', message: 'Hyperkalemia risk' } } },
+    
+    // Cardiovascular - ARBs
+    'Losartan': { class: 'ARB', icon: '❤️', monitorLabs: ['Potassium', 'Creatinine'], alerts: { 'Potassium': { operator: '>', value: 5.5, severity: 'critical', message: 'Hyperkalemia risk' } } },
+    'Valsartan': { class: 'ARB', icon: '❤️', monitorLabs: ['Potassium', 'Creatinine'], alerts: { 'Potassium': { operator: '>', value: 5.5, severity: 'critical', message: 'Hyperkalemia risk' } } },
+    
+    // Cardiovascular - Beta Blockers
+    'Metoprolol': { class: 'Beta Blocker', icon: '💓', monitorLabs: ['Glucose'], alerts: { 'Glucose': { operator: '<', value: 70, severity: 'warning', message: 'May mask hypoglycemia symptoms' } } },
+    'Carvedilol': { class: 'Alpha/Beta Blocker', icon: '💓', monitorLabs: ['Glucose'], alerts: {} },
+    'Bisoprolol': { class: 'Beta Blocker', icon: '💓', monitorLabs: [], alerts: {} },
+    
+    // Cardiovascular - Diuretics
+    'Furosemide': { class: 'Loop Diuretic', icon: '💧', monitorLabs: ['Potassium', 'Sodium', 'Creatinine', 'Magnesium'], alerts: { 'Potassium': { operator: '<', value: 3.5, severity: 'critical', message: 'Hypokalemia - supplement K+' }, 'Sodium': { operator: '<', value: 130, severity: 'warning', message: 'Hyponatremia risk' }, 'Magnesium': { operator: '<', value: 1.5, severity: 'warning', message: 'Hypomagnesemia - supplement Mg' } } },
+    'Spironolactone': { class: 'MRA', icon: '💧', monitorLabs: ['Potassium', 'Creatinine'], alerts: { 'Potassium': { operator: '>', value: 5.5, severity: 'critical', message: 'Hyperkalemia - reduce or hold dose' } } },
+    'Hydrochlorothiazide': { class: 'Thiazide Diuretic', icon: '💧', monitorLabs: ['Potassium', 'Sodium', 'Glucose', 'Uric Acid'], alerts: { 'Potassium': { operator: '<', value: 3.5, severity: 'warning', message: 'Hypokalemia risk' }, 'Sodium': { operator: '<', value: 130, severity: 'warning', message: 'Hyponatremia risk' } } },
+    
+    // Cardiovascular - Other
+    'Amlodipine': { class: 'CCB', icon: '❤️', monitorLabs: [], alerts: {} },
+    'Digoxin': { class: 'Cardiac Glycoside', icon: '❤️', monitorLabs: ['Potassium', 'Creatinine', 'Digoxin Level'], alerts: { 'Potassium': { operator: '<', value: 3.5, severity: 'critical', message: 'Hypokalemia increases digoxin toxicity risk' } } },
+    'Amiodarone': { class: 'Antiarrhythmic', icon: '❤️', monitorLabs: ['TSH', 'LFTs', 'Pulmonary Function'], alerts: {} },
+    
+    // Anticoagulants
+    'Warfarin': { class: 'Vitamin K Antagonist', icon: '🩸', monitorLabs: ['INR', 'PT'], alerts: { 'INR': { operator: '>', value: 4, severity: 'critical', message: 'Supratherapeutic INR - bleeding risk, hold warfarin' }, 'INR': { operator: '<', value: 2, severity: 'warning', message: 'Subtherapeutic - stroke risk if AF' } }, reference: { INR: { normal: '0.8-1.2', target: '2.0-3.0 (AF), 2.5-3.5 (mechanical valve)' } } },
+    'Heparin': { class: 'Anticoagulant', icon: '🩸', monitorLabs: ['aPTT', 'Platelets', 'Anti-Xa'], alerts: { 'Platelets': { operator: '<', value: 100, severity: 'critical', message: 'Consider HIT - check HIT antibody' } } },
+    'Enoxaparin': { class: 'LMWH', icon: '🩸', monitorLabs: ['Anti-Xa', 'Platelets', 'Creatinine'], alerts: { 'Creatinine': { operator: '>', value: 2.5, severity: 'warning', message: 'Accumulation risk in renal impairment' } } },
+    'Rivaroxaban': { class: 'Factor Xa Inhibitor', icon: '🩸', monitorLabs: ['Creatinine', 'eGFR', 'Hemoglobin'], alerts: { 'eGFR': { operator: '<', value: 15, severity: 'critical', message: 'Contraindicated in severe renal impairment' } } },
+    'Apixaban': { class: 'Factor Xa Inhibitor', icon: '🩸', monitorLabs: ['Creatinine', 'eGFR'], alerts: { 'eGFR': { operator: '<', value: 25, severity: 'warning', message: 'Dose adjustment required' } } },
+    
+    // Statins
+    'Atorvastatin': { class: 'Statin', icon: '🩸', monitorLabs: ['LDL', 'Total Cholesterol', 'LFTs', 'CK'], alerts: { 'CK': { operator: '>', value: 1000, severity: 'critical', message: 'Rhabdomyolysis risk - hold statin' } } },
+    'Rosuvastatin': { class: 'Statin', icon: '🩸', monitorLabs: ['LDL', 'LFTs', 'CK'], alerts: {} },
+    
+    // GI
+    'Omeprazole': { class: 'PPI', icon: '🫁', monitorLabs: ['Magnesium', 'B12'], alerts: { 'Magnesium': { operator: '<', value: 1.5, severity: 'warning', message: 'Long-term PPI can cause hypomagnesemia' } } },
+    'Pantoprazole': { class: 'PPI', icon: '🫁', monitorLabs: ['Magnesium'], alerts: {} },
+    
+    // Antibiotics
+    'Vancomycin': { class: 'Glycopeptide', icon: '🦠', monitorLabs: ['Vancomycin Trough', 'Creatinine', 'eGFR'], alerts: { 'Vancomycin Trough': { operator: '>', value: 20, severity: 'critical', message: 'Supratherapeutic - nephrotoxicity risk' }, 'Creatinine': { operator: '>', value: 2.0, severity: 'warning', message: 'Monitor for nephrotoxicity' } }, reference: { 'Vancomycin Trough': { target: '15-20 mcg/mL (serious infections)' } } },
+    'Gentamicin': { class: 'Aminoglycoside', icon: '🦠', monitorLabs: ['Gentamicin Level', 'Creatinine'], alerts: { 'Creatinine': { operator: '>', value: 2.0, severity: 'warning', message: 'Nephrotoxicity - consider dose adjustment' } } },
+    'Amoxicillin': { class: 'Penicillin', icon: '🦠', monitorLabs: [], alerts: {} },
+    'Ciprofloxacin': { class: 'Fluoroquinolone', icon: '🦠', monitorLabs: ['QTc'], alerts: {} },
+    'Meropenem': { class: 'Carbapenem', icon: '🦠', monitorLabs: ['Creatinine'], alerts: {} },
+    
+    // Thyroid
+    'Levothyroxine': { class: 'Thyroid Hormone', icon: '🦋', monitorLabs: ['TSH', 'Free T4'], alerts: { 'TSH': { operator: '<', value: 0.1, severity: 'warning', message: 'Overreplacement - reduce dose' }, 'TSH': { operator: '>', value: 10, severity: 'warning', message: 'Underreplacement - increase dose' } }, reference: { TSH: { normal: '0.4-4.0 mIU/L' } } },
+    
+    // Neurological
+    'Levetiracetam': { class: 'Antiepileptic', icon: '🧠', monitorLabs: ['Creatinine'], alerts: {} },
+    'Phenytoin': { class: 'Antiepileptic', icon: '🧠', monitorLabs: ['Phenytoin Level', 'Albumin'], alerts: { 'Phenytoin Level': { operator: '>', value: 20, severity: 'critical', message: 'Toxic level - hold and recheck' } } },
+    'Valproate': { class: 'Antiepileptic', icon: '🧠', monitorLabs: ['Valproic Acid Level', 'LFTs', 'Ammonia', 'Platelets'], alerts: { 'Ammonia': { operator: '>', value: 80, severity: 'warning', message: 'Hyperammonemia - consider lactulose or dose reduction' } } },
+    
+    // Pain
+    'Morphine': { class: 'Opioid', icon: '💊', monitorLabs: ['Creatinine'], alerts: { 'Creatinine': { operator: '>', value: 2.0, severity: 'warning', message: 'Active metabolites accumulate in renal failure' } } },
+    'Tramadol': { class: 'Opioid', icon: '💊', monitorLabs: ['Creatinine'], alerts: {} },
+    
+    // Psychiatric
+    'Lithium': { class: 'Mood Stabilizer', icon: '🧠', monitorLabs: ['Lithium Level', 'Creatinine', 'TSH', 'Sodium'], alerts: { 'Lithium Level': { operator: '>', value: 1.5, severity: 'critical', message: 'Toxic level - hold lithium, hydrate' }, 'Sodium': { operator: '<', value: 130, severity: 'warning', message: 'Hyponatremia increases lithium toxicity' } }, reference: { 'Lithium Level': { target: '0.6-1.2 mEq/L' } } }
+  },
+  
   LAB_CATEGORIES: {
     'Cardiac Markers': { icon: '❤️', terms: ['Troponin', 'BNP', 'proBNP', 'NT-proBNP', 'CK-MB', 'Myoglobin'] },
     'Renal Function': { icon: '🫘', terms: ['Urea', 'Creatinine', 'Creat', 'eGFR', 'BUN'] },
@@ -3481,11 +3584,52 @@ function renderProfileMeds() {
   const p = state.currentPatient;
   if (!p.medications) p.medications = [];
   
-  const activeMeds = p.medications.filter(m => m.status !== 'discontinued');
-  const discontinuedMeds = p.medications.filter(m => m.status === 'discontinued');
+  const searchTerm = state.medSearchTerm || '';
+  const filteredMeds = p.medications.filter(m => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (m.name || '').toLowerCase().includes(term) ||
+           (m.indication || '').toLowerCase().includes(term) ||
+           (m.generic || '').toLowerCase().includes(term);
+  });
+  
+  const activeMeds = filteredMeds.filter(m => m.status !== 'discontinued');
+  const discontinuedMeds = filteredMeds.filter(m => m.status === 'discontinued');
+  
+  // Check for any drug-lab alerts
+  const totalAlerts = p.medications.reduce((count, med) => {
+    const drugInfo = CONFIG.DRUG_DATABASE[(med.name || '').split(' ')[0]] || CONFIG.DRUG_DATABASE[med.name];
+    if (drugInfo && drugInfo.alerts) {
+      const patientLabs = p.labData?.parameters || [];
+      Object.entries(drugInfo.alerts).forEach(([labName, alertConfig]) => {
+        const labParam = patientLabs.find(lp => lp.name?.toLowerCase().includes(labName.toLowerCase()));
+        if (labParam && labParam.values && labParam.values[0]) {
+          const labValue = parseFloat(labParam.values[0].value);
+          if (!isNaN(labValue)) {
+            if ((alertConfig.operator === '>' && labValue > alertConfig.value) ||
+                (alertConfig.operator === '<' && labValue < alertConfig.value)) {
+              count++;
+            }
+          }
+        }
+      });
+    }
+    return count;
+  }, 0);
   
   let html = `
     <div class="meds-container">
+      <!-- Alert Summary Banner -->
+      ${totalAlerts > 0 ? `
+        <div class="meds-alert-banner">
+          <div class="meds-alert-icon">🚨</div>
+          <div class="meds-alert-text">
+            <strong>${totalAlerts} Drug-Lab Alert${totalAlerts > 1 ? 's' : ''}</strong>
+            <span>Review medications below for potential interactions</span>
+          </div>
+        </div>
+      ` : ''}
+      
       <!-- Upload Card -->
       <div class="meds-upload-card">
         <div class="meds-upload-header">
@@ -3514,6 +3658,15 @@ function renderProfileMeds() {
         <button class="meds-quick-btn" onclick="showAddMedForm()">+ Add Manually</button>
         <button class="meds-quick-btn" onclick="reconcileMeds()">⚖️ Reconcile</button>
       </div>
+      
+      <!-- Search Filter -->
+      ${p.medications.length > 3 ? `
+        <div class="meds-search-bar">
+          <input type="text" class="meds-search-input" placeholder="🔍 Search medications..." 
+                 value="${esc(searchTerm)}" 
+                 oninput="filterMedications(this.value)">
+        </div>
+      ` : ''}
   `;
   
   // Active Medications
@@ -3555,6 +3708,28 @@ function renderProfileMeds() {
         <div class="meds-empty-hint">Upload a photo or add manually</div>
       </div>
     `;
+  } else if (filteredMeds.length === 0 && searchTerm) {
+    html += `
+      <div class="meds-empty">
+        <div class="meds-empty-icon">🔍</div>
+        <div class="meds-empty-title">No matching medications</div>
+        <div class="meds-empty-hint">Try a different search term</div>
+      </div>
+    `;
+  }
+  
+  html += `
+    </div>
+  `;
+  
+  $('profileMeds').innerHTML = html;
+}
+
+// Medication search filter function
+window.filterMedications = function(term) {
+  state.medSearchTerm = term;
+  renderProfileMeds();
+};
   }
   
   html += `
@@ -3570,21 +3745,102 @@ function renderMedCard(med, idx) {
   const drugBaseUrl = state.settings.drugRefUrl || '';
   const showDrugLink = drugBaseUrl && drugBaseUrl.trim() !== '';
   
+  // Normalize drug name for lookup
+  const drugNameNormalized = (med.name || '').split(' ')[0]; // Get first word (e.g., "Metformin" from "Metformin 500mg")
+  const drugInfo = CONFIG.DRUG_DATABASE[drugNameNormalized] || CONFIG.DRUG_DATABASE[med.name] || null;
+  
+  // Get patient's current lab values for alert checking
+  const patientLabs = state.currentPatient?.labData?.parameters || [];
+  let alerts = [];
+  
+  if (drugInfo && drugInfo.alerts) {
+    Object.entries(drugInfo.alerts).forEach(([labName, alertConfig]) => {
+      // Find matching lab value
+      const labParam = patientLabs.find(p => 
+        p.name?.toLowerCase().includes(labName.toLowerCase()) ||
+        labName.toLowerCase().includes(p.name?.toLowerCase())
+      );
+      
+      if (labParam && labParam.values && labParam.values[0]) {
+        const labValue = parseFloat(labParam.values[0].value);
+        if (!isNaN(labValue)) {
+          let triggered = false;
+          if (alertConfig.operator === '>' && labValue > alertConfig.value) triggered = true;
+          if (alertConfig.operator === '<' && labValue < alertConfig.value) triggered = true;
+          if (alertConfig.operator === '>=' && labValue >= alertConfig.value) triggered = true;
+          if (alertConfig.operator === '<=' && labValue <= alertConfig.value) triggered = true;
+          
+          if (triggered) {
+            alerts.push({
+              lab: labName,
+              value: labValue,
+              severity: alertConfig.severity,
+              message: alertConfig.message
+            });
+          }
+        }
+      }
+    });
+  }
+  
   // Build dynamic URL with drug name as query parameter
   const drugName = encodeURIComponent(med.name || '');
   const drugDose = encodeURIComponent(med.dose || '');
   const drugIndication = encodeURIComponent(med.indication || '');
-  const drugUrl = showDrugLink ? `${drugBaseUrl}?drug=${drugName}&dose=${drugDose}&indication=${drugIndication}` : '';
+  
+  // Add relevant lab values to URL for context
+  let labContext = '';
+  if (drugInfo && drugInfo.monitorLabs) {
+    const relevantLabs = drugInfo.monitorLabs.map(labName => {
+      const labParam = patientLabs.find(p => p.name?.toLowerCase().includes(labName.toLowerCase()));
+      if (labParam && labParam.values && labParam.values[0]) {
+        return `${labName}:${labParam.values[0].value}`;
+      }
+      return null;
+    }).filter(Boolean);
+    if (relevantLabs.length) {
+      labContext = '&labs=' + encodeURIComponent(relevantLabs.join(','));
+    }
+  }
+  
+  const drugUrl = showDrugLink ? `${drugBaseUrl}?drug=${drugName}&dose=${drugDose}&indication=${drugIndication}${labContext}` : '';
+  
+  // Build alerts HTML
+  let alertsHtml = '';
+  if (alerts.length > 0) {
+    alertsHtml = `
+      <div class="med-alerts">
+        ${alerts.map(a => `
+          <div class="med-alert ${a.severity}">
+            <span class="med-alert-icon">${a.severity === 'critical' ? '🚨' : '⚠️'}</span>
+            <div class="med-alert-content">
+              <span class="med-alert-lab">${esc(a.lab)}: ${a.value}</span>
+              <span class="med-alert-message">${esc(a.message)}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+  
+  // Monitoring labs badge
+  let monitorBadge = '';
+  if (drugInfo && drugInfo.monitorLabs && drugInfo.monitorLabs.length > 0) {
+    monitorBadge = `<div class="med-monitor-labs">📊 Monitor: ${drugInfo.monitorLabs.slice(0, 3).join(', ')}${drugInfo.monitorLabs.length > 3 ? '...' : ''}</div>`;
+  }
   
   return `
-    <div class="med-card">
+    <div class="med-card ${alerts.length > 0 ? 'has-alerts' : ''}">
+      ${alertsHtml}
       <div class="med-card-header">
         <div class="med-card-main">
           <div class="med-card-name">
+            ${drugInfo ? `<span class="med-drug-icon">${drugInfo.icon}</span>` : ''}
             ${esc(med.name)}
             <span class="med-status ${statusClass}">${statusLabels[statusClass] || statusClass}</span>
           </div>
           ${med.generic ? `<div class="med-card-generic">${esc(med.generic)}</div>` : ''}
+          ${drugInfo ? `<div class="med-card-class">${esc(drugInfo.class)}</div>` : ''}
         </div>
         <div class="med-card-actions">
           ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info">📚</a>` : ''}
@@ -3603,7 +3859,8 @@ function renderMedCard(med, idx) {
           <div class="med-indication-text">${esc(med.indication)}</div>
         </div>
       ` : ''}
-      ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="btn btn-info btn-xs" style="margin-top:10px;width:100%;text-decoration:none;display:block;text-align:center">📖 Learn More (AI-Powered)</a>` : ''}
+      ${monitorBadge}
+      ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="btn btn-info btn-xs med-learn-more" style="margin-top:10px;width:100%;text-decoration:none;display:block;text-align:center">📖 Learn More (AI-Powered)</a>` : ''}
     </div>
   `;
 }
