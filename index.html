@@ -87,6 +87,9 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .meds-alert-text span{color:var(--text-secondary);font-size:0.75rem}
 .btn-sm{padding:10px 16px;font-size:0.8rem}
 .btn-xs{padding:6px 12px;font-size:0.75rem}
+.calc-tab{padding:8px 12px;font-size:0.75rem;background:var(--bg);border:1px solid var(--border)}
+.calc-tab.active{background:var(--primary);color:#000;border-color:var(--primary)}
+.btn-xs{padding:6px 12px;font-size:0.75rem}
 .btn-full{width:100%}
 .btn-icon{width:44px;height:44px;padding:0;border-radius:var(--radius-sm)}
 .form-group{margin-bottom:20px}
@@ -905,6 +908,7 @@ Request New Unit Access
 <div class="action-buttons">
 <button class="btn btn-primary btn-sm" onclick="openAddPatient()">➕ Add Patient</button>
 <button class="btn btn-secondary btn-sm" onclick="openImport()">📥 Import List</button>
+<button class="btn btn-secondary btn-sm" onclick="openCalculator()">🧮 Calculator</button>
 <button class="btn btn-secondary btn-sm btn-full" onclick="exportPDF()">📄 Export PDF</button>
 </div>
 <div id="patientsList"></div>
@@ -1476,7 +1480,89 @@ Request New Unit Access
 </div>
 
 <div class="toast" id="toast"></div>
-<input type="file" id="labFileInput" accept="image/*" style="display:none">
+
+<!-- Quick Drug Reference Modal -->
+<div class="modal" id="quickRefModal">
+<div class="modal-box" style="max-width:500px">
+<div class="modal-header">
+<div class="modal-title" id="quickRefTitle">Drug Reference</div>
+<button class="modal-close-btn" onclick="closeModal('quickRefModal')">✕</button>
+</div>
+<div class="modal-body" id="quickRefBody" style="max-height:60vh;overflow-y:auto">
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('quickRefModal')">Close</button>
+<button class="btn btn-primary" id="quickRefLearnMore" onclick="openFullDrugRef()">Full Reference</button>
+</div>
+</div>
+</div>
+
+<!-- Clinical Calculator Modal -->
+<div class="modal" id="calcModal">
+<div class="modal-box" style="max-width:420px">
+<div class="modal-header">
+<div class="modal-title">🧮 Clinical Calculators</div>
+<button class="modal-close-btn" onclick="closeModal('calcModal')">✕</button>
+</div>
+<div class="modal-body">
+<div class="calc-tabs" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+<button class="btn btn-sm calc-tab active" data-calc="crcl" onclick="showCalcTab('crcl')">CrCl</button>
+<button class="btn btn-sm calc-tab" data-calc="egfr" onclick="showCalcTab('egfr')">eGFR</button>
+<button class="btn btn-sm calc-tab" data-calc="calcium" onclick="showCalcTab('calcium')">Ca²⁺</button>
+<button class="btn btn-sm calc-tab" data-calc="anion" onclick="showCalcTab('anion')">Anion Gap</button>
+<button class="btn btn-sm calc-tab" data-calc="bmi" onclick="showCalcTab('bmi')">BMI</button>
+</div>
+
+<!-- CrCl Calculator -->
+<div class="calc-panel active" id="calcCrcl">
+<div class="form-group"><label class="form-label">Age (years)</label><input type="number" id="calcAge" class="form-input" placeholder="65"></div>
+<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="calcWeight" class="form-input" placeholder="70"></div>
+<div class="form-group"><label class="form-label">Creatinine (mg/dL)</label><input type="number" id="calcCr" class="form-input" step="0.1" placeholder="1.2"></div>
+<div class="form-group"><label class="form-label"><input type="checkbox" id="calcFemale"> Female</label></div>
+<button class="btn btn-primary" onclick="runCrClCalc()" style="width:100%;margin-top:12px">Calculate CrCl</button>
+<div class="calc-result" id="resultCrcl" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+</div>
+
+<!-- eGFR Calculator -->
+<div class="calc-panel" id="calcEgfr" style="display:none">
+<div class="form-group"><label class="form-label">Age (years)</label><input type="number" id="egfrAge" class="form-input" placeholder="65"></div>
+<div class="form-group"><label class="form-label">Creatinine (mg/dL)</label><input type="number" id="egfrCr" class="form-input" step="0.1" placeholder="1.2"></div>
+<div class="form-group"><label class="form-label"><input type="checkbox" id="egfrFemale"> Female</label></div>
+<button class="btn btn-primary" onclick="runEGFRCalc()" style="width:100%;margin-top:12px">Calculate eGFR</button>
+<div class="calc-result" id="resultEgfr" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+</div>
+
+<!-- Corrected Calcium -->
+<div class="calc-panel" id="calcCalcium" style="display:none">
+<div class="form-group"><label class="form-label">Calcium (mg/dL)</label><input type="number" id="calcCa" class="form-input" step="0.1" placeholder="8.5"></div>
+<div class="form-group"><label class="form-label">Albumin (g/dL)</label><input type="number" id="calcAlb" class="form-input" step="0.1" placeholder="3.5"></div>
+<button class="btn btn-primary" onclick="runCalciumCalc()" style="width:100%;margin-top:12px">Calculate Corrected Ca²⁺</button>
+<div class="calc-result" id="resultCalcium" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+</div>
+
+<!-- Anion Gap -->
+<div class="calc-panel" id="calcAnion" style="display:none">
+<div class="form-group"><label class="form-label">Sodium (mEq/L)</label><input type="number" id="calcNa" class="form-input" placeholder="140"></div>
+<div class="form-group"><label class="form-label">Chloride (mEq/L)</label><input type="number" id="calcCl" class="form-input" placeholder="100"></div>
+<div class="form-group"><label class="form-label">Bicarbonate (mEq/L)</label><input type="number" id="calcHCO3" class="form-input" placeholder="24"></div>
+<button class="btn btn-primary" onclick="runAnionCalc()" style="width:100%;margin-top:12px">Calculate Anion Gap</button>
+<div class="calc-result" id="resultAnion" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+</div>
+
+<!-- BMI -->
+<div class="calc-panel" id="calcBmi" style="display:none">
+<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="bmiWeight" class="form-input" placeholder="70"></div>
+<div class="form-group"><label class="form-label">Height (cm)</label><input type="number" id="bmiHeight" class="form-input" placeholder="170"></div>
+<button class="btn btn-primary" onclick="runBMICalc()" style="width:100%;margin-top:12px">Calculate BMI</button>
+<div class="calc-result" id="resultBmi" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:8px;display:none"></div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('calcModal')">Close</button>
+</div>
+</div>
+</div>
+<input type="file" id="labFileInput" accept="image/*" multiple style="display:none">
 
 <!-- Lab Override Modal -->
 <div class="modal" id="labOverrideModal">
@@ -2411,6 +2497,79 @@ const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 const esc = t => { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
 const initials = n => { if (!n) return '?'; const p = n.trim().split(/\s+/); return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : n.substring(0, 2).toUpperCase(); };
+
+// ═══════════════════════════════════════════════════════════════════
+// CLINICAL CALCULATORS
+// ═══════════════════════════════════════════════════════════════════
+
+// Cockcroft-Gault Creatinine Clearance
+function calculateCrCl(age, weight, creatinine, isFemale) {
+  if (!age || !weight || !creatinine || creatinine <= 0) return null;
+  let crcl = ((140 - age) * weight) / (72 * creatinine);
+  if (isFemale) crcl *= 0.85;
+  return crcl.toFixed(1);
+}
+
+// CKD-EPI eGFR (2021 equation - race-free)
+function calculateEGFR(age, creatinine, isFemale) {
+  if (!age || !creatinine || creatinine <= 0) return null;
+  const kappa = isFemale ? 0.7 : 0.9;
+  const alpha = isFemale ? -0.241 : -0.302;
+  const minRatio = Math.min(creatinine / kappa, 1);
+  const maxRatio = Math.max(creatinine / kappa, 1);
+  let egfr = 142 * Math.pow(minRatio, alpha) * Math.pow(maxRatio, -1.200) * Math.pow(0.9938, age);
+  if (isFemale) egfr *= 1.012;
+  return egfr.toFixed(0);
+}
+
+// Corrected Calcium for Albumin
+function calculateCorrectedCalcium(calcium, albumin) {
+  if (!calcium || !albumin) return null;
+  const corrected = calcium + 0.8 * (4.0 - albumin);
+  return corrected.toFixed(1);
+}
+
+// Anion Gap
+function calculateAnionGap(sodium, chloride, bicarb) {
+  if (!sodium || !chloride || !bicarb) return null;
+  return (sodium - chloride - bicarb).toFixed(0);
+}
+
+// BMI
+function calculateBMI(weight, heightCm) {
+  if (!weight || !heightCm) return null;
+  const heightM = heightCm / 100;
+  return (weight / (heightM * heightM)).toFixed(1);
+}
+
+// Ideal Body Weight (Devine formula)
+function calculateIBW(heightCm, isFemale) {
+  if (!heightCm) return null;
+  const heightInches = heightCm / 2.54;
+  const inchesOver5ft = heightInches - 60;
+  if (isFemale) {
+    return (45.5 + 2.3 * inchesOver5ft).toFixed(1);
+  }
+  return (50 + 2.3 * inchesOver5ft).toFixed(1);
+}
+
+// MELD Score (for liver disease)
+function calculateMELD(bilirubin, inr, creatinine, sodium, onDialysis) {
+  if (!bilirubin || !inr || !creatinine) return null;
+  // Cap values per MELD rules
+  const bili = Math.max(1, Math.min(bilirubin, 40));
+  const cr = onDialysis ? 4 : Math.max(1, Math.min(creatinine, 4));
+  const na = sodium ? Math.max(125, Math.min(sodium, 137)) : 137;
+  
+  let meld = 10 * (0.957 * Math.log(cr) + 0.378 * Math.log(bili) + 1.120 * Math.log(inr) + 0.643);
+  meld = Math.round(meld);
+  
+  // MELD-Na adjustment
+  if (sodium) {
+    meld = meld + 1.32 * (137 - na) - 0.033 * meld * (137 - na);
+  }
+  return Math.max(6, Math.min(Math.round(meld), 40));
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // TOUCH SUPPORT - Simplified: Just use CSS + standard onclick
@@ -3871,9 +4030,10 @@ function renderMedCard(med, idx) {
           ${drugInfo ? `<div class="med-card-class">${esc(drugInfo.class)}</div>` : ''}
         </div>
         <div class="med-card-actions">
-          ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info" ontouchstart="">📚</a>` : ''}
-          <button class="med-card-action" onclick="editMedication(${idx})" title="Edit" ontouchstart="">✏️</button>
-          <button class="med-card-action delete" onclick="deleteMedication(${idx})" title="Delete" ontouchstart="">🗑️</button>
+          <button class="med-card-action" onclick="event.stopPropagation();showQuickReference('${esc(med.name)}')" title="Quick Ref">📋</button>
+          ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info">📚</a>` : ''}
+          <button class="med-card-action" onclick="event.stopPropagation();editMedication(${idx})" title="Edit">✏️</button>
+          <button class="med-card-action delete" onclick="event.stopPropagation();deleteMedication(${idx})" title="Delete">🗑️</button>
         </div>
       </div>
       <div class="med-card-dose">
@@ -5047,6 +5207,227 @@ function openUnitAccess(id) {
 // Make openUnitAccess globally accessible
 window.openUnitAccess = openUnitAccess;
 
+// ═══════════════════════════════════════════════════════════════════
+// CLINICAL CALCULATOR UI
+// ═══════════════════════════════════════════════════════════════════
+
+window.openCalculator = function() {
+  openModal('calcModal');
+};
+
+window.showCalcTab = function(tab) {
+  $$('.calc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.calc-tab[data-calc="${tab}"]`)?.classList.add('active');
+  $$('.calc-panel').forEach(p => p.style.display = 'none');
+  $('calc' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = 'block';
+};
+
+window.runCrClCalc = function() {
+  const age = parseFloat($('calcAge').value);
+  const weight = parseFloat($('calcWeight').value);
+  const cr = parseFloat($('calcCr').value);
+  const isFemale = $('calcFemale').checked;
+  
+  const result = calculateCrCl(age, weight, cr, isFemale);
+  const resultDiv = $('resultCrcl');
+  
+  if (result) {
+    const stage = result >= 90 ? 'Normal' : result >= 60 ? 'Mild ↓' : result >= 30 ? 'Moderate ↓' : result >= 15 ? 'Severe ↓' : 'Kidney Failure';
+    const color = result >= 60 ? 'var(--teal)' : result >= 30 ? 'var(--gold)' : 'var(--rose)';
+    resultDiv.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:700;color:${color}">${result} mL/min</div>
+        <div style="color:var(--text-muted);margin-top:4px">Creatinine Clearance</div>
+        <div style="margin-top:8px;padding:8px;background:${color}22;border-radius:6px;color:${color}">${stage}</div>
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+  } else {
+    resultDiv.innerHTML = '<div style="color:var(--rose);text-align:center">Please enter all values</div>';
+    resultDiv.style.display = 'block';
+  }
+};
+
+window.runEGFRCalc = function() {
+  const age = parseFloat($('egfrAge').value);
+  const cr = parseFloat($('egfrCr').value);
+  const isFemale = $('egfrFemale').checked;
+  
+  const result = calculateEGFR(age, cr, isFemale);
+  const resultDiv = $('resultEgfr');
+  
+  if (result) {
+    const stage = result >= 90 ? 'G1 - Normal' : result >= 60 ? 'G2 - Mild ↓' : result >= 45 ? 'G3a - Mild-Mod ↓' : result >= 30 ? 'G3b - Mod-Sev ↓' : result >= 15 ? 'G4 - Severe ↓' : 'G5 - Kidney Failure';
+    const color = result >= 60 ? 'var(--teal)' : result >= 30 ? 'var(--gold)' : 'var(--rose)';
+    resultDiv.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:700;color:${color}">${result} mL/min/1.73m²</div>
+        <div style="color:var(--text-muted);margin-top:4px">eGFR (CKD-EPI 2021)</div>
+        <div style="margin-top:8px;padding:8px;background:${color}22;border-radius:6px;color:${color}">${stage}</div>
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+  } else {
+    resultDiv.innerHTML = '<div style="color:var(--rose);text-align:center">Please enter all values</div>';
+    resultDiv.style.display = 'block';
+  }
+};
+
+window.runCalciumCalc = function() {
+  const ca = parseFloat($('calcCa').value);
+  const alb = parseFloat($('calcAlb').value);
+  
+  const result = calculateCorrectedCalcium(ca, alb);
+  const resultDiv = $('resultCalcium');
+  
+  if (result) {
+    const status = result >= 8.5 && result <= 10.5 ? 'Normal' : result < 8.5 ? 'Hypocalcemia' : 'Hypercalcemia';
+    const color = result >= 8.5 && result <= 10.5 ? 'var(--teal)' : 'var(--rose)';
+    resultDiv.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:700;color:${color}">${result} mg/dL</div>
+        <div style="color:var(--text-muted);margin-top:4px">Corrected Calcium</div>
+        <div style="margin-top:8px;padding:8px;background:${color}22;border-radius:6px;color:${color}">${status}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px">Formula: Ca + 0.8 × (4.0 - Albumin)</div>
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+  } else {
+    resultDiv.innerHTML = '<div style="color:var(--rose);text-align:center">Please enter all values</div>';
+    resultDiv.style.display = 'block';
+  }
+};
+
+window.runAnionCalc = function() {
+  const na = parseFloat($('calcNa').value);
+  const cl = parseFloat($('calcCl').value);
+  const hco3 = parseFloat($('calcHCO3').value);
+  
+  const result = calculateAnionGap(na, cl, hco3);
+  const resultDiv = $('resultAnion');
+  
+  if (result) {
+    const status = result >= 8 && result <= 12 ? 'Normal' : result > 12 ? 'Elevated (HAGMA)' : 'Low';
+    const color = result >= 8 && result <= 12 ? 'var(--teal)' : 'var(--rose)';
+    resultDiv.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:700;color:${color}">${result} mEq/L</div>
+        <div style="color:var(--text-muted);margin-top:4px">Anion Gap</div>
+        <div style="margin-top:8px;padding:8px;background:${color}22;border-radius:6px;color:${color}">${status}</div>
+        ${result > 12 ? '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px">Consider: MUDPILES (Methanol, Uremia, DKA, Propylene glycol, INH/Iron, Lactate, Ethylene glycol, Salicylates)</div>' : ''}
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+  } else {
+    resultDiv.innerHTML = '<div style="color:var(--rose);text-align:center">Please enter all values</div>';
+    resultDiv.style.display = 'block';
+  }
+};
+
+window.runBMICalc = function() {
+  const weight = parseFloat($('bmiWeight').value);
+  const height = parseFloat($('bmiHeight').value);
+  
+  const result = calculateBMI(weight, height);
+  const resultDiv = $('resultBmi');
+  
+  if (result) {
+    const status = result < 18.5 ? 'Underweight' : result < 25 ? 'Normal' : result < 30 ? 'Overweight' : result < 35 ? 'Obese Class I' : result < 40 ? 'Obese Class II' : 'Obese Class III';
+    const color = result >= 18.5 && result < 25 ? 'var(--teal)' : result < 30 ? 'var(--gold)' : 'var(--rose)';
+    const ibw = calculateIBW(height, false);
+    resultDiv.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:2rem;font-weight:700;color:${color}">${result} kg/m²</div>
+        <div style="color:var(--text-muted);margin-top:4px">Body Mass Index</div>
+        <div style="margin-top:8px;padding:8px;background:${color}22;border-radius:6px;color:${color}">${status}</div>
+        ${ibw ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-top:8px">Ideal Body Weight: ~${ibw} kg</div>` : ''}
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+  } else {
+    resultDiv.innerHTML = '<div style="color:var(--rose);text-align:center">Please enter all values</div>';
+    resultDiv.style.display = 'block';
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// QUICK DRUG REFERENCE
+// ═══════════════════════════════════════════════════════════════════
+
+let currentQuickRefDrug = null;
+
+window.showQuickReference = function(drugName) {
+  currentQuickRefDrug = drugName;
+  const drugInfo = CONFIG.DRUG_DATABASE[drugName] || CONFIG.DRUG_DATABASE[drugName.split(' ')[0]];
+  
+  $('quickRefTitle').textContent = drugName;
+  
+  if (drugInfo) {
+    const monitorLabs = drugInfo.monitorLabs?.length ? drugInfo.monitorLabs.join(', ') : 'None specified';
+    const alerts = Object.entries(drugInfo.alerts || {}).map(([lab, alert]) => 
+      `<div style="padding:8px;background:${alert.severity === 'critical' ? 'rgba(244,63,94,0.15)' : 'rgba(245,158,11,0.15)'};border-radius:6px;margin-top:8px">
+        <strong>${lab} ${alert.operator} ${alert.value}:</strong> ${alert.message}
+      </div>`
+    ).join('');
+    
+    $('quickRefBody').innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <span style="font-size:2rem">${drugInfo.icon || '💊'}</span>
+          <div>
+            <div style="font-weight:700;font-size:1.1rem">${drugName}</div>
+            <div style="color:var(--text-muted);font-size:0.85rem">${drugInfo.class || 'Unknown class'}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:12px">
+        <div style="font-weight:600;margin-bottom:8px;color:var(--teal)">📊 Monitor Labs</div>
+        <div style="color:var(--text-muted)">${monitorLabs}</div>
+      </div>
+      
+      ${alerts ? `
+        <div style="margin-bottom:12px">
+          <div style="font-weight:600;margin-bottom:8px;color:var(--gold)">⚠️ Clinical Alerts</div>
+          ${alerts}
+        </div>
+      ` : ''}
+      
+      ${drugInfo.reference ? `
+        <div style="background:var(--bg);padding:12px;border-radius:8px">
+          <div style="font-weight:600;margin-bottom:8px;color:var(--blue)">📖 Reference Ranges</div>
+          ${Object.entries(drugInfo.reference).map(([lab, ranges]) => `
+            <div style="margin-top:8px">
+              <strong>${lab}:</strong> 
+              ${ranges.normal ? `Normal: ${ranges.normal}` : ''} 
+              ${ranges.target ? `| Target: ${ranges.target}` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+  } else {
+    $('quickRefBody').innerHTML = `
+      <div style="text-align:center;padding:24px;color:var(--text-muted)">
+        <div style="font-size:3rem;margin-bottom:12px">💊</div>
+        <div>No detailed information available for ${drugName}</div>
+        <div style="margin-top:8px;font-size:0.85rem">Tap "Full Reference" for more details</div>
+      </div>
+    `;
+  }
+  
+  openModal('quickRefModal');
+};
+
+window.openFullDrugRef = function() {
+  if (!currentQuickRefDrug) return;
+  closeModal('quickRefModal');
+  
+  const drugBaseUrl = state.settings.drugRefUrl || 'drug.html';
+  const url = `${drugBaseUrl}?drug=${encodeURIComponent(currentQuickRefDrug)}`;
+  safeNavigate(url);
+};
+
 window.enterUnit = function() {
   const n = $('userName').value.trim();
   if (!n) { toast('Enter name', true); return; }
@@ -5714,7 +6095,21 @@ async function init() {
       };
     }
     
-    $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
+    $('labFileInput').onchange = async function() { 
+      const files = Array.from(this.files);
+      if (files.length === 0) return;
+      
+      if (files.length === 1) {
+        handleLabUpload(files[0]);
+      } else {
+        toast(`Processing ${files.length} images...`);
+        for (const file of files) {
+          await handleLabUpload(file);
+        }
+        toast(`${files.length} lab images processed!`);
+      }
+      this.value = ''; 
+    };
     $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
     $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
     
