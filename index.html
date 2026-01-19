@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:rgba(245,158,11,0.3)}
 html,body{height:100%}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
 ::-webkit-scrollbar{width:5px}
@@ -115,13 +115,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .landing-subtitle{color:var(--text-muted);margin-bottom:8px}
 .landing-version{color:var(--teal);font-size:0.75rem;font-weight:600;margin-bottom:48px}
 .units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;width:100%;max-width:800px}
-.unit-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+.unit-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--unit-color,var(--gold));transform:scaleX(0);transition:transform 0.3s}
 .unit-card:hover::before{transform:scaleX(1)}
+.unit-card:active{transform:scale(0.98);background:var(--bg-hover)}
 .unit-card:hover{border-color:var(--unit-color,var(--gold));transform:translateY(-4px)}
 .unit-card-icon{font-size:2.5rem;margin-bottom:16px}
 .unit-card-name{font-size:1.1rem;font-weight:700;margin-bottom:4px}
 .unit-card-desc{color:var(--text-muted);font-size:0.85rem}
+.unit-card-code-hint{font-size:0.7rem;color:var(--gold);margin-top:8px;opacity:0.8}
+.units-prompt{grid-column:1/-1;text-align:center;padding:12px;color:var(--gold);font-size:0.9rem;font-weight:600;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
 .fab{position:fixed;width:56px;height:56px;background:var(--bg-card);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);z-index:50;transition:all 0.3s}
 .fab svg{width:24px;height:24px}
 .fab:hover{border-color:var(--gold);color:var(--gold)}
@@ -2835,14 +2839,31 @@ window.sendFeedback = sendFeedback;
 // ═══════════════════════════════════════════════════════════════════
 
 function renderUnits() {
-  $('unitsGrid').innerHTML = state.units.map(u => `
+  // Ensure at least one default unit exists
+  if (!state.units.length) {
+    state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine • Tap to enter', code: '1234', color: '#14b8a6' }];
+  }
+  
+  $('unitsGrid').innerHTML = `
+    <div class="units-prompt">👆 Tap a unit below to enter</div>
+    ${state.units.map(u => `
     <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
       <div class="unit-card-icon">${u.icon || '🏥'}</div>
       <div class="unit-card-name">${esc(u.name)}</div>
-      <div class="unit-card-desc">${esc(u.desc || '')}</div>
+      <div class="unit-card-desc">${esc(u.desc || 'Tap to enter')}</div>
+      <div class="unit-card-code-hint">🔐 Code required</div>
     </div>
-  `).join('');
-  $$('.unit-card').forEach(c => c.onclick = () => openUnitAccess(c.dataset.id));
+  `).join('')}`;
+  
+  // Use both click and touchend for maximum compatibility
+  $$('.unit-card').forEach(c => {
+    const handler = (e) => {
+      e.preventDefault();
+      openUnitAccess(c.dataset.id);
+    };
+    c.addEventListener('click', handler);
+    c.addEventListener('touchend', handler, { passive: false });
+  });
 }
 
 function renderUnitsTable() {
