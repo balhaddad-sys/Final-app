@@ -11,11 +11,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:rgba(245,158,11,0.3)}
-html,body{height:100%;touch-action:manipulation}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{height:100%}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
 /* Touch-friendly interactive elements */
-button,a,.btn,.unit-card,.patient-card,.med-card,.clickable,[onclick]{touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
+button,a,.btn,.unit-card,.patient-card,.med-card,.clickable,[onclick]{cursor:pointer;-webkit-user-select:none;user-select:none}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
@@ -1071,8 +1071,8 @@ Request New Unit Access
 </div>
 </div>
 <div class="modal-footer">
-<button class="btn btn-secondary" id="cancelAccessBtn">Cancel</button>
-<button class="btn btn-primary" id="enterBtn" style="display:none">Enter</button>
+<button class="btn btn-secondary" onclick="closeModal('accessModal')">Cancel</button>
+<button class="btn btn-primary" id="enterBtn" style="display:none" onclick="enterUnit()">Enter</button>
 </div>
 </div>
 </div>
@@ -2415,46 +2415,29 @@ const initials = n => { if (!n) return '?'; const p = n.trim().split(/\s+/); ret
 // ═══════════════════════════════════════════════════════════════════
 // TOUCH SUPPORT HELPER - Must be defined early!
 // ═══════════════════════════════════════════════════════════════════
+
+// Debounce flag to prevent double-taps
+let isProcessingTap = false;
+
 function addTouchSupport(element, handler) {
   if (!element) return;
+  if (element.dataset.touchEnabled) return; // Prevent double-binding
+  element.dataset.touchEnabled = 'true';
   
-  let touchStartY = 0;
-  let touchStartX = 0;
-  let touchMoved = false;
-  const SCROLL_THRESHOLD = 10; // pixels - if moved more than this, it's a scroll
-  
-  element.addEventListener('touchstart', (e) => {
-    touchMoved = false;
-    if (e.touches.length > 0) {
-      touchStartY = e.touches[0].clientY;
-      touchStartX = e.touches[0].clientX;
-    }
-  }, { passive: true });
-  
-  element.addEventListener('touchmove', (e) => {
-    if (e.touches.length > 0) {
-      const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
-      const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
-      // If moved more than threshold, it's a scroll not a tap
-      if (deltaY > SCROLL_THRESHOLD || deltaX > SCROLL_THRESHOLD) {
-        touchMoved = true;
-      }
-    }
-  }, { passive: true });
-  
-  element.addEventListener('touchend', (e) => {
-    if (!touchMoved) {
-      e.preventDefault();
-      handler(e);
-    }
-  }, { passive: false });
-  
-  // Keep click for desktop
+  // Use standard click with debounce - cleaner and more reliable
   element.addEventListener('click', (e) => {
-    // Only handle if not from touch (prevents double-firing)
-    if (!e.sourceCapabilities || !e.sourceCapabilities.firesTouchEvents) {
-      handler(e);
-    }
+    // Safety switch: prevent rapid double-taps
+    if (isProcessingTap) return;
+    
+    isProcessingTap = true;
+    
+    // Execute handler
+    handler(e);
+    
+    // Reset after short delay
+    setTimeout(() => {
+      isProcessingTap = false;
+    }, 300);
   });
 }
 
@@ -2898,22 +2881,13 @@ function renderUnits() {
   $('unitsGrid').innerHTML = `
     <div class="units-prompt">👆 Tap a unit below to enter</div>
     ${state.units.map(u => `
-    <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
+    <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" onclick="openUnitAccess('${u.id}')">
       <div class="unit-card-icon">${u.icon || '🏥'}</div>
       <div class="unit-card-name">${esc(u.name)}</div>
       <div class="unit-card-desc">${esc(u.desc || 'Tap to enter')}</div>
       <div class="unit-card-code-hint">🔐 Code: 1234</div>
     </div>
   `).join('')}`;
-  
-  // Add touch support to each unit card
-  $$('.unit-card').forEach(card => {
-    addTouchSupport(card, () => {
-      const unitId = card.dataset.id;
-      console.log('Unit card tapped:', unitId);
-      openUnitAccess(unitId);
-    });
-  });
 }
 
 function renderUnitsTable() {
@@ -5076,29 +5050,12 @@ function openUnitAccess(id) {
     inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus(); });
   });
   
-  // Add touch support for Cancel button
-  const cancelBtn = $('cancelAccessBtn');
-  if (cancelBtn) {
-    cancelBtn.onclick = null; // Remove any existing handler
-    addTouchSupport(cancelBtn, () => {
-      console.log('Cancel button pressed');
-      closeModal('accessModal');
-    });
-  }
-  
-  // Add touch support for Enter button
-  const enterBtn = $('enterBtn');
-  if (enterBtn) {
-    enterBtn.onclick = null; // Remove any existing handler
-    addTouchSupport(enterBtn, () => {
-      console.log('Enter button pressed');
-      enterUnit();
-    });
-  }
-  
   openModal('accessModal');
   setTimeout(() => inputs[0].focus(), 100);
 }
+
+// Make openUnitAccess globally accessible
+window.openUnitAccess = openUnitAccess;
 
 window.enterUnit = function() {
   const n = $('userName').value.trim();
