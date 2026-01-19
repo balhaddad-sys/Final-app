@@ -8,275 +8,245 @@
 <title>MedWard Drug Reference</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.95);--radius:16px;--radius-sm:10px}
+:root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--radius:16px;--radius-sm:10px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
 .mono{font-family:'JetBrains Mono',monospace}
 
-/* Layout */
-.container{max-width:900px;margin:0 auto;padding:20px;min-height:100vh}
-.header{display:flex;align-items:center;gap:16px;padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:24px}
-.header-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:16px;display:grid;place-items:center;font-size:1.75rem}
-.header-title{font-size:1.5rem;font-weight:800}
-.header-subtitle{color:var(--text-muted);font-size:0.85rem}
-.back-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;color:var(--text);font-size:0.85rem;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
-.back-btn:hover{background:var(--bg-hover);border-color:var(--gold)}
+.container{max-width:800px;margin:0 auto;padding:16px;min-height:100vh}
 
-/* Search Section */
-.search-section{margin-bottom:32px}
-.search-box{position:relative}
-.search-input{width:100%;padding:16px 20px 16px 52px;background:var(--bg-card);border:2px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:1rem;font-family:inherit;transition:all 0.3s}
-.search-input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 4px rgba(139,92,246,0.15)}
-.search-input::placeholder{color:var(--text-muted)}
-.search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:1.25rem;pointer-events:none}
-.search-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);padding:10px 20px;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:10px;color:white;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.2s}
-.search-btn:hover{transform:translateY(-50%) scale(1.02)}
-.search-btn:disabled{opacity:0.5;cursor:not-allowed}
+/* Header */
+.header{display:flex;align-items:center;gap:12px;padding:16px 0;margin-bottom:20px}
+.back-btn{padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.85rem;text-decoration:none;display:flex;align-items:center;gap:6px;transition:all 0.2s}
+.back-btn:hover{border-color:var(--gold);background:var(--bg-hover)}
+.header-title{flex:1;text-align:center}
+.header-title h1{font-size:1.25rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px}
+.header-title p{font-size:0.75rem;color:var(--text-muted)}
+.settings-btn{width:40px;height:40px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;cursor:pointer;font-size:1.1rem;transition:all 0.2s}
+.settings-btn:hover{border-color:var(--purple);background:var(--bg-hover)}
 
-/* AI Chat Section */
-.ai-section{margin-bottom:32px}
-.ai-chat-container{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.ai-chat-header{padding:16px 20px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.1));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.ai-chat-header-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:10px;display:grid;place-items:center;font-size:1.25rem}
-.ai-chat-header-text h3{font-size:1rem;font-weight:700}
-.ai-chat-header-text p{font-size:0.75rem;color:var(--text-muted)}
-.ai-chat-messages{max-height:400px;overflow-y:auto;padding:20px}
-.ai-message{margin-bottom:16px;display:flex;gap:12px}
-.ai-message.user{flex-direction:row-reverse}
-.ai-message-avatar{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:0.9rem;flex-shrink:0}
-.ai-message.assistant .ai-message-avatar{background:linear-gradient(135deg,var(--purple),var(--blue))}
-.ai-message.user .ai-message-avatar{background:linear-gradient(135deg,var(--gold),var(--orange))}
-.ai-message-content{max-width:80%;padding:12px 16px;border-radius:12px;font-size:0.9rem;line-height:1.6}
-.ai-message.assistant .ai-message-content{background:var(--bg-elevated);border:1px solid var(--border)}
-.ai-message.user .ai-message-content{background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(249,115,22,0.1));border:1px solid rgba(245,158,11,0.3)}
-.ai-message-content h4{color:var(--gold);font-size:0.85rem;margin-bottom:8px}
-.ai-message-content ul{margin:8px 0;padding-left:20px}
-.ai-message-content li{margin-bottom:4px}
-.ai-message-content strong{color:var(--purple)}
-.ai-message-content code{background:var(--bg);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.8rem}
-.ai-chat-input-area{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:12px}
-.ai-chat-input{flex:1;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.9rem;font-family:inherit;resize:none}
-.ai-chat-input:focus{outline:none;border-color:var(--purple)}
-.ai-send-btn{padding:12px 24px;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:10px;color:white;font-weight:600;cursor:pointer;transition:all 0.2s}
-.ai-send-btn:hover{transform:scale(1.02)}
-.ai-send-btn:disabled{opacity:0.5;cursor:not-allowed}
+/* Search */
+.search-section{margin-bottom:24px}
+.search-box{position:relative;display:flex;gap:10px}
+.search-input{flex:1;padding:14px 16px 14px 44px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.95rem;font-family:inherit}
+.search-input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(139,92,246,0.15)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.1rem;pointer-events:none}
+.search-btn{padding:14px 24px;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:var(--radius);color:white;font-weight:600;font-size:0.9rem;cursor:pointer}
+.search-btn:disabled{opacity:0.5}
+
+/* Common Drugs */
+.section-title{font-size:0.85rem;font-weight:700;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.drugs-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.drug-chip{padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;font-size:0.8rem;cursor:pointer;transition:all 0.2s}
+.drug-chip:hover{background:var(--bg-hover);border-color:var(--purple);color:var(--purple)}
+
+/* Quick Reference */
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px}
+.quick-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all 0.2s}
+.quick-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.quick-card-icon{font-size:1.5rem;margin-bottom:8px}
+.quick-card-title{font-weight:700;font-size:0.9rem;margin-bottom:4px}
+.quick-card-desc{font-size:0.7rem;color:var(--text-muted);line-height:1.4}
+
+/* Results Area */
+.results-area{min-height:200px}
+.result-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
+.result-header{padding:16px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(59,130,246,0.05));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.result-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:12px;display:grid;place-items:center;font-size:1.5rem}
+.result-title{font-size:1.1rem;font-weight:700}
+.result-subtitle{font-size:0.75rem;color:var(--purple)}
+.result-body{padding:16px;font-size:0.85rem;line-height:1.7;color:var(--text-secondary)}
+.result-body h4{color:var(--gold);font-size:0.8rem;margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.03em}
+.result-body h4:first-child{margin-top:0}
+.result-body ul{margin:8px 0;padding-left:20px}
+.result-body li{margin-bottom:6px}
+.result-body strong{color:var(--text)}
+.result-body code{background:var(--bg);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.8rem}
+.result-body p{margin-bottom:12px}
+.warning-box{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);border-radius:8px;padding:12px;margin:12px 0}
+.warning-box-title{color:var(--rose);font-weight:700;font-size:0.8rem;margin-bottom:6px}
 
 /* Loading */
-.typing-indicator{display:flex;gap:4px;padding:8px 0}
-.typing-dot{width:8px;height:8px;background:var(--purple);border-radius:50%;animation:typing 1.4s infinite}
+.loading{text-align:center;padding:40px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Claude AI FAB */
+.ai-fab{position:fixed;bottom:24px;right:24px;width:60px;height:60px;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:50%;cursor:pointer;box-shadow:0 4px 20px rgba(139,92,246,0.4);display:grid;place-items:center;font-size:1.5rem;z-index:100;transition:all 0.3s}
+.ai-fab:hover{transform:scale(1.1);box-shadow:0 6px 30px rgba(139,92,246,0.5)}
+.ai-fab.has-key{background:linear-gradient(135deg,var(--emerald),var(--teal))}
+
+/* AI Chat Modal */
+.ai-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0}
+.ai-modal.active{display:flex}
+.ai-modal-content{width:100%;max-width:500px;max-height:85vh;background:var(--bg-card);border-radius:var(--radius) var(--radius) 0 0;display:flex;flex-direction:column;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}}
+.ai-modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.ai-modal-header-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:10px;display:grid;place-items:center;font-size:1.2rem}
+.ai-modal-header h3{flex:1;font-size:1rem}
+.ai-modal-header p{font-size:0.7rem;color:var(--text-muted)}
+.ai-modal-close{width:36px;height:36px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:1rem;display:grid;place-items:center}
+.ai-modal-messages{flex:1;overflow-y:auto;padding:16px;min-height:200px;max-height:50vh}
+.ai-msg{margin-bottom:12px;display:flex;gap:10px}
+.ai-msg.user{flex-direction:row-reverse}
+.ai-msg-avatar{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;font-size:0.85rem;flex-shrink:0}
+.ai-msg.assistant .ai-msg-avatar{background:linear-gradient(135deg,var(--purple),var(--blue))}
+.ai-msg.user .ai-msg-avatar{background:linear-gradient(135deg,var(--gold),var(--orange))}
+.ai-msg-content{max-width:85%;padding:10px 14px;border-radius:12px;font-size:0.85rem;line-height:1.5}
+.ai-msg.assistant .ai-msg-content{background:var(--bg-elevated);border:1px solid var(--border)}
+.ai-msg.user .ai-msg-content{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3)}
+.ai-msg-content h4{color:var(--gold);font-size:0.75rem;margin:10px 0 6px}
+.ai-msg-content ul{margin:6px 0;padding-left:16px;font-size:0.8rem}
+.ai-msg-content li{margin-bottom:4px}
+.typing-dots{display:flex;gap:4px;padding:8px 0}
+.typing-dot{width:6px;height:6px;background:var(--purple);border-radius:50%;animation:typing 1.4s infinite}
 .typing-dot:nth-child(2){animation-delay:0.2s}
 .typing-dot:nth-child(3){animation-delay:0.4s}
-@keyframes typing{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
+@keyframes typing{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.ai-modal-input{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px}
+.ai-modal-input textarea{flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.85rem;font-family:inherit;resize:none;max-height:80px}
+.ai-modal-input textarea:focus{outline:none;border-color:var(--purple)}
+.ai-modal-input button{padding:10px 20px;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:10px;color:white;font-weight:600;font-size:0.85rem;cursor:pointer}
+.ai-modal-input button:disabled{opacity:0.5}
 
-/* Drug Card Results */
-.drug-results{margin-top:24px}
-.drug-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;transition:all 0.2s}
-.drug-card:hover{border-color:var(--purple);transform:translateY(-2px)}
-.drug-card-header{padding:20px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(59,130,246,0.05));border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-.drug-card-title{font-size:1.1rem;font-weight:700}
-.drug-card-class{font-size:0.8rem;color:var(--purple);margin-top:4px}
-.drug-card-expand{font-size:1.25rem;transition:transform 0.3s}
-.drug-card.expanded .drug-card-expand{transform:rotate(180deg)}
-.drug-card-body{display:none;padding:20px}
-.drug-card.expanded .drug-card-body{display:block}
-
-/* Drug Info Sections */
-.drug-section{margin-bottom:20px}
-.drug-section:last-child{margin-bottom:0}
-.drug-section-title{font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.drug-section-content{background:var(--bg);border-radius:var(--radius-sm);padding:14px;font-size:0.85rem;color:var(--text-secondary);line-height:1.7}
-.drug-list{list-style:none;padding:0;margin:0}
-.drug-list li{padding:6px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px}
-.drug-list li:last-child{border-bottom:none}
-.drug-list li::before{content:'•';color:var(--purple);font-weight:bold}
-.drug-warning{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);border-radius:var(--radius-sm);padding:14px;margin-top:12px}
-.drug-warning-title{color:var(--rose);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-
-/* Interactions Grid */
-.interaction-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.interaction-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px}
-.interaction-card.severe{border-left:3px solid var(--rose)}
-.interaction-card.moderate{border-left:3px solid var(--orange)}
-.interaction-card.mild{border-left:3px solid var(--gold)}
-.interaction-name{font-weight:600;font-size:0.85rem;margin-bottom:4px}
-.interaction-severity{font-size:0.65rem;text-transform:uppercase;margin-bottom:4px}
-.interaction-card.severe .interaction-severity{color:var(--rose)}
-.interaction-card.moderate .interaction-severity{color:var(--orange)}
-.interaction-card.mild .interaction-severity{color:var(--gold)}
-.interaction-effect{font-size:0.75rem;color:var(--text-muted)}
-
-/* Quick Reference Cards */
-.quick-ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px}
-.quick-ref-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all 0.2s}
-.quick-ref-card:hover{border-color:var(--gold);transform:translateY(-2px)}
-.quick-ref-icon{font-size:2rem;margin-bottom:12px}
-.quick-ref-title{font-weight:700;margin-bottom:4px}
-.quick-ref-desc{font-size:0.8rem;color:var(--text-muted)}
-
-/* Common Drugs Grid */
-.common-drugs-section{margin-bottom:32px}
-.common-drugs-title{font-size:1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.common-drugs-grid{display:flex;flex-wrap:wrap;gap:8px}
-.common-drug-chip{padding:8px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;font-size:0.8rem;cursor:pointer;transition:all 0.2s}
-.common-drug-chip:hover{background:var(--bg-hover);border-color:var(--purple);color:var(--purple)}
-
-/* API Key Section */
-.api-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px}
-.api-section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.api-section-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--emerald),var(--teal));border-radius:10px;display:grid;place-items:center;font-size:1.25rem}
-.api-section h3{font-size:1rem;font-weight:700}
-.api-section p{font-size:0.8rem;color:var(--text-muted);margin-bottom:12px}
-.api-input-row{display:flex;gap:12px}
-.api-input{flex:1;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.85rem}
-.api-input:focus{outline:none;border-color:var(--emerald)}
-.api-save-btn{padding:12px 24px;background:linear-gradient(135deg,var(--emerald),var(--teal));border:none;border-radius:10px;color:white;font-weight:600;cursor:pointer}
-.api-status{margin-top:12px;font-size:0.8rem;display:flex;align-items:center;gap:8px}
-.api-status.connected{color:var(--emerald)}
-.api-status.disconnected{color:var(--rose)}
+/* API Setup (in modal) */
+.api-setup{padding:16px;background:var(--bg);border-radius:10px;margin:12px 16px}
+.api-setup p{font-size:0.75rem;color:var(--text-muted);margin-bottom:10px}
+.api-setup-row{display:flex;gap:8px}
+.api-setup input{flex:1;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.8rem}
+.api-setup input:focus{outline:none;border-color:var(--emerald)}
+.api-setup button{padding:10px 16px;background:var(--emerald);border:none;border-radius:8px;color:white;font-weight:600;font-size:0.8rem;cursor:pointer}
+.api-status{font-size:0.7rem;margin-top:8px;display:flex;align-items:center;gap:6px}
+.api-status.ok{color:var(--emerald)}
+.api-status.no{color:var(--rose)}
 
 /* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-elevated);border:1px solid var(--border);padding:12px 24px;border-radius:var(--radius-sm);font-size:0.85rem;z-index:9999;transition:transform 0.3s}
-.toast.show{transform:translateX(-50%) translateY(0)}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(50px);background:var(--bg-elevated);border:1px solid var(--border);padding:10px 20px;border-radius:10px;font-size:0.85rem;z-index:300;opacity:0;transition:all 0.3s}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{border-color:var(--rose);color:var(--rose)}
 
-/* Responsive */
+/* Empty State */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state-icon{font-size:3rem;margin-bottom:16px}
+.empty-state h3{color:var(--text);margin-bottom:8px}
+
 @media(max-width:640px){
-  .container{padding:16px}
-  .header{flex-direction:column;text-align:center}
-  .search-btn{position:static;transform:none;width:100%;margin-top:12px}
-  .search-input{padding-right:20px}
-  .ai-chat-input-area{flex-direction:column}
-  .ai-send-btn{width:100%}
-  .quick-ref-grid{grid-template-columns:1fr}
+  .quick-grid{grid-template-columns:1fr}
+  .ai-modal-content{max-width:100%;border-radius:var(--radius) var(--radius) 0 0}
+  .header-title h1{font-size:1.1rem}
+}
+@media(min-width:641px){
+  .ai-modal{align-items:center;padding:20px}
+  .ai-modal-content{max-height:80vh;border-radius:var(--radius)}
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Header -->
   <div class="header">
-    <a href="index.html" class="back-btn">← Back to MedWard</a>
-    <div style="flex:1;text-align:center">
-      <div style="display:flex;align-items:center;justify-content:center;gap:12px">
-        <div class="header-icon">💊</div>
-        <div>
-          <div class="header-title">Drug Reference</div>
-          <div class="header-subtitle">AI-Powered Clinical Drug Information</div>
-        </div>
-      </div>
+    <a href="https://balhaddad-sys.github.io/Final-app/index.html" class="back-btn">← Back</a>
+    <div class="header-title">
+      <h1>💊 Drug Reference</h1>
+      <p>AI-Powered Clinical Information</p>
     </div>
+    <button class="settings-btn" onclick="toggleSettings()" title="API Settings">⚙️</button>
   </div>
 
-  <!-- API Key Section -->
-  <div class="api-section" id="apiSection">
-    <div class="api-section-header">
-      <div class="api-section-icon">🔑</div>
-      <h3>Claude AI Integration</h3>
-    </div>
-    <p>Enter your Anthropic API key to enable AI-powered drug queries. Your key is stored locally and never sent to any server except Anthropic's API.</p>
-    <div class="api-input-row">
-      <input type="password" class="api-input" id="apiKeyInput" placeholder="sk-ant-api03-...">
-      <button class="api-save-btn" onclick="saveApiKey()">Save Key</button>
-    </div>
-    <div class="api-status disconnected" id="apiStatus">
-      <span>⚪</span> <span id="apiStatusText">No API key configured</span>
-    </div>
-  </div>
-
-  <!-- Search Section -->
   <div class="search-section">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="drugSearch" placeholder="Search any drug (e.g., Metformin, Lisinopril, Warfarin...)" onkeydown="if(event.key==='Enter')searchDrug()">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search any drug..." onkeydown="if(event.key==='Enter')searchDrug()">
       <button class="search-btn" onclick="searchDrug()" id="searchBtn">Search</button>
     </div>
   </div>
 
-  <!-- Common Drugs -->
-  <div class="common-drugs-section">
-    <div class="common-drugs-title">💊 Common Medications</div>
-    <div class="common-drugs-grid" id="commonDrugsGrid">
-      <div class="common-drug-chip" onclick="quickSearch('Metformin')">Metformin</div>
-      <div class="common-drug-chip" onclick="quickSearch('Lisinopril')">Lisinopril</div>
-      <div class="common-drug-chip" onclick="quickSearch('Amlodipine')">Amlodipine</div>
-      <div class="common-drug-chip" onclick="quickSearch('Atorvastatin')">Atorvastatin</div>
-      <div class="common-drug-chip" onclick="quickSearch('Omeprazole')">Omeprazole</div>
-      <div class="common-drug-chip" onclick="quickSearch('Metoprolol')">Metoprolol</div>
-      <div class="common-drug-chip" onclick="quickSearch('Furosemide')">Furosemide</div>
-      <div class="common-drug-chip" onclick="quickSearch('Warfarin')">Warfarin</div>
-      <div class="common-drug-chip" onclick="quickSearch('Insulin')">Insulin</div>
-      <div class="common-drug-chip" onclick="quickSearch('Heparin')">Heparin</div>
-      <div class="common-drug-chip" onclick="quickSearch('Enoxaparin')">Enoxaparin</div>
-      <div class="common-drug-chip" onclick="quickSearch('Prednisone')">Prednisone</div>
-      <div class="common-drug-chip" onclick="quickSearch('Aspirin')">Aspirin</div>
-      <div class="common-drug-chip" onclick="quickSearch('Clopidogrel')">Clopidogrel</div>
-      <div class="common-drug-chip" onclick="quickSearch('Levothyroxine')">Levothyroxine</div>
-      <div class="common-drug-chip" onclick="quickSearch('Gabapentin')">Gabapentin</div>
+  <div class="section-title">💊 Common Medications</div>
+  <div class="drugs-grid">
+    <div class="drug-chip" onclick="quickSearch('Metformin')">Metformin</div>
+    <div class="drug-chip" onclick="quickSearch('Lisinopril')">Lisinopril</div>
+    <div class="drug-chip" onclick="quickSearch('Amlodipine')">Amlodipine</div>
+    <div class="drug-chip" onclick="quickSearch('Atorvastatin')">Atorvastatin</div>
+    <div class="drug-chip" onclick="quickSearch('Omeprazole')">Omeprazole</div>
+    <div class="drug-chip" onclick="quickSearch('Metoprolol')">Metoprolol</div>
+    <div class="drug-chip" onclick="quickSearch('Furosemide')">Furosemide</div>
+    <div class="drug-chip" onclick="quickSearch('Warfarin')">Warfarin</div>
+    <div class="drug-chip" onclick="quickSearch('Insulin')">Insulin</div>
+    <div class="drug-chip" onclick="quickSearch('Heparin')">Heparin</div>
+    <div class="drug-chip" onclick="quickSearch('Enoxaparin')">Enoxaparin</div>
+    <div class="drug-chip" onclick="quickSearch('Prednisone')">Prednisone</div>
+    <div class="drug-chip" onclick="quickSearch('Aspirin')">Aspirin</div>
+    <div class="drug-chip" onclick="quickSearch('Clopidogrel')">Clopidogrel</div>
+    <div class="drug-chip" onclick="quickSearch('Amoxicillin')">Amoxicillin</div>
+    <div class="drug-chip" onclick="quickSearch('Ciprofloxacin')">Ciprofloxacin</div>
+  </div>
+
+  <div class="section-title">⚡ Quick Protocols</div>
+  <div class="quick-grid">
+    <div class="quick-card" onclick="quickSearch('Hyperkalemia treatment protocol')">
+      <div class="quick-card-icon">⚡</div>
+      <div class="quick-card-title">Hyperkalemia</div>
+      <div class="quick-card-desc">Calcium gluconate, Insulin+D50, Kayexalate</div>
+    </div>
+    <div class="quick-card" onclick="quickSearch('Anticoagulation reversal agents')">
+      <div class="quick-card-icon">🩸</div>
+      <div class="quick-card-title">Anticoag Reversal</div>
+      <div class="quick-card-desc">Warfarin, Heparin, DOAC agents</div>
+    </div>
+    <div class="quick-card" onclick="quickSearch('Insulin sliding scale and DKA protocol')">
+      <div class="quick-card-icon">💉</div>
+      <div class="quick-card-title">Insulin Protocols</div>
+      <div class="quick-card-desc">Sliding scale, DKA, correction</div>
+    </div>
+    <div class="quick-card" onclick="quickSearch('Renal dose adjustments common drugs')">
+      <div class="quick-card-icon">🫘</div>
+      <div class="quick-card-title">Renal Dosing</div>
+      <div class="quick-card-desc">CKD dose adjustments</div>
     </div>
   </div>
 
-  <!-- AI Chat Section -->
-  <div class="ai-section">
-    <div class="ai-chat-container">
-      <div class="ai-chat-header">
-        <div class="ai-chat-header-icon">🤖</div>
-        <div class="ai-chat-header-text">
-          <h3>Ask Claude AI</h3>
-          <p>Ask any clinical question about medications, dosing, interactions, or pharmacology</p>
-        </div>
-      </div>
-      <div class="ai-chat-messages" id="chatMessages">
-        <div class="ai-message assistant">
-          <div class="ai-message-avatar">🤖</div>
-          <div class="ai-message-content">
-            <p>Hello! I'm Claude, your AI assistant for drug information. I can help you with:</p>
-            <ul>
-              <li>Drug mechanisms, indications, and contraindications</li>
-              <li>Dosing guidelines and adjustments (renal, hepatic)</li>
-              <li>Drug interactions and safety concerns</li>
-              <li>Clinical pearls and practical tips</li>
-              <li>Pharmacokinetics and pharmacodynamics</li>
-            </ul>
-            <p style="margin-top:12px;color:var(--text-muted);font-size:0.8rem">⚠️ Always verify clinical decisions with official references and your clinical judgment.</p>
-          </div>
-        </div>
-      </div>
-      <div class="ai-chat-input-area">
-        <textarea class="ai-chat-input" id="chatInput" placeholder="Ask about any medication..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
-        <button class="ai-send-btn" onclick="sendMessage()" id="sendBtn">Send</button>
-      </div>
+  <div class="results-area" id="resultsArea">
+    <div class="empty-state">
+      <div class="empty-state-icon">🔬</div>
+      <h3>Search for a Drug</h3>
+      <p>Click a medication above or search to get AI-powered drug information</p>
     </div>
   </div>
+</div>
 
-  <!-- Drug Results -->
-  <div class="drug-results" id="drugResults"></div>
+<!-- Claude AI FAB -->
+<button class="ai-fab" id="aiFab" onclick="openAiChat()" title="Ask Claude AI">🤖</button>
 
-  <!-- Quick Reference -->
-  <div class="quick-ref-grid">
-    <div class="quick-ref-card" onclick="quickSearch('Hyperkalemia treatment')">
-      <div class="quick-ref-icon">⚡</div>
-      <div class="quick-ref-title">Hyperkalemia</div>
-      <div class="quick-ref-desc">Calcium gluconate, Insulin+D50, Kayexalate protocols</div>
+<!-- AI Chat Modal -->
+<div class="modal ai-modal" id="aiModal" onclick="if(event.target===this)closeAiChat()">
+  <div class="ai-modal-content">
+    <div class="ai-modal-header">
+      <div class="ai-modal-header-icon">🤖</div>
+      <div style="flex:1">
+        <h3>Ask Claude AI</h3>
+        <p>Clinical pharmacology assistant</p>
+      </div>
+      <button class="ai-modal-close" onclick="closeAiChat()">✕</button>
     </div>
-    <div class="quick-ref-card" onclick="quickSearch('Anticoagulation reversal')">
-      <div class="quick-ref-icon">🩸</div>
-      <div class="quick-ref-title">Anticoagulation Reversal</div>
-      <div class="quick-ref-desc">Warfarin, Heparin, DOAC reversal agents</div>
+    
+    <div id="apiSetupArea"></div>
+    
+    <div class="ai-modal-messages" id="chatMessages">
+      <div class="ai-msg assistant">
+        <div class="ai-msg-avatar">🤖</div>
+        <div class="ai-msg-content">
+          <p>Hi! I can help with drug info, dosing, interactions, and clinical questions. What would you like to know?</p>
+        </div>
+      </div>
     </div>
-    <div class="quick-ref-card" onclick="quickSearch('Insulin sliding scale')">
-      <div class="quick-ref-icon">💉</div>
-      <div class="quick-ref-title">Insulin Protocols</div>
-      <div class="quick-ref-desc">Sliding scale, DKA, correction factor</div>
-    </div>
-    <div class="quick-ref-card" onclick="quickSearch('Renal dose adjustments')">
-      <div class="quick-ref-icon">🫘</div>
-      <div class="quick-ref-title">Renal Dosing</div>
-      <div class="quick-ref-desc">CKD and dialysis dose adjustments</div>
+    
+    <div class="ai-modal-input">
+      <textarea id="chatInput" placeholder="Ask anything..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+      <button onclick="sendChat()" id="chatSendBtn">Send</button>
     </div>
   </div>
 </div>
@@ -284,18 +254,19 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY = 'medward_drug_ref';
-const API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
+const STORAGE_KEY = 'medward_drug_v2';
+const API_URL = 'https://api.anthropic.com/v1/messages';
 
 let state = {
   apiKey: null,
   chatHistory: [],
-  isLoading: false
+  isLoading: false,
+  showApiSetup: false
 };
 
 const $ = id => document.getElementById(id);
 
-function toast(msg, isError = false) {
+function toast(msg, isError) {
   const t = $('toast');
   t.textContent = msg;
   t.className = 'toast show' + (isError ? ' error' : '');
@@ -309,88 +280,119 @@ function loadState() {
       const data = JSON.parse(saved);
       state.apiKey = data.apiKey || null;
     }
-    updateApiStatus();
-  } catch (e) {
-    console.error('Load error:', e);
-  }
+    updateFabStatus();
+  } catch(e) {}
 }
 
 function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ apiKey: state.apiKey }));
-  } catch (e) {
-    console.error('Save error:', e);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ apiKey: state.apiKey }));
+}
+
+function updateFabStatus() {
+  const fab = $('aiFab');
+  if (state.apiKey) {
+    fab.classList.add('has-key');
+    fab.title = 'Ask Claude AI (API configured)';
+  } else {
+    fab.classList.remove('has-key');
+    fab.title = 'Ask Claude AI (needs API key)';
   }
+  renderApiSetup();
+}
+
+function toggleSettings() {
+  state.showApiSetup = !state.showApiSetup;
+  renderApiSetup();
+  if (state.showApiSetup) openAiChat();
+}
+
+function renderApiSetup() {
+  const area = $('apiSetupArea');
+  if (!state.showApiSetup && state.apiKey) {
+    area.innerHTML = '';
+    return;
+  }
+  
+  area.innerHTML = `
+    <div class="api-setup">
+      <p>🔑 Enter your Anthropic API key to enable AI queries</p>
+      <div class="api-setup-row">
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." value="${state.apiKey ? '••••••••••••' : ''}">
+        <button onclick="saveApiKey()">Save</button>
+      </div>
+      <div class="api-status ${state.apiKey ? 'ok' : 'no'}">
+        ${state.apiKey ? '✓ API key saved' : '⚠ No API key'}
+      </div>
+    </div>
+  `;
 }
 
 function saveApiKey() {
   const key = $('apiKeyInput').value.trim();
-  if (!key) {
-    toast('Please enter an API key', true);
+  if (!key || key === '••••••••••••') {
+    if (!state.apiKey) toast('Enter API key', true);
     return;
   }
   if (!key.startsWith('sk-ant-')) {
-    toast('Invalid API key format', true);
+    toast('Invalid key format', true);
     return;
   }
   state.apiKey = key;
   saveState();
-  updateApiStatus();
+  updateFabStatus();
+  state.showApiSetup = false;
+  renderApiSetup();
   toast('API key saved!');
 }
 
-function updateApiStatus() {
-  const status = $('apiStatus');
-  const text = $('apiStatusText');
-  
-  if (state.apiKey) {
-    status.className = 'api-status connected';
-    text.textContent = 'API key configured ✓';
-    $('apiKeyInput').value = state.apiKey.substring(0, 12) + '...' + state.apiKey.slice(-4);
-  } else {
-    status.className = 'api-status disconnected';
-    text.textContent = 'No API key configured';
+function openAiChat() {
+  $('aiModal').classList.add('active');
+  if (!state.apiKey) {
+    state.showApiSetup = true;
+    renderApiSetup();
   }
+}
+
+function closeAiChat() {
+  $('aiModal').classList.remove('active');
 }
 
 function quickSearch(query) {
-  $('chatInput').value = query;
-  sendMessage();
+  $('searchInput').value = query;
+  searchDrug();
 }
 
-function searchDrug() {
-  const query = $('drugSearch').value.trim();
+async function searchDrug() {
+  const query = $('searchInput').value.trim();
   if (!query) return;
-  $('chatInput').value = `Tell me about ${query}: mechanism of action, indications, contraindications, dosing, side effects, drug interactions, and clinical pearls.`;
-  sendMessage();
-}
-
-async function sendMessage() {
-  const input = $('chatInput');
-  const message = input.value.trim();
-  
-  if (!message) return;
   
   if (!state.apiKey) {
-    toast('Please configure your API key first', true);
+    openAiChat();
+    toast('Please configure API key first', true);
     return;
   }
   
-  if (state.isLoading) return;
+  const results = $('resultsArea');
+  results.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
   
-  state.isLoading = true;
-  $('sendBtn').disabled = true;
   $('searchBtn').disabled = true;
   
-  // Add user message to chat
-  addMessage('user', message);
-  input.value = '';
-  
-  // Add loading indicator
-  const loadingId = addLoadingMessage();
-  
   try {
-    const response = await fetch(API_ENDPOINT, {
+    const prompt = `Provide comprehensive clinical information about "${query}". Include:
+
+1. **Overview**: Drug class, mechanism of action
+2. **Indications**: FDA-approved and common off-label uses
+3. **Dosing**: Standard doses, routes, frequency
+4. **Renal/Hepatic Adjustments**: Dose modifications
+5. **Contraindications**: Absolute and relative
+6. **Side Effects**: Common and serious (with frequencies if known)
+7. **Drug Interactions**: Major ones to watch
+8. **Monitoring**: What to check and when
+9. **Clinical Pearls**: Practical tips
+
+Format with HTML: use <h4> for headers, <ul><li> for lists, <strong> for emphasis, <code> for doses. Be concise but thorough.`;
+
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -400,124 +402,166 @@ async function sendMessage() {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
-        system: `You are a clinical pharmacology expert assistant helping healthcare professionals with drug information. 
-
-Your responses should be:
-- Clinically accurate and evidence-based
-- Formatted with clear sections using headers
-- Include practical clinical pearls when relevant
-- Note important warnings and contraindications prominently
-- Provide dosing with renal/hepatic adjustments when applicable
-
-Format your responses using simple HTML for better readability:
-- Use <h4> for section headers
-- Use <ul><li> for lists
-- Use <strong> for emphasis
-- Use <code> for drug names and doses
-
-Always include a brief disclaimer that information should be verified with official references.`,
-        messages: [
-          ...state.chatHistory.slice(-10),
-          { role: 'user', content: message }
-        ]
+        max_tokens: 2500,
+        messages: [{ role: 'user', content: prompt }]
       })
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'API request failed');
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API error');
     }
     
     const data = await response.json();
-    const assistantMessage = data.content[0].text;
+    const content = data.content[0].text;
     
-    // Remove loading and add response
-    removeMessage(loadingId);
-    addMessage('assistant', assistantMessage);
+    results.innerHTML = `
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-icon">💊</div>
+          <div>
+            <div class="result-title">${escHtml(query)}</div>
+            <div class="result-subtitle">AI-Generated Drug Information</div>
+          </div>
+        </div>
+        <div class="result-body">${content}</div>
+      </div>
+      <p style="text-align:center;font-size:0.7rem;color:var(--text-muted);margin-top:16px">⚠️ Always verify with official references. This is AI-generated content.</p>
+    `;
     
-    // Update chat history
-    state.chatHistory.push({ role: 'user', content: message });
-    state.chatHistory.push({ role: 'assistant', content: assistantMessage });
-    
-  } catch (error) {
-    console.error('API error:', error);
-    removeMessage(loadingId);
-    addMessage('assistant', `<p style="color:var(--rose)">⚠️ Error: ${error.message}</p><p>Please check your API key and try again.</p>`);
+  } catch(e) {
+    results.innerHTML = `
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-icon" style="background:linear-gradient(135deg,var(--rose),var(--orange))">⚠️</div>
+          <div>
+            <div class="result-title">Error</div>
+            <div class="result-subtitle">${escHtml(e.message)}</div>
+          </div>
+        </div>
+        <div class="result-body">
+          <p>Failed to fetch drug information. Please check your API key and try again.</p>
+        </div>
+      </div>
+    `;
   } finally {
-    state.isLoading = false;
-    $('sendBtn').disabled = false;
     $('searchBtn').disabled = false;
   }
 }
 
-function addMessage(role, content) {
+async function sendChat() {
+  const input = $('chatInput');
+  const msg = input.value.trim();
+  if (!msg || state.isLoading) return;
+  
+  if (!state.apiKey) {
+    state.showApiSetup = true;
+    renderApiSetup();
+    toast('Please add API key', true);
+    return;
+  }
+  
+  state.isLoading = true;
+  $('chatSendBtn').disabled = true;
+  input.value = '';
+  
+  addChatMsg('user', msg);
+  const loadingId = addLoadingMsg();
+  
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: 'You are a clinical pharmacology expert. Give concise, accurate drug information. Use simple HTML formatting: <h4> for headers, <ul><li> for lists, <strong> for emphasis. Keep responses focused and practical.',
+        messages: [
+          ...state.chatHistory.slice(-8),
+          { role: 'user', content: msg }
+        ]
+      })
+    });
+    
+    if (!response.ok) throw new Error('API error');
+    
+    const data = await response.json();
+    const reply = data.content[0].text;
+    
+    removeMsg(loadingId);
+    addChatMsg('assistant', reply);
+    
+    state.chatHistory.push({ role: 'user', content: msg });
+    state.chatHistory.push({ role: 'assistant', content: reply });
+    
+  } catch(e) {
+    removeMsg(loadingId);
+    addChatMsg('assistant', '<p style="color:var(--rose)">Error: ' + escHtml(e.message) + '</p>');
+  } finally {
+    state.isLoading = false;
+    $('chatSendBtn').disabled = false;
+  }
+}
+
+function addChatMsg(role, content) {
   const container = $('chatMessages');
   const id = 'msg_' + Date.now();
-  
   const avatar = role === 'user' ? '👤' : '🤖';
-  const formattedContent = role === 'assistant' ? content : escapeHtml(content);
+  const html = role === 'assistant' ? content : escHtml(content);
   
-  const html = `
-    <div class="ai-message ${role}" id="${id}">
-      <div class="ai-message-avatar">${avatar}</div>
-      <div class="ai-message-content">${formattedContent}</div>
+  container.insertAdjacentHTML('beforeend', `
+    <div class="ai-msg ${role}" id="${id}">
+      <div class="ai-msg-avatar">${avatar}</div>
+      <div class="ai-msg-content">${html}</div>
     </div>
-  `;
-  
-  container.insertAdjacentHTML('beforeend', html);
+  `);
   container.scrollTop = container.scrollHeight;
-  
   return id;
 }
 
-function addLoadingMessage() {
+function addLoadingMsg() {
   const container = $('chatMessages');
   const id = 'loading_' + Date.now();
-  
-  const html = `
-    <div class="ai-message assistant" id="${id}">
-      <div class="ai-message-avatar">🤖</div>
-      <div class="ai-message-content">
-        <div class="typing-indicator">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        </div>
+  container.insertAdjacentHTML('beforeend', `
+    <div class="ai-msg assistant" id="${id}">
+      <div class="ai-msg-avatar">🤖</div>
+      <div class="ai-msg-content">
+        <div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
       </div>
     </div>
-  `;
-  
-  container.insertAdjacentHTML('beforeend', html);
+  `);
   container.scrollTop = container.scrollHeight;
-  
   return id;
 }
 
-function removeMessage(id) {
+function removeMsg(id) {
   const el = $(id);
   if (el) el.remove();
 }
 
-function escapeHtml(text) {
+function escHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
-// Check for drug parameter in URL
-function checkUrlParams() {
+// Check URL params
+function checkParams() {
   const params = new URLSearchParams(window.location.search);
   const drug = params.get('drug');
   if (drug) {
-    $('drugSearch').value = drug;
-    setTimeout(() => searchDrug(), 500);
+    $('searchInput').value = drug;
+    setTimeout(() => searchDrug(), 300);
   }
 }
 
-// Initialize
 loadState();
-checkUrlParams();
+checkParams();
 </script>
 
 </body>
