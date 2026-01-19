@@ -113,15 +113,15 @@ button,.btn,.unit-card,.patient-card,.card,.clickable{touch-action:manipulation;
 .modal-body{padding:24px;overflow-y:auto;flex:1}
 .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px}
 .modal-footer .btn{flex:1;touch-action:manipulation;-webkit-user-select:none;user-select:none;position:relative;z-index:10;min-height:50px}
-.page{display:none;min-height:100vh}
+.page{display:none;min-height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page.active{display:flex;flex-direction:column}
-#landing{align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at top,#111827 0%,var(--bg) 50%)}
+#landing{align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at top,#111827 0%,var(--bg) 50%);touch-action:pan-y}
 .landing-logo{width:88px;height:88px;background:linear-gradient(135deg,var(--gold),var(--orange));border-radius:24px;display:grid;place-items:center;margin-bottom:28px;box-shadow:0 20px 40px rgba(245,158,11,0.3)}
 .landing-logo svg{width:48px;height:48px;stroke:#000;stroke-width:2.5;fill:none}
 .landing-title{font-size:2rem;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .landing-subtitle{color:var(--text-muted);margin-bottom:8px}
 .landing-version{color:var(--teal);font-size:0.75rem;font-weight:600;margin-bottom:48px}
-.units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;width:100%;max-width:800px}
+.units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;width:100%;max-width:800px;touch-action:pan-y}
 .unit-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--unit-color,var(--gold));transform:scaleX(0);transition:transform 0.3s}
 .unit-card:hover::before{transform:scaleX(1)}
