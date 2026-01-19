@@ -11,9 +11,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
-*{margin:0;padding:0;box-sizing:border-box;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow-x:hidden}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden;touch-action:pan-y}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+/* Scrollable areas need pan-x pan-y */
+.profile-tabs,.tabs-container,.calc-tabs{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}
 /* Clickable elements */
 button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-webkit-user-select:none;user-select:none}
 ::-webkit-scrollbar{width:5px}
@@ -90,7 +92,7 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .meds-alert-text span{color:var(--text-secondary);font-size:0.75rem}
 .btn-sm{padding:12px 18px;font-size:0.9rem;min-height:44px}
 .btn-xs{padding:10px 16px;font-size:0.85rem;min-height:40px}
-.calc-tab{padding:12px 16px;font-size:0.85rem;background:var(--bg);border:1px solid var(--border);border-radius:10px;min-height:44px;font-weight:600}
+.calc-tab{padding:12px 16px;font-size:0.9rem;background:#1f2937;border:2px solid #374151;border-radius:10px;min-height:44px;font-weight:600;color:#e5e7eb}
 .calc-tab.active{background:linear-gradient(135deg,var(--teal),#0d9488);color:#fff;border-color:var(--teal)}
 .calc-result{background:linear-gradient(135deg,rgba(20,184,166,0.1),rgba(6,182,212,0.05));border:1px solid rgba(20,184,166,0.2);border-radius:12px}
 .btn-full{width:100%}
@@ -234,9 +236,10 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .profile-avatar{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;font-size:1.5rem;font-weight:800;color:#000}
 .profile-details h2{font-size:1.4rem;font-weight:800;margin-bottom:6px}
 .profile-details .meta{display:flex;flex-wrap:wrap;gap:16px;color:var(--text-secondary);font-size:0.85rem}
-.profile-tabs{display:flex;gap:6px;padding:12px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#0d1117 0%,#0a0f1a 100%);border-bottom:1px solid rgba(255,255,255,0.08);position:sticky;top:0;z-index:10}
+.profile-tabs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#0d1117 0%,#0a0f1a 100%);border-bottom:1px solid rgba(255,255,255,0.08);position:sticky;top:0;z-index:10;touch-action:pan-x pan-y;scrollbar-width:none}
 .profile-tabs::-webkit-scrollbar{display:none}
-.profile-tab{padding:10px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#9ca3af;font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.profile-tabs::-webkit-scrollbar{display:none}
+.profile-tab{padding:12px 18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#9ca3af;font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;display:flex;align-items:center;gap:6px;flex-shrink:0}
 .profile-tab:hover{color:#e6edf3;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.12)}
 .profile-tab.active{color:#fff;background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.15));border-color:var(--gold)}
 .profile-content{flex:1;padding:20px;overflow-y:auto}
