@@ -962,8 +962,7 @@ async function search() {
     
     const response = await fetch(apiUrl, {
       method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'drugQuery', query: query })
     });
     
@@ -1030,8 +1029,7 @@ async function sendChat() {
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ 
         action: 'drugChat', 
         message: msg,
