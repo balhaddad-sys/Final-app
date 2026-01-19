@@ -1011,7 +1011,10 @@ async function performSync() {
         action: 'saveData',
         payload: { 
           units: state.units, 
-          settings: { adminPassword: state.settings.adminPassword }, 
+          settings: { 
+            adminPassword: state.settings.adminPassword,
+            apiUrl: state.settings.apiUrl  // Include API URL so all users get it
+          }, 
           patients: state.patients,
           unitRequests: state.unitRequests
         }
@@ -1073,7 +1076,10 @@ async function forceSync() {
   try {
     const payload = { 
       units: state.units, 
-      settings: { adminPassword: state.settings.adminPassword }, 
+      settings: { 
+        adminPassword: state.settings.adminPassword,
+        apiUrl: state.settings.apiUrl  // Include API URL so all users get it
+      }, 
       patients: state.patients,
       unitRequests: state.unitRequests
     };
@@ -1158,9 +1164,15 @@ async function syncFromCloud() {
         console.log('   Units loaded:', state.units.length);
       }
       
-      // Update settings
+      // Update settings - IMPORTANT: preserve local apiUrl if cloud doesn't have it
       if (data.data.settings) {
+        const cloudApiUrl = data.data.settings.apiUrl;
         state.settings = { ...state.settings, ...data.data.settings };
+        // If cloud has apiUrl, use it; otherwise keep local
+        if (cloudApiUrl && cloudApiUrl !== 'YOUR_API_URL_HERE') {
+          state.settings.apiUrl = cloudApiUrl;
+        }
+        console.log('   Settings loaded, apiUrl:', state.settings.apiUrl ? 'configured' : 'not set');
       }
       
       // Update patients - THIS IS KEY FOR MULTI-USER SYNC
