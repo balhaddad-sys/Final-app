@@ -2852,22 +2852,21 @@ function renderUnits() {
   $('unitsGrid').innerHTML = `
     <div class="units-prompt">👆 Tap a unit below to enter</div>
     ${state.units.map(u => `
-    <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}" ontouchstart="">
+    <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
       <div class="unit-card-icon">${u.icon || '🏥'}</div>
       <div class="unit-card-name">${esc(u.name)}</div>
       <div class="unit-card-desc">${esc(u.desc || 'Tap to enter')}</div>
-      <div class="unit-card-code-hint">🔐 Code required</div>
+      <div class="unit-card-code-hint">🔐 Code: 1234</div>
     </div>
   `).join('')}`;
   
-  // Use both click and touchend for maximum compatibility
-  $$('.unit-card').forEach(c => {
-    const handler = (e) => {
-      e.preventDefault();
-      openUnitAccess(c.dataset.id);
-    };
-    c.addEventListener('click', handler);
-    c.addEventListener('touchend', handler, { passive: false });
+  // Add touch support to each unit card
+  $$('.unit-card').forEach(card => {
+    addTouchSupport(card, () => {
+      const unitId = card.dataset.id;
+      console.log('Unit card tapped:', unitId);
+      openUnitAccess(unitId);
+    });
   });
 }
 
@@ -4995,8 +4994,17 @@ window.deleteCurrentPatient = function() {
 // ═══════════════════════════════════════════════════════════════════
 
 function openUnitAccess(id) {
+  console.log('openUnitAccess called with id:', id);
+  
   const u = getUnit(id);
-  if (!u) return;
+  if (!u) {
+    console.error('Unit not found:', id);
+    toast('Unit not found', true);
+    return;
+  }
+  
+  console.log('Opening access modal for unit:', u.name);
+  
   state.selectedUnitId = id;
   $('accessIcon').textContent = u.icon;
   $('accessTitle').textContent = u.name;
@@ -5012,12 +5020,15 @@ function openUnitAccess(id) {
       if (inp.value && idx < 3) inputs[idx + 1].focus();
       const code = Array.from(inputs).map(i => i.value).join('');
       if (code.length === 4) {
+        console.log('Code entered:', code, 'Expected:', u.code);
         if (code === u.code) {
+          console.log('Code correct!');
           inputs.forEach(i => { i.classList.add('success'); i.disabled = true; });
           $('userSection').style.display = 'block';
           $('enterBtn').style.display = 'flex';
           $('userName').focus();
         } else {
+          console.log('Code incorrect');
           $('codeError').classList.add('show');
           inputs.forEach(i => i.classList.add('error'));
           setTimeout(() => { inputs.forEach(i => { i.classList.remove('error'); i.value = ''; }); inputs[0].focus(); }, 500);
@@ -5651,38 +5662,111 @@ window.saveLabOverride = function() {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// TOUCH SUPPORT HELPER
+// ═══════════════════════════════════════════════════════════════════
+
+function addTouchSupport(element, handler) {
+  if (!element) return;
+  
+  let touchMoved = false;
+  
+  element.addEventListener('touchstart', () => {
+    touchMoved = false;
+  }, { passive: true });
+  
+  element.addEventListener('touchmove', () => {
+    touchMoved = true;
+  }, { passive: true });
+  
+  element.addEventListener('touchend', (e) => {
+    if (!touchMoved) {
+      e.preventDefault();
+      handler(e);
+    }
+  }, { passive: false });
+  
+  element.addEventListener('click', (e) => {
+    handler(e);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════
 
 async function init() {
-  loadLocal();
-  renderUnits();
-  renderScoresGrid();
-  renderRef();
+  console.log('MedWard Pro initializing...');
   
-  $('adminFab').onclick = openAdminLogin;
-  $('syncFab').onclick = manualSync;
-  $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
-  $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
-  $('mainTabs').onclick = e => { const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab); };
-  $('profileTabs').onclick = e => { const t = e.target.closest('.profile-tab'); if (t) showProfileTab(t.dataset.ptab); };
-  $('statsBar').onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
-  
-  $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
-  $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
-  $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
-  
-  $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
-  
-  // Initial cloud sync
-  await syncFromCloud();
-  
-  // Periodic background sync (every 60 seconds) - only if no pending changes
-  setInterval(() => {
-    if (!syncState.pendingChanges) {
-      syncFromCloud();
+  try {
+    loadLocal();
+    renderUnits();
+    renderScoresGrid();
+    renderRef();
+    
+    // Touch-friendly event binding for FABs
+    addTouchSupport($('adminFab'), openAdminLogin);
+    addTouchSupport($('syncFab'), manualSync);
+    
+    $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
+    $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
+    
+    // Touch-friendly tabs
+    const mainTabs = $('mainTabs');
+    if (mainTabs) {
+      addTouchSupport(mainTabs, e => { 
+        const t = e.target.closest('.tab'); 
+        if (t) showTab(t.dataset.tab); 
+      });
     }
-  }, 60000);
+    
+    const profileTabs = $('profileTabs');
+    if (profileTabs) {
+      addTouchSupport(profileTabs, e => { 
+        const t = e.target.closest('.profile-tab'); 
+        if (t) showProfileTab(t.dataset.ptab); 
+      });
+    }
+    
+    const statsBar = $('statsBar');
+    if (statsBar) {
+      addTouchSupport(statsBar, e => { 
+        const s = e.target.closest('.stat-card'); 
+        if (s) { 
+          state.currentFilter = s.dataset.filter; 
+          renderPatients(); 
+        } 
+      });
+    }
+    
+    $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
+    $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
+    $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
+    
+    $$('.modal').forEach(m => {
+      addTouchSupport(m, e => { if (e.target === m) m.classList.remove('active'); });
+    });
+    
+    console.log('MedWard Pro initialized successfully');
+    
+    // Initial cloud sync (with error handling)
+    try {
+      await syncFromCloud();
+    } catch (syncError) {
+      console.warn('Cloud sync failed, using local data:', syncError);
+      toast('Offline mode - using local data');
+    }
+    
+    // Periodic background sync (every 60 seconds) - only if no pending changes
+    setInterval(() => {
+      if (!syncState.pendingChanges) {
+        syncFromCloud().catch(e => console.warn('Background sync failed:', e));
+      }
+    }, 60000);
+    
+  } catch (error) {
+    console.error('Init error:', error);
+    toast('Error initializing app', true);
+  }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
