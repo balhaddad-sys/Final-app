@@ -629,6 +629,165 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .btn-icon-sm:hover{opacity:1}
 .btn-danger{background:#da3633!important;border-color:#da3633!important;color:#fff!important}
 .btn-danger:hover{background:#f85149!important}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MEDICATIONS - PRISTINE PHARMACEUTICAL DESIGN
+   ═══════════════════════════════════════════════════════════════════ */
+
+.meds-container{padding:0}
+
+/* Upload Card */
+.meds-upload-card{
+  background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;margin-bottom:16px;overflow:hidden
+}
+.meds-upload-header{
+  padding:16px;background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(59,130,246,0.08));
+  border-bottom:1px solid rgba(255,255,255,0.04)
+}
+.meds-upload-title{
+  font-size:0.9rem;font-weight:600;color:#e6edf3;
+  display:flex;align-items:center;gap:8px
+}
+.meds-upload-subtitle{font-size:0.75rem;color:#8b949e;margin-top:4px}
+.meds-upload-body{padding:16px}
+.meds-upload-zone{
+  border:2px dashed rgba(139,92,246,0.3);border-radius:10px;
+  padding:28px 20px;text-align:center;cursor:pointer;
+  transition:all 0.2s;background:rgba(139,92,246,0.02)
+}
+.meds-upload-zone:active{
+  background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.5)
+}
+.meds-upload-zone.analyzing{
+  border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.05);
+  pointer-events:none
+}
+.meds-upload-icon{font-size:2rem;margin-bottom:8px}
+.meds-upload-text{font-size:0.85rem;font-weight:500;color:#c9d1d9}
+.meds-upload-hint{font-size:0.72rem;color:#8b949e;margin-top:4px}
+
+/* Medications List Header */
+.meds-list-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;padding:0 4px
+}
+.meds-list-title{
+  font-size:0.7rem;font-weight:600;color:#8b949e;
+  text-transform:uppercase;letter-spacing:0.5px
+}
+.meds-count{
+  font-size:0.7rem;font-weight:600;color:#8b5cf6;
+  background:rgba(139,92,246,0.1);padding:3px 8px;border-radius:10px
+}
+
+/* Medication Card - Premium Design */
+.med-card{
+  background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;margin-bottom:10px;overflow:hidden;
+  transition:all 0.15s
+}
+.med-card:active{border-color:rgba(139,92,246,0.3)}
+.med-card-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:14px 16px;gap:12px
+}
+.med-card-main{flex:1;min-width:0}
+.med-card-name{
+  font-size:0.95rem;font-weight:600;color:#e6edf3;
+  margin-bottom:2px;display:flex;align-items:center;gap:6px
+}
+.med-card-generic{font-size:0.75rem;color:#8b949e;font-style:italic}
+.med-card-actions{display:flex;gap:4px}
+.med-card-action{
+  width:28px;height:28px;border-radius:6px;border:none;
+  background:rgba(255,255,255,0.04);color:#8b949e;
+  font-size:0.8rem;cursor:pointer;display:grid;place-items:center
+}
+.med-card-action:active{background:rgba(255,255,255,0.1)}
+.med-card-action.delete:active{background:rgba(248,81,73,0.2);color:#f85149}
+
+/* Dose & Schedule */
+.med-card-dose{
+  display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.04)
+}
+.med-dose-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;background:rgba(139,92,246,0.1);
+  border-radius:6px;font-size:0.78rem;color:#a78bfa
+}
+.med-dose-pill.route{background:rgba(59,130,246,0.1);color:#60a5fa}
+.med-dose-pill.frequency{background:rgba(16,185,129,0.1);color:#34d399}
+
+/* Indication */
+.med-card-indication{
+  padding:12px 16px;background:rgba(255,255,255,0.01)
+}
+.med-indication-label{
+  font-size:0.65rem;font-weight:600;color:#8b949e;
+  text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px
+}
+.med-indication-text{font-size:0.82rem;color:#c9d1d9;line-height:1.4}
+
+/* Status Badge */
+.med-status{
+  font-size:0.6rem;font-weight:700;padding:2px 6px;
+  border-radius:4px;text-transform:uppercase;letter-spacing:0.3px
+}
+.med-status.active{background:rgba(46,160,67,0.15);color:#3fb950}
+.med-status.prn{background:rgba(251,191,36,0.15);color:#f59e0b}
+.med-status.discontinued{background:rgba(248,81,73,0.15);color:#f85149}
+.med-status.new{background:rgba(139,92,246,0.15);color:#a78bfa}
+
+/* Add Medication Form */
+.med-add-form{
+  background:#161b22;border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;padding:16px;margin-bottom:16px
+}
+.med-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.med-form-full{grid-column:1/-1}
+.med-form-group{display:flex;flex-direction:column;gap:4px}
+.med-form-label{font-size:0.7rem;font-weight:500;color:#8b949e}
+.med-form-input{
+  padding:10px 12px;background:#0d1117;border:1px solid #30363d;
+  border-radius:6px;color:#e6edf3;font-size:0.85rem;font-family:inherit
+}
+.med-form-input:focus{outline:none;border-color:#8b5cf6}
+.med-form-input::placeholder{color:#484f58}
+.med-form-select{
+  padding:10px 12px;background:#0d1117;border:1px solid #30363d;
+  border-radius:6px;color:#e6edf3;font-size:0.85rem;
+  appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center
+}
+.med-form-actions{
+  display:flex;gap:8px;margin-top:12px;padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.04)
+}
+
+/* Empty State */
+.meds-empty{
+  text-align:center;padding:40px 20px;color:#8b949e
+}
+.meds-empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:0.5}
+.meds-empty-title{font-size:0.95rem;font-weight:500;color:#c9d1d9;margin-bottom:4px}
+.meds-empty-hint{font-size:0.8rem}
+
+/* Quick Actions */
+.meds-quick-actions{
+  display:flex;gap:8px;margin-bottom:16px
+}
+.meds-quick-btn{
+  flex:1;padding:10px;background:#161b22;
+  border:1px solid rgba(255,255,255,0.06);border-radius:8px;
+  color:#c9d1d9;font-size:0.8rem;font-weight:500;
+  cursor:pointer;text-align:center;transition:all 0.15s
+}
+.meds-quick-btn:active{background:#1c2128;border-color:rgba(139,92,246,0.3)}
 </style>
 </head>
 <body>
@@ -752,6 +911,7 @@ Request New Unit Access
 </div>
 <div class="profile-tabs" id="profileTabs">
 <button class="profile-tab active" data-ptab="overview">📋 Overview</button>
+<button class="profile-tab" data-ptab="meds">💊 Meds</button>
 <button class="profile-tab" data-ptab="history">📜 History</button>
 <button class="profile-tab" data-ptab="scores">📊 Scores</button>
 <button class="profile-tab" data-ptab="labs">🧪 Labs</button>
@@ -761,6 +921,7 @@ Request New Unit Access
 </div>
 <div class="profile-content">
 <div class="profile-panel active" id="profileOverview"></div>
+<div class="profile-panel" id="profileMeds"></div>
 <div class="profile-panel" id="profileHistory"></div>
 <div class="profile-panel" id="profileScores"></div>
 <div class="profile-panel" id="profileLabs"></div>
@@ -3134,6 +3295,7 @@ function renderPatientProfile() {
   `;
   
   renderProfileOverview();
+  renderProfileMeds();
   renderProfileHistory();
   renderProfileScores();
   renderProfileLabs();
@@ -3141,6 +3303,339 @@ function renderPatientProfile() {
   renderProfileFluids();
   renderProfilePlans();
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// MEDICATIONS MODULE - Pristine Pharmaceutical Design
+// ═══════════════════════════════════════════════════════════════════
+
+function renderProfileMeds() {
+  const p = state.currentPatient;
+  if (!p.medications) p.medications = [];
+  
+  const activeMeds = p.medications.filter(m => m.status !== 'discontinued');
+  const discontinuedMeds = p.medications.filter(m => m.status === 'discontinued');
+  
+  let html = `
+    <div class="meds-container">
+      <!-- Upload Card -->
+      <div class="meds-upload-card">
+        <div class="meds-upload-header">
+          <div class="meds-upload-title">
+            <span>📷</span> Smart Medication Import
+          </div>
+          <div class="meds-upload-subtitle">AI-powered extraction from medication lists, prescriptions & MAR sheets</div>
+        </div>
+        <div class="meds-upload-body">
+          <div class="meds-upload-zone ${state.isAnalyzingMeds ? 'analyzing' : ''}" onclick="triggerMedsUpload()">
+            ${state.isAnalyzingMeds ? `
+              <div class="meds-upload-icon">⏳</div>
+              <div class="meds-upload-text">Analyzing medications...</div>
+              <div class="meds-upload-hint">Extracting drug names, doses & indications</div>
+            ` : `
+              <div class="meds-upload-icon">💊</div>
+              <div class="meds-upload-text">Tap to upload medication list</div>
+              <div class="meds-upload-hint">Supports handwritten & printed formats</div>
+            `}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="meds-quick-actions">
+        <button class="meds-quick-btn" onclick="showAddMedForm()">+ Add Manually</button>
+        <button class="meds-quick-btn" onclick="reconcileMeds()">⚖️ Reconcile</button>
+      </div>
+  `;
+  
+  // Active Medications
+  if (activeMeds.length > 0) {
+    html += `
+      <div class="meds-list-header">
+        <div class="meds-list-title">Active Medications</div>
+        <div class="meds-count">${activeMeds.length} active</div>
+      </div>
+    `;
+    
+    activeMeds.forEach((med, idx) => {
+      const realIdx = p.medications.indexOf(med);
+      html += renderMedCard(med, realIdx);
+    });
+  }
+  
+  // Discontinued
+  if (discontinuedMeds.length > 0) {
+    html += `
+      <div class="meds-list-header" style="margin-top:20px">
+        <div class="meds-list-title">Discontinued</div>
+        <div class="meds-count" style="background:rgba(248,81,73,0.1);color:#f85149">${discontinuedMeds.length}</div>
+      </div>
+    `;
+    
+    discontinuedMeds.forEach((med, idx) => {
+      const realIdx = p.medications.indexOf(med);
+      html += renderMedCard(med, realIdx);
+    });
+  }
+  
+  // Empty State
+  if (p.medications.length === 0) {
+    html += `
+      <div class="meds-empty">
+        <div class="meds-empty-icon">💊</div>
+        <div class="meds-empty-title">No medications recorded</div>
+        <div class="meds-empty-hint">Upload a photo or add manually</div>
+      </div>
+    `;
+  }
+  
+  html += `
+      <!-- Add Med Form (hidden by default) -->
+      <div class="med-add-form" id="medAddForm" style="display:none">
+        <div class="med-form-grid">
+          <div class="med-form-group med-form-full">
+            <label class="med-form-label">Drug Name *</label>
+            <input type="text" class="med-form-input" id="medName" placeholder="e.g., Metformin">
+          </div>
+          <div class="med-form-group">
+            <label class="med-form-label">Dose *</label>
+            <input type="text" class="med-form-input" id="medDose" placeholder="e.g., 500mg">
+          </div>
+          <div class="med-form-group">
+            <label class="med-form-label">Route</label>
+            <select class="med-form-select" id="medRoute">
+              <option value="PO">PO (Oral)</option>
+              <option value="IV">IV</option>
+              <option value="IM">IM</option>
+              <option value="SC">SC</option>
+              <option value="INH">INH (Inhaled)</option>
+              <option value="TOP">Topical</option>
+              <option value="PR">PR</option>
+              <option value="SL">SL</option>
+            </select>
+          </div>
+          <div class="med-form-group">
+            <label class="med-form-label">Frequency *</label>
+            <select class="med-form-select" id="medFreq">
+              <option value="OD">OD (Once daily)</option>
+              <option value="BD">BD (Twice daily)</option>
+              <option value="TDS">TDS (3x daily)</option>
+              <option value="QID">QID (4x daily)</option>
+              <option value="PRN">PRN (As needed)</option>
+              <option value="STAT">STAT</option>
+              <option value="Q4H">Q4H</option>
+              <option value="Q6H">Q6H</option>
+              <option value="Q8H">Q8H</option>
+              <option value="Q12H">Q12H</option>
+              <option value="Weekly">Weekly</option>
+            </select>
+          </div>
+          <div class="med-form-group med-form-full">
+            <label class="med-form-label">Indication</label>
+            <input type="text" class="med-form-input" id="medIndication" placeholder="e.g., Type 2 Diabetes Mellitus">
+          </div>
+          <div class="med-form-group">
+            <label class="med-form-label">Status</label>
+            <select class="med-form-select" id="medStatus">
+              <option value="active">Active</option>
+              <option value="new">New</option>
+              <option value="prn">PRN</option>
+              <option value="discontinued">Discontinued</option>
+            </select>
+          </div>
+          <div class="med-form-group">
+            <label class="med-form-label">Generic Name</label>
+            <input type="text" class="med-form-input" id="medGeneric" placeholder="Optional">
+          </div>
+        </div>
+        <div class="med-form-actions">
+          <button class="btn btn-secondary" style="flex:1" onclick="hideAddMedForm()">Cancel</button>
+          <button class="btn btn-primary" style="flex:1" onclick="saveMedication()">Save Medication</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  $('profileMeds').innerHTML = html;
+}
+
+function renderMedCard(med, idx) {
+  const statusClass = med.status || 'active';
+  const statusLabels = { active: 'Active', new: 'New', prn: 'PRN', discontinued: 'Stopped' };
+  
+  return `
+    <div class="med-card">
+      <div class="med-card-header">
+        <div class="med-card-main">
+          <div class="med-card-name">
+            ${esc(med.name)}
+            <span class="med-status ${statusClass}">${statusLabels[statusClass] || statusClass}</span>
+          </div>
+          ${med.generic ? `<div class="med-card-generic">${esc(med.generic)}</div>` : ''}
+        </div>
+        <div class="med-card-actions">
+          <button class="med-card-action" onclick="editMedication(${idx})" title="Edit">✏️</button>
+          <button class="med-card-action delete" onclick="deleteMedication(${idx})" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div class="med-card-dose">
+        <span class="med-dose-pill">💊 ${esc(med.dose || '—')}</span>
+        <span class="med-dose-pill route">📍 ${esc(med.route || 'PO')}</span>
+        <span class="med-dose-pill frequency">🕐 ${esc(med.frequency || 'OD')}</span>
+      </div>
+      ${med.indication ? `
+        <div class="med-card-indication">
+          <div class="med-indication-label">Indication</div>
+          <div class="med-indication-text">${esc(med.indication)}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+window.triggerMedsUpload = function() {
+  if (state.isAnalyzingMeds) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => handleMedsUpload(e.target.files[0]);
+  input.click();
+};
+
+async function handleMedsUpload(file) {
+  if (!file) return;
+  
+  state.isAnalyzingMeds = true;
+  renderProfileMeds();
+  
+  compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
+    try {
+      const res = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ 
+          action: 'extractMedications',
+          image: imageData,
+          patientDiagnosis: state.currentPatient.diagnosis || ''
+        })
+      });
+      const data = await res.json();
+      
+      state.isAnalyzingMeds = false;
+      
+      if (data.medications && Array.isArray(data.medications)) {
+        const p = state.currentPatient;
+        if (!p.medications) p.medications = [];
+        
+        // Add extracted medications
+        data.medications.forEach(med => {
+          p.medications.push({
+            name: med.name || med.drug || 'Unknown',
+            dose: med.dose || med.dosage || '',
+            route: med.route || 'PO',
+            frequency: med.frequency || med.schedule || 'OD',
+            indication: med.indication || med.reason || '',
+            generic: med.generic || '',
+            status: 'new',
+            addedDate: new Date().toISOString()
+          });
+        });
+        
+        saveCloud();
+        renderProfileMeds();
+        toast(`${data.medications.length} medication(s) imported`);
+      } else {
+        toast('No medications found in image', true);
+        renderProfileMeds();
+      }
+    } catch (e) {
+      state.isAnalyzingMeds = false;
+      toast('Failed to analyze medications', true);
+      renderProfileMeds();
+    }
+  });
+}
+
+window.showAddMedForm = function() {
+  $('medAddForm').style.display = 'block';
+  $('medName').value = '';
+  $('medDose').value = '';
+  $('medRoute').value = 'PO';
+  $('medFreq').value = 'OD';
+  $('medIndication').value = '';
+  $('medStatus').value = 'active';
+  $('medGeneric').value = '';
+  state.editingMedIdx = null;
+};
+
+window.hideAddMedForm = function() {
+  $('medAddForm').style.display = 'none';
+};
+
+window.saveMedication = function() {
+  const name = $('medName').value.trim();
+  const dose = $('medDose').value.trim();
+  
+  if (!name) {
+    toast('Drug name is required', true);
+    return;
+  }
+  
+  const med = {
+    name: name,
+    dose: dose,
+    route: $('medRoute').value,
+    frequency: $('medFreq').value,
+    indication: $('medIndication').value.trim(),
+    status: $('medStatus').value,
+    generic: $('medGeneric').value.trim(),
+    addedDate: new Date().toISOString()
+  };
+  
+  const p = state.currentPatient;
+  if (!p.medications) p.medications = [];
+  
+  if (state.editingMedIdx !== null && state.editingMedIdx !== undefined) {
+    p.medications[state.editingMedIdx] = { ...p.medications[state.editingMedIdx], ...med };
+    toast('Medication updated');
+  } else {
+    p.medications.push(med);
+    toast('Medication added');
+  }
+  
+  state.editingMedIdx = null;
+  saveCloud();
+  hideAddMedForm();
+  renderProfileMeds();
+};
+
+window.editMedication = function(idx) {
+  const med = state.currentPatient.medications[idx];
+  if (!med) return;
+  
+  state.editingMedIdx = idx;
+  $('medAddForm').style.display = 'block';
+  $('medName').value = med.name || '';
+  $('medDose').value = med.dose || '';
+  $('medRoute').value = med.route || 'PO';
+  $('medFreq').value = med.frequency || 'OD';
+  $('medIndication').value = med.indication || '';
+  $('medStatus').value = med.status || 'active';
+  $('medGeneric').value = med.generic || '';
+  
+  $('medAddForm').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.deleteMedication = function(idx) {
+  if (!confirm('Delete this medication?')) return;
+  state.currentPatient.medications.splice(idx, 1);
+  saveCloud();
+  renderProfileMeds();
+  toast('Medication deleted');
+};
+
+window.reconcileMeds = function() {
+  toast('Medication reconciliation - Coming soon');
+};
 
 function renderProfileHistory() {
   const p = state.currentPatient;
