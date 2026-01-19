@@ -5316,6 +5316,12 @@ async function handleLabUpload(files) {
   
   if (fileArray.length === 0) return;
   
+  // Check if API is configured
+  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+    toast('API not configured - go to Admin settings', true);
+    return;
+  }
+  
   state.isAnalyzingLab = true;
   state.pendingLabImages = [];
   renderProfileLabs();
@@ -5338,8 +5344,9 @@ async function handleLabUpload(files) {
       });
     }));
     
-    console.log('📡 Sending to AI Bridge...');
+    console.log('📡 Sending to AI Bridge:', state.settings.apiUrl.substring(0, 50) + '...');
     console.log('🖼️ Total images:', base64Images.length);
+    console.log('📊 Image sizes:', base64Images.map(img => Math.round(img.length/1024) + 'KB').join(', '));
     
     // Store for gallery display
     state.pendingLabImages = base64Images;
@@ -5350,8 +5357,8 @@ async function handleLabUpload(files) {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ 
         action: 'analyzeLabsEnhanced', 
-        images: base64Images,  // Send as array
-        image: base64Images[0], // Backward compatibility
+        images: base64Images,
+        image: base64Images[0],
         extractionPrompt: LAB_EXTRACTION_PROMPT,
         patientContext: {
           existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
@@ -5365,14 +5372,30 @@ async function handleLabUpload(files) {
     
     console.log('📥 Response status:', res.status);
     
-    const data = await res.json();
-    console.log('📦 Extraction result:', data);
+    const responseText = await res.text();
+    console.log('📥 Raw response:', responseText.substring(0, 500));
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError);
+      console.error('Response was:', responseText);
+      throw new Error('Invalid response from server: ' + responseText.substring(0, 100));
+    }
     
     state.isAnalyzingLab = false;
     
-    if (data.error || !data.labData) {
-      console.error('❌ Extraction error:', data.error);
-      toast(data.error || 'Extraction failed', true);
+    if (data.error) {
+      console.error('❌ Server error:', data.error);
+      toast(data.error, true);
+      renderProfileLabs();
+      return;
+    }
+    
+    if (!data.labData) {
+      console.error('❌ No labData in response:', data);
+      toast('No lab data extracted - check image quality', true);
       renderProfileLabs();
       return;
     }
@@ -5391,7 +5414,7 @@ async function handleLabUpload(files) {
   } catch (e) {
     console.error('❌ Lab extraction error:', e);
     state.isAnalyzingLab = false;
-    toast('Extraction failed - check connection', true);
+    toast('Analysis failed: ' + e.message, true);
     renderProfileLabs();
   }
 }
