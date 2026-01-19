@@ -2844,12 +2844,21 @@ window.sendFeedback = sendFeedback;
 // ═══════════════════════════════════════════════════════════════════
 
 function renderUnits() {
+  console.log('🔄 renderUnits called, units count:', state.units.length);
+
   // Ensure at least one default unit exists
   if (!state.units.length) {
+    console.log('⚠️ No units found, creating default unit');
     state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine • Tap to enter', code: '1234', color: '#14b8a6' }];
   }
-  
-  $('unitsGrid').innerHTML = `
+
+  const unitsGrid = $('unitsGrid');
+  if (!unitsGrid) {
+    console.error('❌ unitsGrid element not found!');
+    return;
+  }
+
+  unitsGrid.innerHTML = `
     <div class="units-prompt">👆 Tap a unit below to enter</div>
     ${state.units.map(u => `
     <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
@@ -2859,9 +2868,12 @@ function renderUnits() {
       <div class="unit-card-code-hint">🔐 Code: 1234</div>
     </div>
   `).join('')}`;
-  
+
   // Add touch support to each unit card
-  $$('.unit-card').forEach(card => {
+  const unitCards = $$('.unit-card');
+  console.log('✅ Rendered', unitCards.length, 'unit cards, attaching event handlers...');
+
+  unitCards.forEach(card => {
     addTouchSupport(card, () => {
       const unitId = card.dataset.id;
       console.log('Unit card tapped:', unitId);
@@ -5739,19 +5751,28 @@ async function init() {
     });
     
     console.log('MedWard Pro initialized successfully');
-    
+
     // Initial cloud sync (with error handling)
     try {
       await syncFromCloud();
+      // Re-render units after sync to reflect any changes from cloud
+      renderUnits();
+      console.log('✅ Units re-rendered after cloud sync');
     } catch (syncError) {
       console.warn('Cloud sync failed, using local data:', syncError);
       toast('Offline mode - using local data');
     }
-    
+
     // Periodic background sync (every 60 seconds) - only if no pending changes
-    setInterval(() => {
+    setInterval(async () => {
       if (!syncState.pendingChanges) {
-        syncFromCloud().catch(e => console.warn('Background sync failed:', e));
+        try {
+          await syncFromCloud();
+          // Re-render units after background sync
+          renderUnits();
+        } catch (e) {
+          console.warn('Background sync failed:', e);
+        }
       }
     }, 60000);
     
