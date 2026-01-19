@@ -11,13 +11,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{margin:0;padding:0;box-sizing:border-box;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow-x:hidden}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-/* Scrollable areas allow vertical pan */
-.page,.modal-body,.panel{touch-action:pan-y}
-/* Clickable elements are manipulation only */
-button,.btn,.unit-card,.patient-card,.card,.clickable{touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
+/* Clickable elements */
+button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-webkit-user-select:none;user-select:none}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
@@ -2415,32 +2413,22 @@ const esc = t => { if (!t) return ''; const d = document.createElement('div'); d
 const initials = n => { if (!n) return '?'; const p = n.trim().split(/\s+/); return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : n.substring(0, 2).toUpperCase(); };
 
 // ═══════════════════════════════════════════════════════════════════
-// TOUCH SUPPORT HELPER - Must be defined early!
+// TOUCH SUPPORT - Simplified: Just use CSS + standard onclick
 // ═══════════════════════════════════════════════════════════════════
 
-// Debounce flag to prevent double-taps
-let isProcessingTap = false;
+// Navigation lock to prevent double-firing
+let isNavigating = false;
 
-function addTouchSupport(element, handler) {
-  if (!element) return;
-  if (element.dataset.touchEnabled) return; // Prevent double-binding
-  element.dataset.touchEnabled = 'true';
+function safeNavigate(url) {
+  if (isNavigating) return;
+  isNavigating = true;
   
-  // Use standard click with debounce - cleaner and more reliable
-  element.addEventListener('click', (e) => {
-    // Safety switch: prevent rapid double-taps
-    if (isProcessingTap) return;
-    
-    isProcessingTap = true;
-    
-    // Execute handler
-    handler(e);
-    
-    // Reset after short delay
-    setTimeout(() => {
-      isProcessingTap = false;
-    }, 300);
-  });
+  setTimeout(() => {
+    window.location.href = url;
+  }, 100);
+  
+  // Reset after 2 seconds in case navigation fails
+  setTimeout(() => { isNavigating = false; }, 2000);
 }
 
 function toast(msg, isError = false) {
@@ -5678,44 +5666,6 @@ window.saveLabOverride = function() {
   toast('Lab value updated');
 };
 
-// Make all buttons touch-friendly globally
-function enableTouchForAllButtons() {
-  document.querySelectorAll('button, .btn, [onclick]').forEach(el => {
-    // Skip if already has touch handler
-    if (el.dataset.touchEnabled) return;
-    el.dataset.touchEnabled = 'true';
-    
-    const originalOnclick = el.onclick;
-    if (originalOnclick) {
-      el.onclick = null; // Remove original
-      
-      let touchMoved = false;
-      
-      el.addEventListener('touchstart', () => {
-        touchMoved = false;
-      }, { passive: true });
-      
-      el.addEventListener('touchend', (e) => {
-        if (!touchMoved) {
-          e.preventDefault();
-          e.stopPropagation();
-          originalOnclick.call(el, e);
-        }
-      }, { passive: false });
-      
-      el.addEventListener('click', (e) => {
-        originalOnclick.call(el, e);
-      });
-    }
-  });
-}
-
-// Run on DOM changes to catch dynamically added buttons
-const buttonObserver = new MutationObserver(() => {
-  enableTouchForAllButtons();
-});
-buttonObserver.observe(document.body, { childList: true, subtree: true });
-
 // ═══════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════
@@ -5724,55 +5674,53 @@ async function init() {
   console.log('MedWard Pro initializing...');
   
   try {
-    // Enable touch support for all existing buttons
-    enableTouchForAllButtons();
-    
     loadLocal();
     renderUnits();
     renderScoresGrid();
     renderRef();
     
-    // Touch-friendly event binding for FABs
-    addTouchSupport($('adminFab'), openAdminLogin);
-    addTouchSupport($('syncFab'), manualSync);
+    // Standard onclick for FABs
+    $('adminFab').onclick = openAdminLogin;
+    $('syncFab').onclick = manualSync;
     
     $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
     $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
     
-    // Touch-friendly tabs
+    // Standard onclick for tabs
     const mainTabs = $('mainTabs');
     if (mainTabs) {
-      addTouchSupport(mainTabs, e => { 
+      mainTabs.onclick = e => { 
         const t = e.target.closest('.tab'); 
         if (t) showTab(t.dataset.tab); 
-      });
+      };
     }
     
     const profileTabs = $('profileTabs');
     if (profileTabs) {
-      addTouchSupport(profileTabs, e => { 
+      profileTabs.onclick = e => { 
         const t = e.target.closest('.profile-tab'); 
         if (t) showProfileTab(t.dataset.ptab); 
-      });
+      };
     }
     
     const statsBar = $('statsBar');
     if (statsBar) {
-      addTouchSupport(statsBar, e => { 
+      statsBar.onclick = e => { 
         const s = e.target.closest('.stat-card'); 
         if (s) { 
           state.currentFilter = s.dataset.filter; 
           renderPatients(); 
         } 
-      });
+      };
     }
     
     $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
     $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
     $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
     
+    // Standard onclick for modal backdrop close
     $$('.modal').forEach(m => {
-      addTouchSupport(m, e => { if (e.target === m) m.classList.remove('active'); });
+      m.onclick = e => { if (e.target === m) m.classList.remove('active'); };
     });
     
     console.log('MedWard Pro initialized successfully');
