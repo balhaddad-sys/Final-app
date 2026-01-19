@@ -1017,7 +1017,7 @@ Request New Unit Access
 <div class="back-btn" onclick="closePatientProfile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
 <div class="profile-title">Patient Profile</div>
 <div class="profile-actions">
-<button class="btn btn-success btn-sm" onclick="openDischargeModal(state.currentPatient?.id)" id="profileDischargeBtn">🏠 Discharge</button>
+<button class="btn btn-success btn-sm" onclick="openDischargeModal()" id="profileDischargeBtn">🏠 Discharge</button>
 <button class="btn btn-secondary btn-sm" onclick="editCurrentPatient()">✏️</button>
 </div>
 </div>
@@ -2839,7 +2839,7 @@ function markDirty() {
 async function performSync() {
   if (!syncState.pendingChanges) return;
   
-  // Always save locally first (now unit-specific)
+  // Always save locally first
   saveLocal();
   
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
@@ -2848,54 +2848,51 @@ async function performSync() {
     return;
   }
   
-  // Only sync if we have a current unit
-  if (!state.currentUnit) {
-    syncState.pendingChanges = false;
-    updateSyncStatus('synced', 'Saved locally');
-    return;
-  }
-  
-  updateSyncStatus('syncing', 'Syncing to cloud...');
+  updateSyncStatus('syncing', 'Syncing to Google Drive...');
   
   try {
-    // Use unit-specific key for cloud storage
-    const unitKey = state.currentUnit.id;
+    // Build payload with unit-tagged patients for isolation
+    const payload = {
+      units: state.units,
+      settings: {
+        adminPassword: state.settings.adminPassword,
+        apiUrl: state.settings.apiUrl
+      },
+      // Tag patients with their unit for server-side isolation
+      patients: state.patients.map(p => ({
+        ...p,
+        unitId: state.currentUnit?.id || 'default'
+      })),
+      unitRequests: state.unitRequests,
+      lastUpdated: new Date().toISOString()
+    };
     
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
-        action: 'saveUnitData',
-        unitKey: unitKey,
-        payload: { 
-          patients: state.patients,
-          lastUpdated: new Date().toISOString()
-        },
-        // Also save global config separately
-        globalPayload: {
-          units: state.units, 
-          settings: { 
-            adminPassword: state.settings.adminPassword,
-            apiUrl: state.settings.apiUrl
-          }, 
-          unitRequests: state.unitRequests
-        }
+        action: 'saveData',
+        payload: payload
       })
     });
     
     if (!res.ok) throw new Error('HTTP ' + res.status);
     
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error || 'Save failed');
+    
     syncState.pendingChanges = false;
     syncState.lastSyncTime = Date.now();
     syncState.errorCount = 0;
-    updateSyncStatus('synced', 'Synced');
+    updateSyncStatus('synced', 'Saved to Drive');
+    console.log('✅ Synced to Google Drive');
     
   } catch (e) {
     console.error('Sync error:', e);
     syncState.errorCount++;
     
     if (syncState.errorCount >= 3) {
-      updateSyncStatus('error', 'Sync failed - check connection');
+      updateSyncStatus('error', 'Sync failed');
     } else {
       setTimeout(() => performSync(), 5000);
       updateSyncStatus('pending', 'Retrying...');
@@ -2915,7 +2912,7 @@ async function forceSync() {
     syncState.syncTimeout = null;
   }
   
-  // Save locally first (now unit-specific)
+  // Save locally first
   saveLocal();
   
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
@@ -2924,45 +2921,31 @@ async function forceSync() {
     return true;
   }
   
-  // Need a current unit to sync
-  if (!state.currentUnit) {
-    console.log('⚠️ No current unit - saved locally only');
-    updateSyncStatus('synced', 'Saved locally');
-    return true;
-  }
-  
-  updateSyncStatus('syncing', 'Saving to cloud...');
-  console.log('☁️ Force syncing to cloud for unit:', state.currentUnit.name);
+  updateSyncStatus('syncing', 'Saving to Google Drive...');
+  console.log('☁️ Force syncing to Google Drive...');
   console.log('📦 Patients to save:', state.patients.length);
   
-  // Log lab data for debugging
-  state.patients.forEach(p => {
-    if (p.labData?.parameters?.length) {
-      console.log(`   Patient ${p.name}: ${p.labData.parameters.length} lab parameters`);
-    }
-  });
-  
   try {
-    const unitKey = state.currentUnit.id;
+    const payload = {
+      units: state.units,
+      settings: {
+        adminPassword: state.settings.adminPassword,
+        apiUrl: state.settings.apiUrl
+      },
+      patients: state.patients.map(p => ({
+        ...p,
+        unitId: state.currentUnit?.id || 'default'
+      })),
+      unitRequests: state.unitRequests,
+      lastUpdated: new Date().toISOString()
+    };
     
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
-        action: 'saveUnitData',
-        unitKey: unitKey,
-        payload: { 
-          patients: state.patients,
-          lastUpdated: new Date().toISOString()
-        },
-        globalPayload: {
-          units: state.units, 
-          settings: { 
-            adminPassword: state.settings.adminPassword,
-            apiUrl: state.settings.apiUrl
-          }, 
-          unitRequests: state.unitRequests
-        }
+        action: 'saveData',
+        payload: payload
       })
     });
     
@@ -2983,15 +2966,15 @@ async function forceSync() {
     syncState.pendingChanges = false;
     syncState.lastSyncTime = Date.now();
     syncState.errorCount = 0;
-    updateSyncStatus('synced', 'Synced');
-    console.log('✅ Sync successful at', result.timestamp);
+    updateSyncStatus('synced', 'Saved to Drive');
+    console.log('✅ Synced to Google Drive');
     return true;
     
   } catch (e) {
     console.error('❌ Sync error:', e);
     syncState.errorCount++;
     updateSyncStatus('error', 'Sync failed: ' + e.message);
-    toast('Failed to save to cloud: ' + e.message, true);
+    toast('Failed to save: ' + e.message, true);
     return false;
   }
 }
@@ -3016,64 +2999,46 @@ async function manualSync() {
 async function syncFromCloud() {
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') return;
   
-  console.log('🔄 Loading data from cloud...');
+  console.log('🔄 Loading data from Google Drive...');
   
   try {
-    // First load global data (units, settings)
-    const globalRes = await fetch(state.settings.apiUrl, {
+    const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'loadData' })
     });
     
-    const globalData = await globalRes.json();
-    console.log('📥 Global data received:', globalData.success ? 'success' : 'failed');
+    const data = await res.json();
+    console.log('📥 Data received:', data.success ? 'success' : 'failed');
     
-    if (globalData.success && globalData.data) {
+    if (data.success && data.data) {
       // Update units
-      if (globalData.data.units?.length) {
-        state.units = globalData.data.units;
+      if (data.data.units?.length) {
+        state.units = data.data.units;
         console.log('   Units loaded:', state.units.length);
       }
       
       // Update settings
-      if (globalData.data.settings) {
-        const cloudApiUrl = globalData.data.settings.apiUrl;
-        state.settings = { ...state.settings, ...globalData.data.settings };
+      if (data.data.settings) {
+        const cloudApiUrl = data.data.settings.apiUrl;
+        state.settings = { ...state.settings, ...data.data.settings };
         if (cloudApiUrl && cloudApiUrl !== 'YOUR_API_URL_HERE') {
           state.settings.apiUrl = cloudApiUrl;
         }
       }
       
-      // Update unit requests
-      if (globalData.data.unitRequests) {
-        state.unitRequests = globalData.data.unitRequests;
-      }
-    }
-    
-    // Then load unit-specific patients if we have a current unit
-    if (state.currentUnit) {
-      const unitKey = state.currentUnit.id;
-      console.log('🔄 Loading patients for unit:', unitKey);
-      
-      const unitRes = await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'loadUnitData', unitKey: unitKey })
-      });
-      
-      const unitData = await unitRes.json();
-      
-      if (unitData.success && unitData.data?.patients) {
-        state.patients = unitData.data.patients;
-        console.log('   Unit patients loaded:', state.patients.length);
-        
-        // Log lab data for debugging
-        state.patients.forEach(p => {
-          if (p.labData?.parameters?.length) {
-            console.log(`   → ${p.name}: ${p.labData.parameters.length} lab parameters`);
-          }
-        });
+      // Update patients - filter by current unit if set
+      if (data.data.patients) {
+        if (state.currentUnit) {
+          // Filter to only show patients for this unit
+          state.patients = data.data.patients.filter(p => 
+            !p.unitId || p.unitId === state.currentUnit.id
+          );
+          console.log('   Patients for unit', state.currentUnit.name + ':', state.patients.length);
+        } else {
+          state.patients = data.data.patients;
+          console.log('   All patients loaded:', state.patients.length);
+        }
         
         // Refresh current patient reference if open
         if (state.currentPatient) {
@@ -3083,23 +3048,28 @@ async function syncFromCloud() {
           }
         }
       }
+      
+      // Update unit requests
+      if (data.data.unitRequests) {
+        state.unitRequests = data.data.unitRequests;
+      }
+      
+      // Save to local storage
+      saveLocal();
+      
+      // Re-render appropriate view
+      if (state.currentPatient) {
+        renderPatientProfile();
+      } else if (state.currentUnit) {
+        renderPatients();
+      } else {
+        renderUnits();
+      }
+      
+      console.log('✅ Loaded from Google Drive');
     }
-    
-    // Save to local storage
-    saveLocal();
-    
-    // Re-render appropriate view
-    if (state.currentPatient) {
-      renderPatientProfile();
-    } else if (state.currentUnit) {
-      renderPatients();
-    } else {
-      renderUnits();
-    }
-    
-    console.log('✅ Cloud sync complete');
   } catch (e) {
-    console.error('❌ Load from cloud failed:', e);
+    console.error('❌ Load from Drive failed:', e);
   }
 }
 
@@ -6183,13 +6153,20 @@ document.addEventListener('click', (e) => {
 
 window.openDischargeModal = function(patientId, event) {
   if (event) event.stopPropagation();
-  const p = getPatient(patientId);
-  if (!p) return;
+  
+  // Use provided patientId or fall back to current patient
+  const id = patientId || state.currentPatient?.id;
+  const p = getPatient(id);
+  
+  if (!p) {
+    toast('No patient selected', true);
+    return;
+  }
   if (p.status === 'discharged') {
     toast('Patient already discharged', true);
     return;
   }
-  state.dischargePatientId = patientId;
+  state.dischargePatientId = id;
   $('dischargePatientName').textContent = p.name;
   $('dischargeSummary').value = '';
   openModal('dischargeModal');
