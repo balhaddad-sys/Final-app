@@ -346,6 +346,18 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .lab-trend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .lab-trend-select{padding:10px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:0.85rem;min-width:180px}
 .lab-trend-chart{background:var(--bg);border-radius:var(--radius-sm);padding:20px;height:220px}
+/* Lab Overview Dashboard */
+.lab-overview-dashboard{margin:20px 0;padding:16px;background:linear-gradient(135deg,rgba(20,184,166,0.05),rgba(59,130,246,0.05));border-radius:var(--radius);border:1px solid var(--border)}
+.lab-overview-header{font-weight:700;font-size:0.9rem;margin-bottom:16px;color:var(--text)}
+.lab-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.lab-overview-card{background:var(--bg);border-radius:var(--radius-sm);padding:14px;text-align:center;border:1px solid var(--border);position:relative;overflow:hidden}
+.lab-overview-card.high,.lab-overview-card.critical{border-color:rgba(244,63,94,0.4);background:linear-gradient(135deg,rgba(244,63,94,0.08),transparent)}
+.lab-overview-card.low{border-color:rgba(59,130,246,0.4);background:linear-gradient(135deg,rgba(59,130,246,0.08),transparent)}
+.lab-overview-name{font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.lab-overview-value{font-size:1.4rem;font-weight:800;margin:6px 0 2px;display:flex;align-items:center;justify-content:center;gap:4px}
+.lab-overview-trend{font-size:1rem}
+.lab-overview-unit{font-size:0.65rem;color:var(--text-muted)}
+.lab-sparkline{width:100%;height:40px;margin-top:8px}
 /* Other sections */
 .vitals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
 .vital-card{background:var(--bg);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer;transition:all 0.15s;border:1px solid transparent}
@@ -5155,6 +5167,52 @@ function renderProfileLabs() {
   
   // Trend Chart
   if (labData.parameters.length > 0) {
+    // Add Overview Dashboard with key parameters
+    const keyParams = labData.parameters.filter(p => 
+      ['Creatinine', 'Potassium', 'Sodium', 'Hemoglobin', 'WBC', 'Glucose', 'NT-proBNP', 'Troponin', 'HS Troponin I', 'ALT', 'AST'].some(k => 
+        p.name.toLowerCase().includes(k.toLowerCase())
+      )
+    ).slice(0, 6);
+    
+    if (keyParams.length > 1) {
+      let overviewHtml = '<div class="lab-overview-dashboard"><div class="lab-overview-header">📊 Key Parameters Overview</div><div class="lab-overview-grid">';
+      
+      keyParams.forEach((param, i) => {
+        const values = (param.values || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-5);
+        const latest = values[values.length - 1];
+        const prev = values[values.length - 2];
+        const trend = prev && latest ? (parseFloat(latest.value) > parseFloat(prev.value) ? '↑' : parseFloat(latest.value) < parseFloat(prev.value) ? '↓' : '→') : '';
+        const trendColor = trend === '↑' ? (latest?.status === 'high' ? '#f43f5e' : '#10b981') : trend === '↓' ? (latest?.status === 'low' ? '#3b82f6' : '#10b981') : '#6b7280';
+        const sparkData = values.map(v => parseFloat(v.value) || 0);
+        const sparkMin = Math.min(...sparkData);
+        const sparkMax = Math.max(...sparkData);
+        const sparkRange = sparkMax - sparkMin || 1;
+        const sparkPoints = sparkData.map((v, idx) => {
+          const x = (idx / (sparkData.length - 1 || 1)) * 100;
+          const y = 100 - ((v - sparkMin) / sparkRange) * 80 - 10;
+          return x + ',' + y;
+        }).join(' ');
+        const strokeColor = latest?.status === 'high' || latest?.status === 'critical' ? '#f43f5e' : latest?.status === 'low' ? '#3b82f6' : '#10b981';
+        
+        overviewHtml += `
+          <div class="lab-overview-card ${latest?.status || 'normal'}">
+            <div class="lab-overview-name">${esc(param.abbrev || param.name)}</div>
+            <div class="lab-overview-value">
+              <span>${latest?.value || '—'}</span>
+              <span class="lab-overview-trend" style="color:${trendColor}">${trend}</span>
+            </div>
+            <div class="lab-overview-unit">${param.unit || ''}</div>
+            <svg class="lab-sparkline" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <polyline fill="none" stroke="${strokeColor}" stroke-width="3" points="${sparkPoints}"/>
+            </svg>
+          </div>
+        `;
+      });
+      
+      overviewHtml += '</div></div>';
+      html += overviewHtml;
+    }
+    
     html += `
       <div class="lab-trend-section">
         <div class="lab-trend-header">
@@ -6684,12 +6742,32 @@ window.extractPatients = async function() {
       id: Date.now() + i, name: p.name, ward: smartWard(p.ward), room: p.room || '—',
       diagnosis: p.diagnosis || 'Pending', doctor: p.doctor || state.currentUser?.name || 'Unassigned',
       status: p.status === 'chronic' ? 'chronic' : 'active',
-      labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: {}
+      labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: {}, medications: [], clinicalNotes: []
     }));
     
     $('importResults').style.display = 'block';
     $('importCount').textContent = state.importPatients.length;
-    $('importList').innerHTML = state.importPatients.map(p => `<div class="import-item"><div style="flex:1"><b>${esc(p.name)}</b><div style="font-size:0.75rem;color:var(--text-muted)">${esc(p.room)}</div></div><select class="import-ward-select" onchange="state.importPatients.find(x=>x.id===${p.id}).ward=this.value">${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}</select></div>`).join('');
+    
+    // Better display with diagnosis and status
+    $('importList').innerHTML = state.importPatients.map(p => `
+      <div class="import-item" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <b style="font-size:1rem">${esc(p.name)}</b>
+            <span class="status-badge status-${p.status}" style="margin-left:8px;font-size:0.65rem">${p.status}</span>
+          </div>
+          <span style="font-size:0.8rem;color:var(--text-muted)">${esc(p.room)}</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-secondary)">${esc(p.diagnosis)}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="import-ward-select" style="flex:1" onchange="state.importPatients.find(x=>x.id===${p.id}).ward=this.value">
+            ${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}
+          </select>
+          <span style="font-size:0.75rem;color:var(--text-muted)">👨‍⚕️ ${esc(p.doctor)}</span>
+        </div>
+      </div>
+    `).join('');
+    
     $('importConfirmBtn').disabled = false;
     
     console.log('✅ Found', state.importPatients.length, 'patients');
