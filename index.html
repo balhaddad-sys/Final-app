@@ -312,7 +312,8 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .lab-trend-chart{background:var(--bg);border-radius:var(--radius-sm);padding:20px;height:220px}
 /* Other sections */
 .vitals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
-.vital-card{background:var(--bg);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.vital-card{background:var(--bg);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer;transition:all 0.15s;border:1px solid transparent}
+.vital-card:active{transform:scale(0.96);border-color:var(--teal);background:rgba(20,184,166,0.1)}
 .vital-icon{font-size:1.5rem;margin-bottom:8px}
 .vital-value{font-size:1.25rem;font-weight:700}
 .vital-label{font-size:0.7rem;color:var(--text-muted);margin-top:4px}
@@ -4380,14 +4381,14 @@ function renderProfileOverview() {
       <div class="section-body"><div style="font-size:0.95rem;color:var(--text-secondary)">${esc(p.diagnosis) || 'No diagnosis recorded'}</div></div>
     </div>
     <div class="section-card">
-      <div class="section-header"><div class="section-title">🩺 Vitals</div><button class="btn btn-secondary btn-xs" onclick="openAddVitals()">Update</button></div>
+      <div class="section-header"><div class="section-title">🩺 Vitals</div><span style="font-size:0.7rem;color:var(--text-muted)">Tap to edit</span></div>
       <div class="section-body">
         <div class="vitals-grid">
-          <div class="vital-card"><div class="vital-icon">❤️</div><div class="vital-value">${p.vitals?.hr || '—'}</div><div class="vital-label">HR</div></div>
-          <div class="vital-card"><div class="vital-icon">🩸</div><div class="vital-value">${p.vitals?.bp || '—'}</div><div class="vital-label">BP</div></div>
-          <div class="vital-card"><div class="vital-icon">🌡️</div><div class="vital-value">${p.vitals?.temp || '—'}</div><div class="vital-label">Temp</div></div>
-          <div class="vital-card"><div class="vital-icon">💨</div><div class="vital-value">${p.vitals?.rr || '—'}</div><div class="vital-label">RR</div></div>
-          <div class="vital-card"><div class="vital-icon">🫁</div><div class="vital-value">${p.vitals?.spo2 || '—'}</div><div class="vital-label">SpO₂</div></div>
+          <div class="vital-card" onclick="editVital('hr')"><div class="vital-icon">❤️</div><div class="vital-value">${p.vitals?.hr || '—'}</div><div class="vital-label">HR</div></div>
+          <div class="vital-card" onclick="editVital('bp')"><div class="vital-icon">🩸</div><div class="vital-value">${p.vitals?.bp || '—'}</div><div class="vital-label">BP</div></div>
+          <div class="vital-card" onclick="editVital('temp')"><div class="vital-icon">🌡️</div><div class="vital-value">${p.vitals?.temp || '—'}</div><div class="vital-label">Temp</div></div>
+          <div class="vital-card" onclick="editVital('rr')"><div class="vital-icon">💨</div><div class="vital-value">${p.vitals?.rr || '—'}</div><div class="vital-label">RR</div></div>
+          <div class="vital-card" onclick="editVital('spo2')"><div class="vital-icon">🫁</div><div class="vital-value">${p.vitals?.spo2 || '—'}</div><div class="vital-label">SpO₂</div></div>
         </div>
       </div>
     </div>
@@ -5092,6 +5093,30 @@ window.saveEditText = function() {
   toast('Saved!');
 };
 
+window.editVital = function(vitalType) {
+  const v = state.currentPatient.vitals || {};
+  const labels = {
+    hr: { label: 'Heart Rate', unit: 'bpm', icon: '❤️' },
+    bp: { label: 'Blood Pressure', unit: 'mmHg', icon: '🩸', placeholder: '120/80' },
+    temp: { label: 'Temperature', unit: '°C', icon: '🌡️' },
+    rr: { label: 'Respiratory Rate', unit: '/min', icon: '💨' },
+    spo2: { label: 'SpO₂', unit: '%', icon: '🫁' }
+  };
+  const info = labels[vitalType];
+  
+  state.addDataType = 'singleVital';
+  state.editingVitalType = vitalType;
+  $('addDataTitle').textContent = `${info.icon} ${info.label}`;
+  $('addDataBody').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">${info.label} (${info.unit})</label>
+      <input type="text" id="singleVitalValue" class="form-input" value="${v[vitalType] || ''}" placeholder="${info.placeholder || ''}" style="font-size:1.5rem;text-align:center;padding:20px" autofocus>
+    </div>
+  `;
+  openModal('addDataModal');
+  setTimeout(() => $('singleVitalValue')?.focus(), 100);
+};
+
 window.openAddVitals = function() {
   state.addDataType = 'vitals';
   $('addDataTitle').textContent = 'Update Vitals';
@@ -5132,7 +5157,10 @@ window.saveAddData = function() {
   const type = state.addDataType;
   const now = new Date().toISOString();
   
-  if (type === 'vitals') {
+  if (type === 'singleVital') {
+    if (!p.vitals) p.vitals = {};
+    p.vitals[state.editingVitalType] = $('singleVitalValue').value;
+  } else if (type === 'vitals') {
     p.vitals = { hr: $('addHR').value, bp: $('addBP').value, temp: $('addTemp').value, rr: $('addRR').value, spo2: $('addSpO2').value };
   } else if (type === 'fluid') {
     if (!p.fluids) p.fluids = [];
