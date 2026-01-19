@@ -3756,14 +3756,6 @@ window.filterMedications = function(term) {
   state.medSearchTerm = term;
   renderProfileMeds();
 };
-  }
-  
-  html += `
-    </div>
-  `;
-  
-  $('profileMeds').innerHTML = html;
-}
 
 function renderMedCard(med, idx) {
   const statusClass = med.status || 'active';
