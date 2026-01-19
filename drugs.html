@@ -214,10 +214,19 @@ const $=id=>document.getElementById(id);
 // URL Parameter Handler - receives drug data from MedWard main app
 function getURLParams() {
   const params = new URLSearchParams(window.location.search);
+  const labsStr = params.get('labs') || '';
+  const labs = {};
+  if (labsStr) {
+    labsStr.split(',').forEach(item => {
+      const [name, value] = item.split(':');
+      if (name && value) labs[name] = value;
+    });
+  }
   return {
     drug: params.get('drug') || '',
     dose: params.get('dose') || '',
-    indication: params.get('indication') || ''
+    indication: params.get('indication') || '',
+    labs: labs
   };
 }
 
@@ -276,17 +285,34 @@ function init(){
 
 // Show patient context banner when coming from MedWard with context
 function showPatientContext(params) {
-  const contextHtml = `
-    <div class="patient-context-banner" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.05));border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
-      <div style="font-size:1.5rem">📋</div>
-      <div style="flex:1">
-        <div style="font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.03em">Patient Context</div>
-        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
-          ${params.dose ? `<span style="margin-right:12px">💊 <strong>Dose:</strong> ${esc(params.dose)}</span>` : ''}
-          ${params.indication ? `<span>📝 <strong>Indication:</strong> ${esc(params.indication)}</span>` : ''}
-        </div>
+  const hasLabs = Object.keys(params.labs).length > 0;
+  const labsHtml = hasLabs ? `
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(245,158,11,0.2)">
+      <div style="font-size:0.7rem;font-weight:600;color:var(--gold);margin-bottom:4px">📊 Current Labs</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${Object.entries(params.labs).map(([name, value]) => `
+          <span style="background:var(--bg-elevated);padding:4px 8px;border-radius:6px;font-size:0.75rem;font-family:monospace">
+            ${esc(name)}: <strong>${esc(value)}</strong>
+          </span>
+        `).join('')}
       </div>
-      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">✕</button>
+    </div>
+  ` : '';
+  
+  const contextHtml = `
+    <div class="patient-context-banner" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.05));border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:1.5rem">📋</div>
+        <div style="flex:1">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.03em">Patient Context</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
+            ${params.dose ? `<span style="margin-right:12px">💊 <strong>Dose:</strong> ${esc(params.dose)}</span>` : ''}
+            ${params.indication ? `<span>📝 <strong>Indication:</strong> ${esc(params.indication)}</span>` : ''}
+          </div>
+        </div>
+        <button onclick="this.closest('.patient-context-banner').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;align-self:flex-start">✕</button>
+      </div>
+      ${labsHtml}
     </div>
   `;
   $('results').innerHTML = contextHtml;
@@ -334,17 +360,36 @@ async function search(){
   
   // Preserve patient context if it exists
   const params = getURLParams();
-  const contextBanner = (params.dose || params.indication) ? `
-    <div class="patient-context-banner" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.05));border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
-      <div style="font-size:1.5rem">📋</div>
-      <div style="flex:1">
-        <div style="font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.03em">Patient Context</div>
-        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
-          ${params.dose ? `<span style="margin-right:12px">💊 <strong>Dose:</strong> ${esc(params.dose)}</span>` : ''}
-          ${params.indication ? `<span>📝 <strong>Indication:</strong> ${esc(params.indication)}</span>` : ''}
-        </div>
+  const hasContext = params.dose || params.indication || Object.keys(params.labs).length > 0;
+  const hasLabs = Object.keys(params.labs).length > 0;
+  
+  const labsHtml = hasLabs ? `
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(245,158,11,0.2)">
+      <div style="font-size:0.7rem;font-weight:600;color:var(--gold);margin-bottom:4px">📊 Current Labs</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${Object.entries(params.labs).map(([name, value]) => `
+          <span style="background:var(--bg-elevated);padding:4px 8px;border-radius:6px;font-size:0.75rem;font-family:monospace">
+            ${esc(name)}: <strong>${esc(value)}</strong>
+          </span>
+        `).join('')}
       </div>
-      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">✕</button>
+    </div>
+  ` : '';
+  
+  const contextBanner = hasContext ? `
+    <div class="patient-context-banner" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.05));border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:1.5rem">📋</div>
+        <div style="flex:1">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.03em">Patient Context</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
+            ${params.dose ? `<span style="margin-right:12px">💊 <strong>Dose:</strong> ${esc(params.dose)}</span>` : ''}
+            ${params.indication ? `<span>📝 <strong>Indication:</strong> ${esc(params.indication)}</span>` : ''}
+          </div>
+        </div>
+        <button onclick="this.closest('.patient-context-banner').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;align-self:flex-start">✕</button>
+      </div>
+      ${labsHtml}
     </div>
   ` : '';
   
