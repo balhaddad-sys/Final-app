@@ -764,12 +764,25 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
   padding:14px 16px;gap:12px
 }
 .med-card-main{flex:1;min-width:0}
-.med-card-name{
-  font-size:0.95rem;font-weight:600;color:#e6edf3;
-  margin-bottom:2px;display:flex;align-items:center;gap:6px
+.med-card-name-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px
 }
-.med-card-generic{font-size:0.75rem;color:#8b949e;font-style:italic}
-.med-card-actions{display:flex;gap:4px}
+.med-card-name{
+  font-size:1rem;font-weight:600;color:#e6edf3;
+  display:flex;align-items:center;gap:8px
+}
+.med-drug-icon{font-size:1.2rem}
+.med-name-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.med-status{
+  padding:4px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0
+}
+.med-status.active{background:rgba(16,185,129,0.2);color:#34d399}
+.med-status.new{background:rgba(59,130,246,0.2);color:#60a5fa}
+.med-status.prn{background:rgba(245,158,11,0.2);color:#fbbf24}
+.med-status.discontinued{background:rgba(244,63,94,0.2);color:#f87171}
+.med-card-class{font-size:0.8rem;color:#f59e0b;font-weight:500}
+.med-card-actions{display:flex;gap:6px}
 .med-card-action{
   width:44px;height:44px;border-radius:10px;border:none;
   background:rgba(255,255,255,0.06);color:#8b949e;
@@ -777,7 +790,6 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
   transition:all 0.15s
 }
 .med-card-action:active{transform:scale(0.92);background:rgba(255,255,255,0.12)}
-.med-card-action.delete:active{background:rgba(248,81,73,0.25);color:#f85149}
 
 /* Dose & Schedule */
 .med-card-dose{
@@ -976,7 +988,6 @@ Request New Unit Access
 <div class="profile-actions">
 <button class="btn btn-success btn-sm" onclick="openDischargeModal(state.currentPatient?.id)" id="profileDischargeBtn">🏠 Discharge</button>
 <button class="btn btn-secondary btn-sm" onclick="editCurrentPatient()">✏️</button>
-<button class="btn btn-danger btn-sm" onclick="deleteCurrentPatient()">🗑️</button>
 </div>
 </div>
 <div class="profile-patient" id="profilePatientInfo"></div>
@@ -3856,7 +3867,7 @@ function renderProfileMeds() {
       <!-- Quick Actions -->
       <div class="meds-quick-actions">
         <button class="meds-quick-btn" onclick="showAddMedForm()">+ Add Manually</button>
-        <button class="meds-quick-btn" onclick="reconcileMeds()">⚖️ Reconcile</button>
+        <button class="meds-quick-btn" onclick="openCalculator()">🧮 Calculator</button>
       </div>
       
       <!-- Search Filter -->
@@ -4026,19 +4037,18 @@ function renderMedCard(med, idx) {
       ${alertsHtml}
       <div class="med-card-header">
         <div class="med-card-main">
-          <div class="med-card-name">
-            ${drugInfo ? `<span class="med-drug-icon">${drugInfo.icon}</span>` : ''}
-            ${esc(med.name)}
+          <div class="med-card-name-row">
+            <div class="med-card-name">
+              ${drugInfo ? `<span class="med-drug-icon">${drugInfo.icon}</span>` : '💊'}
+              <span class="med-name-text">${esc(med.name)}</span>
+            </div>
             <span class="med-status ${statusClass}">${statusLabels[statusClass] || statusClass}</span>
           </div>
-          ${med.generic ? `<div class="med-card-generic">${esc(med.generic)}</div>` : ''}
           ${drugInfo ? `<div class="med-card-class">${esc(drugInfo.class)}</div>` : ''}
         </div>
         <div class="med-card-actions">
           <button class="med-card-action" onclick="event.stopPropagation();showQuickReference('${esc(med.name)}')" title="Quick Ref">📋</button>
-          ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="med-card-action info" title="Drug Info">📚</a>` : ''}
           <button class="med-card-action" onclick="event.stopPropagation();editMedication(${idx})" title="Edit">✏️</button>
-          <button class="med-card-action delete" onclick="event.stopPropagation();deleteMedication(${idx})" title="Delete">🗑️</button>
         </div>
       </div>
       <div class="med-card-dose">
@@ -4053,7 +4063,7 @@ function renderMedCard(med, idx) {
         </div>
       ` : ''}
       ${monitorBadge}
-      ${showDrugLink ? `<a href="${drugUrl}" target="_blank" ontouchstart="" class="btn btn-info btn-xs med-learn-more">📖 Learn More (AI-Powered)</a>` : ''}
+      ${showDrugLink ? `<a href="${drugUrl}" target="_blank" class="btn btn-info btn-xs med-learn-more">📖 Learn More (AI-Powered)</a>` : ''}
     </div>
   `;
 }
