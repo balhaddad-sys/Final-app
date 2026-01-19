@@ -20,18 +20,21 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
 .mono{font-family:'JetBrains Mono',monospace}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s;position:relative;z-index:1}
-.btn:active{transform:scale(0.95);opacity:0.9}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 24px;min-height:48px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;position:relative;z-index:1}
+.btn:active{transform:scale(0.96);filter:brightness(0.9)}
 .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#000}
 .btn-secondary{background:var(--bg-elevated);border:1px solid var(--border-light);color:var(--text)}
 .btn-secondary:hover{border-color:var(--gold)}
-.btn-ghost{background:transparent;color:var(--text-secondary);padding:10px}
+.btn-ghost{background:transparent;color:var(--text-secondary);padding:12px;min-height:44px}
 .btn-ghost:hover{color:var(--gold)}
 .btn-danger{background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.3);color:var(--rose)}
 .btn-success{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--emerald)}
 .btn-success:hover{background:rgba(16,185,129,0.25);border-color:var(--emerald)}
 .btn-info{background:rgba(56,139,253,0.15);border:1px solid rgba(56,139,253,0.3);color:#58a6ff}
 .btn-info:hover{background:rgba(56,139,253,0.25);border-color:#58a6ff}
+.btn-sm{padding:12px 18px;font-size:0.9rem;min-height:44px}
+.btn-xs{padding:8px 14px;font-size:0.85rem;min-height:38px}
+.btn-icon{padding:12px;min-width:48px;min-height:48px}
 /* Ward Input Autocomplete */
 .ward-input-wrapper{position:relative}
 .ward-suggestions{position:absolute;top:100%;left:0;right:0;background:var(--bg-elevated);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);max-height:200px;overflow-y:auto;z-index:10;display:none}
@@ -85,13 +88,13 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .meds-alert-text{display:flex;flex-direction:column;gap:2px}
 .meds-alert-text strong{color:var(--rose);font-size:0.9rem}
 .meds-alert-text span{color:var(--text-secondary);font-size:0.75rem}
-.btn-sm{padding:10px 16px;font-size:0.8rem}
-.btn-xs{padding:6px 12px;font-size:0.75rem}
-.calc-tab{padding:8px 12px;font-size:0.75rem;background:var(--bg);border:1px solid var(--border)}
-.calc-tab.active{background:var(--primary);color:#000;border-color:var(--primary)}
-.btn-xs{padding:6px 12px;font-size:0.75rem}
+.btn-sm{padding:12px 18px;font-size:0.9rem;min-height:44px}
+.btn-xs{padding:10px 16px;font-size:0.85rem;min-height:40px}
+.calc-tab{padding:12px 16px;font-size:0.85rem;background:var(--bg);border:1px solid var(--border);border-radius:10px;min-height:44px;font-weight:600}
+.calc-tab.active{background:linear-gradient(135deg,var(--teal),#0d9488);color:#fff;border-color:var(--teal)}
+.calc-result{background:linear-gradient(135deg,rgba(20,184,166,0.1),rgba(6,182,212,0.05));border:1px solid rgba(20,184,166,0.2);border-radius:12px}
 .btn-full{width:100%}
-.btn-icon{width:44px;height:44px;padding:0;border-radius:var(--radius-sm)}
+.btn-icon{width:48px;height:48px;padding:0;border-radius:var(--radius-sm);min-height:48px}
 .form-group{margin-bottom:20px}
 .form-label{display:block;font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
 .form-input,.form-select,.form-textarea{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:0.9rem;transition:all 0.2s}
@@ -768,12 +771,13 @@ button,.btn,.card,.unit-card,.patient-card,.med-card,[onclick]{cursor:pointer;-w
 .med-card-generic{font-size:0.75rem;color:#8b949e;font-style:italic}
 .med-card-actions{display:flex;gap:4px}
 .med-card-action{
-  width:28px;height:28px;border-radius:6px;border:none;
-  background:rgba(255,255,255,0.04);color:#8b949e;
-  font-size:0.8rem;cursor:pointer;display:grid;place-items:center
+  width:44px;height:44px;border-radius:10px;border:none;
+  background:rgba(255,255,255,0.06);color:#8b949e;
+  font-size:1.1rem;cursor:pointer;display:grid;place-items:center;
+  transition:all 0.15s
 }
-.med-card-action:active{background:rgba(255,255,255,0.1)}
-.med-card-action.delete:active{background:rgba(248,81,73,0.2);color:#f85149}
+.med-card-action:active{transform:scale(0.92);background:rgba(255,255,255,0.12)}
+.med-card-action.delete:active{background:rgba(248,81,73,0.25);color:#f85149}
 
 /* Dose & Schedule */
 .med-card-dose{
@@ -1072,6 +1076,7 @@ Request New Unit Access
 <div id="userSection" style="display:none;margin-top:28px;padding-top:28px;border-top:1px solid var(--border)">
 <div class="form-group"><label class="form-label">Your Name</label><input type="text" id="userName" class="form-input"></div>
 <div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-select"><option value="attending">Attending</option><option value="resident">Resident</option><option value="intern">Intern</option></select></div>
+<div class="form-group" style="margin-top:16px"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.9rem;color:var(--text-muted)"><input type="checkbox" id="rememberMe" checked style="width:20px;height:20px;accent-color:var(--gold)"> Remember me on this device</label></div>
 </div>
 </div>
 <div class="modal-footer">
@@ -5433,6 +5438,16 @@ window.enterUnit = function() {
   if (!n) { toast('Enter name', true); return; }
   state.currentUnit = getUnit(state.selectedUnitId);
   state.currentUser = { name: n, role: $('userRole').value };
+  
+  // Save session for auto-login
+  const rememberMe = $('rememberMe')?.checked;
+  if (rememberMe) {
+    localStorage.setItem('medWard_session', JSON.stringify({
+      unitId: state.selectedUnitId,
+      user: state.currentUser
+    }));
+  }
+  
   closeModal('accessModal');
   showPage('dashboard');
   $('unitBadge').textContent = state.currentUnit.name;
@@ -5444,11 +5459,41 @@ window.enterUnit = function() {
 };
 
 window.logout = function() {
+  // Clear saved session
+  localStorage.removeItem('medWard_session');
+  
   state.currentUnit = null;
   state.currentUser = null;
   state.currentFilter = 'all';
   showPage('landing');
+  toast('Logged out');
 };
+
+// Auto-login check
+function checkAutoLogin() {
+  const savedSession = localStorage.getItem('medWard_session');
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      const unit = getUnit(session.unitId);
+      if (unit && session.user) {
+        state.currentUnit = unit;
+        state.currentUser = session.user;
+        showPage('dashboard');
+        $('unitBadge').textContent = state.currentUnit.name;
+        $('dashAvatar').textContent = initials(state.currentUser.name);
+        $('currentDate').textContent = formatDate();
+        renderPatients();
+        renderRef();
+        toast(`Welcome back, ${state.currentUser.name}!`);
+        return true;
+      }
+    } catch (e) {
+      localStorage.removeItem('medWard_session');
+    }
+  }
+  return false;
+}
 
 function showTab(tabName) {
   $$('.tab').forEach(t => t.classList.remove('active'));
@@ -6059,6 +6104,9 @@ async function init() {
     renderUnits();
     renderScoresGrid();
     renderRef();
+    
+    // Check for saved session (auto-login)
+    const autoLoggedIn = checkAutoLogin();
     
     // Standard onclick for FABs
     $('adminFab').onclick = openAdminLogin;
