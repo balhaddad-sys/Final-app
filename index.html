@@ -205,6 +205,50 @@ body {
 .patient-discharge-btn.discharged{background:rgba(107,114,128,0.1);border-color:rgba(107,114,128,0.3);color:var(--text-muted);cursor:default}
 .patient-card.discharged{border-left-color:var(--text-muted);opacity:0.7}
 .patient-card.discharged .patient-avatar{background:linear-gradient(135deg,var(--text-muted),#4b5563)}
+
+/* Clinical Clarity Profile Actions */
+.profile-actions {
+    display: flex;
+    gap: 6px;
+}
+.profile-actions .btn-sm {
+    padding: 8px 14px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+/* Professional Discharge Button */
+#profileDischargeBtn {
+    background: var(--success-bg);
+    border: 1px solid var(--success-text);
+    color: var(--success-text);
+}
+#profileDischargeBtn:hover {
+    background: #a7f3d0;
+    border-color: #047857;
+}
+/* Edit button styling */
+.profile-actions .btn-secondary {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+.profile-actions .btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+/* Delete button styling */
+.profile-actions .btn-danger {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-text);
+    color: var(--danger-text);
+}
+.profile-actions .btn-danger:hover {
+    background: #fecaca;
+    border-color: #7f1d1d;
+}
 /* Lab Override */
 .lab-value-card{cursor:pointer;transition:all 0.2s}
 .lab-value-card:hover{border-color:var(--primary);transform:translateY(-2px)}
@@ -1794,7 +1838,7 @@ Request New Unit Access
 <div class="back-btn" onclick="closePatientProfile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
 <div class="profile-title">Patient Profile</div>
 <div class="profile-actions">
-<button class="btn btn-success btn-sm" onclick="openDischargeModal(state.currentPatient?.id)" id="profileDischargeBtn">🏠 Discharge</button>
+<button class="btn btn-success btn-sm" onclick="openDischargeModal()" id="profileDischargeBtn">🏠 Discharge</button>
 <button class="btn btn-secondary btn-sm" onclick="editCurrentPatient()">✏️</button>
 <button class="btn btn-danger btn-sm" onclick="deleteCurrentPatient()">🗑️</button>
 </div>
@@ -8881,8 +8925,17 @@ document.addEventListener('click', (e) => {
 
 window.openDischargeModal = function(patientId, event) {
   if (event) event.stopPropagation();
+
+  // If no patientId provided, use current patient
+  if (!patientId && state.currentPatient) {
+    patientId = state.currentPatient.id;
+  }
+
   const p = getPatient(patientId);
-  if (!p) return;
+  if (!p) {
+    toast('Patient not found', true);
+    return;
+  }
   if (p.status === 'discharged') {
     toast('Patient already discharged', true);
     return;
