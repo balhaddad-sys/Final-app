@@ -4415,9 +4415,9 @@ async function handleLabUpload(file) {
       if (data.error || !data.labData) {
         console.error('❌ Extraction error:', data.error);
         let errorMsg = data.error || 'Extraction failed';
-        if (data.debug && data.debug.rawResponsePreview) {
-          errorMsg += '\n\nRaw AI response:\n' + data.debug.rawResponsePreview;
-          alert('DEBUG INFO:\n\n' + data.debug.rawResponsePreview);
+        if (data.debug) {
+          const d = data.debug;
+          alert('DEBUG INFO:\n\nLength: ' + d.rawResponseLength + '\nFirst { at: ' + d.firstBraceAt + '\nLast } at: ' + d.lastBraceAt + '\n\nExtracted:\n' + d.extractedPreview + '\n\nRaw:\n' + d.rawResponsePreview);
         }
         toast(errorMsg.substring(0, 100), true);
         renderProfileLabs();
