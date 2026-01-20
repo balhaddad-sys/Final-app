@@ -280,9 +280,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 /* ═══════════════════════════════════════════════════════════════════
    PROFESSIONAL TYPOGRAPHY
 ═══════════════════════════════════════════════════════════════════ */
-.label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;font-weight:600}
+.label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;font-weight:600}
 .value{font-size:1.1rem;font-weight:600;color:#ffffff}
-.med-name{font-size:1.2rem;font-weight:700;color:var(--text)}
 
 /* Ward & Patient Cards - Glass Effect */
 .ward-section{margin-bottom:20px}
@@ -307,33 +306,45 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .patient-name{font-weight:700;font-size:1rem;margin-bottom:4px}
 .patient-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:0.8rem;color:var(--text-secondary)}
 .patient-diagnosis{font-size:0.85rem;color:var(--text-secondary);margin-top:12px;padding:12px 14px;background:var(--bg);border-radius:var(--radius-sm)}
-#patientProfile{background:var(--bg);display:flex;flex-direction:column;height:100vh;overflow:hidden}
-#patientProfile.active{display:flex}
-.profile-header{background:rgba(15,23,42,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);flex-shrink:0;z-index:10}
-.patient-header-sticky{position:sticky;top:0;background:rgba(15,23,42,0.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:900;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center}
-.profile-nav{display:flex;align-items:center;gap:10px}
+#patientProfile{background:var(--bg);display:flex;flex-direction:column;height:100vh}
+.profile-header{background:rgba(10,15,26,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:100;flex-shrink:0}
+.profile-nav{display:flex;align-items:center;gap:12px;margin-bottom:0}
 .back-btn{width:36px;height:36px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s}
 .back-btn:hover{border-color:var(--gold);color:var(--gold)}
-.profile-title{font-size:0.95rem;font-weight:600;flex:1}
+.profile-title{font-size:1rem;font-weight:700;flex:1}
 .profile-actions{display:flex;gap:6px}
-.profile-actions .btn{padding:6px 10px;font-size:0.7rem}
-.profile-patient{display:flex;align-items:center;gap:12px;margin-top:10px}
-.profile-avatar{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:0.9rem;font-weight:700;color:#000;flex-shrink:0}
-.profile-details h2{font-size:0.9rem;font-weight:700;margin-bottom:2px}
+.profile-actions .btn{padding:6px 12px;font-size:0.75rem}
+.profile-patient{display:flex;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)}
+.profile-avatar{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:0.9rem;font-weight:800;color:#000;flex-shrink:0}
+.profile-details h2{font-size:0.95rem;font-weight:700;margin-bottom:2px}
 .profile-details .meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--text-secondary);font-size:0.7rem}
 /* Profile Layout - Sidebar on right side */
-.profile-body{display:flex;flex:1 1 auto;overflow:hidden;min-height:0}
-.profile-sidebar{width:64px;min-width:64px;flex-shrink:0;background:#0d1117;border-left:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;padding:12px 6px;gap:6px;overflow-y:auto;order:2}
-.profile-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;background:transparent;border:none;border-radius:10px;color:#6b7280;font-family:inherit;font-size:0.6rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-align:center;width:100%;position:relative}
-.profile-nav-item:hover{color:#9ca3af;background:rgba(255,255,255,0.04)}
-.profile-nav-item.active{color:#f59e0b;background:rgba(245,158,11,0.15)}
-.profile-nav-item .nav-icon{font-size:1.2rem}
-.profile-nav-item .nav-label{font-size:0.55rem;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.profile-nav-item .nav-badge{position:absolute;top:2px;right:2px;background:var(--rose);color:#fff;font-size:0.5rem;min-width:14px;height:14px;padding:0 3px;border-radius:7px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.profile-nav-section{display:none}
+.profile-body{display:flex;flex-direction:row-reverse;flex:1;overflow:hidden;min-height:0}
+.profile-sidebar{width:200px;min-width:200px;background:#0a0e17;border-left:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;padding:16px 12px;gap:4px;overflow-y:auto}
+.profile-sidebar::-webkit-scrollbar{width:4px}
+.profile-sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+.profile-nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:transparent;border:none;border-radius:10px;color:#8b949e;font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;position:relative}
+.profile-nav-item:hover{color:#c9d1d9;background:rgba(255,255,255,0.04)}
+.profile-nav-item.active{color:#f59e0b;background:rgba(245,158,11,0.1);border-right:3px solid #f59e0b;padding-right:11px}
+.profile-nav-item .nav-icon{font-size:1.1rem;width:24px;text-align:center}
+.profile-nav-item .nav-label{flex:1}
+.profile-nav-item .nav-badge{background:rgba(244,63,94,0.2);color:#f87171;font-size:0.65rem;padding:2px 6px;border-radius:10px;font-weight:600}
+.profile-nav-section{font-size:0.65rem;font-weight:700;color:#484f58;text-transform:uppercase;letter-spacing:0.05em;padding:16px 14px 8px;margin-top:8px}
+.profile-nav-section:first-child{margin-top:0;padding-top:8px}
 /* Hide mobile tabs - sidebar only */
 .profile-tabs{display:none}
-.profile-content{flex:1 1 auto;padding:16px;overflow-y:auto;overflow-x:hidden;background:var(--bg);order:1;min-width:0}
+.profile-content{flex:1;padding:24px;overflow-y:auto;background:var(--bg)}
+/* Mobile adjustments - narrower sidebar on right */
+@media(max-width:768px){
+.profile-sidebar{width:72px;min-width:72px;padding:12px 8px;border-left:1px solid rgba(255,255,255,0.06)}
+.profile-nav-item{padding:10px;justify-content:center;border-radius:12px}
+.profile-nav-item.active{border-right:none;border-bottom:3px solid #f59e0b;padding:10px;padding-bottom:7px}
+.profile-nav-item .nav-icon{font-size:1.3rem;width:auto}
+.profile-nav-item .nav-label{display:none}
+.profile-nav-item .nav-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center}
+.profile-nav-section{display:none}
+.profile-content{padding:16px}
+}
 .profile-panel{display:none}
 .profile-panel.active{display:block}
 .section-card{background:#1e293b;border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px -5px rgba(0,0,0,0.3)}
@@ -1592,31 +1603,22 @@ Request New Unit Access
 </div>
 <!-- Main body with sidebar -->
 <div class="profile-body">
-<!-- Content panels -->
-<div class="profile-content">
-<div class="profile-panel active" id="profileOverview"></div>
-<div class="profile-panel" id="profileMeds"></div>
-<div class="profile-panel" id="profileHistory"></div>
-<div class="profile-panel" id="profileScores"></div>
-<div class="profile-panel" id="profileLabs"></div>
-<div class="profile-panel" id="profileImaging"></div>
-<div class="profile-panel" id="profileFluids"></div>
-<div class="profile-panel" id="profilePlans"></div>
-</div>
-<!-- Sidebar navigation on right -->
+<!-- Sidebar navigation (shown on desktop) -->
 <nav class="profile-sidebar" id="profileSidebar">
+<div class="profile-nav-section">Patient Data</div>
 <button class="profile-nav-item active" data-ptab="overview">
 <span class="nav-icon">📋</span>
 <span class="nav-label">Overview</span>
 </button>
 <button class="profile-nav-item" data-ptab="meds">
 <span class="nav-icon">💊</span>
-<span class="nav-label">Meds</span>
+<span class="nav-label">Medications</span>
 </button>
 <button class="profile-nav-item" data-ptab="history">
 <span class="nav-icon">📜</span>
 <span class="nav-label">History</span>
 </button>
+<div class="profile-nav-section">Diagnostics</div>
 <button class="profile-nav-item" data-ptab="labs">
 <span class="nav-icon">🧪</span>
 <span class="nav-label">Labs</span>
@@ -1630,6 +1632,7 @@ Request New Unit Access
 <span class="nav-icon">📊</span>
 <span class="nav-label">Scores</span>
 </button>
+<div class="profile-nav-section">Management</div>
 <button class="profile-nav-item" data-ptab="fluids">
 <span class="nav-icon">💧</span>
 <span class="nav-label">Fluids</span>
@@ -1640,6 +1643,17 @@ Request New Unit Access
 <span class="nav-badge" id="plansTaskBadge" style="display:none">0</span>
 </button>
 </nav>
+<!-- Content panels -->
+<div class="profile-content">
+<div class="profile-panel active" id="profileOverview"></div>
+<div class="profile-panel" id="profileMeds"></div>
+<div class="profile-panel" id="profileHistory"></div>
+<div class="profile-panel" id="profileScores"></div>
+<div class="profile-panel" id="profileLabs"></div>
+<div class="profile-panel" id="profileImaging"></div>
+<div class="profile-panel" id="profileFluids"></div>
+<div class="profile-panel" id="profilePlans"></div>
+</div>
 </div>
 </div>
 
