@@ -193,8 +193,8 @@ body{
 .modal-body{padding:24px;overflow-y:auto;flex:1}
 .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px}
 .modal-footer .btn{flex:1}
-.page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.page.active{display:flex;flex-direction:column}
+.page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:1;background:var(--bg-app)}
+.page.active{display:flex;flex-direction:column;z-index:10;visibility:visible}
 #landing{align-items:center;justify-content:center;padding:24px;background:var(--bg-app)}
 .landing-logo{width:88px;height:88px;background:var(--primary);border-radius:24px;display:grid;place-items:center;margin-bottom:28px;box-shadow:0 4px 12px rgba(0,94,184,0.15)}
 .landing-logo svg{width:48px;height:48px;stroke:#fff;stroke-width:2.5;fill:none}
@@ -8846,10 +8846,14 @@ window.saveLabOverride = function() {
 
 async function init() {
   loadLocal();
+
+  // Ensure landing page shows on startup
+  showPage('landing');
+
   renderUnits();
   renderScoresGrid();
   renderRef();
-  
+
   $('adminFab').onclick = openAdminLogin;
   $('syncFab').onclick = manualSync;
   $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
@@ -8858,16 +8862,16 @@ async function init() {
   $('profileTabs').onclick = e => { const t = e.target.closest('.profile-tab'); if (t) showProfileTab(t.dataset.ptab); };
   $('profileSidebar').onclick = e => { const t = e.target.closest('.profile-nav-item'); if (t) showProfileTab(t.dataset.ptab); };
   $('statsBar').onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
-  
+
   $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
   $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
   $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
-  
+
   $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
-  
+
   // Initial cloud sync
   await syncFromCloud();
-  
+
   // Periodic background sync (every 60 seconds) - only if no pending changes
   setInterval(() => {
     if (!syncState.pendingChanges) {
