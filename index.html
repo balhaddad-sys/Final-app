@@ -3578,8 +3578,18 @@ function renderUnitsTable() {
 
 function renderPatients() {
   const container = $('patientsList');
+  if (!container) { console.warn('patientsList container not found'); return; }
+  
+  // Safety: Default to 'all' if filter is broken/undefined
+  if (!state.currentFilter) state.currentFilter = 'all';
+  
+  // Safety: Ensure patients array exists
+  const patients = state.patients || [];
+  
   const f = state.currentFilter;
-  let filtered = f === 'all' ? [...state.patients] : state.patients.filter(p => p.status === f);
+  let filtered = f === 'all' ? [...patients] : patients.filter(p => p.status === f);
+  
+  console.log('📋 renderPatients:', { filter: f, total: patients.length, filtered: filtered.length });
   
   const wards = {};
   filtered.forEach(p => { const w = p.ward || 'Unassigned'; if (!wards[w]) wards[w] = []; wards[w].push(p); });
@@ -8766,39 +8776,65 @@ window.saveLabOverride = function() {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// INIT
+// INIT - "Render First, Sync Later" Pattern
 // ═══════════════════════════════════════════════════════════════════
 
 async function init() {
-  loadLocal();
-  renderUnits();
-  renderScoresGrid();
-  renderRef();
-  
-  $('adminFab').onclick = openAdminLogin;
-  $('syncFab').onclick = manualSync;
-  $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
-  $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
-  $('mainTabs').onclick = e => { const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab); };
-  $('profileTabs').onclick = e => { const t = e.target.closest('.profile-tab'); if (t) showProfileTab(t.dataset.ptab); };
-  $('profileSidebar').onclick = e => { const t = e.target.closest('.profile-nav-item'); if (t) showProfileTab(t.dataset.ptab); };
-  $('statsBar').onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
-  
-  $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
-  $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
-  $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
-  
-  $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
-  
-  // Initial cloud sync
-  await syncFromCloud();
-  
-  // Periodic background sync (every 60 seconds) - only if no pending changes
-  setInterval(() => {
-    if (!syncState.pendingChanges) {
-      syncFromCloud();
+  try {
+    // 1. CRITICAL: Load and render local data IMMEDIATELY (0ms delay)
+    loadLocal();
+    console.log('📱 Local data loaded, patients:', state.patients.length);
+    
+    // 2. Render the UI right away with whatever we have
+    renderUnits();
+    renderScoresGrid();
+    renderRef();
+    
+    // If user was in a unit, render patients immediately
+    if (state.currentUnit) {
+      console.log('📋 Rendering patients immediately for unit:', state.currentUnit.name);
+      renderPatients();
     }
-  }, 60000);
+    
+    console.log('✅ MedWard Pro initialized with local data');
+    
+    // 3. Setup Event Listeners
+    $('adminFab').onclick = openAdminLogin;
+    $('syncFab').onclick = manualSync;
+    $('adminPwd').onkeydown = e => { if (e.key === 'Enter') loginAdmin(); };
+    $('userName').onkeydown = e => { if (e.key === 'Enter') enterUnit(); };
+    $('mainTabs').onclick = e => { const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab); };
+    $('profileTabs').onclick = e => { const t = e.target.closest('.profile-tab'); if (t) showProfileTab(t.dataset.ptab); };
+    $('profileSidebar').onclick = e => { const t = e.target.closest('.profile-nav-item'); if (t) showProfileTab(t.dataset.ptab); };
+    $('statsBar').onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
+    
+    $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
+    $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
+    $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
+    
+    $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
+    
+    // 4. Background Cloud Sync (Don't block the UI)
+    try {
+      await syncFromCloud();
+      // syncFromCloud already triggers re-render on success
+    } catch (syncError) {
+      console.warn('⚠️ Background sync failed:', syncError);
+      toast('Offline Mode: Using local data', false);
+      // No need to render - we already did it above
+    }
+    
+    // 5. Periodic background sync (every 60 seconds)
+    setInterval(() => {
+      if (!syncState.pendingChanges) {
+        syncFromCloud().catch(e => console.warn('Auto-sync failed:', e));
+      }
+    }, 60000);
+    
+  } catch (criticalError) {
+    console.error('❌ Critical Init Error:', criticalError);
+    toast('System Error - Check Console', true);
+  }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
