@@ -1112,6 +1112,303 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .meds-count{padding:4px 12px;background:rgba(52,211,153,0.1);border-radius:100px;font-size:0.7rem;font-weight:700;color:#34d399}
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   CLINICAL ACTION PLAN - Premium Task System
+═══════════════════════════════════════════════════════════════════════════ */
+
+.clinical-plan-container{padding:0}
+
+/* Header Card */
+.plan-header-card{
+  background:linear-gradient(165deg,#0c1222 0%,#111d2e 50%,#0a1628 100%);
+  border:1px solid rgba(255,255,255,0.08);border-radius:20px;
+  padding:24px;margin-bottom:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3)
+}
+.plan-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.plan-header-title{display:flex;align-items:center;gap:14px}
+.plan-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(135deg,#f59e0b,#f97316);
+  display:grid;place-items:center;font-size:1.5rem;
+  box-shadow:0 8px 24px rgba(245,158,11,0.3)
+}
+.plan-header-title h3{font-size:1.1rem;font-weight:800;color:#f0f6fc;margin-bottom:2px}
+.plan-subtitle{font-size:0.8rem;color:#8b949e}
+.plan-add-btn{
+  display:flex;align-items:center;gap:6px;padding:12px 20px;
+  background:linear-gradient(135deg,#f59e0b,#f97316);
+  border:none;border-radius:12px;color:#000;font-weight:700;font-size:0.85rem;
+  cursor:pointer;transition:all 0.2s;font-family:inherit;
+  box-shadow:0 4px 16px rgba(245,158,11,0.3)
+}
+.plan-add-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(245,158,11,0.4)}
+.plan-add-btn span{font-size:1.2rem;font-weight:400}
+
+/* Progress Section */
+.plan-progress-section{
+  display:flex;align-items:center;gap:24px;
+  padding:20px;background:rgba(0,0,0,0.2);border-radius:16px;margin-bottom:20px
+}
+.plan-progress-ring{position:relative;width:100px;height:100px;flex-shrink:0}
+.plan-progress-ring svg{transform:rotate(-90deg);width:100%;height:100%}
+.progress-bg{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:8}
+.progress-fill{
+  fill:none;stroke:url(#progressGradient);stroke-width:8;
+  stroke-linecap:round;stroke:linear-gradient(135deg,#10b981,#14b8a6);
+  stroke:#10b981;transition:stroke-dasharray 0.5s ease
+}
+.progress-text{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center
+}
+.progress-value{display:block;font-size:1.5rem;font-weight:800;color:#10b981}
+.progress-label{font-size:0.65rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em}
+.plan-stats{display:flex;flex:1;justify-content:space-around}
+.plan-stat{text-align:center}
+.stat-value{display:block;font-size:1.75rem;font-weight:800;color:#f0f6fc}
+.stat-label{font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em}
+
+/* Notification Bar */
+.plan-notification-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;background:rgba(139,92,246,0.08);
+  border:1px solid rgba(139,92,246,0.2);border-radius:12px
+}
+.notification-info{display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:600;color:#a78bfa}
+.notification-icon{font-size:1.1rem}
+.notification-toggle{position:relative;width:48px;height:26px}
+.notification-toggle input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;
+  background:rgba(255,255,255,0.1);border-radius:26px;transition:0.3s
+}
+.toggle-slider::before{
+  content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;
+  background:#6b7280;border-radius:50%;transition:0.3s
+}
+.notification-toggle input:checked + .toggle-slider{background:rgba(139,92,246,0.4)}
+.notification-toggle input:checked + .toggle-slider::before{
+  transform:translateX(22px);background:#a78bfa
+}
+
+/* AI Suggestions */
+.plan-ai-suggestions{
+  background:linear-gradient(135deg,rgba(96,165,250,0.06),rgba(139,92,246,0.04));
+  border:1px solid rgba(96,165,250,0.15);border-radius:16px;
+  padding:18px;margin-bottom:16px
+}
+.ai-suggestions-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ai-badge{
+  display:flex;align-items:center;gap:8px;padding:6px 14px;
+  background:linear-gradient(135deg,rgba(96,165,250,0.15),rgba(139,92,246,0.1));
+  border:1px solid rgba(96,165,250,0.25);border-radius:100px;
+  font-size:0.8rem;font-weight:700;color:#60a5fa
+}
+.ai-icon{font-size:1rem}
+.ai-hint{font-size:0.75rem;color:#6b7280}
+.ai-suggestion-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ai-suggestion-chip{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;font-family:inherit;font-size:0.8rem;color:#c9d1d9;
+  cursor:pointer;transition:all 0.2s;text-align:left
+}
+.ai-suggestion-chip:hover{
+  background:rgba(96,165,250,0.1);border-color:rgba(96,165,250,0.3);
+  transform:translateY(-1px)
+}
+.suggestion-icon{font-size:1rem}
+.suggestion-text{flex:1;font-weight:500}
+.suggestion-add{
+  padding:4px 10px;background:rgba(16,185,129,0.15);border-radius:6px;
+  font-size:0.7rem;font-weight:700;color:#10b981
+}
+
+/* Tasks Section */
+.tasks-section{
+  background:linear-gradient(165deg,#0a0f1a,#0d1420);
+  border:1px solid rgba(255,255,255,0.06);border-radius:16px;
+  padding:0;margin-bottom:16px;overflow:hidden
+}
+.tasks-section-header{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 20px;background:rgba(255,255,255,0.02);
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:0.85rem;font-weight:700;color:#c9d1d9
+}
+.section-icon{font-size:1rem}
+.task-count{
+  margin-left:auto;padding:4px 12px;
+  background:rgba(251,191,36,0.15);border-radius:100px;
+  font-size:0.7rem;font-weight:700;color:#fbbf24
+}
+.task-count.completed{background:rgba(16,185,129,0.15);color:#10b981}
+.expand-icon{margin-left:8px;font-size:0.7rem;color:#6b7280;transition:transform 0.2s}
+.completed-section .tasks-section-header{cursor:pointer}
+.completed-section .tasks-section-header:hover{background:rgba(255,255,255,0.04)}
+
+/* Task List */
+.tasks-list{padding:8px}
+.tasks-empty{text-align:center;padding:40px 20px}
+.empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:0.7}
+.empty-title{font-size:1rem;font-weight:700;color:#c9d1d9;margin-bottom:4px}
+.empty-hint{font-size:0.85rem;color:#6b7280}
+
+/* Task Item */
+.task-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:16px;margin:8px;background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.06);border-radius:12px;
+  transition:all 0.2s
+}
+.task-item:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1)}
+.task-item.completed{opacity:0.6}
+.task-item.completed .task-text{text-decoration:line-through;color:#6b7280}
+.task-item.priority-high{border-left:3px solid #f87171}
+.task-item.priority-medium{border-left:3px solid #fbbf24}
+.task-item.priority-low{border-left:3px solid #34d399}
+
+.task-checkbox{
+  width:24px;height:24px;border-radius:8px;border:2px solid rgba(255,255,255,0.2);
+  background:transparent;cursor:pointer;flex-shrink:0;
+  display:grid;place-items:center;font-size:0.8rem;color:transparent;
+  transition:all 0.2s
+}
+.task-checkbox:hover{border-color:rgba(16,185,129,0.5)}
+.task-checkbox.checked{
+  background:linear-gradient(135deg,#10b981,#14b8a6);
+  border-color:#10b981;color:#fff
+}
+
+.task-content{flex:1;min-width:0}
+.task-text{font-size:0.9rem;font-weight:600;color:#e5e7eb;line-height:1.4;margin-bottom:8px}
+.task-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:0.75rem;color:#6b7280}
+.task-category{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:6px;
+  text-transform:capitalize
+}
+.task-priority{font-weight:600}
+
+.task-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.2s}
+.task-item:hover .task-actions{opacity:1}
+.task-action-btn{
+  width:32px;height:32px;border-radius:8px;border:none;
+  background:rgba(255,255,255,0.05);cursor:pointer;
+  display:grid;place-items:center;font-size:0.85rem;transition:all 0.2s
+}
+.task-action-btn:hover{background:rgba(255,255,255,0.1)}
+.task-action-btn.delete:hover{background:rgba(239,68,68,0.2)}
+
+/* Task Modal */
+.task-modal-box{max-width:480px}
+.task-modal-header{
+  display:flex;align-items:center;gap:16px;padding:24px;
+  background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(249,115,22,0.05));
+  border-bottom:1px solid var(--border)
+}
+.task-modal-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(135deg,#f59e0b,#f97316);
+  display:grid;place-items:center;font-size:1.5rem
+}
+.task-modal-header .modal-close{margin-left:auto}
+.task-textarea{min-height:100px;resize:vertical}
+
+.task-form-row{margin-top:20px}
+.priority-chips,.category-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.priority-chip,.category-chip{
+  padding:10px 16px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+  font-family:inherit;font-size:0.8rem;font-weight:600;color:#9ca3af;
+  cursor:pointer;transition:all 0.2s
+}
+.priority-chip:hover,.category-chip:hover{border-color:rgba(255,255,255,0.2);color:#c9d1d9}
+.priority-chip.selected.high{
+  background:rgba(239,68,68,0.15);border-color:#f87171;color:#f87171
+}
+.priority-chip.selected.medium{
+  background:rgba(251,191,36,0.15);border-color:#fbbf24;color:#fbbf24
+}
+.priority-chip.selected.low{
+  background:rgba(52,211,153,0.15);border-color:#34d399;color:#34d399
+}
+.category-chip.selected{
+  background:rgba(96,165,250,0.15);border-color:#60a5fa;color:#60a5fa
+}
+
+/* Celebration Overlay */
+.celebration-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
+  z-index:10000;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.3s;pointer-events:none
+}
+.celebration-overlay.show{opacity:1;pointer-events:auto}
+.celebration-content{
+  text-align:center;padding:48px 40px;
+  background:linear-gradient(165deg,#0c1222,#111d2e);
+  border:1px solid rgba(255,255,255,0.1);border-radius:28px;
+  max-width:380px;transform:scale(0.9);transition:transform 0.3s;
+  box-shadow:0 32px 64px rgba(0,0,0,0.5)
+}
+.celebration-overlay.show .celebration-content{transform:scale(1)}
+.celebration-confetti{
+  font-size:3rem;margin-bottom:16px;
+  animation:confettiBounce 0.5s ease infinite alternate
+}
+@keyframes confettiBounce{
+  from{transform:translateY(0)}
+  to{transform:translateY(-10px)}
+}
+.celebration-badge{
+  position:relative;width:80px;height:80px;margin:0 auto 24px
+}
+.badge-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:4px solid transparent;
+  background:linear-gradient(135deg,#10b981,#14b8a6) border-box;
+  -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
+  mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:badgeSpin 3s linear infinite
+}
+@keyframes badgeSpin{to{transform:rotate(360deg)}}
+.badge-icon{
+  position:absolute;inset:8px;border-radius:50%;
+  background:linear-gradient(135deg,#10b981,#14b8a6);
+  display:grid;place-items:center;font-size:2rem;color:#fff;font-weight:bold
+}
+.celebration-title{
+  font-size:1.5rem;font-weight:800;color:#f0f6fc;margin-bottom:8px;
+  background:linear-gradient(135deg,#f0f6fc,#10b981);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent
+}
+.celebration-subtitle{font-size:0.9rem;color:#8b949e;margin-bottom:4px}
+.celebration-patient{
+  font-size:1.1rem;font-weight:700;color:#f59e0b;margin-bottom:24px
+}
+.celebration-stats{
+  display:flex;justify-content:center;gap:32px;margin-bottom:24px
+}
+.celeb-stat{text-align:center}
+.celeb-stat-value{display:block;font-size:2rem;font-weight:800;color:#10b981}
+.celeb-stat-label{font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em}
+.celebration-message{
+  display:flex;align-items:center;gap:12px;padding:16px;
+  background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);
+  border-radius:12px;text-align:left;margin-bottom:24px
+}
+.msg-icon{font-size:1.5rem}
+.celebration-message span:last-child{font-size:0.85rem;color:#a7f3d0;line-height:1.5}
+.celebration-btn{
+  width:100%;padding:16px;background:linear-gradient(135deg,#10b981,#14b8a6);
+  border:none;border-radius:12px;color:#fff;font-size:1rem;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:all 0.2s
+}
+.celebration-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(16,185,129,0.4)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    AI DRUG INFO MODAL - NEW FEATURE
 ═══════════════════════════════════════════════════════════════════════════ */
 #drugInfoModal .modal-box{max-width:520px;border-radius:20px;overflow:hidden}
@@ -6807,25 +7104,734 @@ function renderFluidChart(fluids) {
 
 function renderProfilePlans() {
   const p = state.currentPatient;
-  const plans = p.plans || [];
+  if (!p.plans) p.plans = [];
+  if (!p.tasks) p.tasks = [];
+  
+  // Convert old plans to tasks if needed
+  if (p.plans.length > 0 && p.tasks.length === 0) {
+    p.plans.forEach(plan => {
+      const lines = plan.content.split('\n').filter(l => l.trim());
+      lines.forEach(line => {
+        p.tasks.push({
+          id: Date.now() + Math.random(),
+          text: line.replace(/^[-•*]\s*/, ''),
+          completed: false,
+          priority: 'medium',
+          category: 'general',
+          createdAt: plan.date,
+          createdBy: state.currentUser || 'Unknown'
+        });
+      });
+    });
+  }
+  
+  const tasks = p.tasks || [];
+  const pendingTasks = tasks.filter(t => !t.completed);
+  const completedTasks = tasks.filter(t => t.completed);
+  const completionRate = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
+  
+  // Check if all tasks just got completed
+  if (tasks.length > 0 && pendingTasks.length === 0 && !p._celebrationShown) {
+    p._celebrationShown = true;
+    setTimeout(() => showPlanCompletionCelebration(p), 500);
+  } else if (pendingTasks.length > 0) {
+    p._celebrationShown = false;
+  }
+  
+  // Get AI suggestions based on patient context
+  const suggestions = ClinicalPlanAI.getSuggestions(p);
   
   $('profilePlans').innerHTML = `
-    <div class="section-card">
-      <div class="section-header"><div class="section-title">📝 Management Plans</div><button class="btn btn-primary btn-xs" onclick="openAddPlan()">+ Add</button></div>
-      <div class="section-body">
-        ${plans.length ? plans.slice().reverse().map((plan, idx) => `
-          <div class="plan-item">
-            <div class="plan-item-header">
-              <div class="plan-item-date">${formatDateTime(plan.date)}</div>
-              <button class="btn btn-ghost btn-xs" onclick="deletePlan(${plans.length - 1 - idx})">🗑️</button>
+    <div class="clinical-plan-container">
+      <!-- Header with Progress -->
+      <div class="plan-header-card">
+        <div class="plan-header-top">
+          <div class="plan-header-title">
+            <span class="plan-icon">📋</span>
+            <div>
+              <h3>Clinical Action Plan</h3>
+              <p class="plan-subtitle">Task-based management for ${esc(p.name)}</p>
             </div>
-            <div class="plan-item-content">${esc(plan.content)}</div>
           </div>
-        `).join('') : '<div style="text-align:center;padding:30px;color:var(--text-muted)">No plans recorded</div>'}
+          <button class="plan-add-btn" onclick="openTaskModal()">
+            <span>+</span> Add Task
+          </button>
+        </div>
+        
+        <!-- Progress Ring -->
+        <div class="plan-progress-section">
+          <div class="plan-progress-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="progress-bg" cx="50" cy="50" r="42"/>
+              <circle class="progress-fill" cx="50" cy="50" r="42" 
+                      style="stroke-dasharray: ${completionRate * 2.64}, 264"/>
+            </svg>
+            <div class="progress-text">
+              <span class="progress-value">${completionRate}%</span>
+              <span class="progress-label">Complete</span>
+            </div>
+          </div>
+          <div class="plan-stats">
+            <div class="plan-stat">
+              <span class="stat-value">${pendingTasks.length}</span>
+              <span class="stat-label">Pending</span>
+            </div>
+            <div class="plan-stat">
+              <span class="stat-value">${completedTasks.length}</span>
+              <span class="stat-label">Done</span>
+            </div>
+            <div class="plan-stat">
+              <span class="stat-value">${tasks.filter(t => t.priority === 'high' && !t.completed).length}</span>
+              <span class="stat-label">Urgent</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notification Toggle -->
+        <div class="plan-notification-bar">
+          <div class="notification-info">
+            <span class="notification-icon">🔔</span>
+            <span>Task Reminders</span>
+          </div>
+          <label class="notification-toggle">
+            <input type="checkbox" id="planNotifyToggle" ${p.notificationsEnabled ? 'checked' : ''} 
+                   onchange="togglePlanNotifications(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- AI Suggestions -->
+      ${suggestions.length > 0 ? `
+        <div class="plan-ai-suggestions">
+          <div class="ai-suggestions-header">
+            <div class="ai-badge">
+              <span class="ai-icon">🧠</span>
+              <span>AI Recommendations</span>
+            </div>
+            <span class="ai-hint">Based on patient profile</span>
+          </div>
+          <div class="ai-suggestion-chips">
+            ${suggestions.map(s => `
+              <button class="ai-suggestion-chip" onclick="addSuggestedTask('${esc(s.text)}', '${s.priority}', '${s.category}')">
+                <span class="suggestion-icon">${s.icon}</span>
+                <span class="suggestion-text">${esc(s.text)}</span>
+                <span class="suggestion-add">+ Add</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      <!-- Pending Tasks -->
+      <div class="tasks-section">
+        <div class="tasks-section-header">
+          <span class="section-icon">⏳</span>
+          <span>Pending Tasks</span>
+          <span class="task-count">${pendingTasks.length}</span>
+        </div>
+        
+        ${pendingTasks.length > 0 ? `
+          <div class="tasks-list">
+            ${pendingTasks.sort((a, b) => {
+              const priorityOrder = { high: 0, medium: 1, low: 2 };
+              return priorityOrder[a.priority] - priorityOrder[b.priority];
+            }).map(task => renderTaskItem(task, false)).join('')}
+          </div>
+        ` : `
+          <div class="tasks-empty">
+            <div class="empty-icon">✅</div>
+            <div class="empty-title">All caught up!</div>
+            <div class="empty-hint">No pending tasks for this patient</div>
+          </div>
+        `}
+      </div>
+      
+      <!-- Completed Tasks -->
+      ${completedTasks.length > 0 ? `
+        <div class="tasks-section completed-section">
+          <div class="tasks-section-header" onclick="toggleCompletedTasks()">
+            <span class="section-icon">✓</span>
+            <span>Completed</span>
+            <span class="task-count completed">${completedTasks.length}</span>
+            <span class="expand-icon" id="completedExpandIcon">▼</span>
+          </div>
+          <div class="tasks-list completed-list" id="completedTasksList" style="display:none">
+            ${completedTasks.map(task => renderTaskItem(task, true)).join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  
+  // Schedule notification check
+  checkPendingTaskNotifications(p);
+}
+
+function renderTaskItem(task, isCompleted) {
+  const priorityColors = {
+    high: { bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', text: '#f87171', icon: '🔴' },
+    medium: { bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.3)', text: '#fbbf24', icon: '🟡' },
+    low: { bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.3)', text: '#34d399', icon: '🟢' }
+  };
+  const priority = priorityColors[task.priority] || priorityColors.medium;
+  
+  const categoryIcons = {
+    labs: '🔬', imaging: '📷', medication: '💊', consult: '👨‍⚕️', 
+    procedure: '🏥', discharge: '🏠', monitoring: '📊', general: '📝'
+  };
+  const catIcon = categoryIcons[task.category] || '📝';
+  
+  return `
+    <div class="task-item ${isCompleted ? 'completed' : ''} priority-${task.priority}" data-task-id="${task.id}">
+      <button class="task-checkbox ${isCompleted ? 'checked' : ''}" 
+              onclick="toggleTaskComplete('${task.id}')">
+        ${isCompleted ? '✓' : ''}
+      </button>
+      <div class="task-content">
+        <div class="task-text">${esc(task.text)}</div>
+        <div class="task-meta">
+          <span class="task-category">${catIcon} ${task.category || 'General'}</span>
+          <span class="task-priority" style="color:${priority.text}">${priority.icon} ${task.priority}</span>
+          ${task.dueDate ? `<span class="task-due">📅 ${formatDate(task.dueDate)}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-actions">
+        ${!isCompleted ? `
+          <button class="task-action-btn edit" onclick="editTask('${task.id}')" title="Edit">✏️</button>
+        ` : ''}
+        <button class="task-action-btn delete" onclick="deleteTask('${task.id}')" title="Delete">🗑️</button>
       </div>
     </div>
   `;
 }
+
+// Clinical Plan AI Suggestions
+const ClinicalPlanAI = {
+  getSuggestions: function(patient) {
+    const suggestions = [];
+    const diagnosis = (patient.diagnosis || '').toLowerCase();
+    const existingTasks = (patient.tasks || []).map(t => t.text.toLowerCase());
+    const meds = (patient.medications || []).map(m => m.name?.toLowerCase());
+    const labs = patient.labData?.parameters || [];
+    
+    // Diagnosis-based suggestions
+    const diagnosisSuggestions = {
+      'diabetes': [
+        { text: 'Check HbA1c if not done in 3 months', priority: 'medium', category: 'labs', icon: '🔬' },
+        { text: 'Review blood glucose log', priority: 'medium', category: 'monitoring', icon: '📊' },
+        { text: 'Diabetic foot examination', priority: 'medium', category: 'procedure', icon: '🦶' },
+        { text: 'Ophthalmology referral for retinopathy screening', priority: 'low', category: 'consult', icon: '👁️' }
+      ],
+      'hypertension': [
+        { text: 'Ensure BP monitoring TDS', priority: 'high', category: 'monitoring', icon: '📊' },
+        { text: 'Check renal function panel', priority: 'medium', category: 'labs', icon: '🔬' },
+        { text: 'Review antihypertensive compliance', priority: 'medium', category: 'medication', icon: '💊' }
+      ],
+      'pneumonia': [
+        { text: 'Repeat CXR in 48-72h if no improvement', priority: 'medium', category: 'imaging', icon: '📷' },
+        { text: 'Check inflammatory markers (CRP, WBC)', priority: 'high', category: 'labs', icon: '🔬' },
+        { text: 'Assess oxygen requirements', priority: 'high', category: 'monitoring', icon: '📊' },
+        { text: 'Review antibiotic de-escalation at 48h', priority: 'medium', category: 'medication', icon: '💊' }
+      ],
+      'heart failure': [
+        { text: 'Daily weight monitoring', priority: 'high', category: 'monitoring', icon: '⚖️' },
+        { text: 'Strict fluid restriction (1.5L/day)', priority: 'high', category: 'general', icon: '💧' },
+        { text: 'Check BNP/NT-proBNP trend', priority: 'medium', category: 'labs', icon: '🔬' },
+        { text: 'Optimize diuretic dosing', priority: 'high', category: 'medication', icon: '💊' },
+        { text: 'Echocardiogram if not recent', priority: 'medium', category: 'imaging', icon: '📷' }
+      ],
+      'acs': [
+        { text: 'Serial troponins q6h x3', priority: 'high', category: 'labs', icon: '🔬' },
+        { text: 'Continuous cardiac monitoring', priority: 'high', category: 'monitoring', icon: '📊' },
+        { text: 'Cardiology consult', priority: 'high', category: 'consult', icon: '👨‍⚕️' },
+        { text: 'Ensure DAPT initiated', priority: 'high', category: 'medication', icon: '💊' }
+      ],
+      'mi': [
+        { text: 'Serial troponins q6h x3', priority: 'high', category: 'labs', icon: '🔬' },
+        { text: 'Cardiology consult for cath consideration', priority: 'high', category: 'consult', icon: '👨‍⚕️' }
+      ],
+      'sepsis': [
+        { text: 'Repeat lactate in 2-4h', priority: 'high', category: 'labs', icon: '🔬' },
+        { text: 'Ensure blood cultures before antibiotics', priority: 'high', category: 'labs', icon: '🧫' },
+        { text: 'Fluid resuscitation 30mL/kg', priority: 'high', category: 'general', icon: '💧' },
+        { text: 'Reassess antibiotic coverage at 48h', priority: 'medium', category: 'medication', icon: '💊' }
+      ],
+      'ckd': [
+        { text: 'Avoid nephrotoxic medications', priority: 'high', category: 'medication', icon: '💊' },
+        { text: 'Check electrolytes and renal panel', priority: 'medium', category: 'labs', icon: '🔬' },
+        { text: 'Nephrology consult if new AKI on CKD', priority: 'medium', category: 'consult', icon: '👨‍⚕️' }
+      ],
+      'stroke': [
+        { text: 'Neurology consult', priority: 'high', category: 'consult', icon: '🧠' },
+        { text: 'Swallowing assessment before oral intake', priority: 'high', category: 'procedure', icon: '🏥' },
+        { text: 'PT/OT evaluation', priority: 'medium', category: 'consult', icon: '🏃' },
+        { text: 'Initiate secondary prevention', priority: 'medium', category: 'medication', icon: '💊' }
+      ],
+      'dvt': [
+        { text: 'Ensure therapeutic anticoagulation', priority: 'high', category: 'medication', icon: '💊' },
+        { text: 'Compression stockings', priority: 'medium', category: 'general', icon: '🧦' },
+        { text: 'Repeat Doppler if symptoms worsen', priority: 'medium', category: 'imaging', icon: '📷' }
+      ],
+      'pe': [
+        { text: 'Continuous O2 monitoring', priority: 'high', category: 'monitoring', icon: '📊' },
+        { text: 'Therapeutic anticoagulation', priority: 'high', category: 'medication', icon: '💊' },
+        { text: 'Echocardiogram for RV strain', priority: 'medium', category: 'imaging', icon: '📷' }
+      ],
+      'copd': [
+        { text: 'Peak flow monitoring', priority: 'medium', category: 'monitoring', icon: '📊' },
+        { text: 'Ensure bronchodilator availability', priority: 'high', category: 'medication', icon: '💊' },
+        { text: 'Steroid taper plan', priority: 'medium', category: 'medication', icon: '💊' }
+      ]
+    };
+    
+    // Check diagnosis matches
+    Object.entries(diagnosisSuggestions).forEach(([condition, items]) => {
+      if (diagnosis.includes(condition)) {
+        items.forEach(item => {
+          if (!existingTasks.some(t => t.includes(item.text.toLowerCase().slice(0, 20)))) {
+            suggestions.push(item);
+          }
+        });
+      }
+    });
+    
+    // Lab-triggered suggestions
+    labs.forEach(param => {
+      const status = param.values?.[0]?.status;
+      const name = param.name?.toLowerCase();
+      
+      if (status === 'critical' || status === 'high' || status === 'low') {
+        if (name?.includes('potassium') && (status === 'high' || status === 'critical')) {
+          suggestions.push({ 
+            text: 'Repeat potassium in 2-4h after treatment', 
+            priority: 'high', category: 'labs', icon: '🔬' 
+          });
+          suggestions.push({ 
+            text: 'ECG to assess for hyperkalemia changes', 
+            priority: 'high', category: 'procedure', icon: '💓' 
+          });
+        }
+        if (name?.includes('hemoglobin') && status === 'low') {
+          suggestions.push({ 
+            text: 'Type and screen if transfusion anticipated', 
+            priority: 'medium', category: 'labs', icon: '🩸' 
+          });
+        }
+        if (name?.includes('creatinine') && (status === 'high' || status === 'critical')) {
+          suggestions.push({ 
+            text: 'Review all medications for renal dosing', 
+            priority: 'high', category: 'medication', icon: '💊' 
+          });
+        }
+      }
+    });
+    
+    // Medication-triggered suggestions
+    if (meds.some(m => m?.includes('warfarin'))) {
+      suggestions.push({ 
+        text: 'Check INR daily until stable', 
+        priority: 'high', category: 'labs', icon: '🔬' 
+      });
+    }
+    if (meds.some(m => m?.includes('vancomycin'))) {
+      suggestions.push({ 
+        text: 'Vancomycin trough before 4th dose', 
+        priority: 'high', category: 'labs', icon: '🔬' 
+      });
+    }
+    if (meds.some(m => m?.includes('digoxin'))) {
+      suggestions.push({ 
+        text: 'Check digoxin level and potassium', 
+        priority: 'medium', category: 'labs', icon: '🔬' 
+      });
+    }
+    
+    // General suggestions based on status
+    if (patient.status === 'critical') {
+      suggestions.push({ 
+        text: 'ICU consultation for escalation of care', 
+        priority: 'high', category: 'consult', icon: '🚨' 
+      });
+    }
+    
+    // Discharge planning if stable
+    if (patient.status === 'stable' && !existingTasks.some(t => t.includes('discharge'))) {
+      suggestions.push({ 
+        text: 'Review discharge criteria and plan', 
+        priority: 'low', category: 'discharge', icon: '🏠' 
+      });
+    }
+    
+    // Deduplicate and limit
+    const unique = [];
+    const seen = new Set();
+    suggestions.forEach(s => {
+      const key = s.text.toLowerCase().slice(0, 30);
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(s);
+      }
+    });
+    
+    return unique.slice(0, 6);
+  }
+};
+
+// Task Management Functions
+window.openTaskModal = function(existingTask = null) {
+  state.editingTaskId = existingTask?.id || null;
+  
+  const modalHtml = `
+    <div class="modal show" id="taskModal" onclick="if(event.target===this)closeModal('taskModal')">
+      <div class="modal-box task-modal-box">
+        <div class="modal-header task-modal-header">
+          <div class="task-modal-icon">📋</div>
+          <div>
+            <h3 class="modal-title">${existingTask ? 'Edit Task' : 'Add Clinical Task'}</h3>
+            <p class="modal-subtitle">For ${esc(state.currentPatient.name)}</p>
+          </div>
+          <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Task Description <span class="required">*</span></label>
+            <textarea id="taskText" class="form-textarea task-textarea" 
+                      placeholder="e.g., Check morning labs, Discuss with cardiology...">${existingTask?.text || ''}</textarea>
+          </div>
+          
+          <div class="task-form-row">
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <div class="priority-chips" id="priorityChips">
+                <button type="button" class="priority-chip high ${existingTask?.priority === 'high' ? 'selected' : ''}" data-value="high">
+                  🔴 High
+                </button>
+                <button type="button" class="priority-chip medium ${(!existingTask || existingTask?.priority === 'medium') ? 'selected' : ''}" data-value="medium">
+                  🟡 Medium
+                </button>
+                <button type="button" class="priority-chip low ${existingTask?.priority === 'low' ? 'selected' : ''}" data-value="low">
+                  🟢 Low
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="task-form-row">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <div class="category-chips" id="categoryChips">
+                <button type="button" class="category-chip ${(!existingTask || existingTask?.category === 'general') ? 'selected' : ''}" data-value="general">📝 General</button>
+                <button type="button" class="category-chip ${existingTask?.category === 'labs' ? 'selected' : ''}" data-value="labs">🔬 Labs</button>
+                <button type="button" class="category-chip ${existingTask?.category === 'imaging' ? 'selected' : ''}" data-value="imaging">📷 Imaging</button>
+                <button type="button" class="category-chip ${existingTask?.category === 'medication' ? 'selected' : ''}" data-value="medication">💊 Meds</button>
+                <button type="button" class="category-chip ${existingTask?.category === 'consult' ? 'selected' : ''}" data-value="consult">👨‍⚕️ Consult</button>
+                <button type="button" class="category-chip ${existingTask?.category === 'procedure' ? 'selected' : ''}" data-value="procedure">🏥 Procedure</button>
+                <button type="button" class="category-chip ${existingTask?.category === 'monitoring' ? 'selected' : ''}" data-value="monitoring">📊 Monitor</button>
+                <button type="button" class="category-chip ${existingTask?.category === 'discharge' ? 'selected' : ''}" data-value="discharge">🏠 Discharge</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('taskModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTask()">
+            💾 ${existingTask ? 'Update' : 'Add'} Task
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  // Initialize chip handlers
+  document.querySelectorAll('#priorityChips .priority-chip').forEach(chip => {
+    chip.onclick = function() {
+      document.querySelectorAll('#priorityChips .priority-chip').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+    };
+  });
+  
+  document.querySelectorAll('#categoryChips .category-chip').forEach(chip => {
+    chip.onclick = function() {
+      document.querySelectorAll('#categoryChips .category-chip').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+    };
+  });
+  
+  $('taskText').focus();
+};
+
+window.saveTask = function() {
+  const text = $('taskText')?.value?.trim();
+  if (!text) {
+    toast('Please enter a task description', true);
+    return;
+  }
+  
+  const priority = document.querySelector('#priorityChips .priority-chip.selected')?.dataset.value || 'medium';
+  const category = document.querySelector('#categoryChips .category-chip.selected')?.dataset.value || 'general';
+  
+  const p = state.currentPatient;
+  if (!p.tasks) p.tasks = [];
+  
+  if (state.editingTaskId) {
+    const task = p.tasks.find(t => t.id === state.editingTaskId);
+    if (task) {
+      task.text = text;
+      task.priority = priority;
+      task.category = category;
+      task.updatedAt = new Date().toISOString();
+    }
+    toast('Task updated');
+  } else {
+    p.tasks.push({
+      id: Date.now().toString(),
+      text: text,
+      completed: false,
+      priority: priority,
+      category: category,
+      createdAt: new Date().toISOString(),
+      createdBy: state.currentUser || 'Unknown'
+    });
+    toast('Task added');
+    
+    // Schedule notification for this task
+    if (p.notificationsEnabled) {
+      scheduleTaskNotification(p, p.tasks[p.tasks.length - 1]);
+    }
+  }
+  
+  saveCloud();
+  closeModal('taskModal');
+  renderProfilePlans();
+};
+
+window.addSuggestedTask = function(text, priority, category) {
+  const p = state.currentPatient;
+  if (!p.tasks) p.tasks = [];
+  
+  p.tasks.push({
+    id: Date.now().toString(),
+    text: text,
+    completed: false,
+    priority: priority,
+    category: category,
+    createdAt: new Date().toISOString(),
+    createdBy: state.currentUser || 'Unknown',
+    aiSuggested: true
+  });
+  
+  saveCloud();
+  renderProfilePlans();
+  toast('Task added from AI suggestion');
+};
+
+window.toggleTaskComplete = function(taskId) {
+  const p = state.currentPatient;
+  const task = p.tasks?.find(t => t.id === taskId);
+  if (!task) return;
+  
+  task.completed = !task.completed;
+  task.completedAt = task.completed ? new Date().toISOString() : null;
+  task.completedBy = task.completed ? (state.currentUser || 'Unknown') : null;
+  
+  saveCloud();
+  renderProfilePlans();
+  
+  if (task.completed) {
+    toast('✓ Task completed');
+  }
+};
+
+window.editTask = function(taskId) {
+  const task = state.currentPatient.tasks?.find(t => t.id === taskId);
+  if (task) openTaskModal(task);
+};
+
+window.deleteTask = function(taskId) {
+  if (!confirm('Delete this task?')) return;
+  
+  const p = state.currentPatient;
+  p.tasks = p.tasks.filter(t => t.id !== taskId);
+  saveCloud();
+  renderProfilePlans();
+  toast('Task deleted');
+};
+
+window.toggleCompletedTasks = function() {
+  const list = $('completedTasksList');
+  const icon = $('completedExpandIcon');
+  if (list.style.display === 'none') {
+    list.style.display = 'block';
+    icon.textContent = '▲';
+  } else {
+    list.style.display = 'none';
+    icon.textContent = '▼';
+  }
+};
+
+// Notification System
+window.togglePlanNotifications = async function(enabled) {
+  const p = state.currentPatient;
+  p.notificationsEnabled = enabled;
+  saveCloud();
+  
+  if (enabled) {
+    const permission = await requestNotificationPermission();
+    if (permission) {
+      toast('🔔 Notifications enabled');
+      checkPendingTaskNotifications(p);
+    } else {
+      toast('Please enable notifications in browser settings', true);
+      p.notificationsEnabled = false;
+      $('planNotifyToggle').checked = false;
+      saveCloud();
+    }
+  } else {
+    toast('Notifications disabled');
+  }
+};
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    console.log('Notifications not supported');
+    return false;
+  }
+  
+  if (Notification.permission === 'granted') return true;
+  
+  const permission = await Notification.requestPermission();
+  return permission === 'granted';
+}
+
+function checkPendingTaskNotifications(patient) {
+  if (!patient.notificationsEnabled) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  
+  const pendingTasks = (patient.tasks || []).filter(t => !t.completed);
+  const highPriorityTasks = pendingTasks.filter(t => t.priority === 'high');
+  
+  // Store last notification time to avoid spam
+  const lastNotified = localStorage.getItem(`lastTaskNotify_${patient.id}`);
+  const now = Date.now();
+  
+  // Only notify every 30 minutes minimum
+  if (lastNotified && (now - parseInt(lastNotified)) < 30 * 60 * 1000) return;
+  
+  if (highPriorityTasks.length > 0) {
+    sendTaskNotification(patient, highPriorityTasks);
+    localStorage.setItem(`lastTaskNotify_${patient.id}`, now.toString());
+  }
+}
+
+function scheduleTaskNotification(patient, task) {
+  if (!patient.notificationsEnabled) return;
+  
+  // For high priority tasks, notify after 15 minutes if not done
+  if (task.priority === 'high') {
+    setTimeout(() => {
+      const currentTask = state.currentPatient?.tasks?.find(t => t.id === task.id);
+      if (currentTask && !currentTask.completed) {
+        sendSingleTaskNotification(patient, task);
+      }
+    }, 15 * 60 * 1000);
+  }
+}
+
+function sendTaskNotification(patient, tasks) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  
+  const notification = new Notification(`MedWard: ${patient.name}`, {
+    body: `${tasks.length} urgent task${tasks.length > 1 ? 's' : ''} pending:\n• ${tasks[0].text}${tasks.length > 1 ? `\n• +${tasks.length - 1} more` : ''}`,
+    icon: '📋',
+    tag: `tasks-${patient.id}`,
+    requireInteraction: true,
+    vibrate: [200, 100, 200]
+  });
+  
+  notification.onclick = function() {
+    window.focus();
+    if (state.currentPatient?.id !== patient.id) {
+      const p = state.patients.find(pt => pt.id === patient.id);
+      if (p) {
+        state.currentPatient = p;
+        state.activeTab = 'plans';
+        showPatientProfile();
+      }
+    }
+    notification.close();
+  };
+}
+
+function sendSingleTaskNotification(patient, task) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  
+  new Notification(`MedWard: Reminder`, {
+    body: `Urgent task for ${patient.name}:\n${task.text}`,
+    icon: '🔴',
+    tag: `task-${task.id}`,
+    vibrate: [200, 100, 200]
+  });
+}
+
+// Completion Celebration
+function showPlanCompletionCelebration(patient) {
+  const celebrationHtml = `
+    <div class="celebration-overlay" id="celebrationOverlay" onclick="closeCelebration()">
+      <div class="celebration-content" onclick="event.stopPropagation()">
+        <div class="celebration-confetti">🎉</div>
+        <div class="celebration-badge">
+          <div class="badge-ring"></div>
+          <div class="badge-icon">✓</div>
+        </div>
+        <h2 class="celebration-title">Outstanding Work!</h2>
+        <p class="celebration-subtitle">All clinical tasks completed for</p>
+        <div class="celebration-patient">${esc(patient.name)}</div>
+        <div class="celebration-stats">
+          <div class="celeb-stat">
+            <span class="celeb-stat-value">${patient.tasks?.length || 0}</span>
+            <span class="celeb-stat-label">Tasks Completed</span>
+          </div>
+          <div class="celeb-stat">
+            <span class="celeb-stat-value">${patient.tasks?.filter(t => t.priority === 'high').length || 0}</span>
+            <span class="celeb-stat-label">High Priority</span>
+          </div>
+        </div>
+        <div class="celebration-message">
+          <span class="msg-icon">🏆</span>
+          <span>Clinical excellence achieved. Ready for review or discharge planning.</span>
+        </div>
+        <button class="celebration-btn" onclick="closeCelebration()">Continue</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', celebrationHtml);
+  
+  // Trigger confetti animation
+  setTimeout(() => {
+    const overlay = $('celebrationOverlay');
+    if (overlay) overlay.classList.add('show');
+  }, 50);
+  
+  // Send congratulations notification
+  if (patient.notificationsEnabled && Notification.permission === 'granted') {
+    new Notification('MedWard: Excellent Work! 🏆', {
+      body: `All tasks completed for ${patient.name}. Clinical plan achieved!`,
+      icon: '🎉'
+    });
+  }
+}
+
+window.closeCelebration = function() {
+  const overlay = $('celebrationOverlay');
+  if (overlay) {
+    overlay.classList.remove('show');
+    setTimeout(() => overlay.remove(), 300);
+  }
+};
 
 window.deletePlan = function(idx) {
   if (!confirm('Delete?')) return;
@@ -6882,10 +7888,7 @@ window.openAddFluid = function() {
 };
 
 window.openAddPlan = function() {
-  state.addDataType = 'plan';
-  $('addDataTitle').textContent = 'Add Plan';
-  $('addDataBody').innerHTML = '<div class="form-group"><label class="form-label">Plan</label><textarea id="addPlanContent" class="form-textarea" style="min-height:150px"></textarea></div>';
-  openModal('addDataModal');
+  openTaskModal();
 };
 
 window.saveAddData = function() {
