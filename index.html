@@ -7471,7 +7471,7 @@ window.openTaskModal = function(existingTask = null) {
   state.editingTaskId = existingTask?.id || null;
   
   const modalHtml = `
-    <div class="modal show" id="taskModal" onclick="if(event.target===this)closeModal('taskModal')">
+    <div class="modal active" id="taskModal" onclick="if(event.target===this)closeModal('taskModal')">
       <div class="modal-box task-modal-box">
         <div class="modal-header task-modal-header">
           <div class="task-modal-icon">📋</div>
