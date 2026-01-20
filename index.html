@@ -280,8 +280,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 /* ═══════════════════════════════════════════════════════════════════
    PROFESSIONAL TYPOGRAPHY
 ═══════════════════════════════════════════════════════════════════ */
-.label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;font-weight:600}
+.label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;font-weight:600}
 .value{font-size:1.1rem;font-weight:600;color:#ffffff}
+.med-name{font-size:1.2rem;font-weight:700;color:var(--text)}
 
 /* Ward & Patient Cards - Glass Effect */
 .ward-section{margin-bottom:20px}
@@ -306,47 +307,35 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .patient-name{font-weight:700;font-size:1rem;margin-bottom:4px}
 .patient-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:0.8rem;color:var(--text-secondary)}
 .patient-diagnosis{font-size:0.85rem;color:var(--text-secondary);margin-top:12px;padding:12px 14px;background:var(--bg);border-radius:var(--radius-sm)}
-#patientProfile{background:var(--bg);display:flex;flex-direction:column;height:100vh}
-.profile-header{background:rgba(10,15,26,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:100;flex-shrink:0}
-.profile-nav{display:flex;align-items:center;gap:12px;margin-bottom:0}
+#patientProfile{background:var(--bg);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#patientProfile.active{display:flex}
+.profile-header{background:rgba(15,23,42,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);flex-shrink:0;z-index:10}
+.patient-header-sticky{position:sticky;top:0;background:rgba(15,23,42,0.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:900;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center}
+.profile-nav{display:flex;align-items:center;gap:10px}
 .back-btn{width:36px;height:36px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s}
 .back-btn:hover{border-color:var(--gold);color:var(--gold)}
-.profile-title{font-size:1rem;font-weight:700;flex:1}
+.profile-title{font-size:0.95rem;font-weight:600;flex:1}
 .profile-actions{display:flex;gap:6px}
-.profile-actions .btn{padding:6px 12px;font-size:0.75rem}
-.profile-patient{display:flex;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)}
-.profile-avatar{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:0.9rem;font-weight:800;color:#000;flex-shrink:0}
-.profile-details h2{font-size:0.95rem;font-weight:700;margin-bottom:2px}
+.profile-actions .btn{padding:6px 10px;font-size:0.7rem}
+.profile-patient{display:flex;align-items:center;gap:12px;margin-top:10px}
+.profile-avatar{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:0.9rem;font-weight:700;color:#000;flex-shrink:0}
+.profile-details h2{font-size:0.9rem;font-weight:700;margin-bottom:2px}
 .profile-details .meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--text-secondary);font-size:0.7rem}
 /* Profile Layout - Sidebar on right side */
-.profile-body{display:flex;flex-direction:row-reverse;flex:1;overflow:hidden;min-height:0}
-.profile-sidebar{width:200px;min-width:200px;background:#0a0e17;border-left:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;padding:16px 12px;gap:4px;overflow-y:auto}
-.profile-sidebar::-webkit-scrollbar{width:4px}
-.profile-sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
-.profile-nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:transparent;border:none;border-radius:10px;color:#8b949e;font-family:inherit;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;position:relative}
-.profile-nav-item:hover{color:#c9d1d9;background:rgba(255,255,255,0.04)}
-.profile-nav-item.active{color:#f59e0b;background:rgba(245,158,11,0.1);border-right:3px solid #f59e0b;padding-right:11px}
-.profile-nav-item .nav-icon{font-size:1.1rem;width:24px;text-align:center}
-.profile-nav-item .nav-label{flex:1}
-.profile-nav-item .nav-badge{background:rgba(244,63,94,0.2);color:#f87171;font-size:0.65rem;padding:2px 6px;border-radius:10px;font-weight:600}
-.profile-nav-section{font-size:0.65rem;font-weight:700;color:#484f58;text-transform:uppercase;letter-spacing:0.05em;padding:16px 14px 8px;margin-top:8px}
-.profile-nav-section:first-child{margin-top:0;padding-top:8px}
+.profile-body{display:flex;flex:1 1 auto;overflow:hidden;min-height:0;width:100%}
+.profile-sidebar{width:64px;min-width:64px;flex-shrink:0;background:#0d1117;border-left:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;padding:12px 6px;gap:6px;overflow-y:auto;order:2}
+.profile-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;background:transparent;border:none;border-radius:10px;color:#6b7280;font-family:inherit;font-size:0.6rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-align:center;width:100%;position:relative}
+.profile-nav-item:hover{color:#9ca3af;background:rgba(255,255,255,0.04)}
+.profile-nav-item.active{color:#f59e0b;background:rgba(245,158,11,0.15)}
+.profile-nav-item .nav-icon{font-size:1.2rem}
+.profile-nav-item .nav-label{font-size:0.55rem;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.profile-nav-item .nav-badge{position:absolute;top:2px;right:2px;background:var(--rose);color:#fff;font-size:0.5rem;min-width:14px;height:14px;padding:0 3px;border-radius:7px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.profile-nav-section{display:none}
 /* Hide mobile tabs - sidebar only */
 .profile-tabs{display:none}
-.profile-content{flex:1;padding:24px;overflow-y:auto;background:var(--bg)}
-/* Mobile adjustments - narrower sidebar on right */
-@media(max-width:768px){
-.profile-sidebar{width:72px;min-width:72px;padding:12px 8px;border-left:1px solid rgba(255,255,255,0.06)}
-.profile-nav-item{padding:10px;justify-content:center;border-radius:12px}
-.profile-nav-item.active{border-right:none;border-bottom:3px solid #f59e0b;padding:10px;padding-bottom:7px}
-.profile-nav-item .nav-icon{font-size:1.3rem;width:auto}
-.profile-nav-item .nav-label{display:none}
-.profile-nav-item .nav-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center}
-.profile-nav-section{display:none}
-.profile-content{padding:16px}
-}
+.profile-content{flex:1 1 auto;padding:16px;overflow-y:auto;overflow-x:hidden;background:var(--bg);order:1;min-width:0;width:100%}
 .profile-panel{display:none}
-.profile-panel.active{display:block}
+.profile-panel.active{display:block;min-height:200px}
 .section-card{background:#1e293b;border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px -5px rgba(0,0,0,0.3)}
 .section-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:rgba(255,255,255,0.02)}
 .section-title{font-weight:700;font-size:0.85rem;display:flex;align-items:center;gap:8px}
@@ -1603,22 +1592,31 @@ Request New Unit Access
 </div>
 <!-- Main body with sidebar -->
 <div class="profile-body">
-<!-- Sidebar navigation (shown on desktop) -->
+<!-- Content panels -->
+<div class="profile-content">
+<div class="profile-panel active" id="profileOverview"></div>
+<div class="profile-panel" id="profileMeds"></div>
+<div class="profile-panel" id="profileHistory"></div>
+<div class="profile-panel" id="profileScores"></div>
+<div class="profile-panel" id="profileLabs"></div>
+<div class="profile-panel" id="profileImaging"></div>
+<div class="profile-panel" id="profileFluids"></div>
+<div class="profile-panel" id="profilePlans"></div>
+</div>
+<!-- Sidebar navigation on right -->
 <nav class="profile-sidebar" id="profileSidebar">
-<div class="profile-nav-section">Patient Data</div>
 <button class="profile-nav-item active" data-ptab="overview">
 <span class="nav-icon">📋</span>
 <span class="nav-label">Overview</span>
 </button>
 <button class="profile-nav-item" data-ptab="meds">
 <span class="nav-icon">💊</span>
-<span class="nav-label">Medications</span>
+<span class="nav-label">Meds</span>
 </button>
 <button class="profile-nav-item" data-ptab="history">
 <span class="nav-icon">📜</span>
 <span class="nav-label">History</span>
 </button>
-<div class="profile-nav-section">Diagnostics</div>
 <button class="profile-nav-item" data-ptab="labs">
 <span class="nav-icon">🧪</span>
 <span class="nav-label">Labs</span>
@@ -1632,7 +1630,6 @@ Request New Unit Access
 <span class="nav-icon">📊</span>
 <span class="nav-label">Scores</span>
 </button>
-<div class="profile-nav-section">Management</div>
 <button class="profile-nav-item" data-ptab="fluids">
 <span class="nav-icon">💧</span>
 <span class="nav-label">Fluids</span>
@@ -1643,17 +1640,6 @@ Request New Unit Access
 <span class="nav-badge" id="plansTaskBadge" style="display:none">0</span>
 </button>
 </nav>
-<!-- Content panels -->
-<div class="profile-content">
-<div class="profile-panel active" id="profileOverview"></div>
-<div class="profile-panel" id="profileMeds"></div>
-<div class="profile-panel" id="profileHistory"></div>
-<div class="profile-panel" id="profileScores"></div>
-<div class="profile-panel" id="profileLabs"></div>
-<div class="profile-panel" id="profileImaging"></div>
-<div class="profile-panel" id="profileFluids"></div>
-<div class="profile-panel" id="profilePlans"></div>
-</div>
 </div>
 </div>
 
@@ -2281,6 +2267,7 @@ Request New Unit Access
 <script>
 (function(){
 'use strict';
+console.log('🚀 MedWard Pro script starting...');
 
 const CONFIG = {
   STORAGE_KEY: 'medward_pro_v12',
@@ -3184,8 +3171,21 @@ function loadLocal() {
       if (d.patients) state.patients = d.patients;
       if (d.unitRequests) state.unitRequests = d.unitRequests;
     }
-  } catch (e) {}
+  } catch (e) { console.log('Local storage load error:', e); }
+  
+  // Default unit
   if (!state.units.length) state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine', code: '1234', color: '#14b8a6' }];
+  
+  // Demo patients if none exist (for testing)
+  if (!state.patients.length) {
+    console.log('📋 Adding demo patients for testing...');
+    state.patients = [
+      { id: 1, name: 'John Smith', ward: 'Ward 14', room: '101', diagnosis: 'Community Acquired Pneumonia', doctor: 'Dr. Ahmed', status: 'stable', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: { hr: '78', bp: '120/80', temp: '37.2', rr: '18', spo2: '96%' } },
+      { id: 2, name: 'Sarah Johnson', ward: 'Ward 14', room: '102', diagnosis: 'DKA - Diabetic Ketoacidosis', doctor: 'Dr. Fatima', status: 'critical', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: { hr: '110', bp: '90/60', temp: '36.8', rr: '24', spo2: '94%' } },
+      { id: 3, name: 'Mohammed Ali', ward: 'Ward 22', room: '205', diagnosis: 'Acute COPD Exacerbation', doctor: 'Dr. Ahmed', status: 'chronic', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: { hr: '92', bp: '140/90', temp: '37.8', rr: '22', spo2: '89%' } }
+    ];
+  }
+  
   state.settings.adminPassword = state.settings.adminPassword || CONFIG.ADMIN_PASSWORD;
   // Always use hardcoded API URL - this ensures all users have the correct endpoint
   state.settings.apiUrl = CONFIG.API_URL;
@@ -3474,6 +3474,15 @@ async function syncFromCloud() {
     }
   } catch (e) {
     console.error('❌ Load from cloud failed:', e);
+    // Still render whatever we have in local state
+    console.log('📱 Falling back to local data, patients:', state.patients.length);
+    if (state.currentPatient) {
+      renderPatientProfile();
+    } else if (state.currentUnit) {
+      renderPatients();
+    } else {
+      renderUnits();
+    }
   }
 }
 
@@ -4205,8 +4214,10 @@ function renderProfileScores() {
 // ═══════════════════════════════════════════════════════════════════
 
 window.openPatientProfile = function(id) {
+  console.log('Opening patient profile for ID:', id);
   const p = getPatient(id);
-  if (!p) return;
+  if (!p) { console.error('Patient not found:', id); return; }
+  console.log('Found patient:', p.name);
   state.currentPatient = p;
   state.currentInteractionId = null;
   if (!p.labData) p.labData = { dates: [], parameters: [], interpretation: null };
@@ -4218,6 +4229,7 @@ window.openPatientProfile = function(id) {
   if (!p.scores) p.scores = [];
   renderPatientProfile();
   showPage('patientProfile');
+  console.log('Patient profile shown');
 };
 
 window.closePatientProfile = function() {
@@ -4230,8 +4242,19 @@ window.closePatientProfile = function() {
 };
 
 function renderPatientProfile() {
+  try {
   const p = state.currentPatient;
-  if (!p) return;
+  console.log('renderPatientProfile called, patient:', p);
+  
+  // Show debug info immediately
+  const infoEl = $('profilePatientInfo');
+  if (!infoEl) { console.error('profilePatientInfo element not found!'); return; }
+  
+  if (!p) { 
+    console.error('No current patient'); 
+    infoEl.innerHTML = '<div style="color:red;padding:20px">DEBUG: No patient data</div>';
+    return; 
+  }
   
   const avatarBg = p.status === 'critical' ? 'var(--rose),var(--orange)' : 
                    p.status === 'chronic' ? 'var(--purple),#a855f7' :
@@ -4242,7 +4265,7 @@ function renderPatientProfile() {
   const dischargeBtn = $('profileDischargeBtn');
   if (dischargeBtn) dischargeBtn.style.display = p.status === 'discharged' ? 'none' : '';
   
-  $('profilePatientInfo').innerHTML = `
+  infoEl.innerHTML = `
     <div class="profile-avatar" style="background:linear-gradient(135deg,${avatarBg})">${initials(p.name)}</div>
     <div class="profile-details">
       <h2>${esc(p.name)}</h2>
@@ -4254,9 +4277,12 @@ function renderPatientProfile() {
       </div>
     </div>
   `;
+  console.log('Patient info rendered');
   
   renderProfileOverview();
+  console.log('Overview rendered');
   renderProfileMeds();
+  console.log('Meds rendered');
   renderProfileHistory();
   renderProfileScores();
   renderProfileLabs();
@@ -4264,6 +4290,11 @@ function renderPatientProfile() {
   renderProfileFluids();
   renderProfilePlans();
   updateProfileBadges();
+  console.log('All profile sections rendered');
+  } catch(e) { 
+    console.error('renderPatientProfile error:', e); 
+    $('profilePatientInfo').innerHTML = '<div style="color:red;padding:20px">ERROR: ' + e.message + '</div>';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -6214,7 +6245,9 @@ window.viewNoteImage = function(idx) {
 };
 
 function renderProfileOverview() {
+  try {
   const p = state.currentPatient;
+  if (!p) return;
   $('profileOverview').innerHTML = `
     <div class="section-card">
       <div class="section-header"><div class="section-title">📋 Diagnosis</div></div>
@@ -6239,6 +6272,7 @@ function renderProfileOverview() {
       </div>
     </div>
   `;
+  } catch(e) { console.error('renderProfileOverview error:', e); }
 }
 
 function renderProfileLabs() {
