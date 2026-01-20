@@ -884,6 +884,88 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .med-learn-more .sparkle{font-size:1rem}
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   NEURAL MEDICATION SUGGESTIONS - AI Learning System
+═══════════════════════════════════════════════════════════════════════════ */
+
+.med-ai-suggestions{
+  background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(59,130,246,0.05));
+  border:1px solid rgba(139,92,246,0.2);
+  border-radius:14px;padding:16px;margin-bottom:20px;
+  position:relative;overflow:hidden
+}
+.med-ai-suggestions::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#8b5cf6,#3b82f6,#14b8a6);
+  animation:aiGradient 3s ease infinite
+}
+@keyframes aiGradient{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+.med-ai-header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.med-ai-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#8b5cf6,#6366f1);
+  display:grid;place-items:center;font-size:1.1rem;
+  box-shadow:0 4px 12px rgba(139,92,246,0.3)
+}
+.med-ai-title{display:flex;align-items:center;gap:8px;flex:1}
+.med-ai-title span:first-child{font-size:0.9rem;font-weight:700;color:#e0e7ff}
+.med-ai-badge{
+  padding:3px 8px;background:rgba(139,92,246,0.2);
+  border:1px solid rgba(139,92,246,0.3);border-radius:100px;
+  font-size:0.6rem;font-weight:700;color:#a78bfa;
+  text-transform:uppercase;letter-spacing:0.05em
+}
+.med-ai-hint{
+  width:100%;font-size:0.75rem;color:#8b949e;
+  padding-left:46px;margin-top:-4px
+}
+.med-ai-chips{display:flex;flex-wrap:wrap;gap:8px}
+.med-ai-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+  font-family:inherit;font-size:0.8rem;font-weight:600;color:#c9d1d9;
+  cursor:pointer;transition:all 0.2s;position:relative
+}
+.med-ai-chip:hover{
+  background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3);
+  transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)
+}
+.med-ai-chip-icon{font-size:1rem}
+.med-ai-chip-info{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.med-ai-chip-name{font-weight:700;color:#f0f6fc}
+.med-ai-chip-detail{font-size:0.7rem;color:#8b949e;font-weight:500}
+.med-ai-chip-match{
+  position:absolute;top:-6px;right:-6px;
+  padding:2px 6px;background:linear-gradient(135deg,#10b981,#14b8a6);
+  border-radius:100px;font-size:0.6rem;font-weight:700;color:#000
+}
+.med-ai-chip.high-match{border-color:rgba(16,185,129,0.4)}
+.med-ai-chip.high-match .med-ai-chip-name{color:#34d399}
+
+/* Loading State */
+.med-ai-loading{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;color:#8b949e;font-size:0.8rem
+}
+.med-ai-pulse{
+  width:8px;height:8px;border-radius:50%;background:#8b5cf6;
+  animation:aiPulse 1.5s ease infinite
+}
+@keyframes aiPulse{
+  0%,100%{opacity:0.3;transform:scale(0.8)}
+  50%{opacity:1;transform:scale(1.2)}
+}
+
+/* No Suggestions */
+.med-ai-empty{
+  padding:16px;text-align:center;color:#6b7280;font-size:0.8rem
+}
+.med-ai-empty-icon{font-size:1.5rem;margin-bottom:8px;opacity:0.5}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    ADD MEDICATION FORM - Premium Inline Design v15
 ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -3927,9 +4009,29 @@ function renderProfileMeds() {
         
         <div class="med-form-section">
           <div class="med-form-section-title">Drug Information</div>
+          
+          <!-- AI Smart Suggestions -->
+          <div class="med-ai-suggestions" id="medAiSuggestions">
+            <div class="med-ai-header">
+              <div class="med-ai-icon">🧠</div>
+              <div class="med-ai-title">
+                <span>Neural Suggestions</span>
+                <span class="med-ai-badge">AI-Powered</span>
+              </div>
+              <div class="med-ai-hint">Based on diagnosis & similar patients</div>
+            </div>
+            <div class="med-ai-chips" id="medSuggestionChips">
+              <!-- Populated by JS -->
+              <div class="med-ai-loading">
+                <span class="med-ai-pulse"></span>
+                Analyzing patient profile...
+              </div>
+            </div>
+          </div>
+          
           <div class="med-form-group med-form-full">
             <label class="med-form-label">Drug Name <span class="required">*</span></label>
-            <input type="text" class="med-form-input" id="medName" placeholder="e.g., Metformin">
+            <input type="text" class="med-form-input" id="medName" placeholder="e.g., Metformin" oninput="filterMedSuggestions(this.value)">
           </div>
           <div class="med-form-row">
             <div class="med-form-group">
@@ -4147,6 +4249,9 @@ window.showAddMedForm = function() {
     // Initialize chip handlers
     initMedFormChipHandlers();
     
+    // Render AI suggestions
+    renderMedSuggestions();
+    
     // Scroll to form
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -4346,6 +4451,401 @@ window.deleteMedication = function(idx) {
 
 window.reconcileMeds = function() {
   toast('Medication reconciliation - Coming soon');
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// NEURAL MEDICATION LEARNING SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+
+const MedLearning = {
+  // Knowledge base of condition-medication associations
+  knowledgeBase: {
+    // Diabetes
+    'diabetes': [
+      { name: 'Metformin', dose: '500mg', route: 'PO', frequency: 'BD', indication: 'Type 2 Diabetes', weight: 10 },
+      { name: 'Gliclazide', dose: '80mg', route: 'PO', frequency: 'OD', indication: 'Type 2 Diabetes', weight: 8 },
+      { name: 'Insulin Glargine', dose: '10 units', route: 'SC', frequency: 'OD', indication: 'Diabetes', weight: 7 },
+      { name: 'Sitagliptin', dose: '100mg', route: 'PO', frequency: 'OD', indication: 'Type 2 Diabetes', weight: 6 },
+      { name: 'Empagliflozin', dose: '10mg', route: 'PO', frequency: 'OD', indication: 'Type 2 Diabetes', weight: 6 }
+    ],
+    'dm': [
+      { name: 'Metformin', dose: '500mg', route: 'PO', frequency: 'BD', indication: 'Type 2 Diabetes', weight: 10 }
+    ],
+    // Hypertension
+    'hypertension': [
+      { name: 'Amlodipine', dose: '5mg', route: 'PO', frequency: 'OD', indication: 'Hypertension', weight: 10 },
+      { name: 'Lisinopril', dose: '10mg', route: 'PO', frequency: 'OD', indication: 'Hypertension', weight: 9 },
+      { name: 'Losartan', dose: '50mg', route: 'PO', frequency: 'OD', indication: 'Hypertension', weight: 8 },
+      { name: 'Hydrochlorothiazide', dose: '25mg', route: 'PO', frequency: 'OD', indication: 'Hypertension', weight: 7 },
+      { name: 'Atenolol', dose: '50mg', route: 'PO', frequency: 'OD', indication: 'Hypertension', weight: 6 }
+    ],
+    'htn': [
+      { name: 'Amlodipine', dose: '5mg', route: 'PO', frequency: 'OD', indication: 'Hypertension', weight: 10 }
+    ],
+    // Heart Failure
+    'heart failure': [
+      { name: 'Furosemide', dose: '40mg', route: 'PO', frequency: 'OD', indication: 'Heart Failure', weight: 10 },
+      { name: 'Spironolactone', dose: '25mg', route: 'PO', frequency: 'OD', indication: 'Heart Failure', weight: 9 },
+      { name: 'Carvedilol', dose: '6.25mg', route: 'PO', frequency: 'BD', indication: 'Heart Failure', weight: 8 },
+      { name: 'Ramipril', dose: '2.5mg', route: 'PO', frequency: 'OD', indication: 'Heart Failure', weight: 8 },
+      { name: 'Sacubitril/Valsartan', dose: '49/51mg', route: 'PO', frequency: 'BD', indication: 'Heart Failure', weight: 7 }
+    ],
+    'chf': [
+      { name: 'Furosemide', dose: '40mg', route: 'PO', frequency: 'OD', indication: 'Heart Failure', weight: 10 }
+    ],
+    // Infection/Pneumonia
+    'pneumonia': [
+      { name: 'Amoxicillin/Clavulanate', dose: '625mg', route: 'PO', frequency: 'TDS', indication: 'Pneumonia', weight: 10 },
+      { name: 'Azithromycin', dose: '500mg', route: 'PO', frequency: 'OD', indication: 'Pneumonia', weight: 9 },
+      { name: 'Ceftriaxone', dose: '1g', route: 'IV', frequency: 'OD', indication: 'Pneumonia', weight: 8 },
+      { name: 'Levofloxacin', dose: '750mg', route: 'PO', frequency: 'OD', indication: 'Pneumonia', weight: 7 }
+    ],
+    'infection': [
+      { name: 'Amoxicillin/Clavulanate', dose: '625mg', route: 'PO', frequency: 'TDS', indication: 'Infection', weight: 9 },
+      { name: 'Ciprofloxacin', dose: '500mg', route: 'PO', frequency: 'BD', indication: 'Infection', weight: 8 }
+    ],
+    'sepsis': [
+      { name: 'Piperacillin/Tazobactam', dose: '4.5g', route: 'IV', frequency: 'Q6H', indication: 'Sepsis', weight: 10 },
+      { name: 'Vancomycin', dose: '1g', route: 'IV', frequency: 'Q12H', indication: 'Sepsis', weight: 9 },
+      { name: 'Meropenem', dose: '1g', route: 'IV', frequency: 'Q8H', indication: 'Sepsis', weight: 8 }
+    ],
+    // ACS/MI
+    'acs': [
+      { name: 'Aspirin', dose: '81mg', route: 'PO', frequency: 'OD', indication: 'ACS', weight: 10 },
+      { name: 'Clopidogrel', dose: '75mg', route: 'PO', frequency: 'OD', indication: 'ACS', weight: 10 },
+      { name: 'Atorvastatin', dose: '80mg', route: 'PO', frequency: 'OD', indication: 'ACS', weight: 9 },
+      { name: 'Enoxaparin', dose: '1mg/kg', route: 'SC', frequency: 'BD', indication: 'ACS', weight: 8 },
+      { name: 'Metoprolol', dose: '25mg', route: 'PO', frequency: 'BD', indication: 'ACS', weight: 7 }
+    ],
+    'mi': [
+      { name: 'Aspirin', dose: '81mg', route: 'PO', frequency: 'OD', indication: 'MI', weight: 10 },
+      { name: 'Clopidogrel', dose: '75mg', route: 'PO', frequency: 'OD', indication: 'MI', weight: 10 }
+    ],
+    // COPD/Asthma
+    'copd': [
+      { name: 'Salbutamol', dose: '100mcg', route: 'INH', frequency: 'PRN', indication: 'COPD', weight: 10 },
+      { name: 'Tiotropium', dose: '18mcg', route: 'INH', frequency: 'OD', indication: 'COPD', weight: 9 },
+      { name: 'Budesonide/Formoterol', dose: '160/4.5mcg', route: 'INH', frequency: 'BD', indication: 'COPD', weight: 8 },
+      { name: 'Prednisolone', dose: '40mg', route: 'PO', frequency: 'OD', indication: 'COPD Exacerbation', weight: 7 }
+    ],
+    'asthma': [
+      { name: 'Salbutamol', dose: '100mcg', route: 'INH', frequency: 'PRN', indication: 'Asthma', weight: 10 },
+      { name: 'Fluticasone/Salmeterol', dose: '250/50mcg', route: 'INH', frequency: 'BD', indication: 'Asthma', weight: 9 }
+    ],
+    // CKD
+    'ckd': [
+      { name: 'Calcium Carbonate', dose: '500mg', route: 'PO', frequency: 'TDS', indication: 'CKD', weight: 8 },
+      { name: 'Sodium Bicarbonate', dose: '500mg', route: 'PO', frequency: 'TDS', indication: 'CKD', weight: 7 },
+      { name: 'Erythropoietin', dose: '4000 units', route: 'SC', frequency: 'Weekly', indication: 'CKD Anemia', weight: 6 }
+    ],
+    'renal': [
+      { name: 'Furosemide', dose: '40mg', route: 'IV', frequency: 'BD', indication: 'Renal', weight: 8 }
+    ],
+    // Pain
+    'pain': [
+      { name: 'Paracetamol', dose: '1g', route: 'PO', frequency: 'QID', indication: 'Pain', weight: 10 },
+      { name: 'Ibuprofen', dose: '400mg', route: 'PO', frequency: 'TDS', indication: 'Pain', weight: 8 },
+      { name: 'Tramadol', dose: '50mg', route: 'PO', frequency: 'Q6H', indication: 'Pain', weight: 7 },
+      { name: 'Morphine', dose: '5mg', route: 'IV', frequency: 'Q4H', indication: 'Severe Pain', weight: 6 }
+    ],
+    // GI
+    'gerd': [
+      { name: 'Omeprazole', dose: '20mg', route: 'PO', frequency: 'OD', indication: 'GERD', weight: 10 },
+      { name: 'Pantoprazole', dose: '40mg', route: 'PO', frequency: 'OD', indication: 'GERD', weight: 9 }
+    ],
+    'nausea': [
+      { name: 'Ondansetron', dose: '4mg', route: 'IV', frequency: 'Q8H', indication: 'Nausea', weight: 10 },
+      { name: 'Metoclopramide', dose: '10mg', route: 'PO', frequency: 'TDS', indication: 'Nausea', weight: 8 }
+    ],
+    // DVT/PE
+    'dvt': [
+      { name: 'Enoxaparin', dose: '1mg/kg', route: 'SC', frequency: 'BD', indication: 'DVT', weight: 10 },
+      { name: 'Rivaroxaban', dose: '15mg', route: 'PO', frequency: 'BD', indication: 'DVT', weight: 9 },
+      { name: 'Warfarin', dose: '5mg', route: 'PO', frequency: 'OD', indication: 'DVT', weight: 8 }
+    ],
+    'pe': [
+      { name: 'Enoxaparin', dose: '1mg/kg', route: 'SC', frequency: 'BD', indication: 'PE', weight: 10 },
+      { name: 'Heparin', dose: '5000 units', route: 'IV', frequency: 'Infusion', indication: 'PE', weight: 9 }
+    ],
+    // Stroke
+    'stroke': [
+      { name: 'Aspirin', dose: '300mg', route: 'PO', frequency: 'OD', indication: 'Stroke', weight: 10 },
+      { name: 'Atorvastatin', dose: '40mg', route: 'PO', frequency: 'OD', indication: 'Stroke', weight: 9 },
+      { name: 'Clopidogrel', dose: '75mg', route: 'PO', frequency: 'OD', indication: 'Stroke', weight: 8 }
+    ],
+    // Seizure
+    'seizure': [
+      { name: 'Levetiracetam', dose: '500mg', route: 'PO', frequency: 'BD', indication: 'Seizure', weight: 10 },
+      { name: 'Phenytoin', dose: '100mg', route: 'PO', frequency: 'TDS', indication: 'Seizure', weight: 8 },
+      { name: 'Valproate', dose: '500mg', route: 'PO', frequency: 'BD', indication: 'Seizure', weight: 7 }
+    ],
+    'epilepsy': [
+      { name: 'Levetiracetam', dose: '500mg', route: 'PO', frequency: 'BD', indication: 'Epilepsy', weight: 10 }
+    ]
+  },
+  
+  // Lab-based suggestions
+  labTriggers: {
+    'potassium': {
+      low: [{ name: 'Potassium Chloride', dose: '20mEq', route: 'PO', frequency: 'BD', indication: 'Hypokalemia', weight: 10 }],
+      high: [{ name: 'Calcium Gluconate', dose: '1g', route: 'IV', frequency: 'STAT', indication: 'Hyperkalemia', weight: 10 },
+             { name: 'Insulin Regular', dose: '10 units', route: 'IV', frequency: 'STAT', indication: 'Hyperkalemia', weight: 9 }]
+    },
+    'hemoglobin': {
+      low: [{ name: 'Ferrous Sulfate', dose: '325mg', route: 'PO', frequency: 'TDS', indication: 'Anemia', weight: 9 },
+            { name: 'Packed RBCs', dose: '1 unit', route: 'IV', frequency: 'STAT', indication: 'Severe Anemia', weight: 8 }]
+    },
+    'glucose': {
+      high: [{ name: 'Insulin Regular', dose: 'Sliding Scale', route: 'SC', frequency: 'Q6H', indication: 'Hyperglycemia', weight: 10 }]
+    },
+    'creatinine': {
+      high: [{ name: 'IV Normal Saline', dose: '1L', route: 'IV', frequency: 'Over 4hr', indication: 'AKI', weight: 9 }]
+    },
+    'inr': {
+      high: [{ name: 'Vitamin K', dose: '10mg', route: 'IV', frequency: 'STAT', indication: 'Elevated INR', weight: 10 }]
+    }
+  },
+  
+  // Learn from existing patients in the system
+  learnFromPatients: function() {
+    const learned = {};
+    const patients = state.patients || [];
+    
+    patients.forEach(p => {
+      if (!p.diagnosis || !p.medications?.length) return;
+      
+      const dxLower = p.diagnosis.toLowerCase();
+      p.medications.forEach(med => {
+        if (!med.name) return;
+        
+        // Create a key from diagnosis keywords
+        const keywords = dxLower.split(/[\s,\/]+/).filter(w => w.length > 2);
+        keywords.forEach(keyword => {
+          if (!learned[keyword]) learned[keyword] = [];
+          
+          // Check if already exists
+          const existing = learned[keyword].find(m => m.name.toLowerCase() === med.name.toLowerCase());
+          if (existing) {
+            existing.weight += 2; // Increase weight for repeated use
+            existing.count = (existing.count || 1) + 1;
+          } else {
+            learned[keyword].push({
+              name: med.name,
+              dose: med.dose,
+              route: med.route,
+              frequency: med.frequency,
+              indication: med.indication || p.diagnosis,
+              weight: 5,
+              count: 1,
+              learned: true
+            });
+          }
+        });
+      });
+    });
+    
+    return learned;
+  },
+  
+  // Get suggestions for current patient
+  getSuggestions: function(patient) {
+    if (!patient) return [];
+    
+    const suggestions = [];
+    const addedMeds = new Set((patient.medications || []).map(m => m.name?.toLowerCase()));
+    const diagnosis = (patient.diagnosis || '').toLowerCase();
+    
+    // 1. Match from knowledge base
+    Object.entries(this.knowledgeBase).forEach(([condition, meds]) => {
+      if (diagnosis.includes(condition)) {
+        meds.forEach(med => {
+          if (!addedMeds.has(med.name.toLowerCase())) {
+            suggestions.push({
+              ...med,
+              source: 'knowledge',
+              matchType: 'diagnosis',
+              matchTerm: condition
+            });
+          }
+        });
+      }
+    });
+    
+    // 2. Learn from similar patients
+    const learned = this.learnFromPatients();
+    const dxKeywords = diagnosis.split(/[\s,\/]+/).filter(w => w.length > 2);
+    
+    dxKeywords.forEach(keyword => {
+      if (learned[keyword]) {
+        learned[keyword].forEach(med => {
+          if (!addedMeds.has(med.name.toLowerCase())) {
+            const existing = suggestions.find(s => s.name.toLowerCase() === med.name.toLowerCase());
+            if (existing) {
+              existing.weight += med.weight;
+              existing.patientCount = med.count;
+            } else {
+              suggestions.push({
+                ...med,
+                source: 'learned',
+                matchType: 'similar_patients',
+                patientCount: med.count
+              });
+            }
+          }
+        });
+      }
+    });
+    
+    // 3. Check lab values for triggers
+    if (patient.labData?.parameters) {
+      patient.labData.parameters.forEach(param => {
+        const paramName = param.name?.toLowerCase();
+        const latestValue = param.values?.[0];
+        
+        if (latestValue && this.labTriggers[paramName]) {
+          const status = latestValue.status;
+          let triggerMeds = [];
+          
+          if (status === 'critical' || status === 'high') {
+            triggerMeds = this.labTriggers[paramName].high || [];
+          } else if (status === 'low') {
+            triggerMeds = this.labTriggers[paramName].low || [];
+          }
+          
+          triggerMeds.forEach(med => {
+            if (!addedMeds.has(med.name.toLowerCase())) {
+              suggestions.push({
+                ...med,
+                source: 'lab',
+                matchType: 'lab_value',
+                labParam: param.name,
+                labValue: latestValue.value,
+                labStatus: status,
+                weight: med.weight + (status === 'critical' ? 5 : 0)
+              });
+            }
+          });
+        }
+      });
+    }
+    
+    // Sort by weight and deduplicate
+    const unique = [];
+    const seen = new Set();
+    
+    suggestions
+      .sort((a, b) => b.weight - a.weight)
+      .forEach(s => {
+        const key = s.name.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(s);
+        }
+      });
+    
+    return unique.slice(0, 8); // Top 8 suggestions
+  }
+};
+
+// Render suggestions in the form
+function renderMedSuggestions() {
+  const container = $('medSuggestionChips');
+  if (!container) return;
+  
+  const patient = state.currentPatient;
+  if (!patient) {
+    container.innerHTML = '<div class="med-ai-empty"><div class="med-ai-empty-icon">🤖</div>No patient selected</div>';
+    return;
+  }
+  
+  const suggestions = MedLearning.getSuggestions(patient);
+  
+  if (suggestions.length === 0) {
+    container.innerHTML = `
+      <div class="med-ai-empty">
+        <div class="med-ai-empty-icon">💊</div>
+        No suggestions available for this diagnosis
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = suggestions.map(s => {
+    const isHighMatch = s.weight >= 9;
+    const matchIcon = s.source === 'lab' ? '🔬' : s.source === 'learned' ? '📊' : '📋';
+    const matchText = s.source === 'lab' 
+      ? `${s.labParam}: ${s.labValue} (${s.labStatus})`
+      : s.source === 'learned'
+      ? `Used in ${s.patientCount || 1} similar patient${s.patientCount > 1 ? 's' : ''}`
+      : s.matchTerm;
+    
+    return `
+      <button type="button" class="med-ai-chip ${isHighMatch ? 'high-match' : ''}" 
+              onclick="applyMedSuggestion(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+        <span class="med-ai-chip-icon">${matchIcon}</span>
+        <div class="med-ai-chip-info">
+          <span class="med-ai-chip-name">${esc(s.name)}</span>
+          <span class="med-ai-chip-detail">${esc(s.dose)} ${esc(s.route)} ${esc(s.frequency)}</span>
+        </div>
+        ${isHighMatch ? '<span class="med-ai-chip-match">Best</span>' : ''}
+      </button>
+    `;
+  }).join('');
+}
+
+// Apply suggestion to form
+window.applyMedSuggestion = function(suggestion) {
+  $('medName').value = suggestion.name;
+  $('medDose').value = suggestion.dose;
+  $('medIndication').value = suggestion.indication || '';
+  $('medRoute').value = suggestion.route;
+  $('medFreq').value = suggestion.frequency;
+  
+  // Update route chips
+  document.querySelectorAll('#medRouteChips .med-route-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`#medRouteChips .med-route-chip[data-value="${suggestion.route}"]`)?.classList.add('selected');
+  
+  // Update frequency chips
+  document.querySelectorAll('#medFreqChips .med-freq-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`#medFreqChips .med-freq-chip[data-value="${suggestion.frequency}"]`)?.classList.add('selected');
+  
+  toast(`${suggestion.name} applied`);
+};
+
+// Filter suggestions as user types
+window.filterMedSuggestions = function(query) {
+  if (!query || query.length < 2) {
+    renderMedSuggestions();
+    return;
+  }
+  
+  const container = $('medSuggestionChips');
+  if (!container) return;
+  
+  const patient = state.currentPatient;
+  const allSuggestions = MedLearning.getSuggestions(patient);
+  const filtered = allSuggestions.filter(s => 
+    s.name.toLowerCase().includes(query.toLowerCase())
+  );
+  
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="med-ai-empty">No matches for "${esc(query)}"</div>`;
+    return;
+  }
+  
+  container.innerHTML = filtered.map(s => {
+    const isHighMatch = s.weight >= 9;
+    return `
+      <button type="button" class="med-ai-chip ${isHighMatch ? 'high-match' : ''}" 
+              onclick="applyMedSuggestion(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+        <span class="med-ai-chip-icon">💊</span>
+        <div class="med-ai-chip-info">
+          <span class="med-ai-chip-name">${esc(s.name)}</span>
+          <span class="med-ai-chip-detail">${esc(s.dose)} ${esc(s.route)} ${esc(s.frequency)}</span>
+        </div>
+      </button>
+    `;
+  }).join('');
 };
 
 // ═══════════════════════════════════════════════════════════════════
