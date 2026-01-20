@@ -1133,20 +1133,47 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   background:linear-gradient(135deg,rgba(251,191,36,0.08),rgba(251,113,133,0.05));
   border:1px solid rgba(251,191,36,0.25);border-radius:12px;padding:18px;margin-bottom:20px
 }
+.patient-context-alert.critical{
+  background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(251,113,133,0.08));
+  border-color:rgba(239,68,68,0.4);
+  animation:criticalPulse 2s ease infinite
+}
+@keyframes criticalPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.2)}
+  50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}
+}
 .context-alert-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .context-alert-icon{
   width:36px;height:36px;background:rgba(251,191,36,0.15);border-radius:10px;
   display:grid;place-items:center;font-size:1.1rem
 }
+.patient-context-alert.critical .context-alert-icon{background:rgba(239,68,68,0.2)}
 .context-alert-title{font-size:0.9rem;font-weight:700;color:#fbbf24}
+.patient-context-alert.critical .context-alert-title{color:#f87171}
 .context-alert-list{list-style:none;padding:0;margin:0}
 .context-alert-list li{
-  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  display:flex;align-items:flex-start;gap:8px;padding:10px 12px;
   background:rgba(0,0,0,0.2);border-radius:8px;margin-bottom:8px;
-  font-size:0.82rem;color:var(--text-secondary)
+  font-size:0.82rem;color:var(--text-secondary);line-height:1.4
 }
 .context-alert-list li:last-child{margin-bottom:0}
-.context-alert-list .alert-icon{font-size:1rem}
+.context-alert-list li.critical{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)}
+.context-alert-list li.high{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2)}
+.context-alert-list .alert-icon{font-size:1rem;flex-shrink:0;margin-top:1px}
+
+/* Instant Lookup Badge */
+.drug-instant-badge{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(52,211,153,0.05));
+  border:1px solid rgba(16,185,129,0.25);border-radius:10px
+}
+.instant-icon{font-size:1.1rem}
+.drug-instant-badge>span:nth-child(2){font-size:0.85rem;font-weight:700;color:#34d399}
+.instant-source{
+  margin-left:auto;font-size:0.7rem;font-weight:600;color:#6b7280;
+  padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:100px
+}
 
 /* Drug Info Sections */
 .drug-section{margin-bottom:20px}
@@ -1159,10 +1186,29 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .drug-info-list{list-style:none;padding:0;margin:0}
 .drug-info-list li{
   display:flex;align-items:flex-start;gap:10px;padding:8px 0;
-  font-size:0.85rem;color:var(--text-secondary);border-bottom:1px solid var(--border)
+  font-size:0.85rem;color:var(--text-secondary);border-bottom:1px solid var(--border);
+  line-height:1.5
 }
 .drug-info-list li:last-child{border-bottom:none}
 .drug-info-list li::before{content:'•';color:var(--teal);font-weight:bold;font-size:1rem;line-height:1.4}
+.drug-info-list.contraindications li::before{color:var(--rose)}
+.drug-info-list.monitoring li::before{color:var(--blue)}
+.drug-info-list.interactions li::before{color:var(--gold)}
+.drug-info-list li strong{color:var(--text);font-weight:600}
+
+/* Renal Dosing Grid */
+.renal-dosing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px
+}
+.renal-dose-item{
+  padding:12px;background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);border-radius:10px;text-align:center
+}
+.renal-label{
+  display:block;font-size:0.7rem;font-weight:700;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px
+}
+.renal-value{font-size:0.8rem;color:var(--text-secondary);line-height:1.4}
 </style>
 </head>
 <body>
@@ -4849,8 +4895,595 @@ window.filterMedSuggestions = function(query) {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// AI-POWERED DRUG INFO - Learn More Feature
+// AI-POWERED DRUG INFO - Neural Learning Module
 // ═══════════════════════════════════════════════════════════════════
+
+const DrugKnowledgeBase = {
+  // Comprehensive drug database with clinical info
+  drugs: {
+    'metformin': {
+      generic: 'Metformin Hydrochloride',
+      class: 'Biguanide',
+      mechanism: 'Decreases hepatic glucose production, decreases intestinal absorption of glucose, and improves insulin sensitivity by increasing peripheral glucose uptake and utilization.',
+      sideEffects: ['GI upset, nausea, diarrhea (30%)', 'Metallic taste (5%)', 'Vitamin B12 deficiency (long-term)', 'Lactic acidosis (rare but serious)'],
+      contraindications: ['eGFR <30 mL/min (contraindicated)', 'eGFR 30-45 mL/min (use with caution)', 'Acute/decompensated heart failure', 'Hepatic impairment', 'Before IV contrast (hold 48h)'],
+      monitoring: ['Renal function (Cr, eGFR) at baseline then annually', 'Vitamin B12 levels periodically', 'HbA1c every 3-6 months', 'Signs of lactic acidosis'],
+      interactions: {
+        'contrast': 'Hold 48h before and after IV contrast - risk of contrast-induced nephropathy and lactic acidosis',
+        'alcohol': 'Increased risk of lactic acidosis',
+        'furosemide': 'May increase metformin levels'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: 'Max 1000mg/day if eGFR 30-45', severe: 'Contraindicated if eGFR <30' },
+      labAlerts: { creatinine: 'high', egfr: 'low' }
+    },
+    'amlodipine': {
+      generic: 'Amlodipine Besylate',
+      class: 'Calcium Channel Blocker (Dihydropyridine)',
+      mechanism: 'Inhibits calcium ion influx across cell membranes of vascular smooth muscle and cardiac muscle, causing vasodilation and reduced peripheral vascular resistance.',
+      sideEffects: ['Peripheral edema (10-15%)', 'Headache (7%)', 'Dizziness (3%)', 'Flushing (2%)', 'Palpitations'],
+      contraindications: ['Severe aortic stenosis', 'Cardiogenic shock', 'Unstable angina', 'Hypersensitivity'],
+      monitoring: ['Blood pressure regularly', 'Heart rate', 'Peripheral edema', 'Liver function if symptomatic'],
+      interactions: {
+        'simvastatin': 'Limit simvastatin to 20mg/day - increased myopathy risk',
+        'cyclosporine': 'Increased cyclosporine levels',
+        'diltiazem': 'Additive cardiac effects'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: 'No adjustment', severe: 'No adjustment (not dialyzed)' }
+    },
+    'lisinopril': {
+      generic: 'Lisinopril',
+      class: 'ACE Inhibitor',
+      mechanism: 'Competitively inhibits angiotensin-converting enzyme (ACE), preventing conversion of angiotensin I to angiotensin II, leading to decreased aldosterone secretion and vasodilation.',
+      sideEffects: ['Dry cough (10-15%)', 'Hyperkalemia (2-6%)', 'Dizziness (5%)', 'Hypotension', 'Angioedema (rare but serious)', 'Acute kidney injury'],
+      contraindications: ['History of angioedema', 'Pregnancy (2nd/3rd trimester)', 'Bilateral renal artery stenosis', 'Concurrent use with aliskiren in diabetes'],
+      monitoring: ['Blood pressure', 'Potassium levels (within 1-2 weeks of initiation)', 'Renal function (Cr, BUN)', 'Signs of angioedema'],
+      interactions: {
+        'potassium': 'Increased hyperkalemia risk with K+ supplements or K+-sparing diuretics',
+        'spironolactone': 'Significant hyperkalemia risk - monitor K+ closely',
+        'nsaids': 'Reduced antihypertensive effect, increased renal risk',
+        'lithium': 'Increased lithium levels'
+      },
+      labAlerts: { potassium: 'high', creatinine: 'high' },
+      renalDosing: { mild: 'No adjustment', moderate: 'Reduce dose 50%', severe: 'Start 2.5mg/day' }
+    },
+    'furosemide': {
+      generic: 'Furosemide',
+      class: 'Loop Diuretic',
+      mechanism: 'Inhibits sodium and chloride reabsorption in the ascending loop of Henle and distal renal tubule, interfering with the chloride-binding cotransport system, causing increased excretion of water, sodium, chloride, magnesium, and calcium.',
+      sideEffects: ['Hypokalemia (frequent)', 'Hyponatremia', 'Hypotension', 'Ototoxicity (high doses)', 'Hyperuricemia/gout', 'Hypomagnesemia'],
+      contraindications: ['Anuria', 'Hepatic coma', 'Severe electrolyte depletion', 'Hypersensitivity to sulfonamides'],
+      monitoring: ['Electrolytes (K+, Na+, Mg2+) frequently', 'Renal function', 'Blood pressure', 'Fluid status/weight', 'Hearing (high doses)'],
+      interactions: {
+        'aminoglycosides': 'Increased ototoxicity risk',
+        'digoxin': 'Hypokalemia increases digoxin toxicity risk',
+        'lithium': 'Increased lithium toxicity',
+        'nsaids': 'Reduced diuretic effect'
+      },
+      labAlerts: { potassium: 'low', sodium: 'low' }
+    },
+    'aspirin': {
+      generic: 'Acetylsalicylic Acid',
+      class: 'Antiplatelet / NSAID',
+      mechanism: 'Irreversibly inhibits cyclooxygenase-1 (COX-1) in platelets, preventing thromboxane A2 synthesis and platelet aggregation for the lifetime of the platelet (7-10 days).',
+      sideEffects: ['GI bleeding (dose-dependent)', 'Dyspepsia', 'Tinnitus (high doses)', 'Bruising', 'Allergic reactions'],
+      contraindications: ['Active GI bleeding', 'Bleeding disorders', 'Aspirin-exacerbated respiratory disease', 'Children with viral illness (Reye syndrome)'],
+      monitoring: ['Signs of bleeding', 'Hemoglobin if prolonged use', 'Renal function', 'GI symptoms'],
+      interactions: {
+        'warfarin': 'Significantly increased bleeding risk',
+        'ibuprofen': 'May reduce cardioprotective effect if taken before aspirin',
+        'methotrexate': 'Increased methotrexate toxicity',
+        'ssris': 'Increased bleeding risk'
+      }
+    },
+    'clopidogrel': {
+      generic: 'Clopidogrel Bisulfate',
+      class: 'P2Y12 Inhibitor / Antiplatelet',
+      mechanism: 'Irreversibly inhibits the P2Y12 component of ADP receptors on platelet surface, preventing ADP-mediated activation and subsequent platelet aggregation.',
+      sideEffects: ['Bleeding (major 1-2%)', 'Bruising', 'Dyspepsia', 'Diarrhea', 'Rash', 'TTP (rare)'],
+      contraindications: ['Active pathological bleeding', 'Severe hepatic impairment'],
+      monitoring: ['Signs of bleeding', 'CBC if symptomatic', 'Consider platelet function testing in non-responders'],
+      interactions: {
+        'omeprazole': 'Reduced clopidogrel efficacy - use pantoprazole instead',
+        'aspirin': 'Increased bleeding but often used together (DAPT)',
+        'warfarin': 'Significantly increased bleeding risk',
+        'nsaids': 'Increased GI bleeding risk'
+      }
+    },
+    'atorvastatin': {
+      generic: 'Atorvastatin Calcium',
+      class: 'HMG-CoA Reductase Inhibitor (Statin)',
+      mechanism: 'Competitively inhibits HMG-CoA reductase, the rate-limiting enzyme in cholesterol biosynthesis, leading to upregulation of LDL receptors and increased clearance of LDL-C from blood.',
+      sideEffects: ['Myalgia (5-10%)', 'Elevated transaminases (1-3%)', 'Myopathy/rhabdomyolysis (rare)', 'New-onset diabetes (slight risk)', 'GI upset'],
+      contraindications: ['Active liver disease', 'Unexplained persistent transaminase elevation', 'Pregnancy/breastfeeding'],
+      monitoring: ['Lipid panel (4-12 weeks after initiation)', 'LFTs at baseline and if symptomatic', 'CK if muscle symptoms', 'HbA1c periodically'],
+      interactions: {
+        'gemfibrozil': 'Increased myopathy risk - avoid combination',
+        'clarithromycin': 'Increased statin levels and myopathy risk',
+        'amlodipine': 'Limit atorvastatin to 20mg/day',
+        'grapefruit': 'Large amounts increase statin levels'
+      }
+    },
+    'omeprazole': {
+      generic: 'Omeprazole',
+      class: 'Proton Pump Inhibitor (PPI)',
+      mechanism: 'Irreversibly inhibits the H+/K+-ATPase (proton pump) in gastric parietal cells, blocking the final step of acid production and reducing gastric acid secretion by up to 99%.',
+      sideEffects: ['Headache (7%)', 'Diarrhea (3%)', 'Abdominal pain', 'C. diff infection (long-term)', 'B12/Mg deficiency (long-term)', 'Bone fracture risk (long-term)'],
+      contraindications: ['Hypersensitivity to PPIs', 'Concurrent rilpivirine'],
+      monitoring: ['Magnesium (if long-term)', 'B12 (if long-term)', 'Bone density (if high-risk)', 'C. diff if diarrhea develops'],
+      interactions: {
+        'clopidogrel': 'Reduces clopidogrel efficacy - use pantoprazole instead',
+        'methotrexate': 'Increased methotrexate levels',
+        'tacrolimus': 'Increased tacrolimus levels'
+      }
+    },
+    'pantoprazole': {
+      generic: 'Pantoprazole Sodium',
+      class: 'Proton Pump Inhibitor (PPI)',
+      mechanism: 'Irreversibly inhibits the H+/K+-ATPase (proton pump) in gastric parietal cells, blocking the final step of acid production. Less CYP2C19 interaction than omeprazole.',
+      sideEffects: ['Headache (5%)', 'Diarrhea (4%)', 'Nausea', 'C. diff infection (long-term)', 'B12/Mg deficiency (long-term)'],
+      contraindications: ['Hypersensitivity to PPIs'],
+      monitoring: ['Magnesium (if long-term)', 'B12 (if long-term)', 'C. diff if diarrhea'],
+      interactions: {
+        'methotrexate': 'Increased methotrexate levels',
+        'warfarin': 'Monitor INR'
+      }
+    },
+    'insulin glargine': {
+      generic: 'Insulin Glargine',
+      class: 'Long-Acting Insulin Analog',
+      mechanism: 'Binds to insulin receptors, facilitating cellular glucose uptake in muscle and adipose tissue while inhibiting hepatic glucose output. Glargine forms microprecipitates providing slow, peakless release over 24 hours.',
+      sideEffects: ['Hypoglycemia', 'Weight gain', 'Injection site reactions', 'Lipodystrophy', 'Hypokalemia'],
+      contraindications: ['Hypoglycemia', 'Hypersensitivity'],
+      monitoring: ['Blood glucose (fasting and random)', 'HbA1c every 3 months', 'Hypoglycemia episodes', 'Injection sites', 'Potassium if at risk'],
+      interactions: {
+        'beta-blockers': 'May mask hypoglycemia symptoms',
+        'thiazolidinediones': 'Increased fluid retention and heart failure risk',
+        'alcohol': 'Increased hypoglycemia risk'
+      },
+      labAlerts: { glucose: 'low', potassium: 'low' }
+    },
+    'enoxaparin': {
+      generic: 'Enoxaparin Sodium',
+      class: 'Low Molecular Weight Heparin (LMWH)',
+      mechanism: 'Binds to antithrombin III, potentiating its inhibition of Factor Xa (and to lesser extent Factor IIa/thrombin), preventing thrombin generation and fibrin clot formation.',
+      sideEffects: ['Bleeding (major 1-2%)', 'Injection site hematoma', 'Thrombocytopenia (HIT)', 'Elevated transaminases', 'Hyperkalemia'],
+      contraindications: ['Active major bleeding', 'HIT history', 'Severe thrombocytopenia'],
+      monitoring: ['Anti-Xa levels (renal impairment, obesity, pregnancy)', 'Platelets (baseline and if prolonged use)', 'Signs of bleeding', 'Renal function'],
+      interactions: {
+        'aspirin': 'Increased bleeding risk',
+        'nsaids': 'Increased bleeding risk',
+        'warfarin': 'Significant bleeding risk during overlap'
+      },
+      labAlerts: { platelets: 'low', inr: 'high' },
+      renalDosing: { mild: 'No adjustment', moderate: 'Consider dose reduction', severe: 'CrCl <30: 1mg/kg once daily (treatment dose)' }
+    },
+    'warfarin': {
+      generic: 'Warfarin Sodium',
+      class: 'Vitamin K Antagonist',
+      mechanism: 'Inhibits vitamin K epoxide reductase, preventing regeneration of reduced vitamin K needed for gamma-carboxylation of clotting factors II, VII, IX, and X.',
+      sideEffects: ['Bleeding (major 1-3%/year)', 'Bruising', 'Skin necrosis (rare, protein C deficiency)', 'Purple toe syndrome'],
+      contraindications: ['Active bleeding', 'Pregnancy', 'Severe liver disease', 'Recent CNS surgery', 'Uncontrolled hypertension'],
+      monitoring: ['INR (daily initially, then weekly, then monthly when stable)', 'Signs of bleeding', 'Hemoglobin if bleeding suspected'],
+      interactions: {
+        'many drugs': 'Numerous interactions - always check!',
+        'vitamin k': 'Reverses anticoagulation',
+        'antibiotics': 'Many increase INR (metronidazole, fluconazole, TMP-SMX)',
+        'amiodarone': 'Significantly increases INR - reduce warfarin dose 30-50%',
+        'nsaids': 'Increased bleeding risk'
+      },
+      labAlerts: { inr: 'high' }
+    },
+    'amoxicillin/clavulanate': {
+      generic: 'Amoxicillin/Clavulanic Acid (Augmentin)',
+      class: 'Penicillin + Beta-lactamase Inhibitor',
+      mechanism: 'Amoxicillin inhibits bacterial cell wall synthesis by binding to penicillin-binding proteins. Clavulanate irreversibly inhibits beta-lactamases, extending spectrum to beta-lactamase producing organisms.',
+      sideEffects: ['Diarrhea (9%)', 'Nausea/vomiting', 'Rash', 'Candidiasis', 'Hepatotoxicity (rare)', 'C. diff colitis'],
+      contraindications: ['Penicillin allergy', 'History of cholestatic jaundice with this drug', 'Severe renal impairment (use adjusted formulation)'],
+      monitoring: ['Signs of allergic reaction', 'LFTs if prolonged use', 'Renal function', 'C. diff if diarrhea'],
+      interactions: {
+        'methotrexate': 'Reduced methotrexate clearance',
+        'warfarin': 'May increase INR',
+        'allopurinol': 'Increased rash risk'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: 'Reduce frequency', severe: 'CrCl <30: 250-500mg q12h' }
+    },
+    'ceftriaxone': {
+      generic: 'Ceftriaxone Sodium',
+      class: 'Third-Generation Cephalosporin',
+      mechanism: 'Inhibits bacterial cell wall synthesis by binding to penicillin-binding proteins (PBPs), disrupting peptidoglycan synthesis. Broad gram-negative coverage with some gram-positive activity.',
+      sideEffects: ['Diarrhea (3%)', 'Rash (2%)', 'Eosinophilia', 'Biliary sludge/pseudolithiasis', 'Injection site pain', 'C. diff colitis'],
+      contraindications: ['Cephalosporin allergy', 'Neonates with hyperbilirubinemia', 'Neonates receiving calcium-containing IV solutions'],
+      monitoring: ['Signs of allergic reaction', 'C. diff if diarrhea', 'CBC if prolonged use', 'LFTs'],
+      interactions: {
+        'calcium': 'Do not mix or co-administer with calcium-containing solutions (precipitation)',
+        'warfarin': 'May increase INR'
+      }
+    },
+    'azithromycin': {
+      generic: 'Azithromycin',
+      class: 'Macrolide Antibiotic',
+      mechanism: 'Binds to 50S ribosomal subunit, inhibiting bacterial protein synthesis. Concentrates in tissues and has long half-life allowing short courses.',
+      sideEffects: ['Diarrhea (5%)', 'Nausea (3%)', 'Abdominal pain', 'QT prolongation', 'Hearing loss (rare)'],
+      contraindications: ['History of cholestatic jaundice with azithromycin', 'Hypersensitivity to macrolides', 'Caution with QT prolongation'],
+      monitoring: ['QTc if risk factors', 'Signs of arrhythmia', 'LFTs if symptomatic', 'Hearing'],
+      interactions: {
+        'qt-prolonging drugs': 'Additive QT prolongation (antipsychotics, fluoroquinolones)',
+        'warfarin': 'May increase INR',
+        'digoxin': 'Increased digoxin levels'
+      }
+    },
+    'ciprofloxacin': {
+      generic: 'Ciprofloxacin',
+      class: 'Fluoroquinolone Antibiotic',
+      mechanism: 'Inhibits bacterial DNA gyrase and topoisomerase IV, preventing DNA replication, transcription, repair, and recombination.',
+      sideEffects: ['Nausea (5%)', 'Diarrhea (2%)', 'Tendinopathy/rupture (black box)', 'QT prolongation', 'CNS effects', 'C. diff colitis', 'Photosensitivity'],
+      contraindications: ['Concurrent tizanidine', 'History of tendon disorders with fluoroquinolones', 'Myasthenia gravis (may worsen)'],
+      monitoring: ['Signs of tendinitis', 'QTc if risk factors', 'CNS symptoms', 'C. diff if diarrhea'],
+      interactions: {
+        'tizanidine': 'Contraindicated - significant interaction',
+        'theophylline': 'Increased theophylline levels',
+        'warfarin': 'Increased INR',
+        'antacids': 'Reduced absorption - separate by 2 hours',
+        'nsaids': 'Increased seizure risk'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: '250-500mg q12h', severe: '250-500mg q18h' }
+    },
+    'vancomycin': {
+      generic: 'Vancomycin Hydrochloride',
+      class: 'Glycopeptide Antibiotic',
+      mechanism: 'Inhibits bacterial cell wall synthesis by binding to D-Ala-D-Ala terminus of peptidoglycan precursors, preventing cross-linking. Active against gram-positive organisms including MRSA.',
+      sideEffects: ['Nephrotoxicity (5-25%)', 'Red man syndrome (rapid infusion)', 'Ototoxicity', 'Thrombocytopenia', 'Neutropenia'],
+      contraindications: ['Hypersensitivity (true allergy rare)'],
+      monitoring: ['Trough levels (target 10-20 mcg/mL, or AUC-based dosing)', 'Renal function (Cr)', 'CBC weekly if prolonged', 'Signs of red man syndrome'],
+      interactions: {
+        'aminoglycosides': 'Additive nephrotoxicity and ototoxicity',
+        'piperacillin-tazobactam': 'Increased AKI risk - controversial',
+        'loop diuretics': 'Increased ototoxicity risk'
+      },
+      labAlerts: { creatinine: 'high' },
+      renalDosing: { mild: 'Adjust per levels', moderate: 'Extend interval', severe: 'Dose after dialysis or per levels' }
+    },
+    'piperacillin/tazobactam': {
+      generic: 'Piperacillin/Tazobactam (Zosyn)',
+      class: 'Extended-Spectrum Penicillin + Beta-lactamase Inhibitor',
+      mechanism: 'Piperacillin inhibits cell wall synthesis via PBP binding. Tazobactam inhibits many beta-lactamases. Broad spectrum including Pseudomonas.',
+      sideEffects: ['Diarrhea (11%)', 'Rash', 'Thrombocytopenia', 'Leukopenia', 'Elevated LFTs', 'C. diff colitis', 'Hypokalemia'],
+      contraindications: ['Penicillin allergy', 'Hypersensitivity'],
+      monitoring: ['CBC (prolonged use)', 'Renal function', 'LFTs', 'Potassium', 'C. diff if diarrhea'],
+      interactions: {
+        'vancomycin': 'Possibly increased AKI risk',
+        'methotrexate': 'Reduced clearance',
+        'probenecid': 'Increased piperacillin levels'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: '2.25g q6h', severe: 'CrCl <20: 2.25g q8h' }
+    },
+    'ondansetron': {
+      generic: 'Ondansetron',
+      class: '5-HT3 Receptor Antagonist',
+      mechanism: 'Selectively blocks serotonin 5-HT3 receptors in the chemoreceptor trigger zone and vagal afferents, preventing nausea and vomiting signals.',
+      sideEffects: ['Headache (9-27%)', 'Constipation (9%)', 'QT prolongation', 'Dizziness', 'Fatigue'],
+      contraindications: ['Congenital long QT syndrome', 'Concurrent apomorphine'],
+      monitoring: ['QTc if risk factors or high doses', 'Bowel function (constipation)', 'Electrolytes'],
+      interactions: {
+        'apomorphine': 'Contraindicated - profound hypotension',
+        'qt-prolonging drugs': 'Additive QT prolongation',
+        'tramadol': 'Reduced analgesic effect (serotonin pathway)'
+      }
+    },
+    'morphine': {
+      generic: 'Morphine Sulfate',
+      class: 'Opioid Agonist',
+      mechanism: 'Binds to mu-opioid receptors in the CNS, altering perception and emotional response to pain. Also causes euphoria, respiratory depression, and decreased GI motility.',
+      sideEffects: ['Constipation (common)', 'Nausea/vomiting (28%)', 'Sedation', 'Respiratory depression', 'Pruritus', 'Urinary retention', 'Hypotension'],
+      contraindications: ['Severe respiratory depression', 'Acute/severe bronchial asthma', 'GI obstruction', 'Concurrent MAOIs'],
+      monitoring: ['Respiratory rate and depth', 'Pain scores', 'Sedation level', 'Bowel function', 'Signs of dependence'],
+      interactions: {
+        'benzodiazepines': 'Black box - increased risk of respiratory depression and death',
+        'maois': 'Contraindicated - serotonin syndrome risk',
+        'cns depressants': 'Additive sedation and respiratory depression'
+      },
+      labAlerts: { respiratory_rate: 'low' },
+      renalDosing: { mild: 'Use with caution', moderate: 'Reduce dose 25-50%', severe: 'Avoid - active metabolites accumulate' }
+    },
+    'paracetamol': {
+      generic: 'Acetaminophen/Paracetamol',
+      class: 'Analgesic/Antipyretic',
+      mechanism: 'Inhibits prostaglandin synthesis in the CNS and peripherally blocks pain impulse generation. Reduces fever through action on hypothalamic heat-regulating center.',
+      sideEffects: ['Hepatotoxicity (overdose)', 'Rare: thrombocytopenia, skin reactions'],
+      contraindications: ['Severe hepatic impairment', 'Severe active liver disease'],
+      monitoring: ['LFTs if prolonged high-dose use', 'Total daily dose from all sources (max 4g/day, 2g in liver disease)', 'Signs of hepatotoxicity'],
+      interactions: {
+        'warfarin': 'May increase INR with regular use',
+        'alcohol': 'Increased hepatotoxicity risk',
+        'isoniazid': 'Increased hepatotoxicity risk'
+      }
+    },
+    'salbutamol': {
+      generic: 'Salbutamol/Albuterol',
+      class: 'Short-Acting Beta-2 Agonist (SABA)',
+      mechanism: 'Selectively stimulates beta-2 adrenergic receptors in bronchial smooth muscle, causing bronchodilation through increased cAMP and smooth muscle relaxation.',
+      sideEffects: ['Tremor (20%)', 'Tachycardia', 'Palpitations', 'Hypokalemia (high doses)', 'Nervousness', 'Headache'],
+      contraindications: ['Hypersensitivity', 'Use with caution in cardiovascular disease'],
+      monitoring: ['Heart rate', 'Potassium (if frequent use)', 'Frequency of rescue use (indicates control)', 'Peak flow/FEV1'],
+      interactions: {
+        'beta-blockers': 'Reduced bronchodilator effect',
+        'diuretics': 'Additive hypokalemia',
+        'maois': 'Increased cardiovascular effects'
+      },
+      labAlerts: { potassium: 'low' }
+    },
+    'prednisolone': {
+      generic: 'Prednisolone',
+      class: 'Corticosteroid',
+      mechanism: 'Binds to intracellular glucocorticoid receptors, modulating gene transcription to reduce inflammation, suppress immune responses, and affect carbohydrate/protein/fat metabolism.',
+      sideEffects: ['Hyperglycemia', 'Insomnia', 'Mood changes', 'Increased appetite/weight gain', 'GI upset', 'Immunosuppression', 'Osteoporosis (long-term)', 'Adrenal suppression'],
+      contraindications: ['Systemic fungal infections', 'Live vaccines during immunosuppressive doses'],
+      monitoring: ['Blood glucose', 'Blood pressure', 'Signs of infection', 'Bone density (if prolonged)', 'HPA axis (if prolonged use)', 'Growth in children', 'Mood/behavior'],
+      interactions: {
+        'nsaids': 'Increased GI bleeding risk',
+        'vaccines': 'Reduced efficacy of vaccines; avoid live vaccines',
+        'diabetes medications': 'May need dose increase - steroids raise glucose',
+        'cyp3a4 inducers': 'Reduced steroid effect (rifampin, phenytoin)'
+      },
+      labAlerts: { glucose: 'high' }
+    },
+    'levetiracetam': {
+      generic: 'Levetiracetam (Keppra)',
+      class: 'Anticonvulsant',
+      mechanism: 'Binds to synaptic vesicle protein SV2A, modulating neurotransmitter release. Exact anticonvulsant mechanism not fully understood but different from other AEDs.',
+      sideEffects: ['Somnolence (15%)', 'Behavioral changes/irritability (13%)', 'Dizziness (9%)', 'Fatigue', 'Headache'],
+      contraindications: ['Hypersensitivity'],
+      monitoring: ['Seizure frequency', 'Behavioral/mood changes', 'Renal function (renally cleared)', 'Suicidal ideation (FDA warning for all AEDs)'],
+      interactions: {
+        'few significant interactions': 'Major advantage - minimal CYP interactions',
+        'cns depressants': 'Additive sedation'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: '250-750mg q12h', severe: '250-500mg q12h' }
+    },
+    'carvedilol': {
+      generic: 'Carvedilol',
+      class: 'Non-selective Beta-Blocker with Alpha-1 Blocking Activity',
+      mechanism: 'Blocks beta-1, beta-2, and alpha-1 adrenergic receptors. Reduces heart rate, contractility, and blood pressure. In heart failure, improves remodeling and reduces mortality.',
+      sideEffects: ['Dizziness (32%)', 'Fatigue (24%)', 'Hypotension', 'Bradycardia', 'Weight gain', 'Hyperglycemia masking'],
+      contraindications: ['Decompensated heart failure requiring inotropes', 'Severe bradycardia', '2nd/3rd degree AV block', 'Cardiogenic shock', 'Severe hepatic impairment', 'Bronchospastic conditions'],
+      monitoring: ['Heart rate', 'Blood pressure', 'Signs of heart failure worsening (initiation)', 'Weight', 'Glucose in diabetics'],
+      interactions: {
+        'digoxin': 'Increased digoxin levels',
+        'diltiazem/verapamil': 'Additive cardiac depression',
+        'insulin': 'May mask hypoglycemia symptoms',
+        'clonidine': 'Risk of rebound hypertension if clonidine stopped'
+      }
+    },
+    'spironolactone': {
+      generic: 'Spironolactone',
+      class: 'Potassium-Sparing Diuretic / Aldosterone Antagonist',
+      mechanism: 'Competitively binds to aldosterone receptors in distal tubule, blocking sodium reabsorption and potassium excretion. In heart failure, blocks harmful aldosterone effects on cardiac remodeling.',
+      sideEffects: ['Hyperkalemia (dose-dependent)', 'Gynecomastia (9%)', 'GI upset', 'Menstrual irregularities', 'Erectile dysfunction'],
+      contraindications: ['Hyperkalemia (K+ >5.5)', 'Severe renal impairment (CrCl <10)', 'Addison disease', 'Concurrent eplerenone'],
+      monitoring: ['Potassium (within 1 week, then periodically)', 'Renal function', 'Blood pressure', 'Signs of hyperkalemia', 'Gynecomastia'],
+      interactions: {
+        'ace inhibitors/arbs': 'Significantly increased hyperkalemia risk',
+        'potassium supplements': 'Contraindicated combination',
+        'nsaids': 'Reduced diuretic effect, increased hyperkalemia',
+        'digoxin': 'Increased digoxin levels'
+      },
+      labAlerts: { potassium: 'high', creatinine: 'high' },
+      renalDosing: { mild: 'Use with caution', moderate: 'Reduce dose', severe: 'Generally avoid' }
+    },
+    'losartan': {
+      generic: 'Losartan Potassium',
+      class: 'Angiotensin II Receptor Blocker (ARB)',
+      mechanism: 'Selectively blocks binding of angiotensin II to AT1 receptors, preventing vasoconstriction and aldosterone release. Does not affect bradykinin (less cough than ACEi).',
+      sideEffects: ['Dizziness (3%)', 'Hyperkalemia', 'Hypotension', 'Fatigue', 'Diarrhea', 'Upper respiratory infection'],
+      contraindications: ['Pregnancy', 'Concurrent aliskiren in diabetes', 'Bilateral renal artery stenosis'],
+      monitoring: ['Blood pressure', 'Potassium', 'Renal function', 'Signs of angioedema (rare)'],
+      interactions: {
+        'potassium': 'Increased hyperkalemia risk',
+        'lithium': 'Increased lithium levels',
+        'nsaids': 'Reduced effect, increased renal risk'
+      },
+      labAlerts: { potassium: 'high' }
+    },
+    'ramipril': {
+      generic: 'Ramipril',
+      class: 'ACE Inhibitor',
+      mechanism: 'Prodrug converted to ramiprilat, which inhibits ACE, preventing angiotensin I to II conversion. Reduces aldosterone, causes vasodilation, and provides cardio/renal protection.',
+      sideEffects: ['Cough (12%)', 'Dizziness (4%)', 'Hyperkalemia', 'Hypotension', 'Angioedema (rare)', 'Acute kidney injury'],
+      contraindications: ['History of angioedema', 'Pregnancy', 'Bilateral renal artery stenosis'],
+      monitoring: ['Blood pressure', 'Potassium', 'Renal function (Cr, BUN)', 'Signs of angioedema'],
+      interactions: {
+        'potassium': 'Hyperkalemia risk',
+        'nsaids': 'Reduced effect, renal risk',
+        'lithium': 'Increased lithium levels',
+        'aliskiren': 'Avoid in diabetes'
+      },
+      labAlerts: { potassium: 'high', creatinine: 'high' }
+    },
+    'digoxin': {
+      generic: 'Digoxin',
+      class: 'Cardiac Glycoside',
+      mechanism: 'Inhibits Na+/K+-ATPase, increasing intracellular calcium, enhancing cardiac contractility (positive inotrope). Also slows AV conduction via vagal effects.',
+      sideEffects: ['Nausea/vomiting', 'Visual disturbances (yellow-green halos)', 'Arrhythmias', 'Confusion', 'Fatigue'],
+      contraindications: ['Ventricular fibrillation', 'Hypertrophic cardiomyopathy with outflow obstruction', 'WPW syndrome with AF'],
+      monitoring: ['Digoxin levels (0.5-2.0 ng/mL, lower in HF)', 'Potassium (hypokalemia increases toxicity)', 'Renal function', 'Heart rate', 'Signs of toxicity'],
+      interactions: {
+        'amiodarone': 'Increases digoxin level 70-100%',
+        'verapamil': 'Increases digoxin levels',
+        'diuretics': 'Hypokalemia increases toxicity risk',
+        'quinidine': 'Doubles digoxin levels'
+      },
+      labAlerts: { potassium: 'low' },
+      renalDosing: { mild: 'Reduce dose', moderate: 'Reduce dose significantly', severe: 'Use with extreme caution, low doses' }
+    },
+    'heparin': {
+      generic: 'Unfractionated Heparin',
+      class: 'Anticoagulant',
+      mechanism: 'Binds to antithrombin III, accelerating its inhibition of thrombin (Factor IIa) and Factor Xa by ~1000-fold. Short half-life, reversible with protamine.',
+      sideEffects: ['Bleeding', 'HIT (heparin-induced thrombocytopenia)', 'Osteoporosis (long-term)', 'Hyperkalemia', 'Elevated LFTs'],
+      contraindications: ['Active major bleeding', 'Severe thrombocytopenia', 'History of HIT'],
+      monitoring: ['aPTT (target 1.5-2.5x control) or anti-Xa levels', 'Platelets (baseline, day 4, then periodically for HIT)', 'Signs of bleeding', 'Hemoglobin'],
+      interactions: {
+        'antiplatelet agents': 'Increased bleeding risk',
+        'thrombolytics': 'Significantly increased bleeding'
+      },
+      labAlerts: { platelets: 'low', aptt: 'high' }
+    },
+    'rivaroxaban': {
+      generic: 'Rivaroxaban (Xarelto)',
+      class: 'Direct Factor Xa Inhibitor (DOAC)',
+      mechanism: 'Directly and selectively inhibits Factor Xa (free and clot-bound), interrupting the coagulation cascade without requiring antithrombin as a cofactor.',
+      sideEffects: ['Bleeding (major 1-4%)', 'Bruising', 'Nausea', 'Anemia', 'Wound secretion post-surgery'],
+      contraindications: ['Active pathological bleeding', 'Severe hepatic disease with coagulopathy', 'Pregnancy/breastfeeding'],
+      monitoring: ['Signs of bleeding', 'Hemoglobin if bleeding suspected', 'Renal function (affects clearance)', 'No routine coagulation monitoring needed'],
+      interactions: {
+        'strong cyp3a4/p-gp inhibitors': 'Increased rivaroxaban levels (ketoconazole, ritonavir)',
+        'strong cyp3a4 inducers': 'Reduced efficacy (rifampin, phenytoin)',
+        'antiplatelet agents': 'Increased bleeding risk'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: 'Use with caution', severe: 'Avoid if CrCl <15' }
+    },
+    'tramadol': {
+      generic: 'Tramadol Hydrochloride',
+      class: 'Opioid Analgesic (Weak)',
+      mechanism: 'Weak mu-opioid receptor agonist plus inhibition of norepinephrine and serotonin reuptake, providing dual analgesic mechanisms.',
+      sideEffects: ['Nausea (24%)', 'Dizziness (26%)', 'Constipation (24%)', 'Headache', 'Seizures (dose-related)', 'Serotonin syndrome'],
+      contraindications: ['Seizure disorder', 'Concurrent MAOIs', 'Acute intoxication with alcohol/opioids/psychotropics', 'Severe renal/hepatic impairment'],
+      monitoring: ['Pain control', 'Signs of serotonin syndrome', 'Seizure activity', 'Signs of dependence', 'Respiratory status'],
+      interactions: {
+        'ssris/snris': 'Serotonin syndrome risk',
+        'maois': 'Contraindicated',
+        'carbamazepine': 'Reduced tramadol effect',
+        'ondansetron': 'Reduced tramadol efficacy'
+      },
+      renalDosing: { mild: 'No adjustment', moderate: 'Extend interval to q12h', severe: 'Max 50mg q12h' }
+    }
+  },
+  
+  // Get drug info (case-insensitive lookup)
+  getDrug: function(name) {
+    if (!name) return null;
+    const key = name.toLowerCase().trim();
+    
+    // Direct match
+    if (this.drugs[key]) return this.drugs[key];
+    
+    // Partial match
+    for (const [drugKey, data] of Object.entries(this.drugs)) {
+      if (key.includes(drugKey) || drugKey.includes(key)) {
+        return data;
+      }
+      // Check generic name
+      if (data.generic && data.generic.toLowerCase().includes(key)) {
+        return data;
+      }
+    }
+    
+    return null;
+  },
+  
+  // Get patient-specific warnings
+  getPatientWarnings: function(drugName, patient) {
+    const warnings = [];
+    const drug = this.getDrug(drugName);
+    if (!drug || !patient) return warnings;
+    
+    const diagnosis = (patient.diagnosis || '').toLowerCase();
+    const meds = (patient.medications || []).map(m => m.name?.toLowerCase());
+    const labData = patient.labData?.parameters || [];
+    
+    // Check drug interactions with current medications
+    if (drug.interactions) {
+      meds.forEach(med => {
+        Object.entries(drug.interactions).forEach(([trigger, warning]) => {
+          if (med && (med.includes(trigger) || trigger.includes(med))) {
+            warnings.push({
+              icon: '⚠️',
+              type: 'interaction',
+              severity: 'high',
+              text: `Interaction with ${med}: ${warning}`
+            });
+          }
+        });
+      });
+    }
+    
+    // Check lab-based warnings
+    if (drug.labAlerts) {
+      labData.forEach(param => {
+        const paramKey = param.name?.toLowerCase();
+        const status = param.values?.[0]?.status;
+        const value = param.values?.[0]?.value;
+        
+        if (drug.labAlerts[paramKey]) {
+          const alertType = drug.labAlerts[paramKey];
+          if ((alertType === 'high' && (status === 'high' || status === 'critical')) ||
+              (alertType === 'low' && status === 'low')) {
+            warnings.push({
+              icon: '🔬',
+              type: 'lab',
+              severity: status === 'critical' ? 'critical' : 'moderate',
+              text: `Caution: ${param.name} is ${status} (${value}) - may affect ${drugName} safety/dosing`
+            });
+          }
+        }
+      });
+    }
+    
+    // Check renal dosing
+    if (drug.renalDosing) {
+      const crParam = labData.find(p => p.name?.toLowerCase().includes('creatinine') || p.name?.toLowerCase().includes('egfr'));
+      if (crParam?.values?.[0]?.status === 'high' || crParam?.values?.[0]?.status === 'critical') {
+        warnings.push({
+          icon: '🫘',
+          type: 'renal',
+          severity: 'high',
+          text: `Renal impairment detected - ${drug.renalDosing.severe || drug.renalDosing.moderate || 'adjust dose'}`
+        });
+      }
+    }
+    
+    // Check diagnosis-specific warnings
+    if (diagnosis.includes('liver') || diagnosis.includes('hepatic') || diagnosis.includes('cirrhosis')) {
+      if (drug.contraindications?.some(c => c.toLowerCase().includes('hepatic') || c.toLowerCase().includes('liver'))) {
+        warnings.push({
+          icon: '🫀',
+          type: 'diagnosis',
+          severity: 'high',
+          text: 'Patient has liver disease - review hepatic contraindications'
+        });
+      }
+    }
+    
+    if (diagnosis.includes('renal') || diagnosis.includes('kidney') || diagnosis.includes('ckd')) {
+      if (drug.renalDosing) {
+        warnings.push({
+          icon: '🫘',
+          type: 'diagnosis',
+          severity: 'moderate',
+          text: `Patient has renal disease - consider dose adjustment`
+        });
+      }
+    }
+    
+    return warnings;
+  },
+  
+  // Learn from patient data
+  learnedInteractions: {},
+  
+  recordInteraction: function(drugName, patientContext, outcome) {
+    // Store learned patterns (could be persisted to localStorage or cloud)
+    const key = drugName.toLowerCase();
+    if (!this.learnedInteractions[key]) {
+      this.learnedInteractions[key] = [];
+    }
+    this.learnedInteractions[key].push({
+      context: patientContext,
+      outcome: outcome,
+      timestamp: Date.now()
+    });
+  }
+};
 
 window.openDrugInfo = async function(drugName, medIdx) {
   const p = state.currentPatient;
@@ -4859,16 +5492,25 @@ window.openDrugInfo = async function(drugName, medIdx) {
   $('drugInfoTitle').textContent = drugName;
   openModal('drugInfoModal');
   
-  // Show loading state
+  // INSTANT: Check local knowledge base first
+  const localDrug = DrugKnowledgeBase.getDrug(drugName);
+  const patientWarnings = DrugKnowledgeBase.getPatientWarnings(drugName, p);
+  
+  if (localDrug) {
+    // Render immediately from local knowledge
+    renderDrugInfoFromKnowledge(localDrug, drugName, patientWarnings, med);
+    return;
+  }
+  
+  // If not in local KB, show loading and try API
   $('drugInfoBody').innerHTML = `
     <div style="text-align:center;padding:40px">
       <div class="spinner"></div>
-      <p style="margin-top:16px;color:var(--text-muted)">Analyzing ${esc(drugName)}...</p>
+      <p style="margin-top:16px;color:var(--text-muted)">Fetching ${esc(drugName)} information...</p>
     </div>
   `;
   
   try {
-    // Build patient context for personalized warnings
     const patientContext = {
       diagnosis: p.diagnosis || '',
       medications: (p.medications || []).map(m => m.name).filter(n => n !== drugName),
@@ -4892,19 +5534,134 @@ window.openDrugInfo = async function(drugName, medIdx) {
     
     const data = await res.json();
     
-    if (data.error) {
-      throw new Error(data.error);
-    }
+    if (data.error) throw new Error(data.error);
     
-    // Render drug info
     renderDrugInfoContent(data, drugName, patientContext);
     
   } catch (e) {
     console.error('Drug info error:', e);
-    // Fallback to basic info
     renderBasicDrugInfo(drugName, med);
   }
 };
+
+function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
+  let html = '';
+  
+  // Header badge showing instant lookup
+  html += `
+    <div class="drug-instant-badge">
+      <span class="instant-icon">⚡</span>
+      <span>Instant Lookup</span>
+      <span class="instant-source">Neural Knowledge Base</span>
+    </div>
+  `;
+  
+  // Patient-specific warnings (most important - show first)
+  if (warnings.length > 0) {
+    const criticalWarnings = warnings.filter(w => w.severity === 'critical' || w.severity === 'high');
+    const otherWarnings = warnings.filter(w => w.severity !== 'critical' && w.severity !== 'high');
+    
+    html += `
+      <div class="patient-context-alert ${criticalWarnings.length > 0 ? 'critical' : ''}">
+        <div class="context-alert-header">
+          <div class="context-alert-icon">${criticalWarnings.length > 0 ? '🚨' : '⚠️'}</div>
+          <div class="context-alert-title">${criticalWarnings.length > 0 ? 'Critical Alerts for This Patient' : 'Patient-Specific Warnings'}</div>
+        </div>
+        <ul class="context-alert-list">
+          ${warnings.map(w => `
+            <li class="${w.severity}">
+              <span class="alert-icon">${w.icon}</span>
+              <span>${esc(w.text)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  // Drug class & mechanism
+  html += `
+    <div class="drug-section">
+      <div class="drug-section-title"><span>🧬</span> ${esc(drug.class || 'Drug Class')}</div>
+      <p class="drug-info-text">${esc(drug.mechanism)}</p>
+    </div>
+  `;
+  
+  // Side Effects
+  if (drug.sideEffects?.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>⚡</span> Side Effects</div>
+        <ul class="drug-info-list">
+          ${drug.sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  // Contraindications
+  if (drug.contraindications?.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>🚫</span> Contraindications</div>
+        <ul class="drug-info-list contraindications">
+          ${drug.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  // Monitoring
+  if (drug.monitoring?.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>📊</span> Monitoring Parameters</div>
+        <ul class="drug-info-list monitoring">
+          ${drug.monitoring.map(m => `<li>${esc(m)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  // Key Interactions
+  if (drug.interactions && Object.keys(drug.interactions).length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>💊</span> Key Drug Interactions</div>
+        <ul class="drug-info-list interactions">
+          ${Object.entries(drug.interactions).map(([trigger, desc]) => `
+            <li><strong>${esc(trigger)}:</strong> ${esc(desc)}</li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  // Renal Dosing
+  if (drug.renalDosing) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>🫘</span> Renal Dosing</div>
+        <div class="renal-dosing-grid">
+          <div class="renal-dose-item">
+            <span class="renal-label">Mild</span>
+            <span class="renal-value">${esc(drug.renalDosing.mild)}</span>
+          </div>
+          <div class="renal-dose-item">
+            <span class="renal-label">Moderate</span>
+            <span class="renal-value">${esc(drug.renalDosing.moderate)}</span>
+          </div>
+          <div class="renal-dose-item">
+            <span class="renal-label">Severe</span>
+            <span class="renal-value">${esc(drug.renalDosing.severe)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  $('drugInfoBody').innerHTML = html;
+}
 
 function renderDrugInfoContent(data, drugName, context) {
   const warnings = data.warnings || [];
