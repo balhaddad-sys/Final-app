@@ -3180,7 +3180,7 @@ function loadLocal() {
   if (!state.patients.length) {
     console.log('📋 Adding demo patients for testing...');
     state.patients = [
-      { id: 1, name: 'John Smith', ward: 'Ward 14', room: '101', diagnosis: 'Community Acquired Pneumonia', doctor: 'Dr. Ahmed', status: 'stable', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: { hr: '78', bp: '120/80', temp: '37.2', rr: '18', spo2: '96%' } },
+      { id: 1, name: 'John Smith', ward: 'Ward 14', room: '101', diagnosis: 'Community Acquired Pneumonia', doctor: 'Dr. Ahmed', status: 'active', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: { hr: '78', bp: '120/80', temp: '37.2', rr: '18', spo2: '96%' } },
       { id: 2, name: 'Sarah Johnson', ward: 'Ward 14', room: '102', diagnosis: 'DKA - Diabetic Ketoacidosis', doctor: 'Dr. Fatima', status: 'critical', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: { hr: '110', bp: '90/60', temp: '36.8', rr: '24', spo2: '94%' } },
       { id: 3, name: 'Mohammed Ali', ward: 'Ward 22', room: '205', diagnosis: 'Acute COPD Exacerbation', doctor: 'Dr. Ahmed', status: 'chronic', labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: { hr: '92', bp: '140/90', temp: '37.8', rr: '22', spo2: '89%' } }
     ];
@@ -3431,10 +3431,21 @@ async function syncFromCloud() {
         console.log('   Settings loaded, apiUrl:', state.settings.apiUrl ? 'configured' : 'not set');
       }
       
-      // Update patients - THIS IS KEY FOR MULTI-USER SYNC
-      if (data.data.patients) {
-        state.patients = data.data.patients;
-        console.log('   Patients loaded:', state.patients.length);
+      // Update patients - GUARDED: don't let empty cloud overwrite local data
+      const cloudPatients = data.data.patients;
+      if (Array.isArray(cloudPatients)) {
+        if (cloudPatients.length > 0) {
+          // Cloud has patients - use them
+          state.patients = cloudPatients;
+          console.log('   ✅ Patients loaded from cloud:', state.patients.length);
+        } else if (state.patients.length === 0) {
+          // Both empty - accept cloud (no data loss)
+          state.patients = cloudPatients;
+          console.log('   ⚠️ Cloud and local both empty');
+        } else {
+          // Cloud empty but local has data - KEEP LOCAL to prevent data loss
+          console.log('   ⚠️ Cloud patients empty; keeping local patients:', state.patients.length);
+        }
         
         // Log lab data for debugging
         state.patients.forEach(p => {
@@ -3461,12 +3472,22 @@ async function syncFromCloud() {
       // Save to local storage
       saveLocal();
       
-      // Re-render appropriate view
+      // Re-render appropriate view with diagnostic logging
+      console.log('🔄 Re-rendering view. State:', {
+        currentPatient: state.currentPatient?.name || null,
+        currentUnit: state.currentUnit?.name || null,
+        currentFilter: state.currentFilter,
+        patientCount: state.patients.length
+      });
+      
       if (state.currentPatient) {
+        console.log('   → Rendering patient profile');
         renderPatientProfile();
       } else if (state.currentUnit) {
+        console.log('   → Rendering patient list');
         renderPatients();
       } else {
+        console.log('   → Rendering unit list');
         renderUnits();
       }
       
