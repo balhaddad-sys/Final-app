@@ -4414,11 +4414,12 @@ async function handleLabUpload(file) {
       
       if (data.error || !data.labData) {
         console.error('❌ Extraction error:', data.error);
-        if (data.debug) {
-          console.error('❌ Debug - Raw response preview:', data.debug.rawResponsePreview);
-          console.error('❌ Debug - Raw response length:', data.debug.rawResponseLength);
+        let errorMsg = data.error || 'Extraction failed';
+        if (data.debug && data.debug.rawResponsePreview) {
+          errorMsg += '\n\nRaw AI response:\n' + data.debug.rawResponsePreview;
+          alert('DEBUG INFO:\n\n' + data.debug.rawResponsePreview);
         }
-        toast(data.error || 'Extraction failed', true);
+        toast(errorMsg.substring(0, 100), true);
         renderProfileLabs();
         return;
       }
