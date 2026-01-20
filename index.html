@@ -1112,226 +1112,172 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .meds-count{padding:4px 12px;background:rgba(52,211,153,0.1);border-radius:100px;font-size:0.7rem;font-weight:700;color:#34d399}
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CLINICAL ACTION PLAN - Clean Spacious Design v2
+   CLINICAL ACTION PLAN - Simple Clean Design
 ═══════════════════════════════════════════════════════════════════════════ */
 
-.clinical-plan-container{padding:4px 0}
+.plan-section-card{padding:0;overflow:hidden}
+.plan-section-header{padding:16px 20px;border-bottom:1px solid var(--border)}
 
-/* Clean Header */
-.plan-header-clean{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:20px;margin-bottom:16px;
-  background:linear-gradient(135deg,#0d1525,#121d30);
-  border:1px solid rgba(255,255,255,0.06);border-radius:16px
+/* Stats Grid */
+.plan-stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--border);margin:0
 }
-.plan-title-row{display:flex;align-items:center;gap:14px}
-.plan-title-icon{
-  width:44px;height:44px;border-radius:12px;
-  background:linear-gradient(135deg,#f59e0b,#ea580c);
-  display:grid;place-items:center;font-size:1.3rem;
-  box-shadow:0 4px 16px rgba(245,158,11,0.25)
-}
-.plan-title-text h3{font-size:1rem;font-weight:700;color:#f0f6fc;margin:0 0 2px}
-.plan-title-text p{font-size:0.75rem;color:#6b7280;margin:0}
-.plan-add-btn-clean{
-  display:flex;align-items:center;gap:6px;
-  padding:10px 18px;background:linear-gradient(135deg,#f59e0b,#ea580c);
-  border:none;border-radius:10px;color:#000;font-weight:700;font-size:0.8rem;
-  cursor:pointer;font-family:inherit;transition:all 0.2s;
-  box-shadow:0 4px 12px rgba(245,158,11,0.25)
-}
-.plan-add-btn-clean:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(245,158,11,0.35)}
-.plan-add-btn-clean:active{transform:scale(0.97)}
-.plan-add-btn-clean .btn-icon{font-size:1.1rem;font-weight:400}
-
-/* Stats Row */
-.plan-stats-row{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px
-}
-.plan-stat-card{
+.plan-stat-box{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:16px 8px;background:#0a0f18;
-  border:1px solid rgba(255,255,255,0.05);border-radius:14px;
-  text-align:center
+  padding:16px 8px;background:var(--bg-card);text-align:center;min-height:80px
 }
-.plan-stat-card.progress-card{padding:12px 8px}
-.plan-stat-card.has-urgent{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)}
-.stat-ring{position:relative;width:48px;height:48px;margin-bottom:6px}
-.stat-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring-bg{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:3}
-.ring-fill{fill:none;stroke:#10b981;stroke-width:3;stroke-linecap:round;transition:stroke-dasharray 0.5s}
-.ring-value{
+.plan-stat-box.urgent-box{background:rgba(239,68,68,0.05)}
+.plan-stat-ring{position:relative;width:44px;height:44px}
+.plan-stat-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,0.1);stroke-width:3}
+.ring-fill{fill:none;stroke:#10b981;stroke-width:3;stroke-linecap:round}
+.ring-text{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  font-size:0.7rem;font-weight:800;color:#10b981
+  font-size:0.65rem;font-weight:800;color:#10b981
 }
-.stat-card-value{font-size:1.5rem;font-weight:800;color:#f0f6fc;line-height:1}
-.stat-card-value.pending{color:#f59e0b}
-.stat-card-value.done{color:#10b981}
-.stat-card-value.urgent{color:#ef4444}
-.stat-card-label{font-size:0.65rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;margin-top:6px}
+.plan-stat-num{font-size:1.5rem;font-weight:800;line-height:1}
+.plan-stat-num.amber{color:#f59e0b}
+.plan-stat-num.green{color:#10b981}
+.plan-stat-num.red{color:#ef4444}
+.plan-stat-lbl{font-size:0.65rem;color:#6b7280;margin-top:4px;text-transform:uppercase}
 
-/* Notification Row */
-.plan-notify-row{
+/* Notify Bar */
+.plan-notify-bar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 18px;margin-bottom:16px;
-  background:rgba(139,92,246,0.06);
-  border:1px solid rgba(139,92,246,0.15);border-radius:12px
+  padding:12px 20px;background:rgba(139,92,246,0.05);
+  border-bottom:1px solid var(--border)
 }
-.notify-left{display:flex;align-items:center;gap:10px}
-.notify-icon{font-size:1rem}
-.notify-text{font-size:0.82rem;font-weight:600;color:#a78bfa}
-.switch-toggle{position:relative;width:44px;height:24px}
-.switch-toggle input{opacity:0;width:0;height:0}
-.switch-slider{
+.notify-label{font-size:0.8rem;color:#a78bfa;font-weight:600}
+.toggle-switch{position:relative;width:40px;height:22px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-track{
   position:absolute;cursor:pointer;inset:0;
-  background:rgba(255,255,255,0.1);border-radius:24px;transition:0.3s
+  background:rgba(255,255,255,0.1);border-radius:22px;transition:0.2s
 }
-.switch-slider::before{
-  content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;
-  background:#6b7280;border-radius:50%;transition:0.3s
+.toggle-track::before{
+  content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;
+  background:#6b7280;border-radius:50%;transition:0.2s
 }
-.switch-toggle input:checked + .switch-slider{background:rgba(139,92,246,0.5)}
-.switch-toggle input:checked + .switch-slider::before{transform:translateX(20px);background:#a78bfa}
+.toggle-switch input:checked + .toggle-track{background:#8b5cf6}
+.toggle-switch input:checked + .toggle-track::before{transform:translateX(18px);background:#fff}
 
-/* AI Suggestions Card */
-.plan-suggestions-card{
-  padding:16px;margin-bottom:16px;
-  background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(139,92,246,0.03));
-  border:1px solid rgba(59,130,246,0.12);border-radius:14px
+/* AI Box */
+.plan-ai-box{padding:16px 20px;border-bottom:1px solid var(--border);background:rgba(59,130,246,0.03)}
+.plan-ai-header{margin-bottom:12px}
+.ai-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px;background:rgba(59,130,246,0.1);
+  border-radius:100px;font-size:0.7rem;font-weight:700;color:#60a5fa
 }
-.suggestions-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.suggestions-badge{
-  display:flex;align-items:center;gap:6px;
-  padding:5px 12px;background:rgba(59,130,246,0.12);
-  border-radius:100px;font-size:0.75rem;font-weight:700;color:#60a5fa
-}
-.suggestions-hint{font-size:0.7rem;color:#6b7280}
-.suggestions-list{display:flex;flex-direction:column;gap:8px}
-.suggestion-item{
+.plan-ai-list{display:flex;flex-direction:column;gap:8px}
+.plan-ai-item{
   display:flex;align-items:center;gap:10px;
-  padding:12px 14px;background:rgba(255,255,255,0.02);
-  border:1px solid rgba(255,255,255,0.06);border-radius:10px;
-  cursor:pointer;transition:all 0.2s
+  padding:10px 12px;background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:10px;cursor:pointer;
+  transition:all 0.2s;-webkit-tap-highlight-color:transparent
 }
-.suggestion-item:hover{background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)}
-.suggestion-icon{font-size:1rem;flex-shrink:0}
-.suggestion-text{flex:1;font-size:0.82rem;color:#c9d1d9;line-height:1.4}
-.suggestion-add-btn{
-  width:26px;height:26px;border-radius:8px;
-  background:rgba(16,185,129,0.15);color:#10b981;
-  display:grid;place-items:center;font-size:1rem;font-weight:600;flex-shrink:0
+.plan-ai-item:active{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.3)}
+.ai-item-icon{font-size:1rem;flex-shrink:0}
+.ai-item-text{flex:1;font-size:0.8rem;color:#c9d1d9;line-height:1.3}
+.ai-item-add{
+  width:24px;height:24px;background:rgba(16,185,129,0.15);
+  border-radius:6px;color:#10b981;display:grid;place-items:center;
+  font-size:1rem;font-weight:600;flex-shrink:0
 }
 
-/* Tasks Card */
-.tasks-card{
-  background:#0a0f18;border:1px solid rgba(255,255,255,0.05);
-  border-radius:14px;margin-bottom:12px;overflow:hidden
+/* Tasks List */
+.plan-tasks-list{padding:0}
+.tasks-group-header{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 20px;background:rgba(255,255,255,0.02);
+  font-size:0.8rem;font-weight:700;color:#9ca3af;
+  border-bottom:1px solid var(--border)
 }
-.tasks-card.completed-card{opacity:0.8}
-.tasks-card-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 18px;background:rgba(255,255,255,0.02);
-  font-size:0.85rem;font-weight:700;color:#c9d1d9;
-  border-bottom:1px solid rgba(255,255,255,0.04)
+.tasks-group-header.completed-header{cursor:pointer}
+.tasks-group-header.completed-header:active{background:rgba(255,255,255,0.04)}
+.tasks-count{
+  margin-left:auto;padding:2px 8px;background:rgba(245,158,11,0.15);
+  border-radius:100px;font-size:0.65rem;color:#f59e0b
 }
-.tasks-card-header.collapsible{cursor:pointer}
-.tasks-card-header.collapsible:hover{background:rgba(255,255,255,0.04)}
-.header-right{display:flex;align-items:center;gap:8px}
-.collapse-icon{font-size:0.7rem;color:#6b7280}
-.tasks-badge{
-  padding:3px 10px;border-radius:100px;font-size:0.7rem;font-weight:700
-}
-.tasks-badge.pending{background:rgba(245,158,11,0.15);color:#f59e0b}
-.tasks-badge.done{background:rgba(16,185,129,0.15);color:#10b981}
-.tasks-card-body{padding:8px}
+.tasks-count.done{background:rgba(16,185,129,0.15);color:#10b981}
+.expand-arrow{font-size:0.6rem;color:#6b7280;margin-left:4px}
 
-/* Task Card Item */
-.task-card{
+/* Task Item */
+.plan-task-item{
   display:flex;align-items:flex-start;gap:12px;
-  padding:14px;margin-bottom:8px;
-  background:rgba(255,255,255,0.02);
-  border:1px solid rgba(255,255,255,0.04);border-radius:10px;
-  transition:all 0.2s
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  transition:background 0.2s
 }
-.task-card:last-child{margin-bottom:0}
-.task-card:hover{background:rgba(255,255,255,0.04)}
-.task-card.completed{opacity:0.6}
-.task-card[data-priority="high"]{border-left:3px solid #ef4444}
-.task-card[data-priority="medium"]{border-left:3px solid #f59e0b}
-.task-card[data-priority="low"]{border-left:3px solid #10b981}
+.plan-task-item:active{background:rgba(255,255,255,0.02)}
+.plan-task-item.completed{opacity:0.5}
+.plan-task-item[data-priority="high"]{border-left:3px solid #ef4444}
+.plan-task-item[data-priority="medium"]{border-left:3px solid #f59e0b}
+.plan-task-item[data-priority="low"]{border-left:3px solid #10b981}
 
-.task-check{
-  width:22px;height:22px;border-radius:6px;
+.task-check-box{
+  width:22px;height:22px;border-radius:6px;flex-shrink:0;
   border:2px solid rgba(255,255,255,0.2);background:transparent;
-  cursor:pointer;flex-shrink:0;display:grid;place-items:center;
-  font-size:0.75rem;color:transparent;transition:all 0.2s
+  display:grid;place-items:center;font-size:0.75rem;color:transparent;
+  cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent
 }
-.task-check:hover{border-color:rgba(16,185,129,0.5)}
-.task-check.checked{background:#10b981;border-color:#10b981;color:#fff}
+.task-check-box:active{border-color:#10b981}
+.task-check-box.done{background:#10b981;border-color:#10b981;color:#fff}
 
-.task-body{flex:1;min-width:0}
-.task-text-row{margin-bottom:8px}
-.task-text{font-size:0.85rem;font-weight:500;color:#e5e7eb;line-height:1.4}
-.task-text.done{text-decoration:line-through;color:#6b7280}
-.task-meta-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.task-cat{
-  font-size:0.7rem;color:#8b949e;
-  padding:3px 8px;background:rgba(255,255,255,0.04);border-radius:5px;
-  text-transform:capitalize
-}
-.task-priority-badge{
-  padding:3px 8px;border-radius:5px;font-size:0.65rem;font-weight:700
-}
+.task-info{flex:1;min-width:0}
+.task-text{font-size:0.85rem;color:#e5e7eb;line-height:1.4;margin-bottom:6px}
+.plan-task-item.completed .task-text{text-decoration:line-through;color:#6b7280}
+.task-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:0.7rem;color:#6b7280}
+.task-cat{padding:2px 6px;background:rgba(255,255,255,0.04);border-radius:4px;text-transform:capitalize}
+.task-pri.high{color:#ef4444}
+.task-pri.medium{color:#f59e0b}
+.task-pri.low{color:#10b981}
 
-.task-actions-col{display:flex;flex-direction:column;gap:4px;opacity:0;transition:opacity 0.2s}
-.task-card:hover .task-actions-col{opacity:1}
-.task-action{
-  width:28px;height:28px;border-radius:6px;border:none;
+.task-btns{display:flex;gap:4px;flex-shrink:0}
+.task-btn{
+  width:28px;height:28px;border:none;border-radius:6px;
   background:rgba(255,255,255,0.04);cursor:pointer;
-  display:grid;place-items:center;font-size:0.8rem;transition:all 0.2s
+  display:grid;place-items:center;font-size:0.8rem;
+  -webkit-tap-highlight-color:transparent
 }
-.task-action:hover{background:rgba(255,255,255,0.08)}
-.task-action.delete:hover{background:rgba(239,68,68,0.15)}
+.task-btn:active{background:rgba(255,255,255,0.1)}
+.task-btn.del:active{background:rgba(239,68,68,0.2)}
 
 /* Empty State */
-.tasks-empty-state{
-  text-align:center;padding:40px 20px;
-  background:#0a0f18;border:1px solid rgba(255,255,255,0.05);border-radius:14px
-}
-.tasks-empty-state .empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:0.6}
-.tasks-empty-state .empty-title{font-size:1rem;font-weight:700;color:#c9d1d9;margin-bottom:4px}
-.tasks-empty-state .empty-text{font-size:0.82rem;color:#6b7280}
+.plan-empty{text-align:center;padding:40px 20px}
+.plan-empty .empty-icon{font-size:2rem;margin-bottom:8px;opacity:0.5}
+.plan-empty .empty-text{font-size:0.85rem;color:#6b7280}
 
 /* Task Modal */
-.task-modal-box{max-width:440px}
+.task-modal-box{max-width:400px}
 .task-modal-header{
-  display:flex;align-items:center;gap:14px;padding:20px 24px;
-  background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(234,88,12,0.04));
+  display:flex;align-items:center;gap:12px;padding:16px 20px;
+  background:linear-gradient(135deg,rgba(245,158,11,0.06),rgba(234,88,12,0.03));
   border-bottom:1px solid var(--border)
 }
 .task-modal-icon{
-  width:44px;height:44px;border-radius:12px;
+  width:40px;height:40px;border-radius:10px;
   background:linear-gradient(135deg,#f59e0b,#ea580c);
-  display:grid;place-items:center;font-size:1.3rem
+  display:grid;place-items:center;font-size:1.2rem
 }
 .task-modal-header .modal-close{margin-left:auto}
 .task-textarea{min-height:80px;resize:vertical}
 
 .task-form-row{margin-top:16px}
-.priority-chips,.category-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.priority-chips,.category-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .priority-chip,.category-chip{
-  padding:8px 14px;background:rgba(255,255,255,0.03);
+  padding:8px 12px;background:rgba(255,255,255,0.03);
   border:1px solid rgba(255,255,255,0.08);border-radius:8px;
   font-family:inherit;font-size:0.75rem;font-weight:600;color:#9ca3af;
-  cursor:pointer;transition:all 0.2s
+  cursor:pointer;-webkit-tap-highlight-color:transparent
 }
-.priority-chip:hover,.category-chip:hover{border-color:rgba(255,255,255,0.15)}
-.priority-chip.selected.high{background:rgba(239,68,68,0.12);border-color:#ef4444;color:#ef4444}
-.priority-chip.selected.medium{background:rgba(245,158,11,0.12);border-color:#f59e0b;color:#f59e0b}
-.priority-chip.selected.low{background:rgba(16,185,129,0.12);border-color:#10b981;color:#10b981}
-.category-chip.selected{background:rgba(59,130,246,0.12);border-color:#3b82f6;color:#3b82f6}
+.priority-chip:active,.category-chip:active{background:rgba(255,255,255,0.08)}
+.priority-chip.selected.high{background:rgba(239,68,68,0.1);border-color:#ef4444;color:#ef4444}
+.priority-chip.selected.medium{background:rgba(245,158,11,0.1);border-color:#f59e0b;color:#f59e0b}
+.priority-chip.selected.low{background:rgba(16,185,129,0.1);border-color:#10b981;color:#10b981}
+.category-chip.selected{background:rgba(59,130,246,0.1);border-color:#3b82f6;color:#3b82f6}
 
-/* Celebration Overlay */
+/* Celebration */
 .celebration-overlay{
   position:fixed;top:0;left:0;right:0;bottom:0;
   background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
@@ -1340,46 +1286,33 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 }
 .celebration-overlay.show{opacity:1;pointer-events:auto}
 .celebration-content{
-  text-align:center;padding:36px 28px;width:100%;max-width:340px;
-  background:linear-gradient(165deg,#0c1222,#111d2e);
-  border:1px solid rgba(255,255,255,0.1);border-radius:24px;
-  transform:scale(0.9);transition:transform 0.3s;
-  box-shadow:0 24px 48px rgba(0,0,0,0.5)
+  text-align:center;padding:32px 24px;width:100%;max-width:320px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:20px;
+  transform:scale(0.9);transition:transform 0.3s
 }
 .celebration-overlay.show .celebration-content{transform:scale(1)}
-.celebration-confetti{font-size:2.5rem;margin-bottom:12px;animation:bounce 0.5s ease infinite alternate}
-@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
-.celebration-badge{position:relative;width:70px;height:70px;margin:0 auto 20px}
-.badge-ring{
-  position:absolute;inset:0;border-radius:50%;
-  border:3px solid #10b981;animation:spin 3s linear infinite
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.badge-icon{
-  position:absolute;inset:6px;border-radius:50%;
+.celebration-confetti{font-size:2.5rem;margin-bottom:12px}
+.celebration-badge{
+  width:60px;height:60px;margin:0 auto 16px;border-radius:50%;
   background:linear-gradient(135deg,#10b981,#14b8a6);
-  display:grid;place-items:center;font-size:1.5rem;color:#fff;font-weight:bold
+  display:grid;place-items:center;font-size:1.5rem;color:#fff
 }
-.celebration-title{font-size:1.3rem;font-weight:800;color:#f0f6fc;margin-bottom:6px}
+.celebration-title{font-size:1.2rem;font-weight:800;color:#f0f6fc;margin-bottom:4px}
 .celebration-subtitle{font-size:0.85rem;color:#8b949e;margin-bottom:4px}
-.celebration-patient{font-size:1rem;font-weight:700;color:#f59e0b;margin-bottom:20px}
-.celebration-stats{display:flex;justify-content:center;gap:28px;margin-bottom:20px}
+.celebration-patient{font-size:1rem;font-weight:700;color:#f59e0b;margin-bottom:16px}
+.celebration-stats{display:flex;justify-content:center;gap:24px;margin-bottom:16px}
 .celeb-stat{text-align:center}
-.celeb-stat-value{display:block;font-size:1.75rem;font-weight:800;color:#10b981}
-.celeb-stat-label{font-size:0.65rem;color:#6b7280;text-transform:uppercase}
+.celeb-stat-value{display:block;font-size:1.5rem;font-weight:800;color:#10b981}
+.celeb-stat-label{font-size:0.6rem;color:#6b7280;text-transform:uppercase}
 .celebration-message{
-  display:flex;align-items:center;gap:10px;padding:14px;
-  background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);
-  border-radius:10px;text-align:left;margin-bottom:20px
+  padding:12px;background:rgba(16,185,129,0.1);border-radius:10px;
+  font-size:0.8rem;color:#a7f3d0;margin-bottom:16px;line-height:1.4
 }
-.msg-icon{font-size:1.3rem}
-.celebration-message span:last-child{font-size:0.8rem;color:#a7f3d0;line-height:1.4}
 .celebration-btn{
-  width:100%;padding:14px;background:linear-gradient(135deg,#10b981,#14b8a6);
+  width:100%;padding:12px;background:#10b981;
   border:none;border-radius:10px;color:#fff;font-size:0.9rem;font-weight:700;
-  cursor:pointer;font-family:inherit;transition:all 0.2s
+  cursor:pointer;font-family:inherit
 }
-.celebration-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(16,185,129,0.35)}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    AI DRUG INFO MODAL - NEW FEATURE
@@ -7116,190 +7049,211 @@ function renderProfilePlans() {
   const suggestions = ClinicalPlanAI.getSuggestions(p);
   
   $('profilePlans').innerHTML = `
-    <div class="clinical-plan-container">
-      
-      <!-- Clean Header -->
-      <div class="plan-header-clean">
-        <div class="plan-title-row">
-          <div class="plan-title-icon">📋</div>
-          <div class="plan-title-text">
-            <h3>Clinical Action Plan</h3>
-            <p>Task-based management</p>
-          </div>
-        </div>
-        <button class="plan-add-btn-clean" id="addTaskBtn">
-          <span class="btn-icon">+</span>
-          <span class="btn-text">Add Task</span>
-        </button>
+    <div class="section-card plan-section-card">
+      <div class="section-header plan-section-header">
+        <div class="section-title">📋 Clinical Plan</div>
+        <button class="btn btn-primary btn-xs" id="addTaskBtn">+ Add Task</button>
       </div>
       
-      <!-- Progress Stats Row -->
-      <div class="plan-stats-row">
-        <div class="plan-stat-card progress-card">
-          <div class="stat-ring">
+      <!-- Progress Stats -->
+      <div class="plan-stats-grid">
+        <div class="plan-stat-box">
+          <div class="plan-stat-ring">
             <svg viewBox="0 0 36 36">
               <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
               <path class="ring-fill" stroke-dasharray="${completionRate}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
             </svg>
-            <span class="ring-value">${completionRate}%</span>
+            <span class="ring-text">${completionRate}%</span>
           </div>
-          <span class="stat-card-label">Complete</span>
         </div>
-        
-        <div class="plan-stat-card">
-          <span class="stat-card-value pending">${pendingTasks.length}</span>
-          <span class="stat-card-label">Pending</span>
+        <div class="plan-stat-box">
+          <span class="plan-stat-num amber">${pendingTasks.length}</span>
+          <span class="plan-stat-lbl">Pending</span>
         </div>
-        
-        <div class="plan-stat-card">
-          <span class="stat-card-value done">${completedTasks.length}</span>
-          <span class="stat-card-label">Done</span>
+        <div class="plan-stat-box">
+          <span class="plan-stat-num green">${completedTasks.length}</span>
+          <span class="plan-stat-lbl">Done</span>
         </div>
-        
-        <div class="plan-stat-card ${urgentCount > 0 ? 'has-urgent' : ''}">
-          <span class="stat-card-value urgent">${urgentCount}</span>
-          <span class="stat-card-label">Urgent</span>
+        <div class="plan-stat-box ${urgentCount > 0 ? 'urgent-box' : ''}">
+          <span class="plan-stat-num red">${urgentCount}</span>
+          <span class="plan-stat-lbl">Urgent</span>
         </div>
       </div>
       
-      <!-- Notification Toggle -->
-      <div class="plan-notify-row">
-        <div class="notify-left">
-          <span class="notify-icon">🔔</span>
-          <span class="notify-text">Push Notifications</span>
-        </div>
-        <label class="switch-toggle">
-          <input type="checkbox" id="planNotifyToggle" ${p.notificationsEnabled ? 'checked' : ''} 
-                 onchange="togglePlanNotifications(this.checked)">
-          <span class="switch-slider"></span>
+      <!-- Notifications -->
+      <div class="plan-notify-bar">
+        <span class="notify-label">🔔 Reminders</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="planNotifyToggle" ${p.notificationsEnabled ? 'checked' : ''}>
+          <span class="toggle-track"></span>
         </label>
       </div>
       
       <!-- AI Suggestions -->
       ${suggestions.length > 0 ? `
-        <div class="plan-suggestions-card">
-          <div class="suggestions-header">
-            <span class="suggestions-badge">🧠 AI Suggestions</span>
-            <span class="suggestions-hint">Based on patient profile</span>
+        <div class="plan-ai-box">
+          <div class="plan-ai-header">
+            <span class="ai-badge">🧠 AI Suggestions</span>
           </div>
-          <div class="suggestions-list">
-            ${suggestions.slice(0, 4).map(s => `
-              <div class="suggestion-item" onclick="addSuggestedTask('${esc(s.text).replace(/'/g, "\\'")}', '${s.priority}', '${s.category}')">
-                <span class="suggestion-icon">${s.icon}</span>
-                <span class="suggestion-text">${esc(s.text)}</span>
-                <span class="suggestion-add-btn">+</span>
+          <div class="plan-ai-list">
+            ${suggestions.slice(0, 4).map((s, idx) => `
+              <div class="plan-ai-item" data-suggestion-idx="${idx}">
+                <span class="ai-item-icon">${s.icon}</span>
+                <span class="ai-item-text">${esc(s.text)}</span>
+                <span class="ai-item-add">+</span>
               </div>
             `).join('')}
           </div>
         </div>
       ` : ''}
       
-      <!-- Pending Tasks -->
-      ${pendingTasks.length > 0 ? `
-        <div class="tasks-card">
-          <div class="tasks-card-header">
-            <span>⏳ Pending Tasks</span>
-            <span class="tasks-badge pending">${pendingTasks.length}</span>
+      <!-- Task List -->
+      <div class="plan-tasks-list">
+        ${pendingTasks.length > 0 ? `
+          <div class="tasks-group-header">
+            <span>⏳ Pending</span>
+            <span class="tasks-count">${pendingTasks.length}</span>
           </div>
-          <div class="tasks-card-body">
-            ${pendingTasks.sort((a, b) => {
-              const priorityOrder = { high: 0, medium: 1, low: 2 };
-              return priorityOrder[a.priority] - priorityOrder[b.priority];
-            }).map(task => renderTaskCard(task, false)).join('')}
-          </div>
-        </div>
-      ` : `
-        <div class="tasks-empty-state">
-          <div class="empty-icon">✅</div>
-          <div class="empty-title">All Caught Up!</div>
-          <div class="empty-text">No pending tasks. Add a new task or use AI suggestions above.</div>
-        </div>
-      `}
-      
-      <!-- Completed Tasks -->
-      ${completedTasks.length > 0 ? `
-        <div class="tasks-card completed-card">
-          <div class="tasks-card-header collapsible" onclick="toggleCompletedSection()">
-            <span>✓ Completed</span>
-            <div class="header-right">
-              <span class="tasks-badge done">${completedTasks.length}</span>
-              <span class="collapse-icon" id="collapseIcon">▼</span>
+          ${pendingTasks.sort((a, b) => {
+            const order = { high: 0, medium: 1, low: 2 };
+            return order[a.priority] - order[b.priority];
+          }).map(task => `
+            <div class="plan-task-item" data-task-id="${task.id}" data-priority="${task.priority}">
+              <div class="task-check-box ${task.completed ? 'done' : ''}" data-action="toggle"></div>
+              <div class="task-info">
+                <div class="task-text">${esc(task.text)}</div>
+                <div class="task-meta">
+                  <span class="task-cat">${getCategoryIcon(task.category)} ${task.category || 'general'}</span>
+                  <span class="task-pri ${task.priority}">${getPriorityDot(task.priority)}</span>
+                </div>
+              </div>
+              <div class="task-btns">
+                <button class="task-btn" data-action="edit">✏️</button>
+                <button class="task-btn del" data-action="delete">🗑️</button>
+              </div>
             </div>
+          `).join('')}
+        ` : `
+          <div class="plan-empty">
+            <div class="empty-icon">✅</div>
+            <div class="empty-text">No pending tasks</div>
           </div>
-          <div class="tasks-card-body" id="completedBody" style="display:none">
-            ${completedTasks.map(task => renderTaskCard(task, true)).join('')}
+        `}
+        
+        ${completedTasks.length > 0 ? `
+          <div class="tasks-group-header completed-header" id="completedHeader">
+            <span>✓ Completed</span>
+            <span class="tasks-count done">${completedTasks.length}</span>
+            <span class="expand-arrow">▼</span>
           </div>
-        </div>
-      ` : ''}
-      
+          <div class="completed-tasks-list" id="completedTasksList" style="display:none">
+            ${completedTasks.map(task => `
+              <div class="plan-task-item completed" data-task-id="${task.id}">
+                <div class="task-check-box done" data-action="toggle">✓</div>
+                <div class="task-info">
+                  <div class="task-text">${esc(task.text)}</div>
+                </div>
+                <div class="task-btns">
+                  <button class="task-btn del" data-action="delete">🗑️</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
     </div>
   `;
   
-  // Attach click handler for Add Task button
-  const addBtn = document.getElementById('addTaskBtn');
-  if (addBtn) {
-    addBtn.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openTaskModal();
-    };
-  }
+  // Store suggestions for click handlers
+  state._planSuggestions = suggestions;
   
-  // Schedule notification check
+  // Attach event handlers (mobile-friendly approach)
+  initPlanEventHandlers();
+  
+  // Check notifications
   checkPendingTaskNotifications(p);
 }
 
-function renderTaskCard(task, isCompleted) {
-  const priorityConfig = {
-    high: { color: '#ef4444', bg: 'rgba(239,68,68,0.1)', label: 'High', dot: '🔴' },
-    medium: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', label: 'Med', dot: '🟡' },
-    low: { color: '#10b981', bg: 'rgba(16,185,129,0.1)', label: 'Low', dot: '🟢' }
-  };
-  const priority = priorityConfig[task.priority] || priorityConfig.medium;
-  
-  const categoryIcons = {
-    labs: '🔬', imaging: '📷', medication: '💊', consult: '👨‍⚕️', 
-    procedure: '🏥', discharge: '🏠', monitoring: '📊', general: '📝'
-  };
-  
-  return `
-    <div class="task-card ${isCompleted ? 'completed' : ''}" data-priority="${task.priority}">
-      <button class="task-check ${isCompleted ? 'checked' : ''}" 
-              onclick="event.stopPropagation(); toggleTaskComplete('${task.id}')">
-        ${isCompleted ? '✓' : ''}
-      </button>
-      <div class="task-body">
-        <div class="task-text-row">
-          <span class="task-text ${isCompleted ? 'done' : ''}">${esc(task.text)}</span>
-        </div>
-        <div class="task-meta-row">
-          <span class="task-cat">${categoryIcons[task.category] || '📝'} ${task.category || 'General'}</span>
-          <span class="task-priority-badge" style="background:${priority.bg};color:${priority.color}">
-            ${priority.dot} ${priority.label}
-          </span>
-        </div>
-      </div>
-      <div class="task-actions-col">
-        ${!isCompleted ? `<button class="task-action" onclick="event.stopPropagation(); editTask('${task.id}')">✏️</button>` : ''}
-        <button class="task-action delete" onclick="event.stopPropagation(); deleteTask('${task.id}')">🗑️</button>
-      </div>
-    </div>
-  `;
+function getCategoryIcon(cat) {
+  const icons = { labs: '🔬', imaging: '📷', medication: '💊', consult: '👨‍⚕️', procedure: '🏥', discharge: '🏠', monitoring: '📊', general: '📝' };
+  return icons[cat] || '📝';
 }
 
-window.toggleCompletedSection = function() {
-  const body = document.getElementById('completedBody');
-  const icon = document.getElementById('collapseIcon');
-  if (body && icon) {
-    if (body.style.display === 'none') {
-      body.style.display = 'block';
-      icon.textContent = '▲';
-    } else {
-      body.style.display = 'none';
-      icon.textContent = '▼';
-    }
+function getPriorityDot(pri) {
+  const dots = { high: '🔴 High', medium: '🟡 Med', low: '🟢 Low' };
+  return dots[pri] || '🟡 Med';
+}
+
+function initPlanEventHandlers() {
+  // Add Task button
+  const addBtn = document.getElementById('addTaskBtn');
+  if (addBtn) {
+    addBtn.onclick = function() { openTaskModal(); };
   }
-};
+  
+  // Notification toggle
+  const notifyToggle = document.getElementById('planNotifyToggle');
+  if (notifyToggle) {
+    notifyToggle.onchange = function() { togglePlanNotifications(this.checked); };
+  }
+  
+  // Completed section toggle
+  const completedHeader = document.getElementById('completedHeader');
+  if (completedHeader) {
+    completedHeader.onclick = function() {
+      const list = document.getElementById('completedTasksList');
+      const arrow = this.querySelector('.expand-arrow');
+      if (list.style.display === 'none') {
+        list.style.display = 'block';
+        arrow.textContent = '▲';
+      } else {
+        list.style.display = 'none';
+        arrow.textContent = '▼';
+      }
+    };
+  }
+  
+  // AI Suggestion items
+  document.querySelectorAll('.plan-ai-item').forEach(item => {
+    item.onclick = function() {
+      const idx = parseInt(this.dataset.suggestionIdx);
+      const s = state._planSuggestions?.[idx];
+      if (s) addSuggestedTask(s.text, s.priority, s.category);
+    };
+  });
+  
+  // Task items - use event delegation on parent
+  document.querySelectorAll('.plan-task-item').forEach(item => {
+    const taskId = item.dataset.taskId;
+    
+    // Checkbox
+    const checkbox = item.querySelector('[data-action="toggle"]');
+    if (checkbox) {
+      checkbox.onclick = function(e) {
+        e.stopPropagation();
+        toggleTaskComplete(taskId);
+      };
+    }
+    
+    // Edit button
+    const editBtn = item.querySelector('[data-action="edit"]');
+    if (editBtn) {
+      editBtn.onclick = function(e) {
+        e.stopPropagation();
+        editTask(taskId);
+      };
+    }
+    
+    // Delete button
+    const deleteBtn = item.querySelector('[data-action="delete"]');
+    if (deleteBtn) {
+      deleteBtn.onclick = function(e) {
+        e.stopPropagation();
+        deleteTask(taskId);
+      };
+    }
+  });
+}
 
 // Clinical Plan AI Suggestions
   const priorityColors = {
