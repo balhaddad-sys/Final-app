@@ -228,7 +228,22 @@ function loadLocal() {
     if (s) {
       const d = JSON.parse(s);
       if (d.units?.length) state.units = d.units;
-      if (d.settings) state.settings = { ...state.settings, ...d.settings };
+      if (d.settings) state.settings = { ...state.settings, ...d.settings }
+
+if (!Array.isArray(state.patients) || state.patients.length === 0) {
+  state.patients = [{
+    id: Date.now(),
+    name: 'Demo Patient',
+    age: 65,
+    bed: '12A',
+    diagnosis: 'Community Acquired Pneumonia',
+    status: 'active',
+    ward: state.currentUnit || 'Unit A',
+    labData: { dates: [], parameters: [] },
+    imaging: [], fluids: [], plans: [], history: '', vitals: {}
+  }];
+}
+;
       if (d.patients) state.patients = d.patients;
       if (d.unitRequests) state.unitRequests = d.unitRequests;
     }
