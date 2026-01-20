@@ -4354,6 +4354,12 @@ Return a JSON object with this exact structure:
 RESPOND ONLY WITH VALID JSON. No markdown, no explanation.`;
 
 async function handleLabUpload(file) {
+  // Guard: Check API URL
+  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+    toast('API not configured. Go to Admin → Settings', true);
+    return;
+  }
+  
   state.isAnalyzingLab = true;
   renderProfileLabs();
   
@@ -4366,24 +4372,29 @@ async function handleLabUpload(file) {
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
       console.log('🔬 Starting enhanced lab extraction...');
-      console.log('📡 API:', state.settings.apiUrl.substring(0, 50) + '...');
+      console.log('📡 API:', state.settings.apiUrl);
       console.log('🖼️ Image size:', Math.round(imageData.length / 1024), 'KB');
+      
+      const requestBody = { 
+        action: 'analyzeLabsEnhanced', 
+        image: imageData,
+        extractionPrompt: LAB_EXTRACTION_PROMPT,
+        patientContext: {
+          existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
+            name: p.name,
+            latestValue: p.values?.[0]?.value,
+            latestDate: p.values?.[0]?.date
+          })) || []
+        }
+      };
+      
+      console.log('📤 Sending request with keys:', Object.keys(requestBody).join(', '));
+      console.log('📤 Image data starts with:', imageData.substring(0, 50));
       
       const res = await fetch(state.settings.apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ 
-          action: 'analyzeLabsEnhanced', 
-          image: imageData,
-          extractionPrompt: LAB_EXTRACTION_PROMPT,
-          patientContext: {
-            existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
-              name: p.name,
-              latestValue: p.values?.[0]?.value,
-              latestDate: p.values?.[0]?.date
-            })) || []
-          }
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
       });
       
       console.log('📥 Response status:', res.status);
