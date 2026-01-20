@@ -1745,9 +1745,10 @@ const CONFIG = {
   ADMIN_PASSWORD: 'admin123',
   // Hardcoded API URL - central Google Apps Script for all users
   API_URL: 'https://script.google.com/macros/s/AKfycbwnPMayEKM6rHJB2qZ-DDECoVB4Kte1EcoBiea0pmcasfyAeW7RGeADiH5DMXGRJOSJ/exec',
-  MAX_IMAGE_SIZE: 1500000,
-  IMAGE_QUALITY: 0.85,
-  MAX_DIM: 2000,
+  // Optimized image settings for fast upload (1200px is enough for OCR)
+  MAX_IMAGE_SIZE: 800000,   // 800KB max (was 1.5MB)
+  IMAGE_QUALITY: 0.7,       // 70% quality (was 85%)
+  MAX_DIM: 1200,            // 1200px max dimension (was 2000px)
   SYNC_DEBOUNCE_MS: 1500,
   VALID_WARDS: ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned'],
   
@@ -2758,18 +2759,44 @@ function compress(file, max, cb) {
     const img = new Image();
     img.onload = () => {
       const c = document.createElement('canvas'), ctx = c.getContext('2d');
-      let w = img.width, h = img.height, q = CONFIG.IMAGE_QUALITY;
-      if (w > CONFIG.MAX_DIM || h > CONFIG.MAX_DIM) {
-        if (w > h) { h = Math.round(h * CONFIG.MAX_DIM / w); w = CONFIG.MAX_DIM; }
-        else { w = Math.round(w * CONFIG.MAX_DIM / h); h = CONFIG.MAX_DIM; }
+      let w = img.width, h = img.height;
+      const originalSize = e.target.result.length;
+      
+      // More aggressive resizing for medical OCR (1200px is plenty)
+      const maxDim = CONFIG.MAX_DIM || 1200;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
       }
+      
       c.width = w; c.height = h;
       ctx.drawImage(img, 0, 0, w, h);
+      
+      // Start with configured quality, reduce if needed
+      let q = CONFIG.IMAGE_QUALITY || 0.7;
       let url = c.toDataURL('image/jpeg', q);
-      while (url.length > max && q > 0.3) { q -= 0.1; url = c.toDataURL('image/jpeg', q); }
+      
+      // Reduce quality until under max size (more aggressive reduction)
+      while (url.length > max && q > 0.3) { 
+        q -= 0.15; 
+        url = c.toDataURL('image/jpeg', q); 
+      }
+      
+      const finalSize = url.length;
+      const reduction = Math.round((1 - finalSize/originalSize) * 100);
+      console.log(`📸 Compressed: ${Math.round(originalSize/1024)}KB → ${Math.round(finalSize/1024)}KB (${reduction}% reduction, quality=${q.toFixed(2)}, ${w}x${h})`);
+      
       cb(url);
     };
+    img.onerror = () => {
+      console.error('❌ Image load failed');
+      cb(null);
+    };
     img.src = e.target.result;
+  };
+  r.onerror = () => {
+    console.error('❌ File read failed');
+    cb(null);
   };
   r.readAsDataURL(file);
 }
@@ -5409,24 +5436,38 @@ async function handleLabUpload(files) {
     // Store for gallery display
     state.pendingLabImages = base64Images;
     
-    // Send all images to the API
-    const res = await fetch(state.settings.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ 
-        action: 'analyzeLabsEnhanced', 
-        images: base64Images,
-        image: base64Images[0],
-        extractionPrompt: LAB_EXTRACTION_PROMPT,
-        patientContext: {
-          existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
-            name: p.name,
-            latestValue: p.values?.[0]?.value,
-            latestDate: p.values?.[0]?.date
-          })) || []
-        }
-      })
-    });
+    // Send all images to the API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    let res;
+    try {
+      res = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ 
+          action: 'analyzeLabsEnhanced', 
+          images: base64Images,
+          image: base64Images[0],
+          extractionPrompt: LAB_EXTRACTION_PROMPT,
+          patientContext: {
+            existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
+              name: p.name,
+              latestValue: p.values?.[0]?.value,
+              latestDate: p.values?.[0]?.date
+            })) || []
+          }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timed out (60s) - try a smaller image');
+      }
+      throw fetchError;
+    }
     
     console.log('📥 Response status:', res.status);
     
