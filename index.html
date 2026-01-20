@@ -1,18 +1,62 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta name="theme-color" content="#030712">
+<meta name="theme-color" content="#005eb8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MedWard Pro v15</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg:#030712;--bg-card:#0a0f1a;--bg-elevated:#111827;--bg-hover:#1f2937;--text:#f9fafb;--text-secondary:#9ca3af;--text-muted:#6b7280;--gold:#f59e0b;--gold-light:#fbbf24;--teal:#14b8a6;--purple:#8b5cf6;--rose:#f43f5e;--emerald:#10b981;--blue:#3b82f6;--orange:#f97316;--border:rgba(255,255,255,0.08);--border-light:rgba(255,255,255,0.12);--glass:rgba(10,15,26,0.9);--radius:16px;--radius-sm:10px}
+:root{
+    /* Clinical Reference Palette */
+    --primary: #005eb8;
+    --primary-dark: #003087;
+    --bg-app: #f3f4f6;
+    --bg-surface: #ffffff;
+    --text-main: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --border-light: #d1d5db;
+    --success: #059669;
+    --danger: #dc2626;
+    --warning: #d97706;
+
+    /* Layout */
+    --header-height: 60px;
+    --bottom-nav-height: 65px;
+
+    /* Radius (keep existing tokens) */
+    --radius: 16px;
+    --radius-sm: 10px;
+
+    /* Compatibility map (existing code uses these) */
+    --bg: var(--bg-app);
+    --bg-card: var(--bg-surface);
+    --bg-elevated: #ffffff;
+    --bg-hover: #eef2f7;
+    --text: var(--text-main);
+
+    /* Accent aliases (preserve original naming) */
+    --gold: var(--primary);
+    --gold-light: #1d78d6;
+    --teal: #0ea5e9;
+    --purple: #7c3aed;
+    --rose: var(--danger);
+    --emerald: var(--success);
+    --blue: #2563eb;
+    --orange: var(--warning);
+
+    /* Glass */
+    --glass: rgba(255,255,255,0.85);
+}
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html,body{background-color:var(--bg-app);color:var(--text-main);font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;margin:0;padding-bottom:var(--bottom-nav-height);line-height:1.6;overflow-x:hidden}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -1434,6 +1478,155 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px
 }
 .renal-value{font-size:0.8rem;color:var(--text-secondary);line-height:1.4}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* CLINICAL REFERENCE (MEDSCAPE / UPTODATE) LIGHT THEME OVERRIDES             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Global surfaces */
+#landing{background:var(--bg-app)}
+.landing-logo{background:linear-gradient(135deg,var(--primary),var(--primary-dark));box-shadow:0 12px 28px rgba(0,94,184,0.25)}
+.landing-logo svg{stroke:#fff}
+.landing-title{background:linear-gradient(135deg,var(--primary),var(--primary-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.landing-version{color:var(--primary)}
+
+.unit-card{background:var(--bg-surface);border:1px solid var(--border)}
+.unit-card:hover{border-color:var(--primary)}
+
+/* Buttons */
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff}
+.btn-secondary{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-main)}
+.btn-secondary:hover{border-color:var(--primary)}
+.btn-ghost{color:var(--text-secondary)}
+.btn-ghost:hover{color:var(--primary)}
+
+/* Forms */
+.form-label{color:var(--text-muted)}
+.form-input,.form-select,.form-textarea{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-main)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,94,184,0.12)}
+
+/* Modals */
+.modal{background:rgba(17,24,39,0.35)}
+.modal-box{background:var(--bg-surface);border:1px solid var(--border)}
+
+/* Dashboard */
+#dashboard{background:var(--bg-app)}
+
+/* Header (map existing .dash-header to Medscape-style header) */
+.dash-header{
+  background:var(--primary);
+  color:#fff;
+  height:var(--header-height);
+  padding:0 16px;
+  border-bottom:none;
+  backdrop-filter:none;
+  box-shadow:0 2px 4px rgba(0,0,0,0.10);
+}
+.dash-logo-icon{background:rgba(255,255,255,0.18)}
+.dash-logo-icon svg{stroke:#fff}
+.dash-badge{border:1px solid rgba(255,255,255,0.25);color:#fff}
+.dash-avatar{background:rgba(255,255,255,0.18);color:#fff}
+
+.date-banner{background:var(--bg-surface);color:var(--text-main);border:1px solid var(--border)}
+
+/* Bottom nav (re-style existing tabs container instead of introducing new markup) */
+.tabs-container{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:var(--bottom-nav-height);
+  background:var(--bg-surface);
+  border-top:1px solid var(--border);
+  border-radius:0;
+  padding:0;
+  margin:0;
+  gap:0;
+  z-index:1000;
+  justify-content:space-around;
+  align-items:center;
+}
+.tabs-container .tab{
+  flex:1;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:var(--text-secondary);
+  font-size:0.7rem;
+  gap:4px;
+  border-radius:0;
+}
+.tabs-container .tab:hover{color:var(--primary)}
+.tabs-container .tab.active{
+  color:var(--primary);
+  background:rgba(0,94,184,0.05);
+}
+
+/* Give dashboard content breathing room above fixed bottom nav */
+.dash-content{padding-bottom:calc(var(--bottom-nav-height) + 20px)}
+
+/* Patient census list */
+#patientsList,#patientList{padding:12px;display:flex;flex-direction:column;gap:12px}
+
+.ward-header{
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-left:4px solid var(--primary);
+}
+.ward-title{color:var(--primary-dark)}
+.ward-count{background:var(--primary);color:#fff}
+
+.patient-card{
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-left:4px solid var(--primary);
+  border-radius:8px;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.05);
+  margin-bottom:0;
+}
+.patient-card:hover{border-color:var(--primary);transform:translateY(-1px)}
+
+.patient-card.new{border-left-color:var(--success)}
+.patient-card.critical{border-left-color:var(--danger);background:linear-gradient(90deg,rgba(220,38,38,0.06),transparent)}
+.patient-card.chronic{border-left-color:var(--purple)}
+
+/* Typography */
+.p-info{flex:1;min-width:0}
+.p-name{font-size:1rem;font-weight:800;color:var(--primary-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-details{font-size:0.85rem;color:var(--text-secondary);margin-top:2px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.p-sep{color:var(--text-muted)}
+
+.p-meta{text-align:right;font-size:0.75rem;color:var(--text-muted);min-width:86px}
+.p-meta-primary{font-weight:700;color:var(--primary)}
+.p-meta-secondary{margin-top:2px}
+
+.p-chevron{color:var(--text-secondary);flex-shrink:0}
+
+/* Stats bar */
+.stat-card{background:var(--bg-surface);border:1px solid var(--border)}
+.stat-card:hover,.stat-card.active{border-color:var(--primary);background:rgba(0,94,184,0.06)}
+.stat-value{background:linear-gradient(135deg,var(--primary),var(--primary-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* Profile (patient page) */
+#patientProfile{background:var(--bg-app)}
+.profile-header{background:var(--bg-surface);border-bottom:1px solid var(--border)}
+.back-btn{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary)}
+.back-btn:hover{border-color:var(--primary);color:var(--primary)}
+.profile-sidebar{background:var(--bg-surface);border-right:1px solid var(--border)}
+.profile-nav-item{color:var(--text-secondary)}
+.profile-nav-item:hover{color:var(--primary-dark);background:rgba(0,94,184,0.06)}
+.profile-nav-item.active{color:var(--primary);background:rgba(0,94,184,0.10);border-left:3px solid var(--primary)}
+.profile-content{background:var(--bg-app)}
+
+
 </style>
 </head>
 <body>
@@ -3516,39 +3709,69 @@ function renderPatients() {
   const container = $('patientsList');
   const f = state.currentFilter;
   let filtered = f === 'all' ? [...state.patients] : state.patients.filter(p => p.status === f);
-  
+
   const wards = {};
-  filtered.forEach(p => { const w = p.ward || 'Unassigned'; if (!wards[w]) wards[w] = []; wards[w].push(p); });
-  
+  filtered.forEach(p => {
+    const w = p.ward || 'Unassigned';
+    if (!wards[w]) wards[w] = [];
+    wards[w].push(p);
+  });
+
   if (!filtered.length) {
     container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div>No patients</div></div>';
     updateStats();
     return;
   }
-  
+
   const order = ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned', 'Unassigned'];
   let html = '';
-  Object.keys(wards).sort((a, b) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b))).forEach(ward => {
-    const ps = wards[ward];
-    html += `<div class="ward-section"><div class="ward-header"><div class="ward-title">📍 ${esc(ward)}</div><div class="ward-count">${ps.length}</div></div>`;
-    ps.forEach(p => {
-      html += `<div class="patient-card ${p.status}" onclick="openPatientProfile(${p.id})">
-        <div class="patient-header">
-          <div class="patient-avatar">${initials(p.name)}</div>
-          <div class="patient-info">
-            <div class="patient-name">${esc(p.name)} ${p.status === 'new' ? '<span class="badge badge-emerald">NEW</span>' : ''} ${p.status === 'critical' ? '<span class="badge badge-rose">CRITICAL</span>' : ''}</div>
-            <div class="patient-meta"><span>🛏️ ${esc(p.room || '—')}</span><span>👨‍⚕️ ${esc(p.doctor || '—')}</span></div>
-          </div>
-        </div>
-        <div class="patient-diagnosis">${esc(p.diagnosis || 'Pending')}</div>
-      </div>`;
+
+  Object.keys(wards)
+    .sort((a, b) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b)))
+    .forEach(ward => {
+      const ps = wards[ward];
+      html += `<div class="ward-section">
+        <div class="ward-header">
+          <div class="ward-title">📍 ${esc(ward)}</div>
+          <div class="ward-count">${ps.length}</div>
+        </div>`;
+
+      ps.forEach(p => {
+        const medsCount = (p.medications || []).filter(m => m && m.status !== 'discontinued').length;
+        const badges = [
+          p.status === 'new' ? '<span class="badge badge-emerald">NEW</span>' : '',
+          p.status === 'critical' ? '<span class="badge badge-rose">CRITICAL</span>' : '',
+          p.status === 'chronic' ? '<span class="badge badge-purple">CHRONIC</span>' : ''
+        ].filter(Boolean).join(' ');
+
+        html += `
+          <div class="patient-card ${p.status}" onclick="openPatientProfile(${p.id})">
+            <div class="p-info">
+              <div class="p-name">${esc(p.name)} ${badges}</div>
+              <div class="p-details">
+                <span class="mono">🛏️ ${esc(p.room || '—')}</span>
+                <span class="p-sep">•</span>
+                <span>👨‍⚕️ ${esc(p.doctor || '—')}</span>
+                ${p.diagnosis ? `<span class="p-sep">•</span><span>${esc(p.diagnosis)}</span>` : ''}
+              </div>
+            </div>
+            <div class="p-meta">
+              <div class="p-meta-primary">${medsCount} Meds</div>
+              <div class="p-meta-secondary">${esc((p.status || 'active').toUpperCase())}</div>
+            </div>
+            <div class="p-chevron" aria-hidden="true">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+            </div>
+          </div>`;
+      });
+
+      html += '</div>';
     });
-    html += '</div>';
-  });
-  
+
   container.innerHTML = html;
   updateStats();
 }
+
 
 function updateStats() {
   const a = state.patients;
