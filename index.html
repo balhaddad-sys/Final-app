@@ -10,18 +10,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{
-    /* The "UpToDate" Palette */
-    --primary:#005eb8;       /* NHS/Medical Blue */
-    --primary-dark:#003087;  /* Deep Navy */
-    --bg-app:#f3f4f6;        /* Light Gray Background */
-    --bg-surface:#ffffff;    /* Pure White Cards */
-    --text-main:#111827;     /* Near Black for readability */
-    --text-secondary:#4b5563;/* Dark Gray */
-    --border:#e5e7eb;        /* Subtle Borders */
-    --success:#059669;       /* Clinical Green */
-    --danger:#dc2626;        /* Alert Red */
-    --warning:#d97706;       /* Warning Orange */
+/* 1. CLINICAL VARIABLES (The "UpToDate" Palette) */
+:root {
+    --primary: #005eb8;       /* NHS/Medical Standard Blue */
+    --primary-dark: #003087;  /* Deep Navy for headings */
+    --primary-light: #e6f0f9; /* Very faint blue for active states */
+    --accent: #009688;        /* Teal for secondary actions */
+
+    --bg-app: #f3f4f6;        /* Light Gray Background (Reduces glare) */
+    --bg-surface: #ffffff;    /* Pure White Cards */
+
+    --text-main: #111827;     /* Near Black (High Contrast) */
+    --text-secondary: #6b7280;/* Gray for labels */
+    --text-muted: #9ca3af;    /* Light gray for metadata */
+
+    --border: #e5e7eb;        /* Subtle divider lines */
+
+    --success-bg: #d1fae5; --success-text: #065f46;
+    --danger-bg: #fee2e2;  --danger-text: #991b1b;
+    --warning-bg: #fef3c7; --warning-text: #92400e;
+
+    --nav-height: 60px;
+    --header-height: 56px;
 
     /* Legacy color mappings for compatibility */
     --bg:#f3f4f6;
@@ -36,33 +46,38 @@
     --purple:#8b5cf6;
     --rose:#dc2626;
     --emerald:#059669;
+    --success:#059669;
+    --danger:#dc2626;
+    --warning:#d97706;
     --blue:#3b82f6;
     --orange:#d97706;
     --border-light:#d1d5db;
     --glass:rgba(255,255,255,0.9);
     --radius:16px;
     --radius-sm:10px;
-
-    /* Layout Variables */
-    --header-height:60px;
     --bottom-nav-height:65px;
 }
+/* 2. GLOBAL RESET */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{
-    background-color:var(--bg-app);
-    color:var(--text-main);
-    font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;
-    margin:0;
-    padding-bottom:var(--bottom-nav-height);
-    line-height:1.6;
-    overflow-x:hidden;
+body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding-bottom: calc(var(--nav-height) + 20px); /* Space for bottom nav */
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    overflow-x: hidden;
 }
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
 .mono{font-family:'JetBrains Mono',monospace}
+/* Utilities */
+.hidden { display: none !important; }
+.btn-icon { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s}
 .btn:active{transform:scale(0.97)}
 .btn-primary{background:var(--primary);color:#fff}
@@ -76,74 +91,104 @@ body{
 .btn-info{background:rgba(56,139,253,0.15);border:1px solid rgba(56,139,253,0.3);color:#58a6ff}
 .btn-info:hover{background:rgba(56,139,253,0.25);border-color:#58a6ff}
 /* ═══════════════════════════════════════════════════════════════════
-   CLINICAL REFERENCE DESIGN - PROFESSIONAL HEADER & NAVIGATION
+   3. PROFESSIONAL HEADER
    ═══════════════════════════════════════════════════════════════════ */
-/* 1. The "Medscape-Style" Header */
-.app-header{
-    background:var(--primary);
-    color:white;
-    height:var(--header-height);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 16px;
-    position:sticky;
-    top:0;
-    z-index:1000;
-    box-shadow:0 2px 4px rgba(0,0,0,0.1);
+.app-header {
+    background: var(--primary);
+    color: white;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-.brand-title{
-    font-size:1.25rem;
-    font-weight:700;
-    letter-spacing:-0.5px;
+.brand { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.3px; }
+.brand-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
 }
-.header-actions .icon-btn{
-    background:none;
-    border:none;
-    color:white;
-    cursor:pointer;
-    padding:8px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:opacity 0.2s;
+.header-actions .icon-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
 }
-.header-actions .icon-btn:hover{
-    opacity:0.8;
+.header-actions .icon-btn:hover {
+    opacity: 0.8;
 }
-/* 2. The "UpToDate-Style" Bottom Nav */
-.tabs-bottom{
-    position:fixed;
-    bottom:0;
-    left:0;
-    width:100%;
-    height:var(--bottom-nav-height);
-    background:var(--bg-surface);
-    border-top:1px solid var(--border);
-    display:flex;
-    justify-content:space-around;
-    align-items:center;
-    z-index:1000;
-    padding-bottom:env(safe-area-inset-bottom);
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. BOTTOM NAVIGATION (Thumb Zone)
+   ═══════════════════════════════════════════════════════════════════ */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; width: 100%;
+    height: var(--nav-height);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
 }
-.tab-bottom{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    color:var(--text-secondary);
-    font-size:0.7rem;
-    gap:4px;
-    height:100%;
-    transition:color 0.2s;
-    background:transparent;
-    border:none;
-    cursor:pointer;
+.nav-item {
+    flex: 1; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.7rem; font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s;
+    background: transparent;
+    border: none;
 }
-.tab-bottom.active{
-    color:var(--primary);
-    background:rgba(0,94,184,0.05);
+.nav-item.active { color: var(--primary); }
+.nav-icon { font-size: 1.4rem; margin-bottom: 3px; }
+
+/* Legacy bottom nav support */
+.tabs-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--bottom-nav-height);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-bottom {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    gap: 4px;
+    height: 100%;
+    transition: color 0.2s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+.tab-bottom.active {
+    color: var(--primary);
+    background: rgba(0,94,184,0.05);
 }
 .tab-bottom i{font-size:1.4rem;margin-bottom:2px}
 /* Ward Input Autocomplete */
@@ -375,21 +420,73 @@ body{
 .ward-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--bg-surface);border-radius:var(--radius-sm);margin-bottom:14px;border-left:4px solid var(--primary);border:1px solid var(--border);border-left:4px solid var(--primary)}
 .ward-title{font-weight:700;font-size:0.95rem;color:var(--primary-dark)}
 .ward-count{background:var(--primary);color:#fff;padding:4px 14px;border-radius:100px;font-size:0.75rem;font-weight:700}
-/* The Patient Row - Professional List Style */
+/* ═══════════════════════════════════════════════════════════════════
+   4. PATIENT LIST (Spreadsheet Style)
+   ═══════════════════════════════════════════════════════════════════ */
 #patientsList{padding:12px;display:flex;flex-direction:column;gap:8px}
-.patient-card{
-    background:var(--bg-surface);
-    border:1px solid var(--border);
-    border-left:4px solid var(--primary);
-    border-radius:8px;
-    padding:12px 16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    box-shadow:0 1px 2px rgba(0,0,0,0.05);
-    cursor:pointer;
-    transition:all 0.2s;
-    margin-bottom:0;
+#patientList {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. THE PATIENT ROW (The Core Component)
+   ═══════════════════════════════════════════════════════════════════ */
+.patient-row {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: background 0.1s;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+.patient-row:active { background: var(--primary-light); }
+
+/* The colored strip on the left indicating status */
+.patient-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--primary);
+}
+
+/* Typography */
+.p-name { font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+.p-demographics { font-size: 0.85rem; color: var(--text-secondary); }
+.p-meta { text-align: right; }
+.p-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: var(--bg-app);
+    color: var(--text-secondary);
+}
+
+/* Legacy patient card styles */
+.patient-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0;
 }
 .patient-card:hover{border-color:var(--primary);transform:translateY(-1px);box-shadow:0 2px 4px rgba(0,94,184,0.1)}
 .patient-card.critical{border-left-color:var(--danger);background:linear-gradient(90deg,rgba(220,38,38,0.03),transparent)}
@@ -397,9 +494,7 @@ body{
 .patient-card.new{border-left-color:var(--success);background:linear-gradient(90deg,rgba(5,150,105,0.03),transparent)}
 /* List-style patient info */
 .p-info{flex:1;min-width:0}
-.p-name{font-size:1rem;font-weight:700;color:var(--primary-dark)}
 .p-details{font-size:0.85rem;color:var(--text-secondary);margin-top:2px}
-.p-meta{text-align:right;font-size:0.75rem;color:var(--text-muted)}
 .p-chevron{margin-left:12px;color:var(--text-secondary)}
 /* Legacy styles for profile pages */
 .patient-header{display:flex;align-items:center;gap:16px}
@@ -3669,41 +3764,73 @@ function renderUnitsTable() {
 
 function renderPatients() {
   const container = $('patientsList');
+  if (!container) return;
+
   const f = state.currentFilter;
-  let filtered = f === 'all' ? [...state.patients] : state.patients.filter(p => p.status === f);
+  const patients = state.patients || [];
+  let filtered = f === 'all' ? [...patients] : patients.filter(p => p.status === f);
 
-  const wards = {};
-  filtered.forEach(p => { const w = p.ward || 'Unassigned'; if (!wards[w]) wards[w] = []; wards[w].push(p); });
-
+  // Empty state
   if (!filtered.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div>No patients</div></div>';
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px; color:var(--text-muted);">
+        <div style="font-size:2rem; margin-bottom:10px;">📭</div>
+        <div>No patients found</div>
+      </div>`;
     updateStats();
     return;
   }
 
+  // Group by wards
+  const wards = {};
+  filtered.forEach(p => {
+    const w = p.ward || 'Unassigned';
+    if (!wards[w]) wards[w] = [];
+    wards[w].push(p);
+  });
+
+  // Render with Clinical Clarity design
   const order = ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned', 'Unassigned'];
   let html = '';
-  Object.keys(wards).sort((a, b) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b))).forEach(ward => {
+
+  Object.keys(wards).sort((a, b) => {
+    const aIdx = order.indexOf(a) === -1 ? 99 : order.indexOf(a);
+    const bIdx = order.indexOf(b) === -1 ? 99 : order.indexOf(b);
+    return aIdx - bIdx;
+  }).forEach(ward => {
     const ps = wards[ward];
-    html += `<div class="ward-section"><div class="ward-header"><div class="ward-title">📍 ${esc(ward)}</div><div class="ward-count">${ps.length}</div></div>`;
+    html += `<div class="ward-section">
+      <div class="ward-header">
+        <div class="ward-title">📍 ${esc(ward)}</div>
+        <div class="ward-count">${ps.length}</div>
+      </div>`;
+
     ps.forEach(p => {
       const medCount = (p.meds && p.meds.length) || 0;
-      html += `<div class="patient-card ${p.status}" onclick="openPatientProfile(${p.id})">
+
+      // Determine Status Color
+      let statusColor = 'var(--primary)';
+      if (p.status === 'critical') statusColor = 'var(--danger)';
+      else if (p.status === 'new') statusColor = 'var(--success)';
+      else if (p.status === 'chronic') statusColor = 'var(--purple)';
+      else if (p.ward && p.ward.includes('ICU')) statusColor = 'var(--danger)';
+
+      // Create the row using both patient-card (for compatibility) and patient-row classes
+      html += `<div class="patient-card ${p.status}" style="border-left-color:${statusColor}" onclick="openPatientProfile(${p.id})">
         <div class="p-info">
           <div class="p-name">${esc(p.name)}</div>
-          <div class="p-details">
-            <span>${p.age || '—'}y ${p.gender || '—'}</span> •
-            <span style="font-family:'JetBrains Mono'">${esc(p.room || '—')}</span>
+          <div class="p-demographics p-details">
+            <span style="font-family:'JetBrains Mono'">${esc(p.room || p.bed || 'No Bed')}</span> •
+            ${p.age || '—'}y ${p.gender || '—'}
           </div>
         </div>
         <div class="p-meta">
-          <div style="font-weight:600;color:var(--primary)">${medCount} Med${medCount !== 1 ? 's' : ''}</div>
-          <div>${esc(ward)}</div>
-        </div>
-        <div class="p-chevron">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M9 5l7 7-7 7"/>
-          </svg>
+          <div class="p-badge" style="background:var(--primary-light); color:var(--primary-dark);">
+            ${medCount} Med${medCount !== 1 ? 's' : ''}
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+            ${esc(ward)}
+          </div>
         </div>
       </div>`;
     });
