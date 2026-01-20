@@ -883,36 +883,130 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 }
 .med-learn-more .sparkle{font-size:1rem}
 
-/* Add Medication Form - Enhanced */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADD MEDICATION FORM - Premium Inline Design v15
+═══════════════════════════════════════════════════════════════════════════ */
+
 .med-add-form{
-  background:linear-gradient(145deg,#0f1729,#151d2e);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:16px;padding:20px;margin-bottom:16px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.3)
+  background:linear-gradient(165deg,#0a101f 0%,#111b2e 50%,#0f1825 100%);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;padding:0;margin-bottom:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow:hidden
 }
-.med-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.med-form-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;
+  background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(96,165,250,0.05));
+  border-bottom:1px solid rgba(255,255,255,0.06)
+}
+.med-form-title{
+  font-size:1.1rem;font-weight:700;color:#f0f6fc;
+  display:flex;align-items:center;gap:10px
+}
+.med-form-close{
+  width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03);color:#8b949e;font-size:1rem;
+  cursor:pointer;display:grid;place-items:center;transition:all 0.2s
+}
+.med-form-close:hover{background:rgba(248,81,73,0.1);border-color:rgba(248,81,73,0.3);color:#f85149}
+
+.med-form-section{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.med-form-section:last-of-type{border-bottom:none}
+.med-form-section-title{
+  font-size:0.7rem;font-weight:700;color:#6b7280;
+  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px
+}
+.med-form-section-title::after{
+  content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.06),transparent)
+}
+
+.med-form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.med-form-group{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.med-form-group:last-child{margin-bottom:0}
 .med-form-full{grid-column:1/-1}
-.med-form-group{display:flex;flex-direction:column;gap:6px}
-.med-form-label{font-size:0.7rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.03em}
+.med-form-label{
+  font-size:0.75rem;font-weight:600;color:#9ca3af;
+  display:flex;align-items:center;gap:4px
+}
+.med-form-label .required{color:#f87171}
 .med-form-input{
-  padding:12px 14px;background:#0a0f1c;border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px;color:#f0f6fc;font-size:0.88rem;font-family:inherit;transition:all 0.2s
+  padding:14px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;color:#f0f6fc;font-size:0.9rem;font-family:inherit;
+  transition:all 0.2s;width:100%
 }
-.med-form-input:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,0.15)}
+.med-form-input:focus{
+  outline:none;border-color:rgba(167,139,250,0.5);
+  box-shadow:0 0 0 3px rgba(167,139,250,0.1),0 4px 12px rgba(0,0,0,0.2)
+}
 .med-form-input::placeholder{color:#4b5563}
-.med-form-select{
-  padding:12px 14px;background:#0a0f1c;border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px;color:#f0f6fc;font-size:0.88rem;
-  appearance:none;cursor:pointer;transition:all 0.2s;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center
+
+/* Route Chips - Premium */
+.med-route-chips{display:flex;flex-wrap:wrap;gap:8px}
+.med-route-chip{
+  padding:10px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;color:#9ca3af;font-size:0.82rem;font-weight:600;
+  font-family:inherit;cursor:pointer;transition:all 0.2s
 }
-.med-form-select:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,0.15)}
+.med-route-chip:hover{border-color:rgba(96,165,250,0.3);color:#60a5fa}
+.med-route-chip.selected{
+  background:linear-gradient(135deg,rgba(96,165,250,0.15),rgba(96,165,250,0.08));
+  border-color:#60a5fa;color:#60a5fa;
+  box-shadow:0 0 12px rgba(96,165,250,0.2)
+}
+
+/* Frequency Chips - Premium */
+.med-freq-chips{display:flex;flex-wrap:wrap;gap:8px}
+.med-freq-chip{
+  padding:10px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;color:#9ca3af;font-size:0.82rem;font-weight:600;
+  font-family:inherit;cursor:pointer;transition:all 0.2s
+}
+.med-freq-chip:hover{border-color:rgba(52,211,153,0.3);color:#34d399}
+.med-freq-chip.selected{
+  background:linear-gradient(135deg,rgba(52,211,153,0.15),rgba(52,211,153,0.08));
+  border-color:#34d399;color:#34d399;
+  box-shadow:0 0 12px rgba(52,211,153,0.2)
+}
+
+/* Status Options - Premium */
+.med-status-options{display:flex;flex-wrap:wrap;gap:8px}
+.med-status-option{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;color:#9ca3af;font-size:0.82rem;font-weight:600;
+  font-family:inherit;cursor:pointer;transition:all 0.2s
+}
+.med-status-option:hover{border-color:rgba(255,255,255,0.15)}
+.med-status-option.selected{
+  background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.2);color:#f0f6fc
+}
+.status-dot{width:8px;height:8px;border-radius:50%}
+.status-dot.active{background:#34d399}
+.status-dot.new{background:#a78bfa}
+.status-dot.prn{background:#fbbf24}
+.status-dot.discontinued{background:#6b7280}
+
+/* Form Actions - Premium */
 .med-form-actions{
-  display:flex;gap:10px;margin-top:16px;padding-top:16px;
-  border-top:1px solid rgba(255,255,255,0.06)
+  display:flex;gap:12px;padding:20px 24px;
+  background:rgba(0,0,0,0.2);border-top:1px solid rgba(255,255,255,0.04)
 }
-.med-form-actions .btn{flex:1;padding:12px 16px}
+.med-form-btn{
+  flex:1;padding:14px 20px;border-radius:12px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:8px
+}
+.med-form-actions .btn-primary{
+  background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;
+  box-shadow:0 4px 16px rgba(245,158,11,0.3)
+}
+.med-form-actions .btn-primary:hover{
+  box-shadow:0 6px 24px rgba(245,158,11,0.4);transform:translateY(-1px)
+}
+.med-form-actions .btn-secondary{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1)
+}
 
 /* Empty State */
 .meds-empty{text-align:center;padding:48px 24px;color:#6b7280}
@@ -923,12 +1017,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 /* Quick Actions */
 .meds-quick-actions{display:flex;gap:10px;margin-bottom:20px}
 .meds-quick-btn{
-  flex:1;padding:12px 16px;background:#0f1729;
-  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+  flex:1;padding:14px 16px;background:linear-gradient(145deg,#0f1729,#151d2e);
+  border:1px solid rgba(255,255,255,0.08);border-radius:12px;
   color:#c9d1d9;font-size:0.82rem;font-weight:600;font-family:inherit;
   cursor:pointer;text-align:center;transition:all 0.2s
 }
-.meds-quick-btn:hover{background:#151d2e;border-color:rgba(167,139,250,0.3);color:#a78bfa}
+.meds-quick-btn:hover{border-color:rgba(167,139,250,0.4);color:#a78bfa;background:linear-gradient(145deg,#131c33,#1a2540)}
 
 /* List Header */
 .meds-list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -1587,6 +1681,121 @@ Request New Unit Access
 </div>
 <div class="modal-footer">
 <button class="btn btn-secondary btn-full" onclick="closeModal('drugInfoModal')">Close</button>
+</div>
+</div>
+</div>
+
+<!-- Add Medication Modal - Premium -->
+<div class="modal" id="addMedModal">
+<div class="modal-box">
+<div class="modal-header">
+  <div class="med-modal-icon">💊</div>
+  <div class="med-modal-title" id="addMedModalTitle">Add Medication</div>
+  <p class="med-modal-subtitle">Enter medication details for this patient</p>
+</div>
+<div class="modal-body">
+  <!-- Drug Name -->
+  <div class="med-form-section">
+    <div class="med-form-section-title"><span>💉</span> Drug Information</div>
+    <div class="med-input-group">
+      <label class="med-input-label">Drug Name <span class="required">*</span></label>
+      <input type="text" class="med-input" id="medNameNew" placeholder="e.g., Metformin, Lisinopril">
+    </div>
+    <div class="med-form-row">
+      <div class="med-input-group">
+        <label class="med-input-label">Dose <span class="required">*</span></label>
+        <input type="text" class="med-input" id="medDoseNew" placeholder="e.g., 500mg">
+      </div>
+      <div class="med-input-group">
+        <label class="med-input-label">Generic Name</label>
+        <input type="text" class="med-input" id="medGenericNew" placeholder="Optional">
+      </div>
+    </div>
+  </div>
+  
+  <!-- Route -->
+  <div class="med-form-section">
+    <div class="med-form-section-title"><span>🎯</span> Route of Administration</div>
+    <div class="med-pill-group" id="routePills">
+      <button type="button" class="med-pill selected" data-route="PO">PO</button>
+      <button type="button" class="med-pill" data-route="IV">IV</button>
+      <button type="button" class="med-pill" data-route="IM">IM</button>
+      <button type="button" class="med-pill" data-route="SC">SC</button>
+      <button type="button" class="med-pill" data-route="INH">INH</button>
+      <button type="button" class="med-pill" data-route="TOP">TOP</button>
+      <button type="button" class="med-pill" data-route="SL">SL</button>
+      <button type="button" class="med-pill" data-route="PR">PR</button>
+    </div>
+  </div>
+  
+  <!-- Frequency -->
+  <div class="med-form-section">
+    <div class="med-form-section-title"><span>🕐</span> Frequency</div>
+    <div class="med-freq-grid" id="freqPills">
+      <button type="button" class="med-freq-pill selected" data-freq="OD">
+        <div class="med-freq-label">OD</div>
+        <div class="med-freq-desc">Once daily</div>
+      </button>
+      <button type="button" class="med-freq-pill" data-freq="BD">
+        <div class="med-freq-label">BD</div>
+        <div class="med-freq-desc">Twice daily</div>
+      </button>
+      <button type="button" class="med-freq-pill" data-freq="TDS">
+        <div class="med-freq-label">TDS</div>
+        <div class="med-freq-desc">3× daily</div>
+      </button>
+      <button type="button" class="med-freq-pill" data-freq="QID">
+        <div class="med-freq-label">QID</div>
+        <div class="med-freq-desc">4× daily</div>
+      </button>
+      <button type="button" class="med-freq-pill" data-freq="Q6H">
+        <div class="med-freq-label">Q6H</div>
+        <div class="med-freq-desc">Every 6h</div>
+      </button>
+      <button type="button" class="med-freq-pill" data-freq="Q8H">
+        <div class="med-freq-label">Q8H</div>
+        <div class="med-freq-desc">Every 8h</div>
+      </button>
+      <button type="button" class="med-freq-pill" data-freq="Q12H">
+        <div class="med-freq-label">Q12H</div>
+        <div class="med-freq-desc">Every 12h</div>
+      </button>
+      <button type="button" class="med-freq-pill" data-freq="PRN">
+        <div class="med-freq-label">PRN</div>
+        <div class="med-freq-desc">As needed</div>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Clinical Details -->
+  <div class="med-form-section">
+    <div class="med-form-section-title"><span>📋</span> Clinical Details</div>
+    <div class="med-input-group">
+      <label class="med-input-label">Indication</label>
+      <input type="text" class="med-input" id="medIndicationNew" placeholder="e.g., Type 2 Diabetes, Hypertension">
+    </div>
+    <div class="med-input-group">
+      <label class="med-input-label">Status</label>
+      <div class="med-status-group" id="statusPills">
+        <button type="button" class="med-status-pill active selected" data-status="active">
+          <span class="med-status-dot"></span>Active
+        </button>
+        <button type="button" class="med-status-pill new" data-status="new">
+          <span class="med-status-dot"></span>New
+        </button>
+        <button type="button" class="med-status-pill prn" data-status="prn">
+          <span class="med-status-dot"></span>PRN
+        </button>
+        <button type="button" class="med-status-pill discontinued" data-status="discontinued">
+          <span class="med-status-dot"></span>Stopped
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-secondary" onclick="closeModal('addMedModal')">Cancel</button>
+  <button class="btn btn-primary" onclick="saveMedicationNew()">Save Medication</button>
 </div>
 </div>
 </div>
@@ -3711,65 +3920,92 @@ function renderProfileMeds() {
   html += `
       <!-- Add Med Form (hidden by default) -->
       <div class="med-add-form" id="medAddForm" style="display:none">
-        <div class="med-form-grid">
+        <div class="med-form-header">
+          <div class="med-form-title">💊 Add Medication</div>
+          <button class="med-form-close" onclick="hideAddMedForm()">✕</button>
+        </div>
+        
+        <div class="med-form-section">
+          <div class="med-form-section-title">Drug Information</div>
           <div class="med-form-group med-form-full">
-            <label class="med-form-label">Drug Name *</label>
+            <label class="med-form-label">Drug Name <span class="required">*</span></label>
             <input type="text" class="med-form-input" id="medName" placeholder="e.g., Metformin">
           </div>
-          <div class="med-form-group">
-            <label class="med-form-label">Dose *</label>
-            <input type="text" class="med-form-input" id="medDose" placeholder="e.g., 500mg">
+          <div class="med-form-row">
+            <div class="med-form-group">
+              <label class="med-form-label">Generic Name</label>
+              <input type="text" class="med-form-input" id="medGeneric" placeholder="Optional">
+            </div>
+            <div class="med-form-group">
+              <label class="med-form-label">Dose <span class="required">*</span></label>
+              <input type="text" class="med-form-input" id="medDose" placeholder="e.g., 500mg">
+            </div>
           </div>
+        </div>
+        
+        <div class="med-form-section">
+          <div class="med-form-section-title">Administration</div>
           <div class="med-form-group">
             <label class="med-form-label">Route</label>
-            <select class="med-form-select" id="medRoute">
-              <option value="PO">PO (Oral)</option>
-              <option value="IV">IV</option>
-              <option value="IM">IM</option>
-              <option value="SC">SC</option>
-              <option value="INH">INH (Inhaled)</option>
-              <option value="TOP">Topical</option>
-              <option value="PR">PR</option>
-              <option value="SL">SL</option>
-            </select>
+            <div class="med-route-chips" id="medRouteChips">
+              <button type="button" class="med-route-chip selected" data-value="PO">PO</button>
+              <button type="button" class="med-route-chip" data-value="IV">IV</button>
+              <button type="button" class="med-route-chip" data-value="IM">IM</button>
+              <button type="button" class="med-route-chip" data-value="SC">SC</button>
+              <button type="button" class="med-route-chip" data-value="INH">INH</button>
+              <button type="button" class="med-route-chip" data-value="TOP">TOP</button>
+              <button type="button" class="med-route-chip" data-value="SL">SL</button>
+              <button type="button" class="med-route-chip" data-value="PR">PR</button>
+            </div>
+            <input type="hidden" id="medRoute" value="PO">
           </div>
           <div class="med-form-group">
-            <label class="med-form-label">Frequency *</label>
-            <select class="med-form-select" id="medFreq">
-              <option value="OD">OD (Once daily)</option>
-              <option value="BD">BD (Twice daily)</option>
-              <option value="TDS">TDS (3x daily)</option>
-              <option value="QID">QID (4x daily)</option>
-              <option value="PRN">PRN (As needed)</option>
-              <option value="STAT">STAT</option>
-              <option value="Q4H">Q4H</option>
-              <option value="Q6H">Q6H</option>
-              <option value="Q8H">Q8H</option>
-              <option value="Q12H">Q12H</option>
-              <option value="Weekly">Weekly</option>
-            </select>
+            <label class="med-form-label">Frequency <span class="required">*</span></label>
+            <div class="med-freq-chips" id="medFreqChips">
+              <button type="button" class="med-freq-chip selected" data-value="OD">OD</button>
+              <button type="button" class="med-freq-chip" data-value="BD">BD</button>
+              <button type="button" class="med-freq-chip" data-value="TDS">TDS</button>
+              <button type="button" class="med-freq-chip" data-value="QID">QID</button>
+              <button type="button" class="med-freq-chip" data-value="Q4H">Q4H</button>
+              <button type="button" class="med-freq-chip" data-value="Q6H">Q6H</button>
+              <button type="button" class="med-freq-chip" data-value="Q8H">Q8H</button>
+              <button type="button" class="med-freq-chip" data-value="PRN">PRN</button>
+            </div>
+            <input type="hidden" id="medFreq" value="OD">
           </div>
+        </div>
+        
+        <div class="med-form-section">
+          <div class="med-form-section-title">Clinical Details</div>
           <div class="med-form-group med-form-full">
             <label class="med-form-label">Indication</label>
             <input type="text" class="med-form-input" id="medIndication" placeholder="e.g., Type 2 Diabetes Mellitus">
           </div>
           <div class="med-form-group">
             <label class="med-form-label">Status</label>
-            <select class="med-form-select" id="medStatus">
-              <option value="active">Active</option>
-              <option value="new">New</option>
-              <option value="prn">PRN</option>
-              <option value="discontinued">Discontinued</option>
-            </select>
-          </div>
-          <div class="med-form-group">
-            <label class="med-form-label">Generic Name</label>
-            <input type="text" class="med-form-input" id="medGeneric" placeholder="Optional">
+            <div class="med-status-options" id="medStatusOptions">
+              <button type="button" class="med-status-option selected" data-value="active">
+                <span class="status-dot active"></span> Active
+              </button>
+              <button type="button" class="med-status-option" data-value="new">
+                <span class="status-dot new"></span> New
+              </button>
+              <button type="button" class="med-status-option" data-value="prn">
+                <span class="status-dot prn"></span> PRN
+              </button>
+              <button type="button" class="med-status-option" data-value="discontinued">
+                <span class="status-dot discontinued"></span> Stopped
+              </button>
+            </div>
+            <input type="hidden" id="medStatus" value="active">
           </div>
         </div>
+        
         <div class="med-form-actions">
-          <button class="btn btn-secondary" style="flex:1" onclick="hideAddMedForm()">Cancel</button>
-          <button class="btn btn-primary" style="flex:1" onclick="saveMedication()">Save Medication</button>
+          <button class="btn btn-secondary med-form-btn" onclick="hideAddMedForm()">Cancel</button>
+          <button class="btn btn-primary med-form-btn" onclick="saveMedication()">
+            <span>💾</span> Save Medication
+          </button>
         </div>
       </div>
     </div>
@@ -3882,38 +4118,164 @@ async function handleMedsUpload(file) {
 }
 
 window.showAddMedForm = function() {
-  $('medAddForm').style.display = 'block';
-  $('medName').value = '';
-  $('medDose').value = '';
-  $('medRoute').value = 'PO';
-  $('medFreq').value = 'OD';
-  $('medIndication').value = '';
-  $('medStatus').value = 'active';
-  $('medGeneric').value = '';
   state.editingMedIdx = null;
+  
+  // Show inline form
+  const form = $('medAddForm');
+  if (form) {
+    form.style.display = 'block';
+    
+    // Reset values
+    $('medName').value = '';
+    $('medDose').value = '';
+    $('medGeneric').value = '';
+    $('medIndication').value = '';
+    $('medRoute').value = 'PO';
+    $('medFreq').value = 'OD';
+    $('medStatus').value = 'active';
+    
+    // Reset chip selections
+    document.querySelectorAll('#medRouteChips .med-route-chip').forEach(c => c.classList.remove('selected'));
+    document.querySelector('#medRouteChips .med-route-chip[data-value="PO"]')?.classList.add('selected');
+    
+    document.querySelectorAll('#medFreqChips .med-freq-chip').forEach(c => c.classList.remove('selected'));
+    document.querySelector('#medFreqChips .med-freq-chip[data-value="OD"]')?.classList.add('selected');
+    
+    document.querySelectorAll('#medStatusOptions .med-status-option').forEach(c => c.classList.remove('selected'));
+    document.querySelector('#medStatusOptions .med-status-option[data-value="active"]')?.classList.add('selected');
+    
+    // Initialize chip handlers
+    initMedFormChipHandlers();
+    
+    // Scroll to form
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 };
 
+function initMedFormChipHandlers() {
+  // Route chips
+  document.querySelectorAll('#medRouteChips .med-route-chip').forEach(chip => {
+    chip.onclick = function() {
+      document.querySelectorAll('#medRouteChips .med-route-chip').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+      $('medRoute').value = this.dataset.value;
+    };
+  });
+  
+  // Frequency chips
+  document.querySelectorAll('#medFreqChips .med-freq-chip').forEach(chip => {
+    chip.onclick = function() {
+      document.querySelectorAll('#medFreqChips .med-freq-chip').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+      $('medFreq').value = this.dataset.value;
+    };
+  });
+  
+  // Status options
+  document.querySelectorAll('#medStatusOptions .med-status-option').forEach(option => {
+    option.onclick = function() {
+      document.querySelectorAll('#medStatusOptions .med-status-option').forEach(o => o.classList.remove('selected'));
+      this.classList.add('selected');
+      $('medStatus').value = this.dataset.value;
+    };
+  });
+}
+
+// Keep old modal handler for backward compatibility
+function initMedPillHandlers() {
+  // Route pills
+  document.querySelectorAll('#routePills .med-pill').forEach(pill => {
+    pill.onclick = function() {
+      document.querySelectorAll('#routePills .med-pill').forEach(p => p.classList.remove('selected'));
+      this.classList.add('selected');
+    };
+  });
+  
+  // Frequency pills  
+  document.querySelectorAll('#freqPills .med-freq-pill').forEach(pill => {
+    pill.onclick = function() {
+      document.querySelectorAll('#freqPills .med-freq-pill').forEach(p => p.classList.remove('selected'));
+      this.classList.add('selected');
+    };
+  });
+  
+  // Status pills
+  document.querySelectorAll('#statusPills .med-status-pill').forEach(pill => {
+    pill.onclick = function() {
+      document.querySelectorAll('#statusPills .med-status-pill').forEach(p => p.classList.remove('selected'));
+      this.classList.add('selected');
+    };
+  });
+}
+
 window.hideAddMedForm = function() {
-  $('medAddForm').style.display = 'none';
+  const form = $('medAddForm');
+  if (form) form.style.display = 'none';
 };
 
 window.saveMedication = function() {
-  const name = $('medName').value.trim();
-  const dose = $('medDose').value.trim();
+  const name = $('medName')?.value?.trim();
+  const dose = $('medDose')?.value?.trim();
   
-  if (!name) {
-    toast('Drug name is required', true);
+  if (!name || !dose) {
+    toast('Please enter drug name and dose', 'error');
     return;
   }
+  
+  const route = $('medRoute')?.value || 'PO';
+  const frequency = $('medFreq')?.value || 'OD';
+  const status = $('medStatus')?.value || 'active';
   
   const med = {
     name: name,
     dose: dose,
-    route: $('medRoute').value,
-    frequency: $('medFreq').value,
-    indication: $('medIndication').value.trim(),
-    status: $('medStatus').value,
-    generic: $('medGeneric').value.trim(),
+    route: route,
+    frequency: frequency,
+    indication: $('medIndication')?.value?.trim() || '',
+    generic: $('medGeneric')?.value?.trim() || '',
+    status: status,
+    addedDate: new Date().toISOString()
+  };
+  
+  const p = state.currentPatient;
+  if (!p.medications) p.medications = [];
+  
+  if (state.editingMedIdx !== null) {
+    // Edit existing
+    p.medications[state.editingMedIdx] = { ...p.medications[state.editingMedIdx], ...med };
+    toast('Medication updated');
+  } else {
+    // Add new
+    p.medications.push(med);
+    toast('Medication added');
+  }
+  
+  saveCloud();
+  hideAddMedForm();
+  renderProfileMeds();
+};
+
+window.saveMedicationNew = function() {
+  const name = $('medNameNew').value.trim();
+  const dose = $('medDoseNew').value.trim();
+  
+  if (!name || !dose) {
+    toast('Please enter drug name and dose', 'error');
+    return;
+  }
+  
+  const route = document.querySelector('#routePills .med-pill.selected')?.dataset.route || 'PO';
+  const frequency = document.querySelector('#freqPills .med-freq-pill.selected')?.dataset.freq || 'OD';
+  const status = document.querySelector('#statusPills .med-status-pill.selected')?.dataset.status || 'active';
+  
+  const med = {
+    name: name,
+    dose: dose,
+    route: route,
+    frequency: frequency,
+    indication: $('medIndicationNew').value.trim(),
+    generic: $('medGenericNew').value.trim(),
+    status: status,
     addedDate: new Date().toISOString()
   };
   
@@ -3930,7 +4292,7 @@ window.saveMedication = function() {
   
   state.editingMedIdx = null;
   saveCloud();
-  hideAddMedForm();
+  closeModal('addMedModal');
   renderProfileMeds();
 };
 
@@ -3939,16 +4301,39 @@ window.editMedication = function(idx) {
   if (!med) return;
   
   state.editingMedIdx = idx;
-  $('medAddForm').style.display = 'block';
-  $('medName').value = med.name || '';
-  $('medDose').value = med.dose || '';
-  $('medRoute').value = med.route || 'PO';
-  $('medFreq').value = med.frequency || 'OD';
-  $('medIndication').value = med.indication || '';
-  $('medStatus').value = med.status || 'active';
-  $('medGeneric').value = med.generic || '';
   
-  $('medAddForm').scrollIntoView({ behavior: 'smooth' });
+  // Show inline form
+  const form = $('medAddForm');
+  if (form) {
+    form.style.display = 'block';
+    
+    // Set values
+    $('medName').value = med.name || '';
+    $('medDose').value = med.dose || '';
+    $('medGeneric').value = med.generic || '';
+    $('medIndication').value = med.indication || '';
+    $('medRoute').value = med.route || 'PO';
+    $('medFreq').value = med.frequency || 'OD';
+    $('medStatus').value = med.status || 'active';
+    
+    // Set route chip
+    document.querySelectorAll('#medRouteChips .med-route-chip').forEach(c => c.classList.remove('selected'));
+    document.querySelector(`#medRouteChips .med-route-chip[data-value="${med.route || 'PO'}"]`)?.classList.add('selected');
+    
+    // Set frequency chip
+    document.querySelectorAll('#medFreqChips .med-freq-chip').forEach(c => c.classList.remove('selected'));
+    document.querySelector(`#medFreqChips .med-freq-chip[data-value="${med.frequency || 'OD'}"]`)?.classList.add('selected');
+    
+    // Set status option
+    document.querySelectorAll('#medStatusOptions .med-status-option').forEach(c => c.classList.remove('selected'));
+    document.querySelector(`#medStatusOptions .med-status-option[data-value="${med.status || 'active'}"]`)?.classList.add('selected');
+    
+    // Initialize chip handlers
+    initMedFormChipHandlers();
+    
+    // Scroll to form
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 };
 
 window.deleteMedication = function(idx) {
