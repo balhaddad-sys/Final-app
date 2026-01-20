@@ -193,7 +193,7 @@ body{
 .modal-body{padding:24px;overflow-y:auto;flex:1}
 .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px}
 .modal-footer .btn{flex:1}
-.page{display:none;min-height:100vh}
+.page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page.active{display:flex;flex-direction:column}
 #landing{align-items:center;justify-content:center;padding:24px;background:var(--bg-app)}
 .landing-logo{width:88px;height:88px;background:var(--primary);border-radius:24px;display:grid;place-items:center;margin-bottom:28px;box-shadow:0 4px 12px rgba(0,94,184,0.15)}
@@ -622,39 +622,39 @@ body{
 #scoreCalcModal{padding:0;align-items:stretch}
 #scoreCalcModal .modal-box{
   max-width:100%;width:100%;height:100%;max-height:100%;
-  border-radius:0;margin:0;background:#0a0e17;
+  border-radius:0;margin:0;background:var(--bg-surface);
   display:flex;flex-direction:column;border:none
 }
 @media(min-width:600px){
   #scoreCalcModal{padding:20px;align-items:center}
   #scoreCalcModal .modal-box{
     max-width:420px;width:100%;height:auto;max-height:85vh;
-    border-radius:12px;border:1px solid rgba(255,255,255,0.06)
+    border-radius:12px;border:1px solid var(--border)
   }
 }
 
 /* Calculator Layout */
 .score-calculator{
   display:flex;flex-direction:column;height:100%;
-  background:#0a0e17;overflow:hidden
+  background:var(--bg-surface);overflow:hidden
 }
 
 /* Header */
 .score-calc-header{
-  padding:16px;background:#0d1117;
-  border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0
+  padding:16px;background:var(--bg-app);
+  border-bottom:1px solid var(--border);flex-shrink:0
 }
 .score-calc-header-top{
   display:flex;justify-content:space-between;align-items:flex-start;gap:12px
 }
 .score-calc-close{
   width:28px;height:28px;border-radius:6px;border:none;
-  background:rgba(255,255,255,0.05);color:#8b949e;
+  background:var(--bg-elevated);color:var(--text-secondary);
   font-size:14px;cursor:pointer;display:grid;place-items:center;flex-shrink:0
 }
-.score-calc-close:active{background:rgba(255,255,255,0.1)}
-.score-calc-title{font-size:1.1rem;font-weight:600;color:#e6edf3;margin-bottom:2px}
-.score-calc-purpose{font-size:0.8rem;color:#8b949e}
+.score-calc-close:active{background:var(--bg-hover)}
+.score-calc-title{font-size:1.1rem;font-weight:600;color:var(--text-main);margin-bottom:2px}
+.score-calc-purpose{font-size:0.8rem;color:var(--text-secondary)}
 .score-calc-category{
   display:inline-block;margin-top:10px;padding:4px 8px;
   background:rgba(56,139,253,0.1);color:#58a6ff;
@@ -700,72 +700,72 @@ body{
 /* Checkbox Field */
 .score-field{
   display:flex;align-items:center;gap:10px;padding:10px 12px;
-  background:#161b22;border:1px solid rgba(255,255,255,0.04);
+  background:var(--bg-surface);border:1px solid var(--border);
   border-radius:8px;cursor:pointer;min-height:44px
 }
-.score-field:active{background:#1c2128}
+.score-field:active{background:var(--bg-elevated)}
 .score-field.checked{
-  background:rgba(46,160,67,0.08);
-  border-color:rgba(46,160,67,0.3)
+  background:rgba(5,150,105,0.08);
+  border-color:rgba(5,150,105,0.3)
 }
 .score-field-checkbox{
   width:18px;height:18px;min-width:18px;border-radius:4px;
-  border:1.5px solid #30363d;display:grid;place-items:center;
+  border:1.5px solid var(--border);display:grid;place-items:center;
   background:transparent;transition:all 0.15s
 }
 .score-field.checked .score-field-checkbox{
-  background:#238636;border-color:#238636
+  background:var(--success);border-color:var(--success)
 }
 .score-field.checked .score-field-checkbox::after{
   content:'✓';color:#fff;font-size:11px;font-weight:700
 }
-.score-field-label{flex:1;font-size:0.82rem;color:#c9d1d9;line-height:1.3}
+.score-field-label{flex:1;font-size:0.82rem;color:var(--text-main);line-height:1.3}
 .score-field-points{
   font-family:'JetBrains Mono',monospace;font-size:0.7rem;
-  color:#8b949e;padding:2px 6px;background:rgba(255,255,255,0.04);
+  color:var(--text-secondary);padding:2px 6px;background:var(--bg-elevated);
   border-radius:4px
 }
-.score-field.checked .score-field-points{color:#3fb950;background:rgba(46,160,67,0.1)}
+.score-field.checked .score-field-points{color:var(--success);background:rgba(5,150,105,0.1)}
 
 /* Select Field */
 .score-field-select{width:100%}
 .score-field-select label{
   display:block;font-size:0.72rem;font-weight:500;
-  color:#8b949e;margin-bottom:6px
+  color:var(--text-secondary);margin-bottom:6px
 }
 .score-field-select select{
   width:100%;padding:10px 32px 10px 10px;
-  background:#161b22;border:1px solid #30363d;
-  border-radius:6px;color:#c9d1d9;font-size:0.82rem;
+  background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:6px;color:var(--text-main);font-size:0.82rem;
   appearance:none;cursor:pointer;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 10px center
 }
-.score-field-select select:focus{outline:none;border-color:#388bfd}
+.score-field-select select:focus{outline:none;border-color:var(--primary)}
 
 /* Number Field */
 .score-field-number{display:flex;align-items:center;gap:10px;width:100%}
-.score-field-number label{flex:1;font-size:0.82rem;color:#c9d1d9}
+.score-field-number label{flex:1;font-size:0.82rem;color:var(--text-main)}
 .score-field-number input{
-  width:80px;padding:8px 10px;background:#161b22;
-  border:1px solid #30363d;border-radius:6px;color:#c9d1d9;
+  width:80px;padding:8px 10px;background:var(--bg-surface);
+  border:1px solid var(--border);border-radius:6px;color:var(--text-main);
   font-size:0.85rem;font-family:'JetBrains Mono',monospace;text-align:center
 }
-.score-field-number input:focus{outline:none;border-color:#388bfd}
+.score-field-number input:focus{outline:none;border-color:var(--primary)}
 
 /* Result */
 .score-calc-result{
-  padding:14px 16px;background:#0d1117;
-  border-top:1px solid rgba(255,255,255,0.05);flex-shrink:0
+  padding:14px 16px;background:var(--bg-app);
+  border-top:1px solid var(--border);flex-shrink:0
 }
 .score-result-display{
   display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:10px
 }
 .score-result-value{
   font-family:'JetBrains Mono',monospace;font-size:2.5rem;
-  font-weight:700;color:#e6edf3
+  font-weight:700;color:var(--text-main)
 }
-.score-result-max{font-size:0.8rem;color:#484f58}
+.score-result-max{font-size:0.8rem;color:var(--text-muted)}
 .score-result-interpretation{padding:10px 12px;border-radius:6px}
 .score-result-risk{font-size:0.9rem;font-weight:600;margin-bottom:2px}
 .score-result-action{font-size:0.78rem;color:rgba(255,255,255,0.8);line-height:1.35}
@@ -780,84 +780,84 @@ body{
 
 /* Footer */
 #scoreCalcModal .modal-footer{
-  background:#0d1117;border-top:1px solid rgba(255,255,255,0.05);
+  background:var(--bg-app);border-top:1px solid var(--border);
   padding:12px 16px;flex-shrink:0;display:flex;gap:8px
 }
 #scoreCalcModal .modal-footer .btn{flex:1;padding:10px}
 
 /* ═══ DASHBOARD SCORES TAB ═══ */
 .scores-search-wrapper{position:relative;margin-bottom:14px}
-.scores-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#484f58}
+.scores-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
 .scores-search-input{
   width:100%;padding:10px 14px 10px 38px;
-  background:#161b22;border:1px solid #30363d;
-  border-radius:6px;color:#c9d1d9;font-size:0.85rem
+  background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:6px;color:var(--text-main);font-size:0.85rem
 }
-.scores-search-input:focus{outline:none;border-color:#388bfd}
-.scores-search-input::placeholder{color:#484f58}
+.scores-search-input:focus{outline:none;border-color:var(--primary)}
+.scores-search-input::placeholder{color:var(--text-muted)}
 
 /* Quick Scores */
 .quick-score-ref{
-  background:#161b22;border:1px solid rgba(255,255,255,0.04);
+  background:var(--bg-surface);border:1px solid var(--border);
   border-radius:8px;padding:12px;margin-bottom:14px
 }
 .quick-score-ref-title{
-  font-size:0.65rem;font-weight:600;color:#8b949e;
+  font-size:0.65rem;font-weight:600;color:var(--text-secondary);
   margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px
 }
 .quick-score-ref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .quick-score-ref-item{
-  padding:10px 6px;background:#0d1117;border:1px solid rgba(255,255,255,0.04);
+  padding:10px 6px;background:var(--bg-elevated);border:1px solid var(--border);
   border-radius:6px;text-align:center;cursor:pointer
 }
-.quick-score-ref-item:active{background:#1c2128}
-.quick-score-ref-item-name{font-size:0.8rem;font-weight:600;color:#e6edf3}
-.quick-score-ref-item-hint{font-size:0.65rem;color:#8b949e;margin-top:2px}
+.quick-score-ref-item:active{background:var(--bg-hover)}
+.quick-score-ref-item-name{font-size:0.8rem;font-weight:600;color:var(--text-main)}
+.quick-score-ref-item-hint{font-size:0.65rem;color:var(--text-secondary);margin-top:2px}
 
 /* Score Groups */
 .emergency-scores-grid{display:flex;flex-direction:column;gap:10px}
 .emergency-score-group{
-  background:#161b22;border:1px solid rgba(255,255,255,0.04);
+  background:var(--bg-surface);border:1px solid var(--border);
   border-radius:8px;overflow:hidden
 }
 .emergency-score-group-header{
-  padding:10px 12px;background:#0d1117;
-  border-bottom:1px solid rgba(255,255,255,0.04);
+  padding:10px 12px;background:var(--bg-app);
+  border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:8px
 }
 .emergency-score-group-icon{font-size:1rem}
-.emergency-score-group-title{font-size:0.85rem;font-weight:600;color:#e6edf3}
+.emergency-score-group-title{font-size:0.85rem;font-weight:600;color:var(--text-main)}
 .emergency-score-group-body{padding:4px}
 .emergency-score-item{
   display:flex;align-items:center;justify-content:space-between;
   padding:10px;border-radius:6px;cursor:pointer;gap:8px
 }
-.emergency-score-item:active{background:rgba(255,255,255,0.03)}
+.emergency-score-item:active{background:var(--bg-elevated)}
 .emergency-score-item-info{flex:1;min-width:0}
-.emergency-score-item-name{font-size:0.82rem;font-weight:500;color:#c9d1d9}
-.emergency-score-item-purpose{font-size:0.7rem;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emergency-score-item-name{font-size:0.82rem;font-weight:500;color:var(--text-main)}
+.emergency-score-item-purpose{font-size:0.7rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .emergency-score-item-btn{
-  padding:6px 10px;background:#21262d;border:1px solid #30363d;
-  border-radius:5px;color:#c9d1d9;font-size:0.7rem;font-weight:500;cursor:pointer
+  padding:6px 10px;background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:5px;color:var(--text-main);font-size:0.7rem;font-weight:500;cursor:pointer
 }
-.emergency-score-item-btn:active{background:#388bfd;color:#fff;border-color:transparent}
+.emergency-score-item-btn:active{background:var(--primary);color:#fff;border-color:transparent}
 
 /* ═══ PATIENT PROFILE SCORES ═══ */
 .patient-scores-section{margin-bottom:16px}
 .patient-scores-header{margin-bottom:8px}
-.patient-scores-title{font-size:0.68rem;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.patient-scores-title{font-size:0.68rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px}
 .patient-scores-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .patient-score-chip{
-  padding:12px 10px;background:#161b22;
-  border:1px solid rgba(255,255,255,0.04);border-radius:8px;
+  padding:12px 10px;background:var(--bg-surface);
+  border:1px solid var(--border);border-radius:8px;
   cursor:pointer;text-align:center
 }
-.patient-score-chip:active{background:#1c2128}
+.patient-score-chip:active{background:var(--bg-elevated)}
 .patient-score-chip.has-value{
-  border-color:rgba(46,160,67,0.3);background:rgba(46,160,67,0.06)
+  border-color:rgba(5,150,105,0.3);background:rgba(5,150,105,0.06)
 }
 .patient-score-chip .score-chip-icon{font-size:1.2rem;display:block;margin-bottom:4px}
-.patient-score-chip .score-chip-name{font-size:0.75rem;font-weight:500;color:#c9d1d9}
+.patient-score-chip .score-chip-name{font-size:0.75rem;font-weight:500;color:var(--text-main)}
 .patient-score-chip .score-chip-value{
   display:none;font-family:'JetBrains Mono',monospace;
   font-size:0.95rem;font-weight:700;margin-top:4px
@@ -869,23 +869,23 @@ body{
 
 /* ═══ CLINICAL HISTORY & NOTES ═══ */
 .history-upload-area{
-  padding:20px;background:#161b22;border:2px dashed #30363d;
+  padding:20px;background:var(--bg-surface);border:2px dashed var(--border);
   border-radius:10px;text-align:center;cursor:pointer;
   margin-bottom:16px;transition:all 0.15s
 }
-.history-upload-area:active{background:#1c2128;border-color:#388bfd}
+.history-upload-area:active{background:var(--bg-elevated);border-color:var(--primary)}
 .clinical-notes-list{display:flex;flex-direction:column;gap:12px}
 .clinical-note-card{
-  background:#161b22;border:1px solid rgba(255,255,255,0.06);
+  background:var(--bg-surface);border:1px solid var(--border);
   border-radius:10px;overflow:hidden
 }
 .clinical-note-header{
   display:flex;justify-content:space-between;align-items:center;
-  padding:10px 12px;background:#0d1117;
-  border-bottom:1px solid rgba(255,255,255,0.04)
+  padding:10px 12px;background:var(--bg-app);
+  border-bottom:1px solid var(--border)
 }
-.clinical-note-type{font-size:0.8rem;font-weight:600;color:#e6edf3}
-.clinical-note-date{font-size:0.7rem;color:#8b949e}
+.clinical-note-type{font-size:0.8rem;font-weight:600;color:var(--text-main)}
+.clinical-note-date{font-size:0.7rem;color:var(--text-secondary)}
 .clinical-note-image{
   width:100%;max-height:200px;object-fit:cover;cursor:pointer;
   border-bottom:1px solid rgba(255,255,255,0.04)
@@ -1174,53 +1174,53 @@ body{
 }
 .med-form-label .required{color:#f87171}
 .med-form-input{
-  padding:14px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
-  border-radius:12px;color:#f0f6fc;font-size:0.9rem;font-family:inherit;
+  padding:14px 16px;background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:12px;color:var(--text-main);font-size:0.9rem;font-family:inherit;
   transition:all 0.2s;width:100%
 }
 .med-form-input:focus{
-  outline:none;border-color:rgba(167,139,250,0.5);
-  box-shadow:0 0 0 3px rgba(167,139,250,0.1),0 4px 12px rgba(0,0,0,0.2)
+  outline:none;border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(0,94,184,0.1)
 }
-.med-form-input::placeholder{color:#4b5563}
+.med-form-input::placeholder{color:var(--text-muted)}
 
 /* Route Chips - Premium */
 .med-route-chips{display:flex;flex-wrap:wrap;gap:8px}
 .med-route-chip{
-  padding:10px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px;color:#9ca3af;font-size:0.82rem;font-weight:600;
+  padding:10px 16px;background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:10px;color:var(--text-secondary);font-size:0.82rem;font-weight:600;
   font-family:inherit;cursor:pointer;transition:all 0.2s
 }
-.med-route-chip:hover{border-color:rgba(96,165,250,0.3);color:#60a5fa}
+.med-route-chip:hover{border-color:var(--primary);color:var(--primary)}
 .med-route-chip.selected{
-  background:linear-gradient(135deg,rgba(96,165,250,0.15),rgba(96,165,250,0.08));
-  border-color:#60a5fa;color:#60a5fa;
-  box-shadow:0 0 12px rgba(96,165,250,0.2)
+  background:rgba(0,94,184,0.08);
+  border-color:var(--primary);color:var(--primary);
+  box-shadow:0 0 0 2px rgba(0,94,184,0.1)
 }
 
 /* Frequency Chips - Premium */
 .med-freq-chips{display:flex;flex-wrap:wrap;gap:8px}
 .med-freq-chip{
-  padding:10px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px;color:#9ca3af;font-size:0.82rem;font-weight:600;
+  padding:10px 16px;background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:10px;color:var(--text-secondary);font-size:0.82rem;font-weight:600;
   font-family:inherit;cursor:pointer;transition:all 0.2s
 }
-.med-freq-chip:hover{border-color:rgba(52,211,153,0.3);color:#34d399}
+.med-freq-chip:hover{border-color:var(--success);color:var(--success)}
 .med-freq-chip.selected{
-  background:linear-gradient(135deg,rgba(52,211,153,0.15),rgba(52,211,153,0.08));
-  border-color:#34d399;color:#34d399;
-  box-shadow:0 0 12px rgba(52,211,153,0.2)
+  background:rgba(5,150,105,0.08);
+  border-color:var(--success);color:var(--success);
+  box-shadow:0 0 0 2px rgba(5,150,105,0.1)
 }
 
 /* Status Options - Premium */
 .med-status-options{display:flex;flex-wrap:wrap;gap:8px}
 .med-status-option{
   display:flex;align-items:center;gap:8px;
-  padding:10px 16px;background:#080c14;border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px;color:#9ca3af;font-size:0.82rem;font-weight:600;
+  padding:10px 16px;background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:10px;color:var(--text-secondary);font-size:0.82rem;font-weight:600;
   font-family:inherit;cursor:pointer;transition:all 0.2s
 }
-.med-status-option:hover{border-color:rgba(255,255,255,0.15)}
+.med-status-option:hover{border-color:var(--primary)}
 .med-status-option.selected{
   background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.2);color:#f0f6fc
 }
@@ -2205,8 +2205,8 @@ Request New Unit Access
           <div class="score-result-action">Recommended action here</div>
         </div>
       </div>
-      <div class="modal-footer" style="background:#080c14;border-top:1px solid rgba(148,163,184,0.06);padding:12px 16px;gap:10px">
-        <button class="btn btn-secondary" onclick="closeModal('scoreCalcModal')" style="background:#1e293b;border:1px solid rgba(148,163,184,0.12);flex:1">Close</button>
+      <div class="modal-footer" style="padding:12px 16px;gap:10px">
+        <button class="btn btn-secondary" onclick="closeModal('scoreCalcModal')" style="flex:1">Close</button>
         <button class="btn btn-primary" id="saveScoreBtn" onclick="savePatientScore()" style="display:none;flex:1">💾 Save</button>
       </div>
     </div>
