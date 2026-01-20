@@ -4393,11 +4393,18 @@ async function handleLabUpload(file) {
       
       const res = await fetch(state.settings.apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(requestBody)
       });
       
       console.log('📥 Response status:', res.status);
+      console.log('📥 Response ok:', res.ok);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ HTTP Error:', res.status, errorText);
+        throw new Error('HTTP ' + res.status + ': ' + errorText.substring(0, 100));
+      }
       
       const data = await res.json();
       console.log('📦 Extraction result:', data);
@@ -4426,9 +4433,11 @@ async function handleLabUpload(file) {
       
     } catch (e) {
       console.error('❌ Lab extraction error:', e);
+      console.error('❌ Error name:', e.name);
+      console.error('❌ Error message:', e.message);
       state.isAnalyzingLab = false;
       hideLabLoader();
-      toast('Extraction failed - check connection', true);
+      toast('Extraction failed: ' + (e.message || 'check connection'), true);
       renderProfileLabs();
     }
   });
