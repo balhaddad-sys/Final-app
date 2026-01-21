@@ -883,7 +883,7 @@ body {
     <div class="tool-content">
       <div class="tool-divider"></div>
       <div class="form-group">
-        <label class="form-label">Current Potassium (K+) mEq/L</label>
+        <label class="form-label">Current Potassium (K+) mmol/L</label>
         <input type="number" class="form-input" id="inputK" placeholder="e.g., 3.2" step="0.1">
       </div>
       <button class="calc-btn" onclick="calcPotassium()">
@@ -920,7 +920,7 @@ body {
     <div class="tool-content">
       <div class="tool-divider"></div>
       <div class="form-group">
-        <label class="form-label">Current Magnesium (Mg) mg/dL</label>
+        <label class="form-label">Current Magnesium (Mg) mmol/L</label>
         <input type="number" class="form-input" id="inputMg" placeholder="e.g., 1.4" step="0.1">
       </div>
       <button class="calc-btn" onclick="calcMagnesium()">
@@ -957,14 +957,14 @@ body {
     <div class="tool-content">
       <div class="tool-divider"></div>
       <div class="form-group">
-        <label class="form-label">Hemoglobin (g/dL)</label>
-        <input type="number" class="form-input" id="inputHgb" placeholder="e.g., 6.8" step="0.1">
+        <label class="form-label">Hemoglobin (g/L)</label>
+        <input type="number" class="form-input" id="inputHgb" placeholder="e.g., 68" step="1">
       </div>
       <div class="form-group">
         <label class="form-label">Patient Status</label>
         <select class="form-select" id="inputBleed">
           <option value="stable">Stable / Asymptomatic</option>
-          <option value="ac">Active Coronary Syndrome (ACS)</option>
+          <option value="acs">Acute Coronary Syndrome (ACS)</option>
           <option value="bleeding">Active Bleeding / Hypotensive</option>
         </select>
       </div>
@@ -1051,11 +1051,11 @@ body {
       <div class="tool-divider"></div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Current Na+ (mEq/L)</label>
+          <label class="form-label">Current Na+ (mmol/L)</label>
           <input type="number" class="form-input" id="inputNaCurrent" placeholder="e.g., 118">
         </div>
         <div class="form-group">
-          <label class="form-label">Target Na+ (mEq/L)</label>
+          <label class="form-label">Target Na+ (mmol/L)</label>
           <input type="number" class="form-input" id="inputNaTarget" placeholder="e.g., 125" value="125">
         </div>
       </div>
@@ -1088,30 +1088,50 @@ body {
 
   <!-- QUICK REFERENCE -->
   <div style="margin-top: 24px; margin-bottom: 16px;">
-    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">📚 Quick Reference</h3>
+    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">📚 Quick Reference (Kuwait SI Units)</h3>
     <p style="font-size: 0.85rem; color: var(--text-muted);">Tap for normal ranges</p>
   </div>
   
   <div class="quick-ref-grid">
-    <div class="quick-ref-card" onclick="showRef('K+: 3.5-5.0 mEq/L')">
+    <div class="quick-ref-card" onclick="showRef('K+: 3.5-5.0 mmol/L\n\nCritical: <2.5 or >6.0\nReplace if <3.5')">
       <div class="quick-ref-icon">🧪</div>
       <div class="quick-ref-title">Potassium</div>
-      <div class="quick-ref-value">3.5-5.0 mEq/L</div>
+      <div class="quick-ref-value">3.5-5.0 mmol/L</div>
     </div>
-    <div class="quick-ref-card" onclick="showRef('Mg: 1.7-2.2 mg/dL')">
+    <div class="quick-ref-card" onclick="showRef('Mg: 0.7-1.0 mmol/L\n\nCritical: <0.4\nReplace if <0.7')">
       <div class="quick-ref-icon">💎</div>
       <div class="quick-ref-title">Magnesium</div>
-      <div class="quick-ref-value">1.7-2.2 mg/dL</div>
+      <div class="quick-ref-value">0.7-1.0 mmol/L</div>
     </div>
-    <div class="quick-ref-card" onclick="showRef('Na+: 136-145 mEq/L')">
+    <div class="quick-ref-card" onclick="showRef('Na+: 136-145 mmol/L\n\nHyponatremia: <135\nHypernatremia: >145\nCorrect slowly: max 8-10 mEq/24hr')">
       <div class="quick-ref-icon">🧂</div>
       <div class="quick-ref-title">Sodium</div>
-      <div class="quick-ref-value">136-145 mEq/L</div>
+      <div class="quick-ref-value">136-145 mmol/L</div>
     </div>
-    <div class="quick-ref-card" onclick="showRef('Hgb: M 13.5-17.5, F 12-16 g/dL')">
+    <div class="quick-ref-card" onclick="showRef('Hemoglobin:\nMale: 130-175 g/L\nFemale: 120-160 g/L\n\nTransfuse if <70 g/L (stable)\nTransfuse if <80 g/L (ACS)')">
       <div class="quick-ref-icon">🩸</div>
       <div class="quick-ref-title">Hemoglobin</div>
-      <div class="quick-ref-value">M: 13.5-17.5 g/dL</div>
+      <div class="quick-ref-value">M: 130-175 g/L</div>
+    </div>
+    <div class="quick-ref-card" onclick="showRef('Calcium (corrected): 2.1-2.6 mmol/L\n\nCritical: <1.9 or >3.0\nCorrection: Ca + 0.02 × (40-Alb)')">
+      <div class="quick-ref-icon">🦴</div>
+      <div class="quick-ref-title">Calcium</div>
+      <div class="quick-ref-value">2.1-2.6 mmol/L</div>
+    </div>
+    <div class="quick-ref-card" onclick="showRef('Phosphate: 0.8-1.5 mmol/L\n\nLow in refeeding syndrome\nHigh in renal failure')">
+      <div class="quick-ref-icon">⚗️</div>
+      <div class="quick-ref-title">Phosphate</div>
+      <div class="quick-ref-value">0.8-1.5 mmol/L</div>
+    </div>
+    <div class="quick-ref-card" onclick="showRef('Glucose (fasting): 3.9-5.6 mmol/L\nRandom: 3.9-7.8 mmol/L\n\nHypoglycemia: <3.9\nDKA/HHS: often >13.9')">
+      <div class="quick-ref-icon">🍬</div>
+      <div class="quick-ref-title">Glucose</div>
+      <div class="quick-ref-value">3.9-5.6 mmol/L</div>
+    </div>
+    <div class="quick-ref-card" onclick="showRef('Creatinine:\nMale: 62-106 µmol/L\nFemale: 44-80 µmol/L\n\neGFR <60 = CKD Stage 3+')">
+      <div class="quick-ref-icon">🫘</div>
+      <div class="quick-ref-title">Creatinine</div>
+      <div class="quick-ref-value">62-106 µmol/L</div>
     </div>
   </div>
 
@@ -1283,14 +1303,16 @@ function calcPotassium() {
     box.innerHTML = `
       <div class="result-title">✓ Normal Potassium</div>
       <div class="result-content">
-        K+ is within normal range (3.5-5.0 mEq/L). No replacement needed.
+        K+ is within normal range (3.5-5.0 mmol/L). No replacement needed.
       </div>
     `;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// MAGNESIUM CALCULATOR
+// MAGNESIUM CALCULATOR (SI Units - mmol/L)
+// Conversion: mg/dL × 0.4114 = mmol/L
+// Normal range: 0.7-1.0 mmol/L (Kuwait/SI)
 // ═══════════════════════════════════════════════════════════════════
 function calcMagnesium() {
   event.stopPropagation();
@@ -1304,7 +1326,8 @@ function calcMagnesium() {
   
   box.classList.remove('hidden', 'danger', 'warning', 'success');
   
-  if (mg < 1.0) {
+  // SI Unit thresholds (mmol/L)
+  if (mg < 0.4) {
     box.classList.add('danger');
     box.innerHTML = `
       <div class="result-title">🚨 SEVERE HYPOMAGNESEMIA</div>
@@ -1316,7 +1339,7 @@ function calcMagnesium() {
         <div class="result-item">Also check K+ and Ca++ (often low together)</div>
       </div>
     `;
-  } else if (mg < 1.5) {
+  } else if (mg < 0.6) {
     box.classList.add('warning');
     box.innerHTML = `
       <div class="result-title">⚠️ Moderate Hypomagnesemia</div>
@@ -1327,7 +1350,7 @@ function calcMagnesium() {
         <div class="result-item">Check K+ (Mg needed for K+ retention)</div>
       </div>
     `;
-  } else if (mg < 1.7) {
+  } else if (mg < 0.7) {
     box.innerHTML = `
       <div class="result-title">📋 Mild Hypomagnesemia</div>
       <div class="result-content">
@@ -1336,7 +1359,7 @@ function calcMagnesium() {
         <div class="result-item">Consider dietary sources (nuts, leafy greens)</div>
       </div>
     `;
-  } else if (mg > 2.5) {
+  } else if (mg > 1.2) {
     box.classList.add('warning');
     box.innerHTML = `
       <div class="result-title">⚠️ Hypermagnesemia</div>
@@ -1352,14 +1375,15 @@ function calcMagnesium() {
     box.innerHTML = `
       <div class="result-title">✓ Normal Magnesium</div>
       <div class="result-content">
-        Mg is within normal range (1.7-2.2 mg/dL). No replacement needed.
+        Mg is within normal range (0.7-1.0 mmol/L). No replacement needed.
       </div>
     `;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// TRANSFUSION CALCULATOR (AABB 2023)
+// TRANSFUSION CALCULATOR (AABB 2023) - SI Units (g/L)
+// Conversion: g/dL × 10 = g/L
 // ═══════════════════════════════════════════════════════════════════
 function calcTransfusion() {
   event.stopPropagation();
@@ -1383,17 +1407,17 @@ function calcTransfusion() {
         <div class="result-item">Activate <strong>Massive Transfusion Protocol</strong> if hemodynamically unstable</div>
         <div class="result-item">Type & Screen / Crossmatch STAT</div>
         <div class="result-item">Consider O-negative if no time for crossmatch</div>
-        <div class="result-item">Target Hgb > 7-8 g/dL during resuscitation</div>
+        <div class="result-item">Target Hgb > 70-80 g/L during resuscitation</div>
       </div>
     `;
-  } else if (status === 'ac') {
-    if (hgb < 8.0) {
+  } else if (status === 'acs') {
+    if (hgb < 80) {
       box.classList.add('warning');
       box.innerHTML = `
         <div class="result-title">⚠️ Transfusion Indicated (ACS)</div>
         <div class="result-content">
           <div class="result-item">Higher threshold for <strong>Acute Coronary Syndrome</strong></div>
-          <div class="result-item">Target Hgb <strong>> 8.0 g/dL</strong></div>
+          <div class="result-item">Target Hgb <strong>> 80 g/L</strong></div>
           <div class="result-item">Give <strong>1 unit pRBC</strong> and reassess</div>
           <div class="result-item">Single-unit strategy unless actively bleeding</div>
         </div>
@@ -1403,21 +1427,21 @@ function calcTransfusion() {
       box.innerHTML = `
         <div class="result-title">✓ No Transfusion Needed</div>
         <div class="result-content">
-          Hgb ${hgb} g/dL is above the ACS threshold of 8.0 g/dL.<br>
+          Hgb ${hgb} g/L is above the ACS threshold of 80 g/L.<br>
           Monitor closely and recheck if symptoms develop.
         </div>
       `;
     }
   } else {
     // Stable patient
-    if (hgb < 7.0) {
+    if (hgb < 70) {
       box.innerHTML = `
         <div class="result-title">📋 Transfusion Indicated (Restrictive)</div>
         <div class="result-content">
-          <div class="result-item">AABB Restrictive Strategy threshold: <strong>< 7.0 g/dL</strong></div>
+          <div class="result-item">AABB Restrictive Strategy threshold: <strong>< 70 g/L</strong></div>
           <div class="result-item">Give <strong>1 unit pRBC</strong> (Single Unit Rule)</div>
           <div class="result-item">Reassess after each unit</div>
-          <div class="result-item">Target Hgb 7-8 g/dL in stable patients</div>
+          <div class="result-item">Target Hgb 70-80 g/L in stable patients</div>
         </div>
       `;
     } else {
@@ -1425,7 +1449,7 @@ function calcTransfusion() {
       box.innerHTML = `
         <div class="result-title">✓ Transfusion NOT Indicated</div>
         <div class="result-content">
-          <div class="result-item">Hgb ${hgb} g/dL is above restrictive threshold (7.0 g/dL)</div>
+          <div class="result-item">Hgb ${hgb} g/L is above restrictive threshold (70 g/L)</div>
           <div class="result-item">AABB recommends <strong>avoiding transfusion</strong> in stable asymptomatic patients</div>
           <div class="result-item">Investigate underlying cause of anemia</div>
           <div class="result-item">Consider iron studies, B12, folate, reticulocyte count</div>
@@ -1628,7 +1652,68 @@ function escapeHtml(text) {
 // QUICK REFERENCE
 // ═══════════════════════════════════════════════════════════════════
 function showRef(text) {
-  alert(text);
+  // Create a styled modal instead of alert
+  const existingModal = document.getElementById('refModal');
+  if (existingModal) existingModal.remove();
+  
+  const modal = document.createElement('div');
+  modal.id = 'refModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 340px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    ">
+      <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: #0284c7;">
+        📚 Reference Range
+      </div>
+      <div style="
+        font-size: 0.95rem;
+        line-height: 1.6;
+        white-space: pre-line;
+        color: #1e293b;
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 12px;
+        font-family: 'JetBrains Mono', monospace;
+      ">${text}</div>
+      <button onclick="this.closest('#refModal').remove()" style="
+        width: 100%;
+        margin-top: 16px;
+        padding: 12px;
+        background: #0284c7;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+      ">Got it</button>
+    </div>
+  `;
+  
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.remove();
+  };
+  
+  document.body.appendChild(modal);
 }
 
 // ═══════════════════════════════════════════════════════════════════
