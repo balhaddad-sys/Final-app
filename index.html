@@ -2069,85 +2069,44 @@ body {
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3) !important;
 }
 
-/* OnCall Landing Button */
+/* OnCall Landing Button - Clean & Simple */
 .oncall-landing-btn {
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%);
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
   color: white;
   text-decoration: none;
-  padding: 16px 20px;
-  border-radius: 16px;
-  margin: 20px auto;
-  max-width: 340px;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.oncall-landing-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s;
-}
-
-.oncall-landing-btn:hover::before {
-  left: 100%;
+  padding: 14px 28px;
+  border-radius: 50px;
+  margin: 24px auto;
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+  transition: all 0.2s ease;
 }
 
 .oncall-landing-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
 }
 
 .oncall-landing-btn:active {
-  transform: translateY(-1px);
+  transform: translateY(0);
 }
 
-.oncall-landing-icon {
-  width: 48px;
-  height: 48px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  flex-shrink: 0;
+.oncall-btn-icon {
+  font-size: 1.2rem;
 }
 
-.oncall-landing-text {
-  flex: 1;
-  text-align: left;
+.oncall-btn-text {
+  letter-spacing: 0.02em;
 }
 
-.oncall-landing-title {
-  font-weight: 800;
-  font-size: 1.05rem;
-  margin-bottom: 2px;
-}
-
-.oncall-landing-subtitle {
-  font-size: 0.75rem;
-  opacity: 0.9;
-}
-
-.oncall-landing-arrow {
-  font-size: 1.3rem;
-  font-weight: 700;
+.oncall-btn-arrow {
+  font-size: 1.1rem;
   opacity: 0.8;
-  transition: transform 0.2s;
-}
-
-.oncall-landing-btn:hover .oncall-landing-arrow {
-  transform: translateX(4px);
 }
 
 .oncall-hero {
@@ -2512,13 +2471,10 @@ body {
 <p class="landing-version">🧠 AI-Powered • Drug Info • Lab Override • Discharge • v15.0</p>
 
 <!-- OnCall Assistant Button -->
-<a href="https://balhaddad-sys.github.io/Final-app/oncall_assistant.html" class="oncall-landing-btn" target="_blank">
-  <div class="oncall-landing-icon">⚡</div>
-  <div class="oncall-landing-text">
-    <div class="oncall-landing-title">OnCall Assistant</div>
-    <div class="oncall-landing-subtitle">Clinical Decision Support • Claude AI</div>
-  </div>
-  <div class="oncall-landing-arrow">→</div>
+<a href="https://balhaddad-sys.github.io/Final-app/oncall_assistant.html" class="oncall-landing-btn">
+  <span class="oncall-btn-icon">⚡</span>
+  <span class="oncall-btn-text">OnCall Assistant</span>
+  <span class="oncall-btn-arrow">→</span>
 </a>
 
 <div class="units-grid" id="unitsGrid"></div>
