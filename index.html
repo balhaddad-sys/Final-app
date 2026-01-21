@@ -622,15 +622,13 @@ body {
 /* Hide mobile tabs - sidebar only */
 .profile-tabs{display:none}
 .profile-content{flex:1;padding:24px;overflow-y:auto;background:var(--bg)}
-/* Mobile adjustments - narrower sidebar */
+/* Mobile adjustments - bottom tabs instead of sidebar */
 @media(max-width:768px){
-.profile-sidebar{width:72px;min-width:72px;padding:12px 8px}
-.profile-nav-item{padding:10px;justify-content:center;border-radius:12px}
-.profile-nav-item.active{border-left:none;border-bottom:3px solid var(--primary);padding:10px;padding-bottom:7px}
-.profile-nav-item .nav-icon{font-size:1.3rem;width:auto}
-.profile-nav-item .nav-label{display:none}
-.profile-nav-item .nav-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center}
-.profile-nav-section{display:none}
+.profile-sidebar{display:none!important}
+.profile-tabs{display:flex!important;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));z-index:1000;box-shadow:0 -4px 20px rgba(0,0,0,0.08)}
+.profile-tab{flex:1 1 0;min-width:60px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;border-radius:12px;font-size:0.65rem;font-weight:600;gap:4px;background:transparent;border:none;color:var(--text-secondary);cursor:pointer;transition:all 0.2s}
+.profile-tab.active{color:#005eb8;background:rgba(0,94,184,0.1)}
+#patientProfile{padding-bottom:90px}
 .profile-content{padding:16px}
 }
 .profile-panel{display:none}
@@ -2029,6 +2027,12 @@ Request New Unit Access
 <div id="userSection" style="display:none;margin-top:28px;padding-top:28px;border-top:1px solid var(--border)">
 <div class="form-group"><label class="form-label">Your Name</label><input type="text" id="userName" class="form-input"></div>
 <div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-select"><option value="attending">Attending</option><option value="resident">Resident</option><option value="intern">Intern</option></select></div>
+<div class="form-group" style="margin-top:16px">
+<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;color:var(--text-secondary)">
+<input type="checkbox" id="rememberMe" style="width:18px;height:18px;accent-color:var(--primary)">
+<span>Remember me on this device</span>
+</label>
+</div>
 </div>
 </div>
 <div class="modal-footer">
@@ -8497,6 +8501,18 @@ window.enterUnit = function() {
   if (!n) { toast('Enter name', true); return; }
   state.currentUnit = getUnit(state.selectedUnitId);
   state.currentUser = { name: n, role: $('userRole').value };
+
+  // Save credentials if "Remember Me" is checked
+  if ($('rememberMe')?.checked) {
+    const savedLogin = {
+      unitId: state.selectedUnitId,
+      userName: n,
+      userRole: $('userRole').value,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('MEDWARD_SAVED_LOGIN', JSON.stringify(savedLogin));
+  }
+
   closeModal('accessModal');
   showPage('dashboard');
   $('unitBadge').textContent = state.currentUnit.name;
@@ -8508,10 +8524,46 @@ window.enterUnit = function() {
 };
 
 window.logout = function() {
+  // Clear saved login on logout
+  localStorage.removeItem('MEDWARD_SAVED_LOGIN');
   state.currentUnit = null;
   state.currentUser = null;
   state.currentFilter = 'all';
   showPage('landing');
+};
+
+window.tryAutoLogin = function() {
+  try {
+    const saved = localStorage.getItem('MEDWARD_SAVED_LOGIN');
+    if (!saved) return false;
+
+    const login = JSON.parse(saved);
+
+    // Expire after 30 days
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    if (Date.now() - login.timestamp > thirtyDays) {
+      localStorage.removeItem('MEDWARD_SAVED_LOGIN');
+      return false;
+    }
+
+    const unit = getUnit(login.unitId);
+    if (!unit) return false;
+
+    // Auto-login
+    state.currentUnit = unit;
+    state.currentUser = { name: login.userName, role: login.userRole };
+    showPage('dashboard');
+    $('unitBadge').textContent = state.currentUnit.name;
+    $('dashAvatar').textContent = initials(state.currentUser.name);
+    $('currentDate').textContent = formatDate();
+    renderPatients();
+    renderRef();
+    toast(`Welcome back, ${state.currentUser.name}!`);
+    return true;
+  } catch (e) {
+    console.error('Auto-login failed:', e);
+    return false;
+  }
 };
 
 function showTab(tabName) {
@@ -8531,6 +8583,11 @@ function showProfileTab(tabName) {
   // Show panel
   $$('.profile-panel').forEach(p => p.classList.remove('active'));
   $('profile' + tabName.charAt(0).toUpperCase() + tabName.slice(1))?.classList.add('active');
+
+  // CRITICAL: Scroll to top IMMEDIATELY (not smooth)
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  document.querySelector('.profile-content')?.scrollTo({ top: 0, behavior: 'instant' });
+
   // Update badges if needed
   updateProfileBadges();
 }
@@ -9178,6 +9235,11 @@ async function init() {
 
   // Initial cloud sync
   await syncFromCloud();
+
+  // Try auto-login after cloud sync
+  if (!state.currentUnit) {
+    tryAutoLogin();
+  }
 
   // Periodic background sync (every 60 seconds) - only if no pending changes
   setInterval(() => {
