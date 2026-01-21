@@ -6352,12 +6352,23 @@ function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
 function renderDrugInfoContent(data, drugName, context) {
   const warnings = data.warnings || [];
   const mechanism = data.mechanism || 'Information not available.';
+  const drugClass = data.drugClass || '';
+  const dosing = data.dosing || '';
+  const indications = data.indications || [];
   const sideEffects = data.sideEffects || [];
   const contraindications = data.contraindications || [];
   const monitoring = data.monitoring || [];
   const interactions = data.interactions || [];
   
   let html = '';
+  
+  // AI Badge
+  html += `
+    <div class="drug-instant-badge">
+      <span class="instant-icon">✨</span>
+      <span>AI-Powered Analysis</span>
+    </div>
+  `;
   
   // Patient-specific warnings
   if (warnings.length > 0 || interactions.length > 0) {
@@ -6378,16 +6389,38 @@ function renderDrugInfoContent(data, drugName, context) {
   // Mechanism of Action
   html += `
     <div class="drug-section">
-      <div class="drug-section-title"><span>🔬</span> Mechanism of Action</div>
+      <div class="drug-section-title"><span>🔬</span> MECHANISM OF ACTION${drugClass ? ` <span style="font-weight:normal;color:var(--text-muted)">• ${esc(drugClass)}</span>` : ''}</div>
       <p class="drug-info-text">${esc(mechanism)}</p>
     </div>
   `;
+  
+  // Indications
+  if (indications.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>💊</span> INDICATIONS</div>
+        <ul class="drug-info-list">
+          ${indications.map(i => `<li>${esc(i)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  // Dosing
+  if (dosing) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>📋</span> DOSING</div>
+        <p class="drug-info-text">${esc(dosing)}</p>
+      </div>
+    `;
+  }
   
   // Side Effects
   if (sideEffects.length > 0) {
     html += `
       <div class="drug-section">
-        <div class="drug-section-title"><span>⚡</span> Common Side Effects</div>
+        <div class="drug-section-title"><span>⚡</span> SIDE EFFECTS</div>
         <ul class="drug-info-list">
           ${sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}
         </ul>
@@ -6399,7 +6432,7 @@ function renderDrugInfoContent(data, drugName, context) {
   if (contraindications.length > 0) {
     html += `
       <div class="drug-section">
-        <div class="drug-section-title"><span>🚫</span> Contraindications</div>
+        <div class="drug-section-title"><span>🚫</span> CONTRAINDICATIONS</div>
         <ul class="drug-info-list">
           ${contraindications.map(c => `<li>${esc(c)}</li>`).join('')}
         </ul>
@@ -6411,7 +6444,7 @@ function renderDrugInfoContent(data, drugName, context) {
   if (monitoring.length > 0) {
     html += `
       <div class="drug-section">
-        <div class="drug-section-title"><span>📊</span> Monitoring Parameters</div>
+        <div class="drug-section-title"><span>📊</span> MONITORING</div>
         <ul class="drug-info-list">
           ${monitoring.map(m => `<li>${esc(m)}</li>`).join('')}
         </ul>
@@ -6596,6 +6629,11 @@ window.viewNoteImage = function(idx) {
 
 function renderProfileOverview() {
   const p = state.currentPatient;
+  
+  // Get latest plan/note
+  const latestPlan = (p.notes || []).filter(n => n.type === 'plan' || n.type === 'assessment').sort((a, b) => new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp))[0];
+  const planText = latestPlan?.text || p.plan || '';
+  
   $('profileOverview').innerHTML = `
     <div class="section-card">
       <div class="section-header"><div class="section-title">📋 Diagnosis</div></div>
@@ -6611,6 +6649,13 @@ function renderProfileOverview() {
           <div class="vital-card"><div class="vital-icon">💨</div><div class="vital-value">${p.vitals?.rr || '—'}</div><div class="vital-label">RR</div></div>
           <div class="vital-card"><div class="vital-icon">🫁</div><div class="vital-value">${p.vitals?.spo2 || '—'}</div><div class="vital-label">SpO₂</div></div>
         </div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><div class="section-title">🎯 Plan</div><button class="btn btn-secondary btn-xs" onclick="openEditPlan()">Edit</button></div>
+      <div class="section-body">
+        <div style="font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;min-height:60px">${esc(planText) || 'Tap Edit to add management plan...'}</div>
+        ${latestPlan?.author ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px">Last updated by ${esc(latestPlan.author)} ${latestPlan.date ? '• ' + formatDate(latestPlan.date) : ''}</div>` : ''}
       </div>
     </div>
     <div class="section-card">
@@ -8373,14 +8418,6 @@ window.openEditText = function(type, title) {
   openModal('editTextModal');
 };
 
-window.saveEditText = function() {
-  state.currentPatient[$('editTextType').value] = $('editTextArea').value;
-  saveCloud();
-  renderPatientProfile();
-  closeModal('editTextModal');
-  toast('Saved!');
-};
-
 window.openAddVitals = function() {
   state.addDataType = 'vitals';
   $('addDataTitle').textContent = 'Update Vitals';
@@ -8411,6 +8448,42 @@ window.openAddFluid = function() {
 
 window.openAddPlan = function() {
   openTaskModal();
+};
+
+window.openEditPlan = function() {
+  const p = state.currentPatient;
+  const latestPlan = (p.notes || []).filter(n => n.type === 'plan' || n.type === 'assessment').sort((a, b) => new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp))[0];
+  const planText = latestPlan?.text || p.plan || '';
+  
+  $('editTextTitle').textContent = 'Edit Plan';
+  $('editTextType').value = 'plan';
+  $('editTextArea').value = planText;
+  openModal('editTextModal');
+};
+
+window.saveEditText = function() {
+  const type = $('editTextType').value;
+  const text = $('editTextArea').value;
+  
+  if (type === 'plan') {
+    // Save plan as a note entry for history tracking
+    if (!state.currentPatient.notes) state.currentPatient.notes = [];
+    state.currentPatient.notes.unshift({
+      type: 'plan',
+      text: text,
+      date: new Date().toISOString().split('T')[0],
+      timestamp: new Date().toISOString(),
+      author: state.currentUser?.name || 'Unknown'
+    });
+    state.currentPatient.plan = text;
+  } else {
+    state.currentPatient[type] = text;
+  }
+  
+  saveCloud();
+  renderPatientProfile();
+  closeModal('editTextModal');
+  toast('Saved!');
 };
 
 window.saveAddData = function() {
