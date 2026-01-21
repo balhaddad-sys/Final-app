@@ -625,11 +625,55 @@ body {
 /* Mobile adjustments - bottom tabs instead of sidebar */
 @media(max-width:768px){
 .profile-sidebar{display:none!important}
-.profile-tabs{display:flex!important;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));z-index:1000;box-shadow:0 -4px 20px rgba(0,0,0,0.08)}
-.profile-tab{flex:1 1 0;min-width:60px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;border-radius:12px;font-size:0.65rem;font-weight:600;gap:4px;background:transparent;border:none;color:var(--text-secondary);cursor:pointer;transition:all 0.2s}
-.profile-tab.active{color:#005eb8;background:rgba(0,94,184,0.1)}
-#patientProfile{padding-bottom:90px}
-.profile-content{padding:16px}
+.profile-tabs{
+  display:flex!important;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#fff;
+  border-top:1px solid #e5e7eb;
+  padding:10px 6px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:1000;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.1);
+  gap:2px;
+}
+.profile-tab{
+  flex:1 1 0;
+  min-width:0;
+  min-height:72px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:10px 4px;
+  border-radius:16px;
+  font-size:0.72rem;
+  font-weight:600;
+  gap:5px;
+  background:transparent;
+  border:none;
+  color:#64748b;
+  cursor:pointer;
+  transition:all 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.profile-tab .tab-icon{
+  font-size:1.6rem;
+  line-height:1;
+}
+.profile-tab.active{
+  color:#0284c7;
+  background:linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  box-shadow:0 2px 8px rgba(2,132,199,0.15);
+}
+.profile-tab:active{
+  transform:scale(0.95);
+  background:rgba(2,132,199,0.1);
+}
+#patientProfile{padding-bottom:110px}
+.profile-content{padding:16px;padding-bottom:120px}
 }
 .profile-panel{display:none}
 .profile-panel.active{display:block}
@@ -2150,14 +2194,12 @@ Request New Unit Access
 </div>
 <!-- Mobile tabs (shown on small screens) -->
 <div class="profile-tabs" id="profileTabs">
-<button class="profile-tab active" data-ptab="overview">📋 Overview</button>
-<button class="profile-tab" data-ptab="meds">💊 Meds</button>
-<button class="profile-tab" data-ptab="history">📜 History</button>
-<button class="profile-tab" data-ptab="scores">📊 Scores</button>
-<button class="profile-tab" data-ptab="labs">🧪 Labs</button>
-<button class="profile-tab" data-ptab="imaging">🩻 Imaging</button>
-<button class="profile-tab" data-ptab="fluids">💧 Fluids</button>
-<button class="profile-tab" data-ptab="plans">📝 Plans</button>
+<button class="profile-tab active" data-ptab="overview"><span class="tab-icon">📋</span>Overview</button>
+<button class="profile-tab" data-ptab="meds"><span class="tab-icon">💊</span>Meds</button>
+<button class="profile-tab" data-ptab="history"><span class="tab-icon">📜</span>History</button>
+<button class="profile-tab" data-ptab="scores"><span class="tab-icon">📊</span>Scores</button>
+<button class="profile-tab" data-ptab="labs"><span class="tab-icon">🧪</span>Labs</button>
+<button class="profile-tab" data-ptab="imaging"><span class="tab-icon">🩻</span>Imaging</button>
 </div>
 <!-- Main body with sidebar -->
 <div class="profile-body">
