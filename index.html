@@ -622,15 +622,13 @@ body {
 /* Hide mobile tabs - sidebar only */
 .profile-tabs{display:none}
 .profile-content{flex:1;padding:24px;overflow-y:auto;background:var(--bg)}
-/* Mobile adjustments - narrower sidebar */
+/* Mobile adjustments - bottom tabs instead of sidebar */
 @media(max-width:768px){
-.profile-sidebar{width:72px;min-width:72px;padding:12px 8px}
-.profile-nav-item{padding:10px;justify-content:center;border-radius:12px}
-.profile-nav-item.active{border-left:none;border-bottom:3px solid var(--primary);padding:10px;padding-bottom:7px}
-.profile-nav-item .nav-icon{font-size:1.3rem;width:auto}
-.profile-nav-item .nav-label{display:none}
-.profile-nav-item .nav-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center}
-.profile-nav-section{display:none}
+.profile-sidebar{display:none!important}
+.profile-tabs{display:flex!important;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));z-index:1000;box-shadow:0 -4px 20px rgba(0,0,0,0.08)}
+.profile-tab{flex:1 1 0;min-width:60px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;border-radius:12px;font-size:0.65rem;font-weight:600;gap:4px;background:transparent;border:none;color:var(--text-secondary);cursor:pointer;transition:all 0.2s}
+.profile-tab.active{color:#005eb8;background:rgba(0,94,184,0.1)}
+#patientProfile{padding-bottom:90px}
 .profile-content{padding:16px}
 }
 .profile-panel{display:none}
@@ -8585,6 +8583,11 @@ function showProfileTab(tabName) {
   // Show panel
   $$('.profile-panel').forEach(p => p.classList.remove('active'));
   $('profile' + tabName.charAt(0).toUpperCase() + tabName.slice(1))?.classList.add('active');
+
+  // CRITICAL: Scroll to top IMMEDIATELY (not smooth)
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  document.querySelector('.profile-content')?.scrollTo({ top: 0, behavior: 'instant' });
+
   // Update badges if needed
   updateProfileBadges();
 }
