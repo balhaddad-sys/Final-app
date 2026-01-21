@@ -9572,9 +9572,46 @@ window.loginAdmin = function() { if ($('adminPwd').value === state.settings.admi
 window.exitAdmin = function() { showPage('landing'); };
 window.addUnit = function() { state.editingUnitId = null; $('unitModalTitle').textContent = 'Add Unit'; $('uName').value = ''; $('uIcon').value = '🏥'; $('uCode').value = ''; $('uDesc').value = ''; openModal('unitModal'); };
 window.editUnit = function(id) { const u = getUnit(id); if (!u) return; state.editingUnitId = id; $('unitModalTitle').textContent = 'Edit Unit'; $('uName').value = u.name; $('uIcon').value = u.icon; $('uCode').value = u.code; $('uDesc').value = u.desc || ''; openModal('unitModal'); };
-window.saveUnit = function() { const name = $('uName').value.trim(), icon = $('uIcon').value.trim() || '🏥', code = $('uCode').value.trim(), desc = $('uDesc').value.trim(); if (!name || !/^\d{4}$/.test(code)) { toast('Invalid', true); return; } if (state.editingUnitId) { const i = state.units.findIndex(u => u.id === state.editingUnitId); if (i !== -1) state.units[i] = { ...state.units[i], name, icon, code, desc }; } else { state.units.push({ id: 'u' + Date.now(), name, icon, code, desc, color: ['#f59e0b', '#14b8a6', '#3b82f6', '#8b5cf6'][state.units.length % 4] }); } saveCloud(); renderUnitsTable(); renderUnits(); closeModal('unitModal'); toast('Saved!'); };
-window.deleteUnit = function(id) { if (!confirm('Delete?')) return; state.units = state.units.filter(u => u.id !== id); saveCloud(); renderUnitsTable(); renderUnits(); };
-window.saveSettings = function() { const p = $('newAdminPwd').value.trim(), u = $('apiUrl').value.trim(), d = $('drugRefUrl').value.trim(); if (p) state.settings.adminPassword = p; if (u) state.settings.apiUrl = u; state.settings.drugRefUrl = d; saveCloud(); toast('Saved!'); $('newAdminPwd').value = ''; };
+window.saveUnit = async function() { 
+  const name = $('uName').value.trim(), icon = $('uIcon').value.trim() || '🏥', code = $('uCode').value.trim(), desc = $('uDesc').value.trim(); 
+  if (!name || !/^\d{4}$/.test(code)) { toast('Name and 4-digit code required', true); return; } 
+  if (state.editingUnitId) { 
+    const i = state.units.findIndex(u => u.id === state.editingUnitId); 
+    if (i !== -1) state.units[i] = { ...state.units[i], name, icon, code, desc }; 
+    console.log('📝 Updated unit:', name);
+  } else { 
+    const newUnit = { id: 'u' + Date.now(), name, icon, code, desc, color: ['#f59e0b', '#14b8a6', '#3b82f6', '#8b5cf6'][state.units.length % 4] };
+    state.units.push(newUnit); 
+    console.log('➕ Created new unit:', name, newUnit.id);
+  } 
+  renderUnitsTable(); 
+  renderUnits(); 
+  closeModal('unitModal'); 
+  toast('Syncing...'); 
+  // Force immediate sync for unit changes
+  await forceSync();
+  toast('Unit saved & synced!'); 
+};
+window.deleteUnit = async function(id) { 
+  if (!confirm('Delete this unit?')) return; 
+  const unit = getUnit(id);
+  console.log('🗑️ Deleting unit:', unit?.name);
+  state.units = state.units.filter(u => u.id !== id); 
+  renderUnitsTable(); 
+  renderUnits(); 
+  toast('Syncing...');
+  await forceSync();
+  toast('Unit deleted & synced!'); 
+};
+window.saveSettings = async function() { 
+  const p = $('newAdminPwd').value.trim(), u = $('apiUrl').value.trim(), d = $('drugRefUrl').value.trim(); 
+  if (p) state.settings.adminPassword = p; 
+  if (u) state.settings.apiUrl = u; 
+  state.settings.drugRefUrl = d; 
+  await forceSync(); 
+  toast('Settings saved!'); 
+  $('newAdminPwd').value = ''; 
+};
 
 // Admin Tab Navigation
 $('adminTabs')?.addEventListener('click', e => {
