@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>OnCall Assistant | MedWard Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #0284c7;
+  --primary-dark: #0369a1;
+  --primary-light: #e0f2fe;
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --danger-dark: #991b1b;
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --success: #059669;
+  --success-light: #d1fae5;
+  --bg: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --text-main: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --radius: 16px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════════════════ */
+.app-header {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #1e40af 100%);
+  color: white;
+  padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.header-back {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.header-back:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.header-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.header-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 1.8rem;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.header-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CATEGORY TABS
+   ═══════════════════════════════════════════════════════════════════ */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.category-tab {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 2px solid var(--border);
+  background: white;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.category-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOOL CARDS
+   ═══════════════════════════════════════════════════════════════════ */
+.tools-container {
+  padding: 0 16px 120px;
+}
+
+.tool-card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.tool-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.tool-header {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tool-header:hover {
+  background: #f8fafc;
+}
+
+.tool-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tool-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.tool-icon.lytes { background: linear-gradient(135deg, #dbeafe, #eff6ff); }
+.tool-icon.blood { background: linear-gradient(135deg, #fee2e2, #fef2f2); }
+.tool-icon.vent { background: linear-gradient(135deg, #d1fae5, #ecfdf5); }
+.tool-icon.ai { background: linear-gradient(135deg, #f3e8ff, #faf5ff); }
+.tool-icon.abg { background: linear-gradient(135deg, #fef3c7, #fffbeb); }
+.tool-icon.renal { background: linear-gradient(135deg, #cffafe, #ecfeff); }
+
+.tool-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.tool-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.tool-chevron {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.tool-card.expanded .tool-chevron {
+  transform: rotate(180deg);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.tool-content {
+  display: none;
+  padding: 0 20px 20px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.tool-card.expanded .tool-content {
+  display: block;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tool-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin-bottom: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORM ELEMENTS
+   ═══════════════════════════════════════════════════════════════════ */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(2,132,199,0.1);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #f9fafb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  background-size: 20px;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: white;
+}
+
+/* Gender Buttons */
+.gender-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.gender-btn {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gender-btn:hover {
+  border-color: var(--primary);
+}
+
+.gender-btn.selected {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+/* Calculate Button */
+.calc-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.calc-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2,132,199,0.3);
+}
+
+.calc-btn:active {
+  transform: translateY(0);
+}
+
+.calc-btn.secondary {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESULT BOX
+   ═══════════════════════════════════════════════════════════════════ */
+.result-box {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 5px solid var(--primary);
+  animation: resultPop 0.3s ease-out;
+}
+
+@keyframes resultPop {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.result-box.danger {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-left-color: var(--danger);
+}
+
+.result-box.warning {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-left-color: var(--warning);
+}
+
+.result-box.success {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-left-color: var(--success);
+}
+
+.result-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-box.danger .result-title { color: var(--danger-dark); }
+.result-box.warning .result-title { color: #92400e; }
+.result-box.success .result-title { color: #065f46; }
+
+.result-content {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.result-content strong {
+  color: var(--text-main);
+}
+
+.result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.result-item::before {
+  content: "•";
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.result-box.danger .result-item::before { color: var(--danger); }
+
+/* Citation */
+.citation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.citation svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   AI ASSISTANT SECTION
+   ═══════════════════════════════════════════════════════════════════ */
+.ai-section {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  color: white;
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ai-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.ai-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.ai-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.ai-input-container {
+  position: relative;
+}
+
+.ai-input {
+  width: 100%;
+  padding: 16px;
+  padding-right: 60px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.ai-input::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+.ai-input:focus {
+  outline: none;
+  border-color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.15);
+}
+
+.ai-send-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: white;
+  border: none;
+  color: #7c3aed;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.ai-send-btn:hover {
+  transform: translateY(-50%) scale(1.05);
+}
+
+.ai-response {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: none;
+}
+
+.ai-response.visible {
+  display: block;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-loading-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.ai-loading-dot {
+  width: 8px;
+  height: 8px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 50%;
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+.ai-loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.ai-loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+.ai-powered-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUICK REFERENCE CARDS
+   ═══════════════════════════════════════════════════════════════════ */
+.quick-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.quick-ref-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-ref-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.quick-ref-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.quick-ref-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+
+.quick-ref-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HIDDEN UTILITY
+   ═══════════════════════════════════════════════════════════════════ */
+.hidden {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BOTTOM NAV
+   ═══════════════════════════════════════════════════════════════════ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-around;
+  z-index: 1000;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.nav-item:hover {
+  background: var(--bg);
+}
+
+.nav-item.active {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.nav-icon {
+  font-size: 1.4rem;
+}
+
+/* Settings Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: var(--bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.settings-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-top">
+    <button class="header-back" onclick="goBack()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <div class="header-badge">
+      <span>⚡</span> Clinical Tools
+    </div>
+  </div>
+  <div class="header-content">
+    <div class="header-icon">🩺</div>
+    <h1 class="header-title">OnCall Assistant</h1>
+    <p class="header-subtitle">Evidence-Based Decision Support</p>
+  </div>
+</header>
+
+<!-- CATEGORY TABS -->
+<div class="category-tabs">
+  <button class="category-tab active" onclick="filterCategory('all')">📋 All Tools</button>
+  <button class="category-tab" onclick="filterCategory('lytes')">🧪 Electrolytes</button>
+  <button class="category-tab" onclick="filterCategory('blood')">🩸 Transfusion</button>
+  <button class="category-tab" onclick="filterCategory('vent')">🫁 Ventilation</button>
+  <button class="category-tab" onclick="filterCategory('ai')">🤖 AI Consult</button>
+</div>
+
+<!-- TOOLS CONTAINER -->
+<div class="tools-container">
+
+  <!-- AI ASSISTANT -->
+  <div class="ai-section" data-category="ai">
+    <div class="ai-header">
+      <div class="ai-icon">🤖</div>
+      <div>
+        <div class="ai-title">Claude AI Consultant</div>
+        <div class="ai-subtitle">Ask any clinical question</div>
+      </div>
+    </div>
+    <div class="ai-input-container">
+      <input type="text" class="ai-input" id="aiInput" placeholder="e.g., How to manage DKA in a 45yo diabetic?">
+      <button class="ai-send-btn" onclick="askClaude()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="ai-response" id="aiResponse"></div>
+    <div class="ai-powered-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+      Powered by Claude AI • Anthropic
+    </div>
+  </div>
+
+  <!-- ELECTROLYTE CORRECTION -->
+  <div class="tool-card" data-category="lytes">
+    <div class="tool-header" onclick="toggleTool(this)">
+      <div class="tool-header-left">
+        <div class="tool-icon lytes">🧪</div>
+        <div>
+          <div class="tool-title">Potassium Correction</div>
+          <div class="tool-subtitle">IV/PO KCl dosing calculator</div>
+        </div>
+      </div>
+      <div class="tool-chevron">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="tool-content">
+      <div class="tool-divider"></div>
+      <div class="form-group">
+        <label class="form-label">Current Potassium (K+) mEq/L</label>
+        <input type="number" class="form-input" id="inputK" placeholder="e.g., 3.2" step="0.1">
+      </div>
+      <button class="calc-btn" onclick="calcPotassium()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Calculate Replacement
+      </button>
+      <div id="resultK" class="result-box hidden"></div>
+      <div class="citation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Source: Yale Guidelines & NICE Recommendations
+      </div>
+    </div>
+  </div>
+
+  <!-- MAGNESIUM -->
+  <div class="tool-card" data-category="lytes">
+    <div class="tool-header" onclick="toggleTool(this)">
+      <div class="tool-header-left">
+        <div class="tool-icon lytes">💎</div>
+        <div>
+          <div class="tool-title">Magnesium Correction</div>
+          <div class="tool-subtitle">IV MgSO4 replacement</div>
+        </div>
+      </div>
+      <div class="tool-chevron">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="tool-content">
+      <div class="tool-divider"></div>
+      <div class="form-group">
+        <label class="form-label">Current Magnesium (Mg) mg/dL</label>
+        <input type="number" class="form-input" id="inputMg" placeholder="e.g., 1.4" step="0.1">
+      </div>
+      <button class="calc-btn" onclick="calcMagnesium()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Calculate Replacement
+      </button>
+      <div id="resultMg" class="result-box hidden"></div>
+      <div class="citation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Source: UpToDate & Clinical Practice Guidelines
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSFUSION -->
+  <div class="tool-card" data-category="blood">
+    <div class="tool-header" onclick="toggleTool(this)">
+      <div class="tool-header-left">
+        <div class="tool-icon blood">🩸</div>
+        <div>
+          <div class="tool-title">Transfusion Decision</div>
+          <div class="tool-subtitle">AABB 2023 Guidelines</div>
+        </div>
+      </div>
+      <div class="tool-chevron">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="tool-content">
+      <div class="tool-divider"></div>
+      <div class="form-group">
+        <label class="form-label">Hemoglobin (g/dL)</label>
+        <input type="number" class="form-input" id="inputHgb" placeholder="e.g., 6.8" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Patient Status</label>
+        <select class="form-select" id="inputBleed">
+          <option value="stable">Stable / Asymptomatic</option>
+          <option value="ac">Active Coronary Syndrome (ACS)</option>
+          <option value="bleeding">Active Bleeding / Hypotensive</option>
+        </select>
+      </div>
+      <button class="calc-btn" onclick="calcTransfusion()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Check Transfusion Indication
+      </button>
+      <div id="resultBlood" class="result-box hidden"></div>
+      <div class="citation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Source: AABB 2023 Clinical Practice Guidelines
+      </div>
+    </div>
+  </div>
+
+  <!-- VENT SETTINGS -->
+  <div class="tool-card" data-category="vent">
+    <div class="tool-header" onclick="toggleTool(this)">
+      <div class="tool-header-left">
+        <div class="tool-icon vent">🫁</div>
+        <div>
+          <div class="tool-title">Ventilator Settings</div>
+          <div class="tool-subtitle">ARDSNet Lung Protective</div>
+        </div>
+      </div>
+      <div class="tool-chevron">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="tool-content">
+      <div class="tool-divider"></div>
+      <div class="form-group">
+        <label class="form-label">Patient Height (cm)</label>
+        <input type="number" class="form-input" id="inputHeight" placeholder="e.g., 175">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gender</label>
+        <div class="gender-buttons">
+          <button class="gender-btn" onclick="setGender('m', this)">
+            <span>♂️</span> Male
+          </button>
+          <button class="gender-btn" onclick="setGender('f', this)">
+            <span>♀️</span> Female
+          </button>
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcVent()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Calculate Tidal Volume (6-8 cc/kg)
+      </button>
+      <div id="resultVent" class="result-box hidden"></div>
+      <div class="citation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Source: ARDSNet Protocol (NEJM 2000)
+      </div>
+    </div>
+  </div>
+
+  <!-- SODIUM CORRECTION -->
+  <div class="tool-card" data-category="lytes">
+    <div class="tool-header" onclick="toggleTool(this)">
+      <div class="tool-header-left">
+        <div class="tool-icon lytes">🧂</div>
+        <div>
+          <div class="tool-title">Sodium Correction</div>
+          <div class="tool-subtitle">Hyponatremia management</div>
+        </div>
+      </div>
+      <div class="tool-chevron">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="tool-content">
+      <div class="tool-divider"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Current Na+ (mEq/L)</label>
+          <input type="number" class="form-input" id="inputNaCurrent" placeholder="e.g., 118">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Na+ (mEq/L)</label>
+          <input type="number" class="form-input" id="inputNaTarget" placeholder="e.g., 125" value="125">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Patient Weight (kg)</label>
+        <input type="number" class="form-input" id="inputNaWeight" placeholder="e.g., 70">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Symptoms</label>
+        <select class="form-select" id="inputNaSymptoms">
+          <option value="none">Asymptomatic</option>
+          <option value="mild">Mild (nausea, headache)</option>
+          <option value="severe">Severe (seizures, altered mental status)</option>
+        </select>
+      </div>
+      <button class="calc-btn" onclick="calcSodium()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Calculate Correction
+      </button>
+      <div id="resultNa" class="result-box hidden"></div>
+      <div class="citation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Source: European Guidelines on Hyponatremia
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK REFERENCE -->
+  <div style="margin-top: 24px; margin-bottom: 16px;">
+    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">📚 Quick Reference</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted);">Tap for normal ranges</p>
+  </div>
+  
+  <div class="quick-ref-grid">
+    <div class="quick-ref-card" onclick="showRef('K+: 3.5-5.0 mEq/L')">
+      <div class="quick-ref-icon">🧪</div>
+      <div class="quick-ref-title">Potassium</div>
+      <div class="quick-ref-value">3.5-5.0 mEq/L</div>
+    </div>
+    <div class="quick-ref-card" onclick="showRef('Mg: 1.7-2.2 mg/dL')">
+      <div class="quick-ref-icon">💎</div>
+      <div class="quick-ref-title">Magnesium</div>
+      <div class="quick-ref-value">1.7-2.2 mg/dL</div>
+    </div>
+    <div class="quick-ref-card" onclick="showRef('Na+: 136-145 mEq/L')">
+      <div class="quick-ref-icon">🧂</div>
+      <div class="quick-ref-title">Sodium</div>
+      <div class="quick-ref-value">136-145 mEq/L</div>
+    </div>
+    <div class="quick-ref-card" onclick="showRef('Hgb: M 13.5-17.5, F 12-16 g/dL')">
+      <div class="quick-ref-icon">🩸</div>
+      <div class="quick-ref-title">Hemoglobin</div>
+      <div class="quick-ref-value">M: 13.5-17.5 g/dL</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="nav-item" onclick="goBack()">
+    <div class="nav-icon">🏠</div>
+    <span>Home</span>
+  </div>
+  <div class="nav-item active">
+    <div class="nav-icon">⚡</div>
+    <span>OnCall</span>
+  </div>
+  <div class="nav-item" onclick="openSettings()">
+    <div class="nav-icon">⚙️</div>
+    <span>Settings</span>
+  </div>
+</nav>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-item">
+        <div>
+          <div class="settings-label">API Endpoint</div>
+          <div class="settings-desc">Google Apps Script URL</div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top: 12px;">
+        <input type="text" class="form-input" id="apiUrlInput" placeholder="https://script.google.com/...">
+      </div>
+      <button class="calc-btn" onclick="saveSettings()" style="margin-top: 12px;">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// STATE & CONFIG
+// ═══════════════════════════════════════════════════════════════════
+let selectedGender = '';
+let apiUrl = localStorage.getItem('ONCALL_API_URL') || '';
+
+// ═══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════
+function goBack() {
+  // Try to go back, or redirect to main app
+  if (window.opener) {
+    window.close();
+  } else if (document.referrer) {
+    window.history.back();
+  } else {
+    // Default: go to main MedWard app if deployed together
+    window.location.href = 'index.html';
+  }
+}
+
+function filterCategory(cat) {
+  // Update tabs
+  document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Filter tools
+  document.querySelectorAll('.tool-card, .ai-section').forEach(card => {
+    if (cat === 'all' || card.dataset.category === cat) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TOOL ACCORDION
+// ═══════════════════════════════════════════════════════════════════
+function toggleTool(header) {
+  // Don't toggle if clicking on input/button
+  if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.tagName === 'SELECT') {
+    return;
+  }
+  
+  const card = header.closest('.tool-card');
+  card.classList.toggle('expanded');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// POTASSIUM CALCULATOR
+// ═══════════════════════════════════════════════════════════════════
+function calcPotassium() {
+  event.stopPropagation();
+  const k = parseFloat(document.getElementById('inputK').value);
+  const box = document.getElementById('resultK');
+  
+  if (!k || isNaN(k)) {
+    alert('Please enter a valid potassium value');
+    return;
+  }
+  
+  box.classList.remove('hidden', 'danger', 'warning', 'success');
+  
+  if (k < 2.5) {
+    box.classList.add('danger');
+    box.innerHTML = `
+      <div class="result-title">🚨 CRITICAL HYPOKALEMIA</div>
+      <div class="result-content">
+        <div class="result-item">IV KCl 40 mEq/hr via <strong>Central Line</strong> (max 10 mEq/hr peripheral)</div>
+        <div class="result-item"><strong>Continuous Cardiac Monitoring</strong> required</div>
+        <div class="result-item">Check Magnesium - replace if low (refractory hypokalemia)</div>
+        <div class="result-item">Recheck K+ in <strong>2 hours</strong></div>
+      </div>
+    `;
+  } else if (k < 3.0) {
+    box.classList.add('warning');
+    box.innerHTML = `
+      <div class="result-title">⚠️ Moderate Hypokalemia</div>
+      <div class="result-content">
+        <div class="result-item">Estimated deficit: <strong>200-400 mEq</strong></div>
+        <div class="result-item">Give <strong>40 mEq KCl PO/IV</strong> now</div>
+        <div class="result-item">Consider additional 20-40 mEq in 2-4 hours</div>
+        <div class="result-item">Recheck K+ in <strong>4 hours</strong></div>
+        <div class="result-item">Check and replace Magnesium if low</div>
+      </div>
+    `;
+  } else if (k < 3.5) {
+    box.innerHTML = `
+      <div class="result-title">📋 Mild Hypokalemia</div>
+      <div class="result-content">
+        <div class="result-item">Estimated deficit: <strong>100-200 mEq</strong></div>
+        <div class="result-item">Give <strong>40 mEq KCl PO</strong> x 1 dose</div>
+        <div class="result-item">Recheck with AM labs</div>
+        <div class="result-item">Consider dietary counseling</div>
+      </div>
+    `;
+  } else if (k > 6.0) {
+    box.classList.add('danger');
+    box.innerHTML = `
+      <div class="result-title">🚨 SEVERE HYPERKALEMIA</div>
+      <div class="result-content">
+        <div class="result-item"><strong>STAT ECG</strong> - look for peaked T waves, widened QRS</div>
+        <div class="result-item"><strong>Calcium Gluconate 1g IV</strong> over 2-3 min (cardioprotection)</div>
+        <div class="result-item"><strong>Regular Insulin 10 units + D50 1 amp</strong> IV</div>
+        <div class="result-item">Albuterol 10-20mg nebulized</div>
+        <div class="result-item">Consider emergent dialysis if refractory</div>
+        <div class="result-item">Hold all K+ supplements and ACEi/ARBs/K-sparing diuretics</div>
+      </div>
+    `;
+  } else if (k > 5.0) {
+    box.classList.add('warning');
+    box.innerHTML = `
+      <div class="result-title">⚠️ Hyperkalemia</div>
+      <div class="result-content">
+        <div class="result-item">Hold all K+ supplements</div>
+        <div class="result-item">Review medications (ACEi, ARBs, K-sparing diuretics)</div>
+        <div class="result-item">Get ECG if not recent</div>
+        <div class="result-item">Consider Kayexalate 15-30g PO or loop diuretic</div>
+        <div class="result-item">Recheck K+ in 4-6 hours</div>
+      </div>
+    `;
+  } else {
+    box.classList.add('success');
+    box.innerHTML = `
+      <div class="result-title">✓ Normal Potassium</div>
+      <div class="result-content">
+        K+ is within normal range (3.5-5.0 mEq/L). No replacement needed.
+      </div>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAGNESIUM CALCULATOR
+// ═══════════════════════════════════════════════════════════════════
+function calcMagnesium() {
+  event.stopPropagation();
+  const mg = parseFloat(document.getElementById('inputMg').value);
+  const box = document.getElementById('resultMg');
+  
+  if (!mg || isNaN(mg)) {
+    alert('Please enter a valid magnesium value');
+    return;
+  }
+  
+  box.classList.remove('hidden', 'danger', 'warning', 'success');
+  
+  if (mg < 1.0) {
+    box.classList.add('danger');
+    box.innerHTML = `
+      <div class="result-title">🚨 SEVERE HYPOMAGNESEMIA</div>
+      <div class="result-content">
+        <div class="result-item"><strong>MgSO4 4g IV</strong> over 4-6 hours</div>
+        <div class="result-item">Then 4-6g over 24 hours</div>
+        <div class="result-item">Cardiac monitoring recommended</div>
+        <div class="result-item">Recheck Mg in 6-12 hours</div>
+        <div class="result-item">Also check K+ and Ca++ (often low together)</div>
+      </div>
+    `;
+  } else if (mg < 1.5) {
+    box.classList.add('warning');
+    box.innerHTML = `
+      <div class="result-title">⚠️ Moderate Hypomagnesemia</div>
+      <div class="result-content">
+        <div class="result-item"><strong>MgSO4 2g IV</strong> over 1-2 hours</div>
+        <div class="result-item">Or MgOxide 400-800mg PO if asymptomatic</div>
+        <div class="result-item">Recheck Mg with AM labs</div>
+        <div class="result-item">Check K+ (Mg needed for K+ retention)</div>
+      </div>
+    `;
+  } else if (mg < 1.7) {
+    box.innerHTML = `
+      <div class="result-title">📋 Mild Hypomagnesemia</div>
+      <div class="result-content">
+        <div class="result-item"><strong>MgOxide 400mg PO</strong> daily</div>
+        <div class="result-item">Recheck with routine labs</div>
+        <div class="result-item">Consider dietary sources (nuts, leafy greens)</div>
+      </div>
+    `;
+  } else if (mg > 2.5) {
+    box.classList.add('warning');
+    box.innerHTML = `
+      <div class="result-title">⚠️ Hypermagnesemia</div>
+      <div class="result-content">
+        <div class="result-item">Stop all Mg-containing medications/antacids</div>
+        <div class="result-item">Check renal function</div>
+        <div class="result-item">If symptomatic: Calcium Gluconate 1g IV</div>
+        <div class="result-item">Consider IV fluids and loop diuretics</div>
+      </div>
+    `;
+  } else {
+    box.classList.add('success');
+    box.innerHTML = `
+      <div class="result-title">✓ Normal Magnesium</div>
+      <div class="result-content">
+        Mg is within normal range (1.7-2.2 mg/dL). No replacement needed.
+      </div>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TRANSFUSION CALCULATOR (AABB 2023)
+// ═══════════════════════════════════════════════════════════════════
+function calcTransfusion() {
+  event.stopPropagation();
+  const hgb = parseFloat(document.getElementById('inputHgb').value);
+  const status = document.getElementById('inputBleed').value;
+  const box = document.getElementById('resultBlood');
+  
+  if (!hgb || isNaN(hgb)) {
+    alert('Please enter a valid hemoglobin value');
+    return;
+  }
+  
+  box.classList.remove('hidden', 'danger', 'warning', 'success');
+  
+  if (status === 'bleeding') {
+    box.classList.add('danger');
+    box.innerHTML = `
+      <div class="result-title">🚨 TRANSFUSE IMMEDIATELY</div>
+      <div class="result-content">
+        <div class="result-item"><strong>Do NOT wait for lab confirmation</strong> in active hemorrhage</div>
+        <div class="result-item">Activate <strong>Massive Transfusion Protocol</strong> if hemodynamically unstable</div>
+        <div class="result-item">Type & Screen / Crossmatch STAT</div>
+        <div class="result-item">Consider O-negative if no time for crossmatch</div>
+        <div class="result-item">Target Hgb > 7-8 g/dL during resuscitation</div>
+      </div>
+    `;
+  } else if (status === 'ac') {
+    if (hgb < 8.0) {
+      box.classList.add('warning');
+      box.innerHTML = `
+        <div class="result-title">⚠️ Transfusion Indicated (ACS)</div>
+        <div class="result-content">
+          <div class="result-item">Higher threshold for <strong>Acute Coronary Syndrome</strong></div>
+          <div class="result-item">Target Hgb <strong>> 8.0 g/dL</strong></div>
+          <div class="result-item">Give <strong>1 unit pRBC</strong> and reassess</div>
+          <div class="result-item">Single-unit strategy unless actively bleeding</div>
+        </div>
+      `;
+    } else {
+      box.classList.add('success');
+      box.innerHTML = `
+        <div class="result-title">✓ No Transfusion Needed</div>
+        <div class="result-content">
+          Hgb ${hgb} g/dL is above the ACS threshold of 8.0 g/dL.<br>
+          Monitor closely and recheck if symptoms develop.
+        </div>
+      `;
+    }
+  } else {
+    // Stable patient
+    if (hgb < 7.0) {
+      box.innerHTML = `
+        <div class="result-title">📋 Transfusion Indicated (Restrictive)</div>
+        <div class="result-content">
+          <div class="result-item">AABB Restrictive Strategy threshold: <strong>< 7.0 g/dL</strong></div>
+          <div class="result-item">Give <strong>1 unit pRBC</strong> (Single Unit Rule)</div>
+          <div class="result-item">Reassess after each unit</div>
+          <div class="result-item">Target Hgb 7-8 g/dL in stable patients</div>
+        </div>
+      `;
+    } else {
+      box.classList.add('success');
+      box.innerHTML = `
+        <div class="result-title">✓ Transfusion NOT Indicated</div>
+        <div class="result-content">
+          <div class="result-item">Hgb ${hgb} g/dL is above restrictive threshold (7.0 g/dL)</div>
+          <div class="result-item">AABB recommends <strong>avoiding transfusion</strong> in stable asymptomatic patients</div>
+          <div class="result-item">Investigate underlying cause of anemia</div>
+          <div class="result-item">Consider iron studies, B12, folate, reticulocyte count</div>
+        </div>
+      `;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// VENTILATOR CALCULATOR (ARDSNet)
+// ═══════════════════════════════════════════════════════════════════
+function setGender(g, btn) {
+  event.stopPropagation();
+  selectedGender = g;
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function calcVent() {
+  event.stopPropagation();
+  const height = parseFloat(document.getElementById('inputHeight').value);
+  const box = document.getElementById('resultVent');
+  
+  if (!height || isNaN(height)) {
+    alert('Please enter patient height');
+    return;
+  }
+  
+  if (!selectedGender) {
+    alert('Please select patient gender');
+    return;
+  }
+  
+  // Calculate Predicted Body Weight (PBW)
+  let pbw;
+  if (selectedGender === 'm') {
+    pbw = 50 + 0.91 * (height - 152.4);
+  } else {
+    pbw = 45.5 + 0.91 * (height - 152.4);
+  }
+  
+  const tvLow = Math.round(pbw * 6);
+  const tvHigh = Math.round(pbw * 8);
+  const tvIdeal = Math.round(pbw * 6); // Start at 6 cc/kg
+  
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <div class="result-title">🫁 ARDSNet Lung Protective Settings</div>
+    <div class="result-content">
+      <div class="result-item"><strong>Predicted Body Weight:</strong> ${Math.round(pbw)} kg</div>
+      <div style="margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+        <strong>Initial Ventilator Settings:</strong><br><br>
+        <div class="result-item"><strong>Tidal Volume:</strong> ${tvLow} - ${tvHigh} mL (start at ${tvIdeal} mL)</div>
+        <div class="result-item"><strong>PEEP:</strong> 5 cmH₂O (titrate per FiO₂/PEEP table)</div>
+        <div class="result-item"><strong>Respiratory Rate:</strong> 14-22 (target pH 7.30-7.45)</div>
+        <div class="result-item"><strong>FiO₂:</strong> Start 100%, wean to maintain SpO₂ 88-95%</div>
+        <div class="result-item"><strong>Plateau Pressure:</strong> Goal ≤ 30 cmH₂O</div>
+      </div>
+      <div class="result-item">If Pplat > 30: ↓ TV by 1 mL/kg (min 4 mL/kg)</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SODIUM CORRECTION
+// ═══════════════════════════════════════════════════════════════════
+function calcSodium() {
+  event.stopPropagation();
+  const current = parseFloat(document.getElementById('inputNaCurrent').value);
+  const target = parseFloat(document.getElementById('inputNaTarget').value) || 125;
+  const weight = parseFloat(document.getElementById('inputNaWeight').value);
+  const symptoms = document.getElementById('inputNaSymptoms').value;
+  const box = document.getElementById('resultNa');
+  
+  if (!current || !weight) {
+    alert('Please enter current sodium and weight');
+    return;
+  }
+  
+  box.classList.remove('hidden', 'danger', 'warning', 'success');
+  
+  // Calculate sodium deficit
+  const tbw = weight * 0.6; // Total body water (male estimate)
+  const deficit = (target - current) * tbw;
+  
+  // 3% saline: 513 mEq/L Na
+  // Rate to raise Na by 1 mEq/L/hr = TBW / 0.513
+  
+  if (symptoms === 'severe') {
+    box.classList.add('danger');
+    box.innerHTML = `
+      <div class="result-title">🚨 SYMPTOMATIC HYPONATREMIA</div>
+      <div class="result-content">
+        <div class="result-item"><strong>3% Hypertonic Saline 100-150 mL IV</strong> bolus over 10-20 min</div>
+        <div class="result-item">May repeat x2 if symptoms persist</div>
+        <div class="result-item">Goal: raise Na by <strong>4-6 mEq/L in first 6 hours</strong></div>
+        <div class="result-item"><strong>Max correction: 8-10 mEq/L in 24 hours</strong></div>
+        <div class="result-item">Recheck Na q2h initially</div>
+        <div class="result-item">Risk of ODS if corrected too rapidly</div>
+      </div>
+    `;
+  } else if (current < 120) {
+    box.classList.add('warning');
+    box.innerHTML = `
+      <div class="result-title">⚠️ Severe Hyponatremia (Na < 120)</div>
+      <div class="result-content">
+        <div class="result-item">Na deficit to reach 125: <strong>~${Math.round(deficit)} mEq</strong></div>
+        <div class="result-item">Consider 3% saline if symptomatic or Na < 110</div>
+        <div class="result-item"><strong>Max correction: 8 mEq/L in 24 hours</strong></div>
+        <div class="result-item">Fluid restriction if SIADH suspected</div>
+        <div class="result-item">Recheck Na q4-6h</div>
+        <div class="result-item">Determine etiology (hypo/eu/hypervolemic)</div>
+      </div>
+    `;
+  } else {
+    box.innerHTML = `
+      <div class="result-title">📋 Mild-Moderate Hyponatremia</div>
+      <div class="result-content">
+        <div class="result-item">Current Na: ${current} mEq/L</div>
+        <div class="result-item">Estimated TBW: ${Math.round(tbw)} L</div>
+        <div class="result-item">Na deficit to 135: ~${Math.round((135 - current) * tbw)} mEq</div>
+        <div class="result-item">Treat underlying cause</div>
+        <div class="result-item">Fluid restriction if SIADH</div>
+        <div class="result-item"><strong>Do not correct faster than 8 mEq/24h</strong></div>
+      </div>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CLAUDE AI ASSISTANT
+// ═══════════════════════════════════════════════════════════════════
+async function askClaude() {
+  const input = document.getElementById('aiInput');
+  const response = document.getElementById('aiResponse');
+  const question = input.value.trim();
+  
+  if (!question) {
+    alert('Please enter a clinical question');
+    return;
+  }
+  
+  if (!apiUrl) {
+    alert('Please configure API URL in settings');
+    openSettings();
+    return;
+  }
+  
+  // Show loading
+  response.classList.add('visible');
+  response.innerHTML = `
+    <div class="ai-loading">
+      <div class="ai-loading-dots">
+        <div class="ai-loading-dot"></div>
+        <div class="ai-loading-dot"></div>
+        <div class="ai-loading-dot"></div>
+      </div>
+      <span>Claude is thinking...</span>
+    </div>
+  `;
+  
+  try {
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'askClinical',
+        question: question
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
+    response.innerHTML = `
+      <div style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(data.answer || data.response || 'No response received')}</div>
+    `;
+  } catch (e) {
+    console.error('AI Error:', e);
+    response.innerHTML = `
+      <div style="color: #fca5a5;">
+        ⚠️ Error: ${e.message || 'Failed to get response'}.<br>
+        Please check your API configuration in settings.
+      </div>
+    `;
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// QUICK REFERENCE
+// ═══════════════════════════════════════════════════════════════════
+function showRef(text) {
+  alert(text);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════════
+function openSettings() {
+  document.getElementById('apiUrlInput').value = apiUrl;
+  document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+function saveSettings() {
+  apiUrl = document.getElementById('apiUrlInput').value.trim();
+  localStorage.setItem('ONCALL_API_URL', apiUrl);
+  closeSettings();
+  alert('Settings saved!');
+}
+
+// Close modal on backdrop click
+document.getElementById('settingsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+
+// Handle Enter key in AI input
+document.getElementById('aiInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    askClaude();
+  }
+});
+</script>
+</body>
+</html>
