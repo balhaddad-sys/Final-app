@@ -592,6 +592,34 @@ body {
   animation: fadeIn 0.3s ease-out;
 }
 
+.ai-response-content {
+  color: #f8fafc;
+}
+
+.ai-response-content h3,
+.ai-response-content h4 {
+  color: #7dd3fc !important;
+}
+
+.ai-response-content strong {
+  color: #f8fafc !important;
+}
+
+.ai-response-content code {
+  background: rgba(255,255,255,0.2) !important;
+  color: #fef08a !important;
+}
+
+.ai-response-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.6);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1180,7 +1208,7 @@ body {
 // STATE & CONFIG
 // ═══════════════════════════════════════════════════════════════════
 let selectedGender = '';
-let apiUrl = localStorage.getItem('ONCALL_API_URL') || '';
+let apiUrl = localStorage.getItem('ONCALL_API_URL') || 'https://script.google.com/macros/s/AKfycbwBwgMnT_f_MAU_CGjcgDuAAImSluqPbKRKyv_y2Z3G8bRxNdHnR8WgKsGLU_D2sjNhfw/exec';
 
 // ═══════════════════════════════════════════════════════════════════
 // NAVIGATION
@@ -1617,7 +1645,7 @@ async function askClaude() {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
-        action: 'askClinical',
+        action: 'oncallAskClinical',
         question: question
       })
     });
@@ -1628,9 +1656,20 @@ async function askClaude() {
       throw new Error(data.error);
     }
     
+    // Format the response with better styling
+    const formattedResponse = formatAIResponse(data.answer || data.response || 'No response received');
+    
     response.innerHTML = `
-      <div style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(data.answer || data.response || 'No response received')}</div>
+      <div class="ai-response-content">${formattedResponse}</div>
+      <div class="ai-response-meta">
+        <span>📚 Kuwait SI Units</span>
+        <span>⏱️ ${new Date().toLocaleTimeString()}</span>
+      </div>
     `;
+    
+    // Clear input after successful response
+    input.value = '';
+    
   } catch (e) {
     console.error('AI Error:', e);
     response.innerHTML = `
@@ -1640,6 +1679,41 @@ async function askClaude() {
       </div>
     `;
   }
+}
+
+// Format AI response with better styling
+function formatAIResponse(text) {
+  // Escape HTML first
+  let formatted = escapeHtml(text);
+  
+  // Convert markdown-style formatting
+  // Headers
+  formatted = formatted.replace(/^### (.+)$/gm, '<h4 style="color:#0284c7;margin:16px 0 8px;font-size:1rem;">$1</h4>');
+  formatted = formatted.replace(/^## (.+)$/gm, '<h3 style="color:#0284c7;margin:16px 0 8px;font-size:1.1rem;">$1</h3>');
+  
+  // Bold
+  formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#1e293b;">$1</strong>');
+  
+  // Bullet points
+  formatted = formatted.replace(/^[•\-\*] (.+)$/gm, '<div style="display:flex;gap:8px;margin:4px 0;"><span style="color:#0284c7;">•</span><span>$1</span></div>');
+  
+  // Numbered lists
+  formatted = formatted.replace(/^(\d+)\. (.+)$/gm, '<div style="display:flex;gap:8px;margin:4px 0;"><span style="color:#0284c7;font-weight:600;">$1.</span><span>$2</span></div>');
+  
+  // Warning/Red flags
+  formatted = formatted.replace(/⚠️/g, '<span style="color:#dc2626;">⚠️</span>');
+  formatted = formatted.replace(/🔴/g, '<span style="color:#dc2626;">🔴</span>');
+  formatted = formatted.replace(/🟡/g, '<span style="color:#d97706;">🟡</span>');
+  formatted = formatted.replace(/🟢/g, '<span style="color:#059669;">🟢</span>');
+  
+  // Code/values
+  formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em;">$1</code>');
+  
+  // Line breaks
+  formatted = formatted.replace(/\n\n/g, '</p><p style="margin:12px 0;">');
+  formatted = formatted.replace(/\n/g, '<br>');
+  
+  return `<p style="margin:0;">${formatted}</p>`;
 }
 
 function escapeHtml(text) {
