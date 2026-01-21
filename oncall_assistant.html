@@ -756,83 +756,6 @@ body {
   font-size: 1.4rem;
 }
 
-/* Settings Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
-  z-index: 2000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.modal-overlay.active {
-  display: flex;
-}
-
-.modal-box {
-  background: white;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 400px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-title {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.modal-close {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: none;
-  background: var(--bg);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.settings-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.settings-item:last-child {
-  border-bottom: none;
-}
-
-.settings-label {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.settings-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
 </style>
 </head>
 <body>
@@ -1175,40 +1098,14 @@ body {
     <div class="nav-icon">⚡</div>
     <span>OnCall</span>
   </div>
-  <div class="nav-item" onclick="openSettings()">
-    <div class="nav-icon">⚙️</div>
-    <span>Settings</span>
-  </div>
 </nav>
-
-<!-- SETTINGS MODAL -->
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Settings</div>
-      <button class="modal-close" onclick="closeSettings()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="settings-item">
-        <div>
-          <div class="settings-label">API Endpoint</div>
-          <div class="settings-desc">Google Apps Script URL</div>
-        </div>
-      </div>
-      <div class="form-group" style="margin-top: 12px;">
-        <input type="text" class="form-input" id="apiUrlInput" placeholder="https://script.google.com/...">
-      </div>
-      <button class="calc-btn" onclick="saveSettings()" style="margin-top: 12px;">Save Settings</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // STATE & CONFIG
 // ═══════════════════════════════════════════════════════════════════
 let selectedGender = '';
-let apiUrl = localStorage.getItem('ONCALL_API_URL') || 'https://script.google.com/macros/s/AKfycbwBwgMnT_f_MAU_CGjcgDuAAImSluqPbKRKyv_y2Z3G8bRxNdHnR8WgKsGLU_D2sjNhfw/exec';
+const apiUrl = 'https://script.google.com/macros/s/AKfycbwBwgMnT_f_MAU_CGjcgDuAAImSluqPbKRKyv_y2Z3G8bRxNdHnR8WgKsGLU_D2sjNhfw/exec';
 
 // ═══════════════════════════════════════════════════════════════════
 // NAVIGATION
@@ -1621,12 +1518,6 @@ async function askClaude() {
     return;
   }
   
-  if (!apiUrl) {
-    alert('Please configure API URL in settings');
-    openSettings();
-    return;
-  }
-  
   // Show loading
   response.classList.add('visible');
   response.innerHTML = `
@@ -1675,7 +1566,7 @@ async function askClaude() {
     response.innerHTML = `
       <div style="color: #fca5a5;">
         ⚠️ Error: ${e.message || 'Failed to get response'}.<br>
-        Please check your API configuration in settings.
+        Please try again later.
       </div>
     `;
   }
@@ -1793,27 +1684,6 @@ function showRef(text) {
 // ═══════════════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════════════
-function openSettings() {
-  document.getElementById('apiUrlInput').value = apiUrl;
-  document.getElementById('settingsModal').classList.add('active');
-}
-
-function closeSettings() {
-  document.getElementById('settingsModal').classList.remove('active');
-}
-
-function saveSettings() {
-  apiUrl = document.getElementById('apiUrlInput').value.trim();
-  localStorage.setItem('ONCALL_API_URL', apiUrl);
-  closeSettings();
-  alert('Settings saved!');
-}
-
-// Close modal on backdrop click
-document.getElementById('settingsModal').addEventListener('click', function(e) {
-  if (e.target === this) closeSettings();
-});
-
 // Handle Enter key in AI input
 document.getElementById('aiInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
