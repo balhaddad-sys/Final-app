@@ -3433,8 +3433,16 @@ function formatShortDate(iso) {
 
 function compress(file, max, cb) {
   const r = new FileReader();
+  r.onerror = () => {
+    console.error('❌ FileReader error');
+    cb(null);
+  };
   r.onload = e => {
     const img = new Image();
+    img.onerror = () => {
+      console.error('❌ Image load error');
+      cb(null);
+    };
     img.onload = () => {
       const c = document.createElement('canvas'), ctx = c.getContext('2d');
       let w = img.width, h = img.height, q = CONFIG.IMAGE_QUALITY;
@@ -3446,6 +3454,7 @@ function compress(file, max, cb) {
       ctx.drawImage(img, 0, 0, w, h);
       let url = c.toDataURL('image/jpeg', q);
       while (url.length > max && q > 0.3) { q -= 0.1; url = c.toDataURL('image/jpeg', q); }
+      console.log('✅ Compressed image:', url.length, 'bytes');
       cb(url);
     };
     img.src = e.target.result;
@@ -3458,11 +3467,19 @@ function compress(file, max, cb) {
 // ═══════════════════════════════════════════════════════════════════
 function compressForAI(file) {
   return new Promise((resolve, reject) => {
+    if (!file) {
+      console.error('❌ compressForAI: No file provided');
+      reject(new Error('No file provided'));
+      return;
+    }
+    console.log('🗜️ Compressing file:', file.name, file.size, 'bytes');
     compress(file, CONFIG.MAX_IMAGE_SIZE, (compressedData) => {
-      if (compressedData) {
+      if (compressedData && compressedData.length > 100) {
+        console.log('✅ compressForAI success:', compressedData.substring(0, 50));
         resolve(compressedData);
       } else {
-        reject(new Error('Compression failed'));
+        console.error('❌ compressForAI: Compression returned invalid data');
+        reject(new Error('Compression failed - invalid data'));
       }
     });
   });
@@ -6956,12 +6973,22 @@ async function handleLabUpload(files) {
     console.log('🗜️ Compressing images in parallel...');
     const compressedBatch = await Promise.all(fileArray.map(file => compressForAI(file)));
     console.log('✅ All images compressed');
-    console.log('🖼️ Total payload size:', Math.round(compressedBatch.reduce((sum, img) => sum + img.length, 0) / 1024), 'KB');
+    
+    // VALIDATE: Make sure we have valid image data
+    const validImages = compressedBatch.filter(img => img && typeof img === 'string' && img.startsWith('data:'));
+    console.log('🖼️ Valid images:', validImages.length, 'of', compressedBatch.length);
+    
+    if (validImages.length === 0) {
+      throw new Error('No valid images after compression');
+    }
+    
+    console.log('🖼️ Total payload size:', Math.round(validImages.reduce((sum, img) => sum + img.length, 0) / 1024), 'KB');
+    console.log('🖼️ First image preview:', validImages[0].substring(0, 50));
 
     // 3. Send the STACK to the cloud
     const requestBody = {
       action: 'analyzeLabsEnhanced',
-      images: compressedBatch, // Changed from 'image' to 'images' array
+      images: validImages, // Use validated images array
       extractionPrompt: LAB_EXTRACTION_PROMPT,
       patientContext: {
         existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
@@ -6972,7 +6999,8 @@ async function handleLabUpload(files) {
       }
     };
 
-    console.log('📤 Sending multi-page request with', compressedBatch.length, 'images');
+    console.log('📤 Sending request with', validImages.length, 'images');
+    console.log('📤 Request body size:', JSON.stringify(requestBody).length, 'bytes');
 
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
