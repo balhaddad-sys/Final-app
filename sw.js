@@ -8,20 +8,17 @@ importScripts("https://progressier.app/0IpCHZYvGyBKyFwHmGj2/sw.js");
  * API calls are NEVER intercepted - they go directly to the network.
  */
 
-const CACHE_NAME = 'medward-v2.0.0';
+const CACHE_NAME = 'medward-v2.0.1';
 const STATIC_ASSETS = [
   '/Final-app/',
   '/Final-app/index.html',
-  '/Final-app/js/app.js',
-  '/Final-app/js/medward-neural.js',
-  '/Final-app/js/clinical-components.js',
   '/Final-app/icons/icon-192.png',
   '/Final-app/icons/icon-512.png'
 ];
 
 // Install - cache static assets
 self.addEventListener('install', event => {
-  console.log('[MedWard SW] Installing v2.0.0');
+  console.log('[MedWard SW] Installing v2.0.1');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(STATIC_ASSETS))
@@ -32,7 +29,7 @@ self.addEventListener('install', event => {
 
 // Activate - clean old caches
 self.addEventListener('activate', event => {
-  console.log('[MedWard SW] Activating v2.0.0');
+  console.log('[MedWard SW] Activating v2.0.1');
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
@@ -92,4 +89,4 @@ self.addEventListener('fetch', event => {
   );
 });
 
-console.log('[MedWard SW] Loaded v2.0.0');
+console.log('[MedWard SW] Loaded v2.0.1');
