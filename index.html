@@ -2054,6 +2054,435 @@ body {
   background: #f0fdf4;
   color: #16a34a;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ONCALL ASSISTANT STYLES
+   ═══════════════════════════════════════════════════════════════════ */
+.oncall-tab {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+  color: white !important;
+  border-color: #7c3aed !important;
+}
+
+.oncall-tab.active {
+  background: linear-gradient(135deg, #6d28d9, #5b21b6) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3) !important;
+}
+
+/* OnCall Landing Button */
+.oncall-landing-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%);
+  color: white;
+  text-decoration: none;
+  padding: 16px 20px;
+  border-radius: 16px;
+  margin: 20px auto;
+  max-width: 340px;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.oncall-landing-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.oncall-landing-btn:hover::before {
+  left: 100%;
+}
+
+.oncall-landing-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.45);
+}
+
+.oncall-landing-btn:active {
+  transform: translateY(-1px);
+}
+
+.oncall-landing-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.oncall-landing-text {
+  flex: 1;
+  text-align: left;
+}
+
+.oncall-landing-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+.oncall-landing-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.oncall-landing-arrow {
+  font-size: 1.3rem;
+  font-weight: 700;
+  opacity: 0.8;
+  transition: transform 0.2s;
+}
+
+.oncall-landing-btn:hover .oncall-landing-arrow {
+  transform: translateX(4px);
+}
+
+.oncall-hero {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #1e40af 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.oncall-hero-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.oncall-hero-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.oncall-hero-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.oncall-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.oncall-tool-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.oncall-tool-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  border-color: var(--primary);
+}
+
+.oncall-tool-card.ai-card {
+  background: linear-gradient(135deg, #f3e8ff, #faf5ff);
+  border-color: #c4b5fd;
+}
+
+.oncall-tool-card.ai-card:hover {
+  border-color: #7c3aed;
+}
+
+.oncall-tool-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 10px;
+}
+
+.oncall-tool-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.oncall-tool-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.oncall-fullpage-btn {
+  margin-top: 16px;
+}
+
+.oncall-fullpage-btn .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  font-size: 1rem;
+}
+
+/* OnCall Modal */
+#oncallModal .modal-box {
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.oncall-modal-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: white;
+  border-radius: 20px 20px 0 0;
+}
+
+.oncall-modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.oncall-modal-body {
+  padding: 20px;
+}
+
+.oncall-input-group {
+  margin-bottom: 16px;
+}
+
+.oncall-input-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.oncall-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.oncall-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(2,132,199,0.1);
+}
+
+.oncall-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #f9fafb;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.oncall-gender-btns {
+  display: flex;
+  gap: 10px;
+}
+
+.oncall-gender-btn {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.oncall-gender-btn.selected {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.oncall-calc-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.oncall-result {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-left: 5px solid var(--primary);
+}
+
+.oncall-result.danger {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border-left-color: #dc2626;
+}
+
+.oncall-result.warning {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left-color: #d97706;
+}
+
+.oncall-result.success {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-left-color: #059669;
+}
+
+.oncall-result-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.oncall-result.danger .oncall-result-title { color: #991b1b; }
+.oncall-result.warning .oncall-result-title { color: #92400e; }
+.oncall-result.success .oncall-result-title { color: #065f46; }
+
+.oncall-result-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.oncall-result-item {
+  margin-bottom: 6px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.oncall-result-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.oncall-result.danger .oncall-result-item::before { color: #dc2626; }
+
+.oncall-citation {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* AI Chat in OnCall */
+.oncall-ai-input-wrap {
+  position: relative;
+}
+
+.oncall-ai-input {
+  width: 100%;
+  padding: 14px 50px 14px 16px;
+  border: 2px solid #c4b5fd;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #faf5ff;
+}
+
+.oncall-ai-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 4px rgba(124,58,237,0.1);
+}
+
+.oncall-ai-send {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #7c3aed;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.oncall-ai-response {
+  margin-top: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f3e8ff, #faf5ff);
+  border-radius: 12px;
+  border: 1px solid #e9d5ff;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.oncall-ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #7c3aed;
+}
+
+.oncall-ai-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.oncall-ai-dot {
+  width: 8px;
+  height: 8px;
+  background: #7c3aed;
+  border-radius: 50%;
+  animation: oncallBounce 1.4s ease-in-out infinite;
+}
+
+.oncall-ai-dot:nth-child(2) { animation-delay: 0.2s; }
+.oncall-ai-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes oncallBounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
 </style>
 </head>
 <body>
@@ -2081,6 +2510,17 @@ body {
 <h1 class="landing-title">MedWard Pro</h1>
 <p class="landing-subtitle">Neural Clinical Management System</p>
 <p class="landing-version">🧠 AI-Powered • Drug Info • Lab Override • Discharge • v15.0</p>
+
+<!-- OnCall Assistant Button -->
+<a href="https://balhaddad-sys.github.io/Final-app/oncall_assistant.html" class="oncall-landing-btn" target="_blank">
+  <div class="oncall-landing-icon">⚡</div>
+  <div class="oncall-landing-text">
+    <div class="oncall-landing-title">OnCall Assistant</div>
+    <div class="oncall-landing-subtitle">Clinical Decision Support • Claude AI</div>
+  </div>
+  <div class="oncall-landing-arrow">→</div>
+</a>
+
 <div class="units-grid" id="unitsGrid"></div>
 <button class="request-unit-btn" onclick="openRequestUnit()">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 5v14M5 12h14"/></svg>
@@ -2175,6 +2615,7 @@ Request New Unit Access
 <div class="section-body"><div class="ref-grid" id="refGrid"></div></div>
 </div>
 </div>
+
 </div>
 </div>
 
@@ -2455,6 +2896,19 @@ Request New Unit Access
 <div class="modal-footer">
 <button class="btn btn-secondary" onclick="closeModal('editTextModal')">Cancel</button>
 <button class="btn btn-primary" onclick="saveEditText()">Save</button>
+</div>
+</div>
+</div>
+
+<!-- ONCALL TOOL MODAL -->
+<div class="modal" id="oncallModal">
+<div class="modal-box" style="max-width:500px">
+<div class="oncall-modal-header">
+  <div class="oncall-modal-title" id="oncallModalTitle">🧪 Tool</div>
+</div>
+<div class="oncall-modal-body" id="oncallModalBody"></div>
+<div class="modal-footer">
+<button class="btn btn-secondary btn-full" onclick="closeModal('oncallModal')">Close</button>
 </div>
 </div>
 </div>
