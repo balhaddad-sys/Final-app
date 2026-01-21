@@ -1753,6 +1753,263 @@ body {
   text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px
 }
 .renal-value{font-size:0.8rem;color:var(--text-secondary);line-height:1.4}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PLAN SECTION - Professional Interactive Design
+   ═══════════════════════════════════════════════════════════════════ */
+.plan-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: white;
+}
+
+.plan-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.plan-header-title svg {
+  width: 20px;
+  height: 20px;
+}
+
+.plan-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.plan-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.plan-btn-edit {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+.plan-btn-edit:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.plan-btn-add {
+  background: white;
+  color: #0284c7;
+}
+
+.plan-btn-add:hover {
+  background: #f0f9ff;
+}
+
+.plan-content {
+  padding: 16px;
+}
+
+.plan-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-muted);
+}
+
+.plan-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+.plan-empty-text {
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.plan-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e0f2fe;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.plan-item:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
+}
+
+.plan-item-check {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 2px;
+}
+
+.plan-item-check:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+}
+
+.plan-item-check.completed {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+}
+
+.plan-item-content {
+  flex: 1;
+}
+
+.plan-item-text {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.plan-item.completed .plan-item-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.plan-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.plan-item-priority {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+
+.plan-item-priority.high {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.plan-item-priority.medium {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.plan-item-priority.low {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.plan-summary {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-top: 1px solid #e0f2fe;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.plan-summary-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.plan-summary-stat span {
+  font-weight: 700;
+  color: #0284c7;
+}
+
+/* Add Plan Modal */
+.plan-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plan-priority-select {
+  display: flex;
+  gap: 8px;
+}
+
+.plan-priority-option {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.plan-priority-option:hover {
+  border-color: var(--primary);
+}
+
+.plan-priority-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.plan-priority-option.high.selected {
+  border-color: #dc2626;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.plan-priority-option.medium.selected {
+  border-color: #d97706;
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.plan-priority-option.low.selected {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #16a34a;
+}
 </style>
 </head>
 <body>
@@ -1793,12 +2050,13 @@ Request New Unit Access
 <div class="page" id="dashboard">
 <header class="dash-header">
 <div class="dash-logo">
+<button class="btn btn-ghost btn-icon" onclick="goToLanding()" title="Switch Unit" style="margin-right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
 <div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div>
 <span class="dash-badge" id="unitBadge">Unit</span>
 </div>
 <div class="dash-user">
 <div class="dash-avatar" id="dashAvatar">DR</div>
-<button class="btn btn-ghost btn-icon" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+<button class="btn btn-ghost btn-icon" onclick="logout()" title="Logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
 </div>
 </header>
 <div class="dash-content">
@@ -6630,15 +6888,59 @@ window.viewNoteImage = function(idx) {
 function renderProfileOverview() {
   const p = state.currentPatient;
   
-  // Get latest plan/note
-  const latestPlan = (p.notes || []).filter(n => n.type === 'plan' || n.type === 'assessment').sort((a, b) => new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp))[0];
-  const planText = latestPlan?.text || p.plan || '';
+  // Get plan items
+  const planItems = (p.planItems || []).sort((a, b) => {
+    // Sort by: incomplete first, then by priority (high > medium > low), then by date
+    if (a.completed !== b.completed) return a.completed ? 1 : -1;
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    }
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+  
+  const completedCount = planItems.filter(i => i.completed).length;
+  const pendingCount = planItems.filter(i => !i.completed).length;
+  
+  // Build plan items HTML
+  let planItemsHtml = '';
+  if (planItems.length === 0) {
+    planItemsHtml = `
+      <div class="plan-empty">
+        <div class="plan-empty-icon">📋</div>
+        <div class="plan-empty-text">No plan items yet</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddPlanItem()">+ Add First Item</button>
+      </div>
+    `;
+  } else {
+    planItemsHtml = `
+      <div class="plan-items">
+        ${planItems.slice(0, 5).map((item, idx) => `
+          <div class="plan-item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
+            <div class="plan-item-check ${item.completed ? 'completed' : ''}" onclick="togglePlanItem('${item.id}')">
+              ${item.completed ? '✓' : ''}
+            </div>
+            <div class="plan-item-content">
+              <div class="plan-item-text">${esc(item.text)}</div>
+              <div class="plan-item-meta">
+                ${item.priority ? `<span class="plan-item-priority ${item.priority}">${item.priority}</span>` : ''}
+                ${item.assignee ? `<span>👤 ${esc(item.assignee)}</span>` : ''}
+                ${item.dueDate ? `<span>📅 ${item.dueDate}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      ${planItems.length > 5 ? `<div style="text-align:center;padding:8px"><button class="btn btn-ghost btn-sm" onclick="showProfileTab('history')">View all ${planItems.length} items →</button></div>` : ''}
+    `;
+  }
   
   $('profileOverview').innerHTML = `
     <div class="section-card">
       <div class="section-header"><div class="section-title">📋 Diagnosis</div></div>
       <div class="section-body"><div style="font-size:0.95rem;color:var(--text-secondary)">${esc(p.diagnosis) || 'No diagnosis recorded'}</div></div>
     </div>
+    
     <div class="section-card">
       <div class="section-header"><div class="section-title">🩺 Vitals</div><button class="btn btn-secondary btn-xs" onclick="openAddVitals()">Update</button></div>
       <div class="section-body">
@@ -6651,13 +6953,35 @@ function renderProfileOverview() {
         </div>
       </div>
     </div>
-    <div class="section-card">
-      <div class="section-header"><div class="section-title">🎯 Plan</div><button class="btn btn-secondary btn-xs" onclick="openEditPlan()">Edit</button></div>
-      <div class="section-body">
-        <div style="font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;min-height:60px">${esc(planText) || 'Tap Edit to add management plan...'}</div>
-        ${latestPlan?.author ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px">Last updated by ${esc(latestPlan.author)} ${latestPlan.date ? '• ' + formatDate(latestPlan.date) : ''}</div>` : ''}
+    
+    <div class="plan-card">
+      <div class="plan-header">
+        <div class="plan-header-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          Management Plan
+        </div>
+        <div class="plan-header-actions">
+          <button class="plan-btn plan-btn-add" onclick="openAddPlanItem()">+ Add</button>
+        </div>
       </div>
+      <div class="plan-content">
+        ${planItemsHtml}
+      </div>
+      ${planItems.length > 0 ? `
+        <div class="plan-summary">
+          <div class="plan-summary-stat">
+            <span>${pendingCount}</span> pending
+          </div>
+          <div class="plan-summary-stat">
+            <span>${completedCount}</span> completed
+          </div>
+        </div>
+      ` : ''}
     </div>
+    
     <div class="section-card">
       <div class="section-header"><div class="section-title">📝 History & Examination</div><button class="btn btn-secondary btn-xs" onclick="openEditText('history', 'History')">Edit</button></div>
       <div class="section-body">
@@ -8461,6 +8785,76 @@ window.openEditPlan = function() {
   openModal('editTextModal');
 };
 
+// ═══════════════════════════════════════════════════════════════════
+// PLAN ITEM MANAGEMENT - Interactive Checklist
+// ═══════════════════════════════════════════════════════════════════
+
+window.openAddPlanItem = function() {
+  state.addDataType = 'planItem';
+  state.editingPlanItemId = null;
+  state.selectedPriority = 'medium';
+  
+  $('addDataTitle').textContent = 'Add Plan Item';
+  $('addDataBody').innerHTML = `
+    <div class="plan-modal-body">
+      <div class="form-group">
+        <label class="form-label">What needs to be done?</label>
+        <textarea id="planItemText" class="form-textarea" rows="3" placeholder="e.g., Order chest X-ray, Start IV antibiotics..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <div class="plan-priority-select">
+          <div class="plan-priority-option high" onclick="selectPriority('high')">🔴 High</div>
+          <div class="plan-priority-option medium selected" onclick="selectPriority('medium')">🟡 Medium</div>
+          <div class="plan-priority-option low" onclick="selectPriority('low')">🟢 Low</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assignee (optional)</label>
+        <input type="text" id="planItemAssignee" class="form-input" placeholder="Who should do this?" value="${state.currentUser?.name || ''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date (optional)</label>
+        <input type="date" id="planItemDueDate" class="form-input">
+      </div>
+    </div>
+  `;
+  openModal('addDataModal');
+  setTimeout(() => $('planItemText')?.focus(), 100);
+};
+
+window.selectPriority = function(priority) {
+  state.selectedPriority = priority;
+  $$('.plan-priority-option').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.plan-priority-option.${priority}`)?.classList.add('selected');
+};
+
+window.togglePlanItem = function(itemId) {
+  const p = state.currentPatient;
+  if (!p.planItems) return;
+  
+  const item = p.planItems.find(i => i.id === itemId);
+  if (item) {
+    item.completed = !item.completed;
+    item.completedAt = item.completed ? new Date().toISOString() : null;
+    item.completedBy = item.completed ? state.currentUser?.name : null;
+    
+    saveCloud();
+    renderProfileOverview();
+    toast(item.completed ? '✓ Marked complete' : 'Marked incomplete');
+  }
+};
+
+window.deletePlanItem = function(itemId) {
+  const p = state.currentPatient;
+  if (!p.planItems) return;
+  
+  p.planItems = p.planItems.filter(i => i.id !== itemId);
+  saveCloud();
+  renderProfileOverview();
+  toast('Item removed');
+};
+
 window.saveEditText = function() {
   const type = $('editTextType').value;
   const text = $('editTextArea').value;
@@ -8496,6 +8890,28 @@ window.saveAddData = function() {
   } else if (type === 'fluid') {
     if (!p.fluids) p.fluids = [];
     p.fluids.push({ date: now, intake: parseInt($('addIntake').value) || 0, output: parseInt($('addOutput').value) || 0 });
+  } else if (type === 'planItem') {
+    // New plan item
+    const text = $('planItemText')?.value?.trim();
+    if (!text) {
+      toast('Please enter what needs to be done', true);
+      return;
+    }
+    
+    if (!p.planItems) p.planItems = [];
+    
+    const newItem = {
+      id: 'plan_' + Date.now(),
+      text: text,
+      priority: state.selectedPriority || 'medium',
+      assignee: $('planItemAssignee')?.value?.trim() || null,
+      dueDate: $('planItemDueDate')?.value || null,
+      completed: false,
+      createdAt: now,
+      createdBy: state.currentUser?.name || 'Unknown'
+    };
+    
+    p.planItems.unshift(newItem);
   } else if (type === 'plan') {
     if (!p.plans) p.plans = [];
     p.plans.push({ date: now, content: $('addPlanContent').value });
@@ -8603,6 +9019,16 @@ window.logout = function() {
   state.currentUser = null;
   state.currentFilter = 'all';
   showPage('landing');
+  toast('Logged out');
+};
+
+window.goToLanding = function() {
+  // Go back to landing page WITHOUT clearing saved login
+  // This allows admin to access unit management while keeping auto-login active
+  state.currentUnit = null;
+  state.currentUser = null;
+  showPage('landing');
+  renderUnits();
 };
 
 window.tryAutoLogin = function() {
@@ -9284,8 +9710,13 @@ window.saveLabOverride = function() {
 async function init() {
   loadLocal();
 
-  // Ensure landing page shows on startup
-  showPage('landing');
+  // Check for saved login FIRST before showing any page
+  const hasSavedLogin = checkSavedLogin();
+  
+  if (!hasSavedLogin) {
+    // No saved login - show landing page
+    showPage('landing');
+  }
 
   renderUnits();
   renderScoresGrid();
@@ -9309,9 +9740,10 @@ async function init() {
   // Initial cloud sync
   await syncFromCloud();
 
-  // Try auto-login after cloud sync
-  if (!state.currentUnit) {
-    tryAutoLogin();
+  // If we had a saved login, now complete the auto-login after data is loaded
+  if (hasSavedLogin && state.currentUnit) {
+    renderPatients();
+    renderRef();
   }
 
   // Periodic background sync (every 60 seconds) - only if no pending changes
@@ -9320,6 +9752,44 @@ async function init() {
       syncFromCloud();
     }
   }, 60000);
+}
+
+// Check and apply saved login - returns true if login was restored
+function checkSavedLogin() {
+  try {
+    const saved = localStorage.getItem('MEDWARD_SAVED_LOGIN');
+    if (!saved) return false;
+
+    const login = JSON.parse(saved);
+
+    // Expire after 30 days
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    if (Date.now() - login.timestamp > thirtyDays) {
+      localStorage.removeItem('MEDWARD_SAVED_LOGIN');
+      return false;
+    }
+
+    const unit = getUnit(login.unitId);
+    if (!unit) return false;
+
+    // Set up state immediately
+    state.currentUnit = unit;
+    state.currentUser = { name: login.userName, role: login.userRole };
+    
+    // Show dashboard immediately
+    showPage('dashboard');
+    $('unitBadge').textContent = state.currentUnit.name;
+    $('dashAvatar').textContent = initials(state.currentUser.name);
+    $('currentDate').textContent = formatDate();
+    
+    // Show welcome toast after a brief delay
+    setTimeout(() => toast(`Welcome back, ${state.currentUser.name}!`), 500);
+    
+    return true;
+  } catch (e) {
+    console.error('Saved login check failed:', e);
+    return false;
+  }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
