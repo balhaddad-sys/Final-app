@@ -112,19 +112,32 @@ body {
     font-weight: 700;
     letter-spacing: -0.3px;
 }
+.header-actions {
+    display: flex;
+    gap: 20px; /* Space between icons for easier targeting */
+}
 .header-actions .icon-btn {
     background: none;
     border: none;
     color: white;
     cursor: pointer;
-    padding: 8px;
+    padding: 12px; /* Increased from 8px for better touch target */
+    margin: -8px; /* Visual compensation to maintain spacing */
     display: flex;
     align-items: center;
     justify-content: center;
     transition: opacity 0.2s;
+    min-width: 44px; /* Apple HIG minimum touch target */
+    min-height: 44px;
+    border-radius: 8px;
 }
 .header-actions .icon-btn:hover {
     opacity: 0.8;
+    background: rgba(255,255,255,0.1);
+}
+.header-actions .icon-btn svg {
+    width: 22px;
+    height: 22px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -149,11 +162,21 @@ body {
     color: var(--text-muted);
     font-size: 0.7rem; font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.2s;
     background: transparent;
     border: none;
+    position: relative;
+    min-height: 60px; /* Ensure minimum touch target height */
+    padding: 8px 4px;
 }
-.nav-item.active { color: var(--primary); }
+.nav-item.active {
+    color: var(--primary);
+    background: rgba(0,94,184,0.05);
+}
+.nav-item:active {
+    background: rgba(0,94,184,0.1);
+    transform: scale(0.96);
+}
 .nav-icon { font-size: 1.4rem; margin-bottom: 3px; }
 
 /* Legacy bottom nav support */
@@ -277,11 +300,30 @@ body {
 .modal.active{display:flex}
 .modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:480px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
 .modal-box.wide{max-width:700px}
-.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .modal-title{font-size:1.1rem;font-weight:700}
-.modal-body{padding:24px;overflow-y:auto;flex:1}
-.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px}
-.modal-footer .btn{flex:1}
+.modal-body{padding:24px;overflow-y:auto;flex:1;padding-bottom:90px}
+/* ═══════════════════════════════════════════════════════════════════
+   STICKY FOOTER DOCK - Professional Medical Form Standard (Fitts's Law)
+   ═══════════════════════════════════════════════════════════════════ */
+.modal-footer {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    padding: 16px 24px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+    z-index: 100;
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+    padding-bottom: max(16px, env(safe-area-inset-bottom)); /* iPhone Safe Area */
+}
+.modal-footer .btn{flex:1;min-height:48px;font-size:1rem}
+.modal-footer .btn-primary{flex:2} /* Make primary action larger/easier to hit */
+.modal-footer .btn-secondary{flex:1}
 .page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:1;background:var(--bg-app)}
 .page.active{display:flex;flex-direction:column;z-index:10;visibility:visible}
 #landing{align-items:center;justify-content:center;padding:24px;background:var(--bg-app)}
@@ -523,7 +565,7 @@ body {
     border: 1px solid var(--border);
     border-left: 4px solid var(--primary);
     border-radius: 8px;
-    padding: 12px 16px;
+    padding: 14px 16px; /* Increased padding for better touch target */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -531,8 +573,10 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     margin-bottom: 0;
+    min-height: 72px; /* Ensure minimum touch target (Apple HIG recommends 44px min) */
 }
 .patient-card:hover{border-color:var(--primary);transform:translateY(-1px);box-shadow:0 2px 4px rgba(0,94,184,0.1)}
+.patient-card:active{transform:scale(0.98);background:var(--primary-light)}
 .patient-card.critical{border-left-color:var(--danger);background:linear-gradient(90deg,rgba(220,38,38,0.03),transparent)}
 .patient-card.chronic{border-left-color:var(--purple)}
 .patient-card.new{border-left-color:var(--success);background:linear-gradient(90deg,rgba(5,150,105,0.03),transparent)}
