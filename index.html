@@ -2532,7 +2532,7 @@ Request New Unit Access
 </div>
 
 <div class="toast" id="toast"></div>
-<input type="file" id="labFileInput" accept="image/*" style="display:none">
+<input type="file" id="labFileInput" accept="image/*" multiple style="display:none">
 
 <!-- Lab Override Modal -->
 <div class="modal" id="labOverrideModal">
@@ -2575,7 +2575,7 @@ Request New Unit Access
 </div>
 </div>
 
-<input type="file" id="labFileInputHidden" accept="image/*" style="display:none">
+<input type="file" id="labFileInputHidden" accept="image/*" multiple style="display:none">
 <input type="file" id="imagingFileInput" accept="image/*" style="display:none">
 <script>
 (function(){
@@ -3451,6 +3451,21 @@ function compress(file, max, cb) {
     img.src = e.target.result;
   };
   r.readAsDataURL(file);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PROMISE-BASED COMPRESSOR FOR BATCH PROCESSING
+// ═══════════════════════════════════════════════════════════════════
+function compressForAI(file) {
+  return new Promise((resolve, reject) => {
+    compress(file, CONFIG.MAX_IMAGE_SIZE, (compressedData) => {
+      if (compressedData) {
+        resolve(compressedData);
+      } else {
+        reject(new Error('Compression failed'));
+      }
+    });
+  });
 }
 
 function smartWard(raw) {
@@ -6895,99 +6910,127 @@ Return a JSON object with this exact structure:
 
 RESPOND ONLY WITH VALID JSON. No markdown, no explanation.`;
 
-async function handleLabUpload(file) {
+// ═══════════════════════════════════════════════════════════════════
+// MULTI-PAGE LAB ANALYSIS - Master Shifu's Batch Processing Logic
+// ═══════════════════════════════════════════════════════════════════
+async function handleLabUpload(files) {
   // Guard: Check API URL
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
     toast('API not configured. Go to Admin → Settings', true);
     return;
   }
-  
+
+  // Convert FileList to Array
+  const fileArray = Array.isArray(files) ? files : Array.from(files);
+  if (fileArray.length === 0) return;
+
+  // 1. Visual Feedback - Show multi-page analysis in progress
   state.isAnalyzingLab = true;
   renderProfileLabs();
-  
-  // Show professional loader
   showLabLoader();
-  
-  // Store image for preview
-  state.pendingLabImage = URL.createObjectURL(file);
-  
-  compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
-    try {
-      console.log('🔬 Starting enhanced lab extraction...');
-      console.log('📡 API:', state.settings.apiUrl);
-      console.log('🖼️ Image size:', Math.round(imageData.length / 1024), 'KB');
-      
-      const requestBody = { 
-        action: 'analyzeLabsEnhanced', 
-        image: imageData,
-        extractionPrompt: LAB_EXTRACTION_PROMPT,
-        patientContext: {
-          existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
-            name: p.name,
-            latestValue: p.values?.[0]?.value,
-            latestDate: p.values?.[0]?.date
-          })) || []
-        }
-      };
-      
-      console.log('📤 Sending request with keys:', Object.keys(requestBody).join(', '));
-      console.log('📤 Image data starts with:', imageData.substring(0, 50));
-      
-      const res = await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(requestBody)
-      });
-      
-      console.log('📥 Response status:', res.status);
-      console.log('📥 Response ok:', res.ok);
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('❌ HTTP Error:', res.status, errorText);
-        throw new Error('HTTP ' + res.status + ': ' + errorText.substring(0, 100));
+
+  // Update loader text for multi-page
+  const loaderEl = document.querySelector('.lab-analysis-loader .loader-title');
+  if (loaderEl) {
+    loaderEl.textContent = fileArray.length > 1
+      ? `Scanning ${fileArray.length} Pages...`
+      : 'Analyzing Lab Report...';
+  }
+  const loaderSubtitle = document.querySelector('.lab-analysis-loader .loader-subtitle');
+  if (loaderSubtitle && fileArray.length > 1) {
+    loaderSubtitle.textContent = 'Stitching reports together';
+  }
+
+  // Store images for preview
+  state.pendingLabImages = [];
+  for (const file of fileArray) {
+    state.pendingLabImages.push(URL.createObjectURL(file));
+  }
+  state.pendingLabImage = state.pendingLabImages[0]; // Keep backward compatibility
+
+  try {
+    console.log(`🔬 Starting enhanced lab extraction (${fileArray.length} pages)...`);
+    console.log('📡 API:', state.settings.apiUrl);
+
+    // 2. Compress ALL images in parallel (Master Shifu's Promise.all technique)
+    console.log('🗜️ Compressing images in parallel...');
+    const compressedBatch = await Promise.all(fileArray.map(file => compressForAI(file)));
+    console.log('✅ All images compressed');
+    console.log('🖼️ Total payload size:', Math.round(compressedBatch.reduce((sum, img) => sum + img.length, 0) / 1024), 'KB');
+
+    // 3. Send the STACK to the cloud
+    const requestBody = {
+      action: 'analyzeLabsEnhanced',
+      images: compressedBatch, // Changed from 'image' to 'images' array
+      extractionPrompt: LAB_EXTRACTION_PROMPT,
+      patientContext: {
+        existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
+          name: p.name,
+          latestValue: p.values?.[0]?.value,
+          latestDate: p.values?.[0]?.date
+        })) || []
       }
-      
-      const data = await res.json();
-      console.log('📦 Extraction result:', data);
-      
-      state.isAnalyzingLab = false;
-      hideLabLoader();
-      
-      if (data.error || !data.labData) {
-        console.error('❌ Extraction error:', data.error);
-        let errorMsg = data.error || 'Extraction failed';
-        if (data.debug) {
-          const d = data.debug;
-          alert('DEBUG INFO:\n\nLength: ' + d.rawResponseLength + '\nFirst { at: ' + d.firstBraceAt + '\nLast } at: ' + d.lastBraceAt + '\n\nExtracted:\n' + d.extractedPreview + '\n\nRaw:\n' + d.rawResponsePreview);
-        }
-        toast(errorMsg.substring(0, 100), true);
-        renderProfileLabs();
-        return;
-      }
-      
-      // Store for preview before confirmation
-      state.pendingLabData = data.labData;
-      state.labExtractionConfidence = data.confidence || 0.8;
-      state.currentInteractionId = data.meta?.interactionId;
-      
-      console.log('✅ Extraction successful, showing preview...');
-      console.log('📊 Parameters found:', data.labData.parameters?.length || 0);
-      console.log('📅 Dates found:', data.labData.dates?.length || 0);
-      
-      // Show enhanced preview modal
-      showLabExtractionPreview(data);
-      
-    } catch (e) {
-      console.error('❌ Lab extraction error:', e);
-      console.error('❌ Error name:', e.name);
-      console.error('❌ Error message:', e.message);
-      state.isAnalyzingLab = false;
-      hideLabLoader();
-      toast('Extraction failed: ' + (e.message || 'check connection'), true);
-      renderProfileLabs();
+    };
+
+    console.log('📤 Sending multi-page request with', compressedBatch.length, 'images');
+
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('📥 Response status:', res.status);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('❌ HTTP Error:', res.status, errorText);
+      throw new Error('HTTP ' + res.status + ': ' + errorText.substring(0, 100));
     }
-  });
+
+    const data = await res.json();
+    console.log('📦 Extraction result:', data);
+
+    state.isAnalyzingLab = false;
+    hideLabLoader();
+
+    if (data.error || !data.labData) {
+      console.error('❌ Extraction error:', data.error);
+      let errorMsg = data.error || 'Extraction failed';
+      if (data.debug) {
+        const d = data.debug;
+        alert('DEBUG INFO:\n\nLength: ' + d.rawResponseLength + '\nFirst { at: ' + d.firstBraceAt + '\nLast } at: ' + d.lastBraceAt + '\n\nExtracted:\n' + d.extractedPreview + '\n\nRaw:\n' + d.rawResponsePreview);
+      }
+      toast(errorMsg.substring(0, 100), true);
+      renderProfileLabs();
+      return;
+    }
+
+    // 4. Store for preview before confirmation
+    state.pendingLabData = data.labData;
+    state.labExtractionConfidence = data.confidence || 0.8;
+    state.currentInteractionId = data.meta?.interactionId;
+
+    console.log('✅ Multi-page extraction successful!');
+    console.log('📊 Parameters found:', data.labData.parameters?.length || 0);
+    console.log('📅 Dates found:', data.labData.dates?.length || 0);
+
+    // Show enhanced preview modal with all images
+    showLabExtractionPreview(data);
+
+    if (fileArray.length > 1) {
+      toast(`✅ ${fileArray.length} pages analyzed and merged`, false);
+    }
+
+  } catch (e) {
+    console.error('❌ Lab extraction error:', e);
+    console.error('❌ Error name:', e.name);
+    console.error('❌ Error message:', e.message);
+    state.isAnalyzingLab = false;
+    hideLabLoader();
+    toast('Extraction failed: ' + (e.message || 'check connection'), true);
+    renderProfileLabs();
+  }
 }
 
 function showLabExtractionPreview(data) {
@@ -7018,8 +7061,20 @@ function showLabExtractionPreview(data) {
   
   let html = '';
   
-  // Image thumbnail section
-  if (state.pendingLabImage) {
+  // Image thumbnail section - supports multiple pages
+  if (state.pendingLabImages && state.pendingLabImages.length > 0) {
+    html += '<div class="preview-images">';
+    state.pendingLabImages.forEach((imgUrl, idx) => {
+      html += `
+        <div class="preview-thumb-wrapper">
+          <img src="${imgUrl}" class="preview-thumb" alt="Lab Image ${idx + 1}">
+          <div class="preview-thumb-badge">${idx + 1}</div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  } else if (state.pendingLabImage) {
+    // Fallback for single image (backward compatibility)
     html += `
       <div class="preview-images">
         <div class="preview-thumb-wrapper">
@@ -9087,7 +9142,7 @@ async function init() {
   $('profileSidebar').onclick = e => { const t = e.target.closest('.profile-nav-item'); if (t) showProfileTab(t.dataset.ptab); };
   $('statsBar').onclick = e => { const s = e.target.closest('.stat-card'); if (s) { state.currentFilter = s.dataset.filter; renderPatients(); } };
 
-  $('labFileInput').onchange = function() { if (this.files[0]) handleLabUpload(this.files[0]); this.value = ''; };
+  $('labFileInput').onchange = function() { if (this.files.length > 0) handleLabUpload(this.files); this.value = ''; };
   $('imagingFileInput').onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
   $('importFile').onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
 
