@@ -2509,9 +2509,16 @@ body {
 <p class="landing-version">🧠 AI-Powered • Drug Info • Lab Override • Discharge • v15.0</p>
 
 <!-- OnCall Assistant Button -->
-<a href="https://balhaddad-sys.github.io/Final-app/oncall_assistant.html" class="oncall-landing-btn">
+<a href="oncall_assistant.html" class="oncall-landing-btn">
   <span class="oncall-btn-icon">⚡</span>
   <span class="oncall-btn-text">OnCall Assistant</span>
+  <span class="oncall-btn-arrow">→</span>
+</a>
+
+<!-- AI Assistant Button -->
+<a href="ai_assistant.html" class="oncall-landing-btn" style="background:linear-gradient(135deg,#0f766e,#115e59);margin-top:10px">
+  <span class="oncall-btn-icon">🤖</span>
+  <span class="oncall-btn-text">AI Clinical Assistant</span>
   <span class="oncall-btn-arrow">→</span>
 </a>
 
@@ -10457,6 +10464,73 @@ window.saveLabOverride = function() {
   renderProfileLabs();
   closeModal('labOverrideModal');
   toast('Lab value updated');
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// MISSING UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+// Toggle search functionality (placeholder for now)
+window.toggleSearch = function() {
+  // Future implementation: toggle a search overlay
+  toast('Search feature coming soon!');
+};
+
+// Toggle manual mode for score calculator
+window.toggleManualMode = function() {
+  const manualFields = $('manualScoreFields');
+  const autoCalc = document.querySelector('.score-auto-calc');
+  
+  if (manualFields) {
+    if (manualFields.style.display === 'none') {
+      manualFields.style.display = 'block';
+      if (autoCalc) autoCalc.style.display = 'none';
+    } else {
+      manualFields.style.display = 'none';
+      if (autoCalc) autoCalc.style.display = 'block';
+    }
+  }
+};
+
+// Quick reject request without opening modal
+window.quickRejectRequest = async function(requestId) {
+  if (!confirm('Are you sure you want to reject this request?')) return;
+  
+  const req = state.unitRequests?.find(r => r.id === requestId);
+  if (!req) return;
+  
+  req.status = 'rejected';
+  req.rejectedAt = new Date().toISOString();
+  
+  // Save to cloud if API is configured
+  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
+    try {
+      await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
+      });
+    } catch (e) {
+      console.error('Failed to update request:', e);
+    }
+  }
+  
+  saveLocal();
+  renderUnitRequests();
+  toast('Request rejected');
+};
+
+// Clear patient labs
+window.clearPatientLabs = function() {
+  if (!confirm('Clear all lab data for this patient?')) return;
+  
+  const p = state.currentPatient;
+  if (!p) return;
+  
+  p.labData = null;
+  saveCloud();
+  renderProfileLabs();
+  toast('Lab data cleared');
 };
 
 // ═══════════════════════════════════════════════════════════════════
