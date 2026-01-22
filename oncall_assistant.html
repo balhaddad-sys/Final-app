@@ -133,6 +133,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .consult-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:400px){.consult-grid{grid-template-columns:1fr}}
 .consult-item{font-size:.8rem;padding:8px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border)}
+/* Handover Cards - Blue theme */
+.handover-card{border-left:4px solid #3b82f6;background:linear-gradient(to right,rgba(59,130,246,0.05),var(--bg-card))}
+.handover-card .tool-header{background:transparent}
+/* Consultation Section Intro */
+.consult-intro{font-size:.8rem;color:var(--text-muted);margin:-8px 0 16px;padding:10px 14px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(236,72,153,0.1));border-radius:10px;border-left:3px solid #8b5cf6}
+/* Consultation Cards - Distinct colored left borders */
+.consult-card{border-left:4px solid #8b5cf6}
+.consult-critical{border-left-color:#dc2626;background:linear-gradient(to right,rgba(220,38,38,0.03),var(--bg-card))}
+.consult-surgery{border-left-color:#059669;background:linear-gradient(to right,rgba(5,150,105,0.03),var(--bg-card))}
+.consult-cardio{border-left-color:#dc2626;background:linear-gradient(to right,rgba(220,38,38,0.03),var(--bg-card))}
+.consult-neuro{border-left-color:#ec4899;background:linear-gradient(to right,rgba(236,72,153,0.03),var(--bg-card))}
+.consult-gi{border-left-color:#f59e0b;background:linear-gradient(to right,rgba(245,158,11,0.03),var(--bg-card))}
+.consult-renal{border-left-color:#8b5cf6;background:linear-gradient(to right,rgba(139,92,246,0.03),var(--bg-card))}
+.consult-pulm{border-left-color:#06b6d4;background:linear-gradient(to right,rgba(6,182,212,0.03),var(--bg-card))}
+.consult-id{border-left-color:#84cc16;background:linear-gradient(to right,rgba(132,204,22,0.03),var(--bg-card))}
+/* Consult Icon Styles */
+.consult-icon-critical{background:linear-gradient(135deg,#dc2626,#991b1b)!important;color:#fff!important;border:none!important}
+.consult-icon-surgery{background:linear-gradient(135deg,#059669,#047857)!important;color:#fff!important;border:none!important}
+.consult-icon-cardio{background:linear-gradient(135deg,#dc2626,#be123c)!important;color:#fff!important;border:none!important}
+.consult-icon-neuro{background:linear-gradient(135deg,#ec4899,#db2777)!important;color:#fff!important;border:none!important}
+.consult-icon-gi{background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;border:none!important}
+.consult-icon-renal{background:linear-gradient(135deg,#8b5cf6,#7c3aed)!important;color:#fff!important;border:none!important}
+.consult-icon-pulm{background:linear-gradient(135deg,#06b6d4,#0891b2)!important;color:#fff!important;border:none!important}
+.consult-icon-id{background:linear-gradient(135deg,#84cc16,#65a30d)!important;color:#fff!important;border:none!important}
 </style>
 </head>
 <body>
@@ -381,10 +405,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- SBAR HANDOVER -->
-<div class="tool-card" data-category="handover">
+<div class="section-label" style="margin-top:12px;">📋 HANDOVER TOOLS</div>
+<div class="tool-card handover-card" data-category="handover">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">📋</div>
+<div class="tool-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;">📋</div>
 <div><div class="tool-title">SBAR Handover</div><div class="tool-subtitle">Structured communication</div></div>
 </div>
 <div class="tool-chevron">▼</div>
@@ -413,10 +438,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- SHIFT HANDOVER CHECKLIST -->
-<div class="tool-card" data-category="handover">
+<div class="tool-card handover-card" data-category="handover">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">✅</div>
+<div class="tool-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;">✅</div>
 <div><div class="tool-title">Shift Handover Checklist</div><div class="tool-subtitle">End-of-shift essentials</div></div>
 </div>
 <div class="tool-chevron">▼</div>
@@ -449,12 +474,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 </div>
 
+<!-- CONSULTATION SECTION -->
+<div class="section-label">📞 SPECIALTY CONSULTATIONS</div>
+<div class="consult-intro">Tap any specialty for what you need BEFORE calling</div>
+
 <!-- ICU CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-critical" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">🏥</div>
-<div><div class="tool-title">ICU Consultation<span class="tool-badge urgent">Critical</span></div><div class="tool-subtitle">What ICU needs to know</div></div>
+<div class="tool-icon consult-icon-critical">🏥</div>
+<div><div class="tool-title">ICU<span class="tool-badge urgent">Critical</span></div><div class="tool-subtitle">Intensive Care Unit</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -500,11 +529,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- SURGERY CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-surgery" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">🔪</div>
-<div><div class="tool-title">Surgery Consultation</div><div class="tool-subtitle">Surgical referral essentials</div></div>
+<div class="tool-icon consult-icon-surgery">🔪</div>
+<div><div class="tool-title">Surgery</div><div class="tool-subtitle">General Surgery</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -548,11 +577,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- CARDIOLOGY CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-cardio" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">❤️</div>
-<div><div class="tool-title">Cardiology Consultation</div><div class="tool-subtitle">Cardiac referral essentials</div></div>
+<div class="tool-icon consult-icon-cardio">❤️</div>
+<div><div class="tool-title">Cardiology</div><div class="tool-subtitle">Cardiac referral</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -606,11 +635,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- NEUROLOGY CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-neuro" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">🧠</div>
-<div><div class="tool-title">Neurology Consultation</div><div class="tool-subtitle">Neuro referral essentials</div></div>
+<div class="tool-icon consult-icon-neuro">🧠</div>
+<div><div class="tool-title">Neurology</div><div class="tool-subtitle">Neuro referral</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -655,11 +684,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- GI CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-gi" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">🔬</div>
-<div><div class="tool-title">GI Consultation</div><div class="tool-subtitle">GI referral essentials</div></div>
+<div class="tool-icon consult-icon-gi">🔬</div>
+<div><div class="tool-title">Gastroenterology</div><div class="tool-subtitle">GI referral</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -707,11 +736,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- NEPHROLOGY CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-renal" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">🫘</div>
-<div><div class="tool-title">Nephrology Consultation</div><div class="tool-subtitle">Renal referral essentials</div></div>
+<div class="tool-icon consult-icon-renal">🫘</div>
+<div><div class="tool-title">Nephrology</div><div class="tool-subtitle">Renal referral</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -754,11 +783,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- PULMONOLOGY CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-pulm" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">🫁</div>
-<div><div class="tool-title">Pulmonology Consultation</div><div class="tool-subtitle">Pulm referral essentials</div></div>
+<div class="tool-icon consult-icon-pulm">🫁</div>
+<div><div class="tool-title">Pulmonology</div><div class="tool-subtitle">Pulm referral</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -801,11 +830,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- INFECTIOUS DISEASE CONSULTATION -->
-<div class="tool-card" data-category="consult">
+<div class="tool-card consult-card consult-id" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
-<div class="tool-icon">🦠</div>
-<div><div class="tool-title">ID Consultation</div><div class="tool-subtitle">Infectious disease essentials</div></div>
+<div class="tool-icon consult-icon-id">🦠</div>
+<div><div class="tool-title">Infectious Disease</div><div class="tool-subtitle">ID referral</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
