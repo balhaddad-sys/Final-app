@@ -1,0 +1,714 @@
+<!-- 
+  ═══════════════════════════════════════════════════════════════════════════
+  MEDWARD PRO - INTERACTIVE GUIDED TOUR
+  ═══════════════════════════════════════════════════════════════════════════
+  
+  Add this code to your index.html (at the end, before </body>)
+  
+  The tour will automatically start for first-time users and guide them through:
+  1. Welcome introduction
+  2. Landing page - OnCall Assistant button
+  3. Landing page - AI Assistant button  
+  4. Creating/selecting a unit
+  5. Adding a patient
+  6. Patient tabs (Overview, Meds, Labs, etc.)
+  7. Medication scanner
+  8. Document upload
+  9. AI features
+  10. Completion
+  
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+<!-- Tour Styles -->
+<style id="tourStyles">
+/* Tour Overlay */
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 99998;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.tour-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Spotlight - highlights the target element */
+.tour-spotlight {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.85);
+  z-index: 99999;
+  pointer-events: none;
+  transition: all 0.4s ease;
+}
+
+.tour-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid #0A84FF;
+  border-radius: 14px;
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.02); }
+}
+
+/* Tooltip */
+.tour-tooltip {
+  position: fixed;
+  background: #1C1C1E;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 300px;
+  z-index: 100000;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: tooltip-appear 0.3s ease;
+}
+
+@keyframes tooltip-appear {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tooltip Arrow */
+.tour-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #1C1C1E;
+  border: 1px solid rgba(255,255,255,0.1);
+  transform: rotate(45deg);
+}
+
+.tour-tooltip.arrow-top::before {
+  top: -9px;
+  left: 50%;
+  margin-left: -8px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.tour-tooltip.arrow-bottom::before {
+  bottom: -9px;
+  left: 50%;
+  margin-left: -8px;
+  border-left: none;
+  border-top: none;
+}
+
+.tour-tooltip.arrow-left::before {
+  left: -9px;
+  top: 50%;
+  margin-top: -8px;
+  border-right: none;
+  border-top: none;
+}
+
+.tour-tooltip.arrow-right::before {
+  right: -9px;
+  top: 50%;
+  margin-top: -8px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.tour-step-indicator {
+  font-size: 12px;
+  color: #0A84FF;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tour-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.tour-desc {
+  font-size: 15px;
+  color: #98989F;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.tour-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.tour-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+
+.tour-btn:active { opacity: 0.8; }
+
+.tour-btn.secondary {
+  background: #2C2C2E;
+  color: #fff;
+}
+
+.tour-btn.primary {
+  background: #0A84FF;
+  color: #fff;
+}
+
+.tour-btn.success {
+  background: #30D158;
+  color: #fff;
+}
+
+/* Welcome Modal */
+.tour-welcome {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.tour-welcome.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tour-welcome-box {
+  background: #1C1C1E;
+  border-radius: 24px;
+  padding: 40px 32px;
+  max-width: 340px;
+  text-align: center;
+  animation: welcome-appear 0.4s ease;
+}
+
+@keyframes welcome-appear {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.tour-welcome-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #0A84FF, #BF5AF2);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 40px;
+}
+
+.tour-welcome-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.tour-welcome-desc {
+  font-size: 16px;
+  color: #98989F;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.tour-welcome-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  background: #0A84FF;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.tour-welcome-skip {
+  background: none;
+  border: none;
+  color: #98989F;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+/* Finger pointer animation */
+.tour-finger {
+  position: fixed;
+  font-size: 32px;
+  z-index: 100000;
+  pointer-events: none;
+  animation: tap 1s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+@keyframes tap {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.9) translateY(5px); }
+}
+
+/* Progress bar */
+.tour-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #2C2C2E;
+  z-index: 100002;
+}
+
+.tour-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0A84FF, #BF5AF2);
+  transition: width 0.3s ease;
+}
+
+/* Completion screen */
+.tour-complete {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 100001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.tour-complete.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tour-complete-check {
+  width: 100px;
+  height: 100px;
+  background: #30D158;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  margin-bottom: 32px;
+  animation: pop 0.5s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.tour-complete-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.tour-complete-desc {
+  font-size: 17px;
+  color: #98989F;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 280px;
+}
+
+.tour-complete-btn {
+  width: 100%;
+  max-width: 300px;
+  padding: 18px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #30D158;
+  color: #fff;
+}
+</style>
+
+<!-- Tour HTML -->
+<div class="tour-overlay" id="tourOverlay"></div>
+<div class="tour-spotlight" id="tourSpotlight"></div>
+<div class="tour-tooltip" id="tourTooltip"></div>
+<div class="tour-finger" id="tourFinger">👆</div>
+<div class="tour-progress" id="tourProgress"><div class="tour-progress-bar" id="tourProgressBar"></div></div>
+
+<!-- Welcome Modal -->
+<div class="tour-welcome" id="tourWelcome">
+  <div class="tour-welcome-box">
+    <div class="tour-welcome-icon">👋</div>
+    <h2 class="tour-welcome-title">Welcome to MedWard Pro!</h2>
+    <p class="tour-welcome-desc">Let's take a quick tour to help you get started with the app.</p>
+    <button class="tour-welcome-btn" onclick="Tour.start()">Start Tour</button>
+    <button class="tour-welcome-skip" onclick="Tour.skip()">Skip for now</button>
+  </div>
+</div>
+
+<!-- Completion Screen -->
+<div class="tour-complete" id="tourComplete">
+  <div class="tour-complete-check">✓</div>
+  <h2 class="tour-complete-title">You're All Set!</h2>
+  <p class="tour-complete-desc">You now know the basics. Explore and discover more features as you go!</p>
+  <button class="tour-complete-btn" onclick="Tour.finish()">Start Using MedWard Pro</button>
+</div>
+
+<!-- Tour Script -->
+<script>
+const Tour = {
+  currentStep: 0,
+  isActive: false,
+  
+  // ═══════════════════════════════════════════════════════════════
+  // TOUR STEPS - Customize these for your app
+  // ═══════════════════════════════════════════════════════════════
+  steps: [
+    {
+      // Step 1: OnCall Assistant Button
+      target: '.oncall-landing-btn',
+      title: '⚡ OnCall Assistant',
+      desc: 'Quick access to clinical protocols, drug dosing, and emergency guidelines. Perfect for on-call situations.',
+      position: 'bottom',
+      page: 'landing'
+    },
+    {
+      // Step 2: AI Assistant Button
+      target: '.ai-landing-btn',
+      title: '🤖 AI Assistant',
+      desc: 'Ask any clinical question and get evidence-based answers. Your AI-powered clinical consultant.',
+      position: 'bottom',
+      page: 'landing'
+    },
+    {
+      // Step 3: Unit Selection
+      target: '.units-grid, #unitsGrid',
+      title: '🏥 Your Units',
+      desc: 'Select a unit to see your patients. You can request access to new units anytime.',
+      position: 'top',
+      page: 'landing'
+    },
+    {
+      // Step 4: Patient List (after entering a unit)
+      target: '.patient-card, .patients-list',
+      title: '👥 Patient Cards',
+      desc: 'Tap any patient to see their full profile. Critical alerts are highlighted in red.',
+      position: 'bottom',
+      page: 'dashboard',
+      waitFor: '.patient-card'
+    },
+    {
+      // Step 5: Bottom Navigation
+      target: '.profile-nav, .bottom-nav',
+      title: '📱 Quick Navigation',
+      desc: 'Switch between Overview, Meds, History, Scores, Labs, and Imaging tabs.',
+      position: 'top',
+      page: 'profile'
+    },
+    {
+      // Step 6: Meds Tab
+      target: '[data-tab="meds"], .profile-nav-item:nth-child(2)',
+      title: '💊 Medications',
+      desc: 'View, add, and scan medications. Tap here to see the medication features.',
+      position: 'top',
+      page: 'profile',
+      action: 'Click to continue'
+    },
+    {
+      // Step 7: Medication Scanner
+      target: '.med-scan-btn, [onclick*="triggerMedScan"]',
+      title: '📷 Scan Medications',
+      desc: 'Point your camera at any pill bottle or medication list. AI identifies drugs instantly!',
+      position: 'bottom',
+      page: 'profile-meds'
+    },
+    {
+      // Step 8: Upload Medication List
+      target: '.upload-zone-compact, .meds-upload-zone',
+      title: '📋 Import Med Lists',
+      desc: 'Upload a photo of handwritten or printed medication lists. AI extracts all drugs automatically.',
+      position: 'bottom',
+      page: 'profile-meds'
+    },
+    {
+      // Step 9: History Tab
+      target: '[data-tab="history"], .profile-nav-item:nth-child(3)',
+      title: '📜 Clinical History',
+      desc: 'Tap here to upload and view clinical documents.',
+      position: 'top',
+      page: 'profile',
+      action: 'Click to continue'
+    },
+    {
+      // Step 10: Document Upload
+      target: '.upload-zone-compact, [onclick*="triggerHistoryUpload"]',
+      title: '📄 Smart Document Import',
+      desc: 'Upload EMR screenshots, notes, lab reports, or any clinical document. AI extracts diagnoses, medications, and findings.',
+      position: 'bottom',
+      page: 'profile-history'
+    },
+    {
+      // Step 11: Labs Tab
+      target: '[data-tab="labs"], .profile-nav-item:nth-child(5)',
+      title: '🧪 Lab Results',
+      desc: 'View and upload lab reports. AI analyzes values and alerts you to critical results.',
+      position: 'top',
+      page: 'profile',
+      action: 'Click to continue'
+    },
+    {
+      // Step 12: Lab Upload
+      target: '.lab-upload-area',
+      title: '📊 Upload Lab Reports',
+      desc: 'Take a photo of any lab report. AI extracts values and provides clinical interpretation.',
+      position: 'bottom',
+      page: 'profile-labs'
+    }
+  ],
+  
+  // ═══════════════════════════════════════════════════════════════
+  // INITIALIZATION
+  // ═══════════════════════════════════════════════════════════════
+  init() {
+    // Check if first time user
+    if (!localStorage.getItem('medward_tour_complete')) {
+      setTimeout(() => {
+        document.getElementById('tourWelcome').classList.add('active');
+      }, 1000);
+    }
+  },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // START TOUR
+  // ═══════════════════════════════════════════════════════════════
+  start() {
+    document.getElementById('tourWelcome').classList.remove('active');
+    document.getElementById('tourProgress').style.display = 'block';
+    this.isActive = true;
+    this.currentStep = 0;
+    this.showStep();
+  },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // SHOW CURRENT STEP
+  // ═══════════════════════════════════════════════════════════════
+  showStep() {
+    const step = this.steps[this.currentStep];
+    if (!step) {
+      this.complete();
+      return;
+    }
+    
+    // Update progress
+    const progress = ((this.currentStep + 1) / this.steps.length) * 100;
+    document.getElementById('tourProgressBar').style.width = progress + '%';
+    
+    // Find target element
+    const target = document.querySelector(step.target);
+    
+    if (!target) {
+      // Element not found, skip to next
+      console.log('Tour: Target not found:', step.target);
+      this.next();
+      return;
+    }
+    
+    // Show overlay
+    document.getElementById('tourOverlay').classList.add('active');
+    
+    // Position spotlight
+    const rect = target.getBoundingClientRect();
+    const spotlight = document.getElementById('tourSpotlight');
+    const padding = 8;
+    
+    spotlight.style.display = 'block';
+    spotlight.style.top = (rect.top - padding) + 'px';
+    spotlight.style.left = (rect.left - padding) + 'px';
+    spotlight.style.width = (rect.width + padding * 2) + 'px';
+    spotlight.style.height = (rect.height + padding * 2) + 'px';
+    
+    // Position tooltip
+    this.positionTooltip(step, rect);
+    
+    // Show finger pointer
+    const finger = document.getElementById('tourFinger');
+    finger.style.display = 'block';
+    finger.style.top = (rect.top + rect.height / 2 - 16) + 'px';
+    finger.style.left = (rect.left + rect.width / 2 - 16) + 'px';
+    
+    // Make target clickable
+    target.style.position = 'relative';
+    target.style.zIndex = '99999';
+    target.style.pointerEvents = 'auto';
+  },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // POSITION TOOLTIP
+  // ═══════════════════════════════════════════════════════════════
+  positionTooltip(step, targetRect) {
+    const tooltip = document.getElementById('tourTooltip');
+    const isLastStep = this.currentStep === this.steps.length - 1;
+    
+    tooltip.innerHTML = `
+      <div class="tour-step-indicator">Step ${this.currentStep + 1} of ${this.steps.length}</div>
+      <div class="tour-title">${step.title}</div>
+      <div class="tour-desc">${step.desc}</div>
+      <div class="tour-actions">
+        ${this.currentStep > 0 ? '<button class="tour-btn secondary" onclick="Tour.prev()">Back</button>' : ''}
+        <button class="tour-btn ${isLastStep ? 'success' : 'primary'}" onclick="Tour.next()">
+          ${isLastStep ? 'Finish' : (step.action || 'Next')}
+        </button>
+      </div>
+    `;
+    
+    tooltip.style.display = 'block';
+    tooltip.className = 'tour-tooltip';
+    
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const padding = 16;
+    let top, left;
+    
+    // Position based on preference
+    switch (step.position) {
+      case 'top':
+        top = targetRect.top - tooltipRect.height - padding - 20;
+        left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+        tooltip.classList.add('arrow-bottom');
+        break;
+      case 'bottom':
+        top = targetRect.bottom + padding + 20;
+        left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+        tooltip.classList.add('arrow-top');
+        break;
+      case 'left':
+        top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+        left = targetRect.left - tooltipRect.width - padding - 20;
+        tooltip.classList.add('arrow-right');
+        break;
+      case 'right':
+        top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+        left = targetRect.right + padding + 20;
+        tooltip.classList.add('arrow-left');
+        break;
+    }
+    
+    // Keep within viewport
+    left = Math.max(16, Math.min(left, window.innerWidth - tooltipRect.width - 16));
+    top = Math.max(16, Math.min(top, window.innerHeight - tooltipRect.height - 16));
+    
+    tooltip.style.top = top + 'px';
+    tooltip.style.left = left + 'px';
+  },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // NAVIGATION
+  // ═══════════════════════════════════════════════════════════════
+  next() {
+    this.hideStep();
+    this.currentStep++;
+    
+    if (this.currentStep >= this.steps.length) {
+      this.complete();
+    } else {
+      // Small delay for animation
+      setTimeout(() => this.showStep(), 300);
+    }
+  },
+  
+  prev() {
+    if (this.currentStep > 0) {
+      this.hideStep();
+      this.currentStep--;
+      setTimeout(() => this.showStep(), 300);
+    }
+  },
+  
+  hideStep() {
+    document.getElementById('tourOverlay').classList.remove('active');
+    document.getElementById('tourSpotlight').style.display = 'none';
+    document.getElementById('tourTooltip').style.display = 'none';
+    document.getElementById('tourFinger').style.display = 'none';
+    
+    // Reset target z-index
+    const step = this.steps[this.currentStep];
+    if (step) {
+      const target = document.querySelector(step.target);
+      if (target) {
+        target.style.zIndex = '';
+        target.style.pointerEvents = '';
+      }
+    }
+  },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // COMPLETE / SKIP
+  // ═══════════════════════════════════════════════════════════════
+  complete() {
+    this.hideStep();
+    document.getElementById('tourProgress').style.display = 'none';
+    document.getElementById('tourComplete').classList.add('active');
+    this.isActive = false;
+  },
+  
+  skip() {
+    document.getElementById('tourWelcome').classList.remove('active');
+    localStorage.setItem('medward_tour_complete', 'true');
+  },
+  
+  finish() {
+    document.getElementById('tourComplete').classList.remove('active');
+    localStorage.setItem('medward_tour_complete', 'true');
+  },
+  
+  // ═══════════════════════════════════════════════════════════════
+  // RESTART TOUR (can be called from settings)
+  // ═══════════════════════════════════════════════════════════════
+  restart() {
+    localStorage.removeItem('medward_tour_complete');
+    document.getElementById('tourWelcome').classList.add('active');
+  }
+};
+
+// Initialize tour when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => Tour.init());
+} else {
+  Tour.init();
+}
+
+// Expose restart function globally
+window.restartTour = () => Tour.restart();
+</script>
