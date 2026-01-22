@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="theme-color" content="#005eb8">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>MedWard Pro v15</title>
+<title>MedWard Pro v16</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1534,6 +1534,45 @@ body {
 }
 .meds-quick-btn:hover{border-color:rgba(167,139,250,0.4);color:#a78bfa;background:linear-gradient(145deg,#131c33,#1a2540)}
 
+/* Medication Scanner */
+.med-scan-btn{background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;border:none;padding:14px 16px;border-radius:12px;font-weight:600;font-size:0.82rem;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.med-scan-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,0.3)}
+.med-scan-btn:active{transform:scale(0.97)}
+#medScanModal .modal-box{max-width:520px;border-radius:20px;max-height:90vh;overflow-y:auto}
+.med-scan-preview{width:100%;max-height:180px;object-fit:contain;border-radius:12px;margin-bottom:16px;background:#1a1a2e}
+.med-scan-result{background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.1));border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:16px;margin-bottom:16px}
+.med-scan-drug-name{font-size:1.3rem;font-weight:700;color:var(--primary);margin-bottom:4px}
+.med-scan-brand{font-size:0.9rem;color:var(--text-muted);font-style:italic;margin-bottom:12px}
+.med-scan-details{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.med-scan-detail{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:8px}
+.med-scan-detail-label{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px}
+.med-scan-detail-value{font-size:0.9rem;font-weight:600;color:var(--text)}
+.med-scan-confidence{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.confidence-bar{flex:1;height:6px;background:var(--bg-hover);border-radius:3px;overflow:hidden}
+.confidence-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+.confidence-fill.high{background:var(--emerald)}
+.confidence-fill.medium{background:var(--warning)}
+.confidence-fill.low{background:var(--danger)}
+.med-scan-actions{display:flex;gap:10px;margin-top:16px}
+.med-scan-actions .btn{flex:1}
+.med-scan-loading{text-align:center;padding:40px 20px}
+.med-scan-error{background:var(--danger-bg);color:var(--danger-text);padding:16px;border-radius:12px;text-align:center}
+
+/* Multi-medication scan results */
+.med-scan-type-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(139,92,246,0.15);border-radius:20px;font-size:0.75rem;font-weight:600;color:#a78bfa;margin-bottom:16px}
+.med-scan-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.med-scan-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px}
+.med-scan-item-check{width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.med-scan-item-check.checked{background:var(--primary);border-color:var(--primary)}
+.med-scan-item-check.checked::after{content:'✓';color:white;font-size:12px;font-weight:bold}
+.med-scan-item-info{flex:1;min-width:0}
+.med-scan-item-name{font-weight:600;color:var(--text);font-size:0.95rem}
+.med-scan-item-details{font-size:0.8rem;color:var(--text-muted);margin-top:2px}
+.med-scan-item-btn{padding:6px 10px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:6px;color:#60a5fa;font-size:0.75rem;cursor:pointer;transition:all 0.2s}
+.med-scan-item-btn:hover{background:rgba(59,130,246,0.2);border-color:#60a5fa}
+.med-scan-select-all{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:12px;cursor:pointer}
+.med-scan-select-all span{font-size:0.85rem;color:var(--text-muted)}
+
 /* List Header */
 .meds-list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .meds-list-title{font-size:0.75rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em}
@@ -2509,16 +2548,9 @@ body {
 <p class="landing-version">🧠 AI-Powered • Drug Info • Lab Override • Discharge • v15.0</p>
 
 <!-- OnCall Assistant Button -->
-<a href="oncall_assistant.html" class="oncall-landing-btn">
+<a href="https://balhaddad-sys.github.io/Final-app/oncall_assistant.html" class="oncall-landing-btn">
   <span class="oncall-btn-icon">⚡</span>
   <span class="oncall-btn-text">OnCall Assistant</span>
-  <span class="oncall-btn-arrow">→</span>
-</a>
-
-<!-- AI Assistant Button -->
-<a href="ai_assistant.html" class="oncall-landing-btn" style="background:linear-gradient(135deg,#0f766e,#115e59);margin-top:10px">
-  <span class="oncall-btn-icon">🤖</span>
-  <span class="oncall-btn-text">AI Clinical Assistant</span>
   <span class="oncall-btn-arrow">→</span>
 </a>
 
@@ -3298,6 +3330,27 @@ Request New Unit Access
 
 <div class="toast" id="toast"></div>
 <input type="file" id="labFileInput" accept="image/*" multiple style="display:none">
+<input type="file" id="medScanInput" accept="image/*" capture="environment" style="display:none">
+
+<!-- Medication Scan Modal -->
+<div class="modal" id="medScanModal">
+<div class="modal-box">
+<div class="modal-header">
+  <div class="drug-info-badge"><span>📷</span> AI Medication Scanner</div>
+  <div class="modal-title">Identify Medication</div>
+  <p class="drug-info-subtitle">Point camera at pill bottle, blister pack, or box</p>
+</div>
+<div class="modal-body" id="medScanBody">
+  <div style="text-align:center;padding:40px">
+    <div class="spinner"></div>
+    <p style="margin-top:16px;color:var(--text-muted)">Ready to scan...</p>
+  </div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary btn-full" onclick="closeModal('medScanModal')">Close</button>
+</div>
+</div>
+</div>
 
 <!-- Lab Override Modal -->
 <div class="modal" id="labOverrideModal">
@@ -5480,6 +5533,7 @@ function renderProfileMeds() {
       
       <!-- Quick Actions -->
       <div class="meds-quick-actions">
+        <button class="med-scan-btn" onclick="triggerMedScan()">📷 Scan Drug</button>
         <button class="meds-quick-btn" onclick="showAddMedForm()">+ Add Manually</button>
         <button class="meds-quick-btn" onclick="reconcileMeds()">⚖️ Reconcile</button>
       </div>
@@ -5691,6 +5745,326 @@ window.triggerMedsUpload = function() {
   input.onchange = e => handleMedsUpload(e.target.files[0]);
   input.click();
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// MEDICATION SCANNER - Camera-based drug identification
+// Supports: pill bottles, medication lists, prescriptions, lab reports
+// ═══════════════════════════════════════════════════════════════════
+
+state.scannedMeds = []; // Store scanned medications for selection
+
+window.triggerMedScan = function() {
+  $('medScanInput').click();
+};
+
+$('medScanInput').onchange = async function() {
+  if (!this.files || !this.files[0]) return;
+  
+  const file = this.files[0];
+  this.value = ''; // Reset for next use
+  
+  // Show modal with loading state
+  openModal('medScanModal');
+  $('medScanBody').innerHTML = `
+    <div class="med-scan-loading">
+      <div class="spinner"></div>
+      <p style="color:var(--text-muted);margin-top:12px">Analyzing image...</p>
+      <p style="color:var(--text-muted);font-size:0.8rem">Detecting medications, doses & schedules</p>
+    </div>
+  `;
+  
+  try {
+    // Compress image for upload
+    const base64Image = await new Promise((resolve, reject) => {
+      compressForAI(file).then(resolve).catch(reject);
+    });
+    state.medScanImage = base64Image;
+    
+    // Strip data URL prefix if present
+    const rawBase64 = base64Image.startsWith('data:') 
+      ? base64Image.split(',')[1] 
+      : base64Image;
+    
+    // Call the API
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'identifyMedication',
+        image: rawBase64
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to identify medications');
+    }
+    
+    // Store scanned meds and render
+    state.scannedMeds = (data.medications || []).map((m, i) => ({ ...m, selected: true, index: i }));
+    renderMedScanResult(data, base64Image);
+    
+  } catch (error) {
+    console.error('Med scan error:', error);
+    $('medScanBody').innerHTML = `
+      <div class="med-scan-error">
+        <p style="font-weight:600;margin-bottom:8px">❌ Analysis Failed</p>
+        <p style="font-size:0.85rem">${esc(error.message || 'Could not analyze image')}</p>
+        <button class="btn btn-secondary" style="margin-top:16px" onclick="triggerMedScan()">Try Again</button>
+      </div>
+    `;
+  }
+};
+
+function renderMedScanResult(data, imageUrl) {
+  const meds = data.medications || [];
+  const confidence = Math.round((data.confidence || 0) * 100);
+  const confidenceClass = confidence >= 80 ? 'high' : confidence >= 50 ? 'medium' : 'low';
+  const imageType = data.imageType || 'unknown';
+  
+  // Type badge labels
+  const typeLabels = {
+    'single_drug': '💊 Single Medication',
+    'medication_list': '📋 Medication List',
+    'prescription': '📝 Prescription',
+    'lab_report': '🔬 Lab Report',
+    'unknown': '📷 Scanned Image'
+  };
+  
+  let html = `
+    <img src="${imageUrl}" class="med-scan-preview" alt="Scanned image">
+    <div class="med-scan-type-badge">${typeLabels[imageType] || typeLabels.unknown} • ${meds.length} found</div>
+  `;
+  
+  // Confidence bar
+  html += `
+    <div class="med-scan-confidence" style="margin-bottom:16px;padding:0;border:none">
+      <span style="font-size:0.75rem;color:var(--text-muted)">Confidence:</span>
+      <div class="confidence-bar">
+        <div class="confidence-fill ${confidenceClass}" style="width:${confidence}%"></div>
+      </div>
+      <span style="font-size:0.8rem;font-weight:600">${confidence}%</span>
+    </div>
+  `;
+  
+  // Low confidence warning
+  if (confidence < 70) {
+    html += `
+      <div style="background:var(--warning-bg);color:var(--warning-text);padding:10px 12px;border-radius:10px;margin-bottom:16px;font-size:0.8rem">
+        ⚠️ Low confidence - please verify medications before adding
+      </div>
+    `;
+  }
+  
+  if (meds.length === 0) {
+    html += `
+      <div style="text-align:center;padding:30px;color:var(--text-muted)">
+        <p style="font-size:1.5rem;margin-bottom:8px">🤷</p>
+        <p>No medications detected in this image</p>
+        <button class="btn btn-secondary" style="margin-top:16px" onclick="triggerMedScan()">Try Another Image</button>
+      </div>
+    `;
+  } else if (meds.length === 1) {
+    // Single medication - show detailed view
+    const med = meds[0];
+    html += renderSingleMedResult(med, data.drugInfo);
+  } else {
+    // Multiple medications - show list with checkboxes
+    html += `
+      <div class="med-scan-select-all" onclick="toggleAllScannedMeds()">
+        <div class="med-scan-item-check ${state.scannedMeds.every(m => m.selected) ? 'checked' : ''}" id="selectAllCheck"></div>
+        <span>Select All (${meds.length} medications)</span>
+      </div>
+      <div class="med-scan-list">
+    `;
+    
+    meds.forEach((med, idx) => {
+      const details = [med.strength, med.frequency, med.route].filter(Boolean).join(' • ');
+      const drugNameEsc = (med.drugName || '').replace(/'/g, "\\'");
+      
+      html += `
+        <div class="med-scan-item">
+          <div class="med-scan-item-check ${state.scannedMeds[idx]?.selected ? 'checked' : ''}" 
+               onclick="toggleScannedMed(${idx})"></div>
+          <div class="med-scan-item-info">
+            <div class="med-scan-item-name">${esc(med.drugName || 'Unknown')}</div>
+            ${details ? `<div class="med-scan-item-details">${esc(details)}</div>` : ''}
+            ${med.brandName ? `<div class="med-scan-item-details" style="font-style:italic">${esc(med.brandName)}</div>` : ''}
+          </div>
+          <button class="med-scan-item-btn" onclick="openDrugInfo('${drugNameEsc}')">Info</button>
+        </div>
+      `;
+    });
+    
+    html += `</div>`;
+    
+    // Action buttons for multiple meds
+    html += `
+      <div class="med-scan-actions">
+        <button class="btn btn-primary" onclick="addSelectedScannedMeds()">
+          ✓ Add Selected (${state.scannedMeds.filter(m => m.selected).length})
+        </button>
+        <button class="btn btn-secondary" onclick="triggerMedScan()">📷 Rescan</button>
+      </div>
+    `;
+  }
+  
+  // Notes from AI
+  if (data.notes) {
+    html += `
+      <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;font-size:0.8rem;color:var(--text-muted)">
+        💡 ${esc(data.notes)}
+      </div>
+    `;
+  }
+  
+  $('medScanBody').innerHTML = html;
+}
+
+function renderSingleMedResult(med, drugInfo) {
+  const drugNameEsc = (med.drugName || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  const strengthEsc = (med.strength || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  
+  let html = `
+    <div class="med-scan-result">
+      <div class="med-scan-drug-name">${esc(med.drugName || 'Unknown')}</div>
+      ${med.brandName ? `<div class="med-scan-brand">${esc(med.brandName)}</div>` : ''}
+      
+      <div class="med-scan-details">
+        ${med.strength ? `
+          <div class="med-scan-detail">
+            <div class="med-scan-detail-label">Strength</div>
+            <div class="med-scan-detail-value">${esc(med.strength)}</div>
+          </div>
+        ` : ''}
+        ${med.form ? `
+          <div class="med-scan-detail">
+            <div class="med-scan-detail-label">Form</div>
+            <div class="med-scan-detail-value">${esc(med.form)}</div>
+          </div>
+        ` : ''}
+        ${med.frequency ? `
+          <div class="med-scan-detail">
+            <div class="med-scan-detail-label">Frequency</div>
+            <div class="med-scan-detail-value">${esc(med.frequency)}</div>
+          </div>
+        ` : ''}
+        ${med.route ? `
+          <div class="med-scan-detail">
+            <div class="med-scan-detail-label">Route</div>
+            <div class="med-scan-detail-value">${esc(med.route)}</div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+    
+    <div class="med-scan-actions">
+      <button class="btn btn-primary" onclick="useMedScanResult('${drugNameEsc}', '${strengthEsc}', '${esc(med.frequency || '')}', '${esc(med.route || '')}')">
+        ✓ Add to Patient
+      </button>
+      <button class="btn btn-info" onclick="openDrugInfo('${drugNameEsc}')">
+        📚 Drug Info
+      </button>
+    </div>
+  `;
+  
+  // Show drug info preview if available
+  if (drugInfo) {
+    html += `
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Quick Info</div>
+        <div style="font-size:0.85rem;color:var(--text);font-weight:600">${esc(drugInfo.drugClass || '')}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">${esc((drugInfo.mechanism || '').substring(0, 150))}${(drugInfo.mechanism || '').length > 150 ? '...' : ''}</div>
+      </div>
+    `;
+  }
+  
+  return html;
+}
+
+window.toggleScannedMed = function(idx) {
+  if (state.scannedMeds[idx]) {
+    state.scannedMeds[idx].selected = !state.scannedMeds[idx].selected;
+    // Re-render just the checkboxes
+    const items = document.querySelectorAll('.med-scan-item-check');
+    if (items[idx + 1]) { // +1 because first is select-all
+      items[idx + 1].classList.toggle('checked', state.scannedMeds[idx].selected);
+    }
+    // Update select-all state
+    const allSelected = state.scannedMeds.every(m => m.selected);
+    const selectAll = $('selectAllCheck');
+    if (selectAll) selectAll.classList.toggle('checked', allSelected);
+    // Update button count
+    const btn = document.querySelector('.med-scan-actions .btn-primary');
+    if (btn) btn.textContent = `✓ Add Selected (${state.scannedMeds.filter(m => m.selected).length})`;
+  }
+};
+
+window.toggleAllScannedMeds = function() {
+  const allSelected = state.scannedMeds.every(m => m.selected);
+  state.scannedMeds.forEach(m => m.selected = !allSelected);
+  // Re-render checkboxes
+  document.querySelectorAll('.med-scan-item-check').forEach((el, idx) => {
+    el.classList.toggle('checked', !allSelected);
+  });
+  // Update button count
+  const btn = document.querySelector('.med-scan-actions .btn-primary');
+  if (btn) btn.textContent = `✓ Add Selected (${state.scannedMeds.filter(m => m.selected).length})`;
+};
+
+window.addSelectedScannedMeds = function() {
+  const selected = state.scannedMeds.filter(m => m.selected);
+  if (selected.length === 0) {
+    toast('No medications selected', true);
+    return;
+  }
+  
+  const p = state.currentPatient;
+  if (!p.medications) p.medications = [];
+  
+  selected.forEach(med => {
+    p.medications.push({
+      name: med.drugName || 'Unknown',
+      dose: med.strength || '',
+      route: med.route || 'PO',
+      frequency: med.frequency || 'OD',
+      indication: med.indication || '',
+      generic: med.brandName ? med.drugName : '',
+      status: 'new',
+      addedDate: new Date().toISOString(),
+      source: 'scan'
+    });
+  });
+  
+  saveCloud();
+  renderProfileMeds();
+  closeModal('medScanModal');
+  toast(`✓ ${selected.length} medication(s) added`);
+};
+
+window.useMedScanResult = function(drugName, strength, frequency, route) {
+  closeModal('medScanModal');
+  
+  // Pre-fill the add medication form
+  showAddMedForm();
+  
+  setTimeout(() => {
+    const nameInput = $('medNameNew');
+    const doseInput = $('medDoseNew');
+    const freqInput = $('medFreqNew');
+    const routeInput = $('medRouteNew');
+    
+    if (nameInput) nameInput.value = drugName;
+    if (doseInput && strength) doseInput.value = strength;
+    if (freqInput && frequency) freqInput.value = frequency;
+    if (routeInput && route) routeInput.value = route;
+    
+    toast('📷 Medication scanned - complete the details');
+  }, 100);
+};
+
+// ═══════════════════════════════════════════════════════════════════
 
 async function handleMedsUpload(file) {
   if (!file) return;
@@ -10464,73 +10838,6 @@ window.saveLabOverride = function() {
   renderProfileLabs();
   closeModal('labOverrideModal');
   toast('Lab value updated');
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// MISSING UTILITY FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════
-
-// Toggle search functionality (placeholder for now)
-window.toggleSearch = function() {
-  // Future implementation: toggle a search overlay
-  toast('Search feature coming soon!');
-};
-
-// Toggle manual mode for score calculator
-window.toggleManualMode = function() {
-  const manualFields = $('manualScoreFields');
-  const autoCalc = document.querySelector('.score-auto-calc');
-  
-  if (manualFields) {
-    if (manualFields.style.display === 'none') {
-      manualFields.style.display = 'block';
-      if (autoCalc) autoCalc.style.display = 'none';
-    } else {
-      manualFields.style.display = 'none';
-      if (autoCalc) autoCalc.style.display = 'block';
-    }
-  }
-};
-
-// Quick reject request without opening modal
-window.quickRejectRequest = async function(requestId) {
-  if (!confirm('Are you sure you want to reject this request?')) return;
-  
-  const req = state.unitRequests?.find(r => r.id === requestId);
-  if (!req) return;
-  
-  req.status = 'rejected';
-  req.rejectedAt = new Date().toISOString();
-  
-  // Save to cloud if API is configured
-  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
-    try {
-      await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
-      });
-    } catch (e) {
-      console.error('Failed to update request:', e);
-    }
-  }
-  
-  saveLocal();
-  renderUnitRequests();
-  toast('Request rejected');
-};
-
-// Clear patient labs
-window.clearPatientLabs = function() {
-  if (!confirm('Clear all lab data for this patient?')) return;
-  
-  const p = state.currentPatient;
-  if (!p) return;
-  
-  p.labData = null;
-  saveCloud();
-  renderProfileLabs();
-  toast('Lab data cleared');
 };
 
 // ═══════════════════════════════════════════════════════════════════
