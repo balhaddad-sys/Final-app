@@ -1143,7 +1143,7 @@ body {
   margin-bottom:16px;transition:all 0.15s
 }
 .history-upload-area:active{background:var(--bg-elevated);border-color:var(--primary)}
-.clinical-notes-list{display:flex;flex-direction:column;gap:12px}
+.clinical-notes-list{display:flex;flex-direction:column;gap:10px}
 .clinical-note-card{
   background:var(--bg-surface);border:1px solid var(--border);
   border-radius:10px;overflow:hidden
@@ -1153,10 +1153,10 @@ body {
   padding:10px 12px;background:var(--bg-app);
   border-bottom:1px solid var(--border)
 }
-.clinical-note-type{font-size:0.8rem;font-weight:600;color:var(--text-main)}
-.clinical-note-date{font-size:0.7rem;color:var(--text-secondary)}
+.clinical-note-type{font-size:0.75rem;font-weight:600;color:var(--text-main);display:flex;align-items:center;gap:6px}
+.clinical-note-date{font-size:0.68rem;color:var(--text-secondary)}
 .clinical-note-image{
-  width:100%;max-height:200px;object-fit:cover;cursor:pointer;
+  width:100%;max-height:120px;object-fit:cover;cursor:pointer;
   border-bottom:1px solid rgba(255,255,255,0.04)
 }
 .clinical-note-ai{
@@ -1164,19 +1164,42 @@ body {
   border-bottom:1px solid rgba(255,255,255,0.04)
 }
 .clinical-note-ai-badge{
-  font-size:0.65rem;font-weight:600;color:#3fb950;
+  font-size:0.62rem;font-weight:600;color:#3fb950;
   margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px
 }
-.clinical-note-ai-text{font-size:0.82rem;color:#c9d1d9;line-height:1.4}
-.clinical-note-text{padding:12px;font-size:0.85rem;color:#c9d1d9;line-height:1.5;white-space:pre-wrap}
-.clinical-note-author{padding:0 12px 10px;font-size:0.72rem;color:#8b949e;font-style:italic}
+.clinical-note-ai-text{
+  font-size:0.78rem;color:#c9d1d9;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+  overflow:hidden;text-overflow:ellipsis
+}
+.clinical-note-ai-text.expanded{-webkit-line-clamp:unset;display:block}
+.clinical-note-expand{
+  font-size:0.7rem;color:#3fb950;cursor:pointer;margin-top:6px;
+  font-weight:500;display:inline-block
+}
+.clinical-note-expand:hover{text-decoration:underline}
+.clinical-note-text{padding:10px 12px;font-size:0.8rem;color:#c9d1d9;line-height:1.4;white-space:pre-wrap}
+.clinical-note-author{padding:0 12px 8px;font-size:0.68rem;color:#8b949e;font-style:italic}
+.clinical-note-extracted{padding:8px 12px;border-top:1px solid rgba(255,255,255,0.04)}
+.clinical-note-extracted-title{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.clinical-note-extracted-content{font-size:0.75rem;line-height:1.3}
 .btn-icon-sm{
   background:transparent;border:none;padding:4px;
-  font-size:0.85rem;cursor:pointer;opacity:0.6;transition:opacity 0.15s
+  font-size:0.8rem;cursor:pointer;opacity:0.6;transition:opacity 0.15s
 }
 .btn-icon-sm:hover{opacity:1}
 .btn-danger{background:#da3633!important;border-color:#da3633!important;color:#fff!important}
 .btn-danger:hover{background:#f85149!important}
+
+/* History/Meds upload loading state */
+.upload-zone-compact.analyzing{
+  border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.05);
+  pointer-events:none
+}
+.upload-zone-compact .upload-spinner{
+  width:20px;height:20px;border:2px solid rgba(251,191,36,0.3);
+  border-top-color:#fbbf24;border-radius:50%;animation:spin 1s linear infinite
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    MEDICATIONS - PRISTINE PHARMACEUTICAL DESIGN
@@ -5552,11 +5575,11 @@ function renderProfileMeds() {
   let html = `
     <div class="meds-container">
       <!-- Compact Upload Zone -->
-      <div class="upload-zone-compact ${state.isAnalyzingMeds ? 'analyzing' : ''}" onclick="triggerMedsUpload()" style="margin-bottom:12px">
+      <div class="upload-zone-compact ${state.isAnalyzingMeds ? 'analyzing' : ''}" onclick="${state.isAnalyzingMeds ? '' : 'triggerMedsUpload()'}" style="margin-bottom:12px">
         ${state.isAnalyzingMeds ? `
-          <div class="upload-icon">⏳</div>
+          <div class="upload-spinner"></div>
           <div class="meds-upload-content">
-            <div class="upload-text">Analyzing...</div>
+            <div class="upload-text">Analyzing medications...</div>
           </div>
         ` : `
           <div class="upload-icon">📋</div>
@@ -7713,19 +7736,25 @@ function renderProfileHistory() {
         <button class="btn btn-primary btn-sm" onclick="addClinicalNote()">+ Add Note</button>
       </div>
       <div class="section-body">
-        <!-- Compact upload zone -->
-        <div class="upload-zone-compact" onclick="triggerHistoryUpload()" style="margin-bottom:12px">
-          <div class="upload-icon">📄</div>
-          <div class="meds-upload-content">
-            <div class="upload-text">Upload Document</div>
-            <div class="upload-hint">EMR screenshot, progress note, consult, lab report, echo, MRI...</div>
-          </div>
+        <!-- Compact upload zone with loading state -->
+        <div class="upload-zone-compact ${state.isAnalyzingHistory ? 'analyzing' : ''}" onclick="${state.isAnalyzingHistory ? '' : 'triggerHistoryUpload()'}" style="margin-bottom:12px">
+          ${state.isAnalyzingHistory ? `
+            <div class="upload-spinner"></div>
+            <div class="meds-upload-content">
+              <div class="upload-text">Analyzing document...</div>
+            </div>
+          ` : `
+            <div class="upload-icon">📄</div>
+            <div class="meds-upload-content">
+              <div class="upload-text">Upload Document</div>
+              <div class="upload-hint">EMR screenshot, note, lab, echo, MRI...</div>
+            </div>
+          `}
         </div>
   `;
   
   if (!p.clinicalNotes.length) {
-    html += `<div style="text-align:center;padding:20px;color:#8b949e">
-      <div style="font-size:1.3rem;margin-bottom:6px">📝</div>
+    html += `<div style="text-align:center;padding:16px;color:#8b949e">
       <div style="font-size:0.85rem">No clinical notes yet</div>
     </div>`;
   } else {
@@ -7734,43 +7763,49 @@ function renderProfileHistory() {
     p.clinicalNotes.slice().reverse().forEach((note, idx) => {
       const realIdx = p.clinicalNotes.length - 1 - idx;
       const typeIcons = { 
-        progress: '📝', consult: '👨‍⚕️', referral: '📤', discharge: '🏥', 
+        progress: '📝', progress_note: '📝', consult: '👨‍⚕️', referral: '📤', discharge: '🏥', 
         imaging: '🩻', lab_report: '🔬', echo: '❤️', holter: '💓',
         radiology: '📷', emr_screenshot: '🖥️', medication_list: '💊', other: '📄' 
       };
       const icon = typeIcons[note.type] || '📄';
+      const typeName = (note.type || 'Note').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      // Truncate summary for display
+      const summaryId = 'summary_' + realIdx;
+      const hasSummary = note.aiSummary && note.aiSummary.length > 0;
+      const summaryLong = note.aiSummary && note.aiSummary.length > 200;
       
       html += `
         <div class="clinical-note-card">
           <div class="clinical-note-header">
-            <div class="clinical-note-type">${icon} ${(note.type || 'Note').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
-            <div style="display:flex;align-items:center;gap:8px">
+            <div class="clinical-note-type">${icon} ${typeName}</div>
+            <div style="display:flex;align-items:center;gap:6px">
               <span class="clinical-note-date">${formatDateTime(note.date)}</span>
               <button class="btn-icon-sm" onclick="deleteClinicalNote(${realIdx})" title="Delete">🗑️</button>
             </div>
           </div>
           ${note.image ? `<img src="${note.image}" class="clinical-note-image" onclick="viewNoteImage(${realIdx})">` : ''}
-          ${note.aiSummary ? `
+          ${hasSummary ? `
             <div class="clinical-note-ai">
               <div class="clinical-note-ai-badge">🤖 AI Summary</div>
-              <div class="clinical-note-ai-text">${esc(note.aiSummary)}</div>
+              <div class="clinical-note-ai-text" id="${summaryId}">${esc(note.aiSummary)}</div>
+              ${summaryLong ? `<span class="clinical-note-expand" onclick="toggleSummary('${summaryId}', this)">Show more</span>` : ''}
             </div>
           ` : ''}
           ${note.diagnoses?.length ? `
-            <div style="margin:8px 0;padding:8px;background:rgba(239,68,68,0.1);border-radius:8px">
-              <div style="font-size:0.7rem;color:#f87171;font-weight:600;margin-bottom:4px">📋 DIAGNOSES</div>
-              <div style="font-size:0.8rem;color:#fca5a5">${note.diagnoses.map(d => esc(d)).join(' • ')}</div>
+            <div class="clinical-note-extracted" style="background:rgba(239,68,68,0.06)">
+              <div class="clinical-note-extracted-title" style="color:#f87171">📋 Diagnoses</div>
+              <div class="clinical-note-extracted-content" style="color:#fca5a5">${note.diagnoses.map(d => esc(d)).join(' • ')}</div>
             </div>
           ` : ''}
           ${note.medsExtracted?.length ? `
-            <div style="margin:8px 0;padding:8px;background:rgba(139,92,246,0.1);border-radius:8px">
-              <div style="font-size:0.7rem;color:#a78bfa;font-weight:600;margin-bottom:4px">💊 MEDICATIONS (${note.medsExtracted.length})</div>
-              <div style="font-size:0.75rem;color:#c4b5fd">${note.medsExtracted.slice(0,5).map(m => esc(m.name + (m.dose ? ' ' + m.dose : ''))).join(', ')}${note.medsExtracted.length > 5 ? '...' : ''}</div>
-              <button class="btn btn-sm" style="margin-top:6px;padding:4px 10px;font-size:0.7rem" onclick="importMedsFromNote(${realIdx})">Import to Medications</button>
+            <div class="clinical-note-extracted" style="background:rgba(139,92,246,0.06)">
+              <div class="clinical-note-extracted-title" style="color:#a78bfa">💊 Medications (${note.medsExtracted.length})</div>
+              <div class="clinical-note-extracted-content" style="color:#c4b5fd">${note.medsExtracted.slice(0,4).map(m => esc(m.name + (m.dose ? ' ' + m.dose : ''))).join(', ')}${note.medsExtracted.length > 4 ? '...' : ''}</div>
+              <button class="btn btn-sm" style="margin-top:6px;padding:3px 8px;font-size:0.68rem" onclick="importMedsFromNote(${realIdx})">Import</button>
             </div>
           ` : ''}
           ${note.text ? `<div class="clinical-note-text">${esc(note.text)}</div>` : ''}
-          ${note.author ? `<div class="clinical-note-author">— ${esc(note.author)}</div>` : ''}
         </div>
       `;
     });
@@ -7781,6 +7816,15 @@ function renderProfileHistory() {
   html += `</div></div>`;
   $('profileHistory').innerHTML = html;
 }
+
+// Toggle summary expand/collapse
+window.toggleSummary = function(id, btn) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.toggle('expanded');
+    btn.textContent = el.classList.contains('expanded') ? 'Show less' : 'Show more';
+  }
+};
 
 window.addClinicalNote = function() {
   const type = prompt('Note type:\\n• progress\\n• consult\\n• referral\\n• discharge\\n• other') || 'progress';
@@ -7803,6 +7847,7 @@ window.addClinicalNote = function() {
 };
 
 window.triggerHistoryUpload = function() {
+  if (state.isAnalyzingHistory) return;
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
@@ -7813,7 +7858,8 @@ window.triggerHistoryUpload = function() {
 async function handleHistoryUpload(file) {
   if (!file) return;
   
-  toast('🔍 Analyzing document...', false, 10000);
+  state.isAnalyzingHistory = true;
+  renderProfileHistory();
   
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
@@ -7878,6 +7924,7 @@ async function handleHistoryUpload(file) {
       }
       
       saveCloud();
+      state.isAnalyzingHistory = false;
       renderProfileHistory();
       
       // Show what was extracted
@@ -7888,6 +7935,8 @@ async function handleHistoryUpload(file) {
       toast(msg);
       
     } catch (e) {
+      state.isAnalyzingHistory = false;
+      renderProfileHistory();
       console.error('Document analysis error:', e);
       toast('Failed to analyze document: ' + e.message, true);
     }
