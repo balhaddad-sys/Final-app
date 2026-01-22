@@ -11112,10 +11112,11 @@ window.saveLabOverride = function() {
 
 async function init() {
   // Check if user has seen onboarding - show to ALL users (new version flag)
-  const onboardingVersion = 'v2'; // Increment this to show onboarding to all users again
+  // Change this version string to force onboarding for all users again
+  const onboardingVersion = 'v3_professional'; // Updated to show new professional onboarding
   if (localStorage.getItem('medward_onboarding_version') !== onboardingVersion) {
-    // Redirect to onboarding demo
-    window.location.href = 'onboarding_demo.html';
+    // Redirect to onboarding
+    window.location.href = 'onboarding.html';
     return;
   }
   
