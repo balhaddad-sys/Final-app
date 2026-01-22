@@ -784,12 +784,37 @@ body {
 .import-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:10px;border-left:4px solid var(--teal)}
 .import-ward-select{padding:8px 12px;background:var(--bg-card);border:1px solid var(--primary);border-radius:8px;color:var(--primary);font-size:0.75rem;font-weight:600}
 #adminPanel{background:var(--bg)}
-.admin-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
-.admin-content{max-width:700px;margin:0 auto;padding:24px}
-.admin-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:24px;overflow:hidden}
-.units-table{width:100%;border-collapse:collapse}
-.units-table th,.units-table td{padding:16px;text-align:left;border-bottom:1px solid var(--border)}
-.units-table th{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase}
+.admin-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.admin-content{max-width:600px;margin:0 auto;padding:16px}
+.admin-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden}
+.admin-section .section-header{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.admin-section .section-title{font-weight:700;font-size:1rem}
+.admin-section .section-body{padding:16px}
+
+/* Admin Unit Cards - Mobile First */
+.admin-unit-card{display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:12px;border:1px solid var(--border);transition:all 0.2s}
+.admin-unit-card:last-child{margin-bottom:0}
+.admin-unit-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.admin-unit-main{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+.admin-unit-icon{font-size:2rem;flex-shrink:0;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--bg-card);border-radius:12px;border:1px solid var(--border)}
+.admin-unit-info{min-width:0;flex:1}
+.admin-unit-name{font-weight:700;font-size:1rem;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-unit-code{font-size:0.8rem;color:var(--text-muted)}
+.admin-unit-code code{background:var(--primary);color:#fff;padding:3px 10px;border-radius:6px;font-weight:600;font-size:0.85rem;letter-spacing:1px}
+.admin-unit-actions{display:flex;gap:8px;flex-shrink:0;margin-left:12px}
+.admin-action-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;color:var(--text-secondary)}
+.admin-action-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(0,94,184,0.05)}
+.admin-action-btn.delete:hover{border-color:var(--rose);color:var(--rose);background:rgba(244,63,94,0.05)}
+.admin-empty-state{text-align:center;padding:40px 20px}
+.admin-empty-icon{font-size:3rem;margin-bottom:12px;opacity:0.5}
+.admin-empty-text{font-weight:600;color:var(--text);margin-bottom:4px}
+.admin-empty-hint{font-size:0.85rem;color:var(--text-muted)}
+
+/* Admin Tabs - Improved Mobile */
+.admin-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:var(--radius-sm);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.admin-tab{flex:1;min-width:0;padding:12px 8px;background:transparent;border:none;border-radius:6px;color:var(--text-muted);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:4px}
+.admin-tab:hover{color:var(--text)}
+.admin-tab.active{background:var(--bg-card);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 @media(max-width:640px){
 .stats-grid{grid-template-columns:repeat(5,1fr);gap:6px}
 .stat-card{padding:10px 4px}
@@ -834,10 +859,6 @@ body {
 .request-card-message{background:var(--bg-card);padding:12px;border-radius:var(--radius-sm);font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px}
 .request-card-actions{display:flex;gap:8px}
 .request-card-time{font-size:0.75rem;color:var(--text-muted);position:absolute;top:16px;right:16px}
-.admin-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:var(--radius-sm)}
-.admin-tab{flex:1;padding:12px;background:transparent;border:none;border-radius:6px;color:var(--text-muted);font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s}
-.admin-tab:hover{color:var(--text)}
-.admin-tab.active{background:var(--bg-elevated);color:var(--gold)}
 .admin-tab-panel{display:none}
 .admin-tab-panel.active{display:block}
 .badge-count{background:var(--rose);color:#fff;padding:2px 8px;border-radius:100px;font-size:0.7rem;margin-left:8px}
@@ -2661,10 +2682,12 @@ Request New Unit Access
 <div class="page" id="adminPanel">
 <header class="admin-header">
 <div style="display:flex;align-items:center;gap:12px">
-<div class="dash-logo-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="2"/></svg></div>
-<span style="font-weight:700">Admin Dashboard</span>
+<div style="width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </div>
-<button class="btn btn-secondary btn-sm" onclick="exitAdmin()">← Exit</button>
+<span style="font-weight:700;font-size:1.1rem">Admin</span>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="exitAdmin()" style="padding:10px 16px;font-size:0.85rem">← Exit</button>
 </header>
 <div class="admin-content">
 <div class="admin-tabs" id="adminTabs">
@@ -2676,18 +2699,19 @@ Request New Unit Access
 <div class="admin-tab-panel active" id="adminUnits">
 <div class="admin-section">
 <div class="section-header"><div class="section-title">🏥 Manage Units</div><button class="btn btn-primary btn-sm" onclick="addUnit()">+ Add Unit</button></div>
-<table class="units-table"><thead><tr><th>Unit</th><th>Code</th><th>Actions</th></tr></thead><tbody id="unitsTable"></tbody></table>
+<div class="section-body" id="unitsTable"></div>
 </div>
 </div>
 
 <div class="admin-tab-panel" id="adminRequests">
 <div class="admin-section">
-<div class="section-header"><div class="section-title">📩 Unit Access Requests</div><button class="btn btn-secondary btn-sm" onclick="refreshRequests()">🔄 Refresh</button></div>
+<div class="section-header"><div class="section-title">📩 Requests</div><button class="btn btn-secondary btn-sm" onclick="refreshRequests()" style="padding:8px 12px;font-size:0.8rem">🔄 Refresh</button></div>
 <div class="section-body">
 <div class="requests-list" id="requestsList">
-<div style="text-align:center;padding:40px;color:var(--text-muted)">
-<div style="font-size:2rem;margin-bottom:12px">📭</div>
-<div>No pending requests</div>
+<div class="admin-empty-state">
+<div class="admin-empty-icon">📭</div>
+<div class="admin-empty-text">No pending requests</div>
+<div class="admin-empty-hint">Unit access requests will appear here</div>
 </div>
 </div>
 </div>
@@ -2696,20 +2720,19 @@ Request New Unit Access
 
 <div class="admin-tab-panel" id="adminSettings">
 <div class="admin-section">
-<div class="section-header"><div class="section-title">⚙️ System Settings</div></div>
+<div class="section-header"><div class="section-title">⚙️ Settings</div></div>
 <div class="section-body">
 <div class="form-group"><label class="form-label">Admin Password</label><input type="password" id="newAdminPwd" class="form-input" placeholder="Enter new password"></div>
 <div class="form-group">
-<label class="form-label">API Endpoint <span style="color:var(--emerald);font-size:0.75rem">(Hardcoded ✓)</span></label>
-<input type="text" id="apiUrl" class="form-input" readonly style="background:rgba(20,184,166,0.1);border-color:var(--emerald);color:var(--text-secondary)">
-<p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">API URL is hardcoded in the app for all users</p>
+<label class="form-label">API Endpoint <span style="color:var(--emerald);font-size:0.7rem;background:rgba(5,150,105,0.1);padding:2px 8px;border-radius:4px;margin-left:6px">Connected ✓</span></label>
+<input type="text" id="apiUrl" class="form-input" readonly style="background:var(--bg);font-size:0.8rem;color:var(--text-muted)">
 </div>
 <div class="form-group">
 <label class="form-label">💊 Drug Reference URL</label>
 <input type="text" id="drugRefUrl" class="form-input" placeholder="https://example.com/drug.html">
-<p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">URL for the "Learn More" button on medications. Leave empty to disable.</p>
+<p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">Optional: URL for medication info</p>
 </div>
-<button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+<button class="btn btn-primary" onclick="saveSettings()" style="width:100%;margin-top:8px">💾 Save Settings</button>
 </div>
 </div>
 </div>
@@ -4593,12 +4616,35 @@ function renderUnits() {
 }
 
 function renderUnitsTable() {
-  $('unitsTable').innerHTML = state.units.map(u => `
-    <tr>
-      <td><span style="font-size:1.25rem;margin-right:10px">${u.icon}</span><b>${esc(u.name)}</b></td>
-      <td><code style="background:var(--bg);padding:6px 14px;border-radius:8px">${u.code}</code></td>
-      <td><button class="btn btn-ghost btn-xs" onclick="editUnit('${u.id}')">✏️</button><button class="btn btn-ghost btn-xs" onclick="deleteUnit('${u.id}')">🗑️</button></td>
-    </tr>
+  const container = $('unitsTable');
+  if (!state.units || state.units.length === 0) {
+    container.innerHTML = `
+      <div class="admin-empty-state">
+        <div class="admin-empty-icon">🏥</div>
+        <div class="admin-empty-text">No units created yet</div>
+        <div class="admin-empty-hint">Click "+ Add Unit" to create your first unit</div>
+      </div>
+    `;
+    return;
+  }
+  container.innerHTML = state.units.map(u => `
+    <div class="admin-unit-card">
+      <div class="admin-unit-main">
+        <div class="admin-unit-icon">${u.icon || '🏥'}</div>
+        <div class="admin-unit-info">
+          <div class="admin-unit-name">${esc(u.name || 'Unnamed Unit')}</div>
+          <div class="admin-unit-code">Code: <code>${u.code || '----'}</code></div>
+        </div>
+      </div>
+      <div class="admin-unit-actions">
+        <button class="admin-action-btn edit" onclick="editUnit('${u.id}')" title="Edit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="admin-action-btn delete" onclick="deleteUnit('${u.id}')" title="Delete">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+    </div>
   `).join('');
 }
 
