@@ -4,1549 +4,781 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Antibiotic Guide</title>
+<title>Antibiotic Stewardship Guide</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-:root{--primary:#3b82f6;--primary-dark:#1d4ed8;--bg:#f3f4f6;--bg-card:#ffffff;--text-main:#0f172a;--text-secondary:#475569;--text-muted:#94a3b8;--border:#e2e8f0;--success:#059669;--success-light:#d1fae5;--danger:#dc2626;--danger-light:#fee2e2;--warning:#d97706;--warning-light:#fef3c7}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text-main);min-height:100vh;padding-bottom:100px;-webkit-font-smoothing:antialiased}
-.app-header{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 4px 12px rgba(59,130,246,0.3)}
-.header-row{display:flex;align-items:center;justify-content:space-between;max-width:600px;margin:0 auto}
-.header-brand{display:flex;align-items:center;gap:12px}
-.header-icon{width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
-.header-title{font-weight:700;font-size:1.1rem}
-.header-subtitle{font-size:0.75rem;opacity:0.9}
-.back-btn{width:44px;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:white;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.main-content{max-width:600px;margin:0 auto;padding:16px}
-.tabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
-.tab-btn{flex-shrink:0;padding:10px 16px;border:1px solid var(--border);background:var(--bg-card);border-radius:20px;font-size:0.85rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.2s}
-.tab-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
-.search-box{position:relative;margin-bottom:16px}
-.search-input{width:100%;padding:14px 16px 14px 44px;border:1px solid var(--border);border-radius:12px;font-size:16px;background:var(--bg-card);color:var(--text-main)}
-.search-input:focus{outline:none;border-color:var(--primary)}
-.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:1.1rem;color:var(--text-muted)}
-.drug-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.drug-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s}
-.drug-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
-.drug-card:active{transform:scale(0.98)}
-.drug-name{font-weight:700;font-size:0.95rem;color:var(--text-main);margin-bottom:4px}
-.drug-class{font-size:0.75rem;color:var(--text-muted)}
-.drug-spectrum{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
-.spectrum-tag{font-size:0.65rem;padding:2px 6px;border-radius:4px;background:#dbeafe;color:#1e40af}
-.spectrum-tag.gp{background:#dcfce7;color:#166534}
-.spectrum-tag.gn{background:#fef3c7;color:#92400e}
-.spectrum-tag.anaerobe{background:#f3e8ff;color:#7c3aed}
-.spectrum-tag.atypical{background:#fce7f3;color:#be185d}
-.detail-view{display:none}
-.detail-view.active{display:block}
-.drug-grid.hidden{display:none}
-.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-weight:600;font-size:0.9rem;margin-bottom:16px;cursor:pointer;padding:8px 0}
-.detail-header{background:var(--bg-card);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid var(--border)}
-.detail-drug-name{font-size:1.5rem;font-weight:800;color:var(--text-main);margin-bottom:4px}
-.detail-drug-class{font-size:0.9rem;color:var(--text-secondary);margin-bottom:12px}
-.detail-source{display:inline-block;font-size:0.7rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:4px 10px;border-radius:6px;font-weight:600}
-.section-card{background:var(--bg-card);border-radius:12px;margin-bottom:12px;border:1px solid var(--border);overflow:hidden}
-.section-header{padding:14px 16px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer}
-.section-icon{font-size:1.2rem}
-.section-title{font-weight:700;font-size:0.95rem;color:var(--text-main);flex:1}
-.section-chevron{color:var(--text-muted);transition:transform 0.2s}
-.section-card.expanded .section-chevron{transform:rotate(180deg)}
-.section-body{display:none;padding:16px}
-.section-card.expanded .section-body{display:block}
-.calc-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.calc-group{display:flex;flex-direction:column;gap:6px}
-.calc-label{font-size:0.75rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase}
-.calc-input{padding:12px;border:1px solid var(--border);border-radius:8px;font-size:16px;font-family:'JetBrains Mono',monospace}
-.calc-input:focus{outline:none;border-color:var(--primary)}
-.calc-select{padding:12px;border:1px solid var(--border);border-radius:8px;font-size:16px;background:white}
-.calc-btn{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;margin-top:8px}
-.calc-btn:active{transform:scale(0.98)}
-.dose-result{margin-top:16px;padding:16px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;border-left:4px solid var(--success)}
-.dose-result.warning{background:linear-gradient(135deg,#fef3c7,#fde68a);border-left-color:var(--warning)}
-.dose-result.danger{background:linear-gradient(135deg,#fee2e2,#fecaca);border-left-color:var(--danger)}
-.dose-title{font-weight:700;font-size:0.9rem;margin-bottom:8px}
-.dose-value{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:700;color:var(--success)}
-.dose-result.warning .dose-value{color:var(--warning)}
-.dose-result.danger .dose-value{color:var(--danger)}
-.dose-note{font-size:0.8rem;color:var(--text-secondary);margin-top:8px}
-.info-row{padding:12px 0;border-bottom:1px solid var(--border)}
-.info-row:last-child{border-bottom:none}
-.info-label{font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px}
-.info-value{font-size:0.9rem;color:var(--text-main);line-height:1.5}
-.warning-box{background:var(--danger-light);border-left:4px solid var(--danger);padding:12px 16px;border-radius:8px;margin-bottom:12px}
-.warning-box.caution{background:var(--warning-light);border-left-color:var(--warning)}
-.warning-title{font-weight:700;font-size:0.85rem;color:var(--danger);margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.warning-box.caution .warning-title{color:var(--warning)}
-.warning-text{font-size:0.8rem;color:var(--text-secondary);line-height:1.5}
-.indication-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
-.indication-item:last-child{border-bottom:none}
-.indication-text{font-size:0.85rem;color:var(--text-main)}
-.indication-dose{font-size:0.8rem;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;margin-top:4px}
-.renal-table{width:100%;border-collapse:collapse;font-size:0.85rem}
-.renal-table th{background:var(--bg);padding:10px 8px;text-align:left;font-weight:600;font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase}
-.renal-table td{padding:10px 8px;border-bottom:1px solid var(--border)}
-.renal-table tr:last-child td{border-bottom:none}
-.renal-gfr{font-weight:600;color:var(--primary)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;z-index:1000}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 20px;border-radius:12px;cursor:pointer;color:var(--text-muted);font-size:0.7rem;font-weight:600;text-decoration:none}
-.nav-item.active{color:var(--primary);background:rgba(59,130,246,0.1)}
-.nav-icon{font-size:1.3rem}
-.hidden{display:none!important}
-.interaction-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:0.75rem;font-weight:600;margin-right:6px;margin-bottom:6px}
-.interaction-badge.major{background:#fee2e2;color:#dc2626}
-.interaction-badge.moderate{background:#fef3c7;color:#d97706}
-.interaction-badge.minor{background:#dbeafe;color:#1d4ed8}
-.blackbox{background:linear-gradient(135deg,#1f2937,#111827);color:white;padding:12px 16px;border-radius:8px;margin-bottom:12px;border-left:4px solid #fbbf24}
-.blackbox-title{font-weight:700;font-size:0.85rem;color:#fbbf24;margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.blackbox-text{font-size:0.8rem;line-height:1.5;color:#e5e7eb}
+:root {
+  --primary: #005eb8;
+  --primary-dark: #003087;
+  --bg: #f3f4f6;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --success: #059669;
+  --danger: #dc2626;
+  --warning: #d97706;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.app-header {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+.header-title { font-weight: 700; font-size: 1.1rem; }
+.header-subtitle { font-size: 0.75rem; opacity: 0.9; }
+.back-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Disclaimer */
+.disclaimer {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-left: 4px solid #f59e0b;
+  margin: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #92400e;
+}
+.disclaimer strong { color: #78350f; }
+
+/* Main Content */
+.main-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* System Grid */
+.system-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.abx-tile {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.abx-tile:active { transform: scale(0.96); background: #f8fafc; }
+.abx-tile:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.abx-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+.abx-label { font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: block; }
+.abx-count { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+/* Detail View */
+.detail-view {
+  display: none;
+}
+.detail-view.active {
+  display: block;
+}
+.system-grid.hidden {
+  display: none;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  cursor: pointer;
+  padding: 8px 0;
+}
+.back-link:hover { text-decoration: underline; }
+
+.category-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+/* Protocol Card */
+.proto-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.proto-header {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.proto-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+.proto-source {
+  font-size: 0.65rem;
+  color: white;
+  font-weight: 600;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.proto-criteria {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border-bottom: 1px solid #fed7aa;
+  font-size: 0.85rem;
+  color: #9a3412;
+}
+.proto-criteria strong { color: #7c2d12; }
+
+.regimen-box {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.regimen-box:last-of-type {
+  border-bottom: none;
+}
+
+.regimen-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.tag-primary { background: #dcfce7; color: #166534; }
+.tag-allergy { background: #fee2e2; color: #991b1b; }
+.tag-alt { background: #dbeafe; color: #1e40af; }
+.tag-risk { background: #fef3c7; color: #92400e; }
+
+.regimen-drug {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.regimen-notes {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.proto-duration {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  font-size: 0.85rem;
+  color: #166534;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Search */
+.search-box {
+  margin: 16px 0;
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 16px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-family: inherit;
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-around;
+  z-index: 1000;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.nav-item:hover { color: var(--primary); }
+.nav-item.active { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.nav-icon { font-size: 1.3rem; }
+
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
+
 <header class="app-header">
-<div class="header-row">
-<div class="header-brand">
-<div class="header-icon">💊</div>
-<div>
-<div class="header-title">Antibiotic Guide</div>
-<div class="header-subtitle">UpToDate & IDSA 2024</div>
-</div>
-</div>
-<button class="back-btn" onclick="goBack()">✕</button>
-</div>
+  <div class="header-row">
+    <div class="header-brand">
+      <div class="header-icon">🛡️</div>
+      <div>
+        <div class="header-title">Antibiotic Stewardship</div>
+        <div class="header-subtitle">IDSA & UpToDate Guidelines</div>
+      </div>
+    </div>
+    <button class="back-btn" onclick="goBack()">✕</button>
+  </div>
 </header>
+
+<div class="disclaimer">
+  <strong>⚠️ Clinical Disclaimer:</strong> Always verify with your local hospital antibiogram and adjust for patient-specific factors (allergies, renal function, prior cultures).
+</div>
+
 <div class="main-content">
-<div class="tabs">
-<button class="tab-btn active" onclick="showTab('drugs',this)">💊 Antibiotics</button>
-<button class="tab-btn" onclick="showTab('calculator',this)">🧮 Dose Calculator</button>
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search conditions or antibiotics..." oninput="handleSearch()">
+  </div>
+
+  <div class="system-grid" id="systemGrid"></div>
+  
+  <div class="detail-view" id="detailView">
+    <div class="back-link" onclick="resetView()">← Back to Systems</div>
+    <h2 class="category-title" id="categoryTitle"></h2>
+    <div id="protocolList"></div>
+  </div>
+  
+  <div id="searchResults" class="hidden"></div>
 </div>
-<div id="tab-drugs">
-<div class="search-box">
-<span class="search-icon">🔍</span>
-<input type="text" class="search-input" id="drugSearch" placeholder="Search antibiotics..." oninput="filterDrugs()">
-</div>
-<div class="drug-grid" id="drugGrid"></div>
-<div class="detail-view" id="drugDetail"></div>
-</div>
-<div id="tab-calculator" class="hidden">
-<div class="section-card expanded">
-<div class="section-body">
-<div class="calc-group" style="margin-bottom:16px">
-<label class="calc-label">Select Antibiotic</label>
-<select class="calc-select" id="calcDrug" onchange="updateCalcInfo()">
-<option value="">-- Select --</option>
-</select>
-</div>
-<div id="calcDrugInfo"></div>
-<div class="calc-row">
-<div class="calc-group">
-<label class="calc-label">Weight (kg)</label>
-<input type="number" class="calc-input" id="calcWeight" placeholder="70">
-</div>
-<div class="calc-group">
-<label class="calc-label">CrCl/eGFR (mL/min)</label>
-<input type="number" class="calc-input" id="calcGFR" placeholder="90">
-</div>
-</div>
-<div class="calc-group">
-<label class="calc-label">Indication</label>
-<select class="calc-select" id="calcIndication">
-<option value="standard">Standard Infection</option>
-<option value="severe">Severe/Life-threatening</option>
-<option value="meningitis">CNS/Meningitis</option>
-</select>
-</div>
-<button class="calc-btn" onclick="calculateDose()">Calculate Dose</button>
-<div id="calcResult"></div>
-</div>
-</div>
-</div>
-</div>
+
 <nav class="bottom-nav">
-<a class="nav-item" href="index.html"><div class="nav-icon">🏠</div><span>Home</span></a>
-<div class="nav-item active"><div class="nav-icon">💊</div><span>Antibiotics</span></div>
-<a class="nav-item" href="oncall_assistant.html"><div class="nav-icon">⚡</div><span>OnCall</span></a>
+  <a class="nav-item" href="index.html"><div class="nav-icon">🏠</div><span>Home</span></a>
+  <div class="nav-item active"><div class="nav-icon">🛡️</div><span>Antibiotics</span></div>
+  <a class="nav-item" href="oncall_assistant.html"><div class="nav-icon">⚡</div><span>OnCall</span></a>
 </nav>
+
 <script>
-const ANTIBIOTICS = {
-  "Amoxicillin": {
-    class: "Penicillin", spectrum: ["gp", "gn"], spectrumDetail: "Strep, E. coli, H. flu, Listeria", source: "UpToDate 2024",
-    dosing: { standard: { dose: "500mg", freq: "q8h", route: "PO" }, high: { dose: "1g", freq: "q8h", route: "PO" }, pediatric: "25-50 mg/kg/day divided q8h" },
-    indications: [
-      { name: "Otitis Media", dose: "500-1000mg PO q8h x 5-7d" },
-      { name: "Sinusitis", dose: "500-1000mg PO q8h x 5-10d" },
-      { name: "Strep Pharyngitis", dose: "500mg PO q12h x 10d" },
-      { name: "H. pylori (triple)", dose: "1g PO BID x 14d" }
-    ],
-    renal: [{ gfr: ">30", dose: "No adjustment" }, { gfr: "10-30", dose: "250-500mg q12h" }, { gfr: "<10", dose: "250-500mg q24h" }, { gfr: "HD", dose: "250-500mg q24h, after HD" }],
-    contraindications: [{ type: "Absolute", text: "Anaphylaxis to penicillins" }, { type: "Relative", text: "Severe cephalosporin allergy (1-2% cross-reactivity)" }],
-    interactions: [{ drug: "Warfarin", severity: "moderate", effect: "↑ INR - monitor closely" }, { drug: "Methotrexate", severity: "major", effect: "↓ MTX clearance - avoid high-dose MTX" }, { drug: "Allopurinol", severity: "moderate", effect: "↑ rash risk" }],
-    precautions: ["Monitor for C. diff in prolonged use", "Mononucleosis: High risk of rash - avoid if suspected EBV", "Contains phenylalanine (chewable) - caution in PKU"],
-    pregnancy: "Category B - Safe", monitoring: "CBC if prolonged, renal function"
+/**
+ * ANTIBIOTIC STEWARDSHIP DATABASE
+ * Sources: IDSA Guidelines 2019-2023, UpToDate, BMJ Best Practice
+ */
+const ABX_PROTOCOLS = {
+  "Respiratory": {
+    icon: "🫁",
+    color: "#3b82f6",
+    conditions: [
+      {
+        name: "CAP - Ward Patient (Non-ICU)",
+        source: "IDSA/ATS 2019",
+        criteria: "No MRSA/Pseudomonas risk factors.",
+        regimens: [
+          { type: "Primary", drug: "Ceftriaxone 1g IV Daily + Azithromycin 500mg IV/PO Daily", notes: "Standard Beta-lactam + Macrolide coverage." },
+          { type: "PCN Allergy", drug: "Levofloxacin 750mg IV/PO Daily", notes: "Respiratory Fluoroquinolone monotherapy." },
+          { type: "Aspiration Risk", drug: "Ampicillin-Sulbactam 3g IV q6h", notes: "Add Anaerobic coverage." }
+        ],
+        duration: "5-7 days (Stop when afebrile for 48h)"
+      },
+      {
+        name: "CAP - ICU Patient",
+        source: "IDSA/ATS 2019",
+        criteria: "Severe CAP requiring ICU admission.",
+        regimens: [
+          { type: "Primary", drug: "Ceftriaxone 1g IV Daily + Azithromycin 500mg IV Daily", notes: "OR Ceftriaxone + Levofloxacin." },
+          { type: "Pseudomonas Risk", drug: "Pip/Tazo 4.5g IV q6h + Levofloxacin 750mg Daily", notes: "Structural lung disease, prior Pseudomonas." },
+          { type: "MRSA Risk", drug: "Add Vancomycin (trough 15-20)", notes: "Recent influenza, cavitary infiltrate, empyema." }
+        ],
+        duration: "7 days minimum"
+      },
+      {
+        name: "HAP (Hospital Acquired)",
+        source: "IDSA 2016",
+        criteria: "Pneumonia >48h after admission. Low mortality risk.",
+        regimens: [
+          { type: "Standard", drug: "Pip/Tazo 4.5g IV q6h OR Cefepime 2g IV q8h", notes: "Cover Pseudomonas & MSSA." },
+          { type: "High MRSA Risk", drug: "Add Vancomycin (trough 15-20)", notes: "If prior IV abx within 90 days or MRSA prevalence >20%." }
+        ],
+        duration: "7 days"
+      },
+      {
+        name: "COPD Exacerbation",
+        source: "GOLD 2023",
+        criteria: "Increased dyspnea + purulent sputum + increased sputum volume (2 of 3).",
+        regimens: [
+          { type: "Outpatient", drug: "Amoxicillin 500mg TID OR Doxycycline 100mg BID", notes: "5-7 day course." },
+          { type: "Inpatient", drug: "Azithromycin 500mg Daily OR Levofloxacin 750mg Daily", notes: "Consider Pseudomonas coverage if severe." }
+        ],
+        duration: "5-7 days"
+      }
+    ]
   },
-  "Amoxicillin-Clavulanate": {
-    class: "Penicillin + β-lactamase inhibitor", spectrum: ["gp", "gn", "anaerobe"], spectrumDetail: "MSSA, Strep, H. flu, Moraxella, Anaerobes, E. coli", source: "UpToDate 2024",
-    dosing: { standard: { dose: "875/125mg", freq: "q12h", route: "PO" }, high: { dose: "2000/125mg XR", freq: "q12h", route: "PO" }, pediatric: "25-45 mg/kg/day divided q12h" },
-    indications: [{ name: "Sinusitis", dose: "875mg PO q12h x 5-7d" }, { name: "Diabetic Foot (mild)", dose: "875mg PO q12h x 7-14d" }, { name: "Animal/Human Bite", dose: "875mg PO q12h x 5d" }, { name: "Aspiration PNA", dose: "875mg PO q12h x 7d" }],
-    renal: [{ gfr: ">30", dose: "No adjustment" }, { gfr: "10-30", dose: "500/125mg q12h" }, { gfr: "<10", dose: "500/125mg q24h" }],
-    contraindications: [{ type: "Absolute", text: "Penicillin anaphylaxis" }, { type: "Absolute", text: "Cholestatic jaundice history with amox-clav" }],
-    interactions: [{ drug: "Warfarin", severity: "moderate", effect: "↑ INR" }, { drug: "Methotrexate", severity: "major", effect: "↓ clearance" }],
-    precautions: ["⚠️ Hepatotoxicity risk - monitor LFTs if >10 days", "GI upset common - take with food", "Diarrhea more common than amoxicillin alone"],
-    pregnancy: "Category B", monitoring: "LFTs if prolonged, CBC"
+  "Urinary": {
+    icon: "🚽",
+    color: "#f59e0b",
+    conditions: [
+      {
+        name: "Acute Cystitis (Uncomplicated)",
+        source: "IDSA 2011",
+        criteria: "No fever, no flank pain, non-pregnant female.",
+        regimens: [
+          { type: "First Line", drug: "Nitrofurantoin 100mg PO BID x 5 days", notes: "Avoid if CrCl < 30." },
+          { type: "Second Line", drug: "TMP-SMX DS BID x 3 days", notes: "Avoid if local resistance > 20%." },
+          { type: "Alternative", drug: "Fosfomycin 3g PO x 1 dose", notes: "Single dose, less effective." }
+        ],
+        duration: "As above"
+      },
+      {
+        name: "Pyelonephritis (Outpatient)",
+        source: "IDSA 2011",
+        criteria: "Mild-moderate, able to tolerate PO, compliant.",
+        regimens: [
+          { type: "Primary", drug: "Ciprofloxacin 500mg BID x 7 days", notes: "Or Levofloxacin 750mg Daily x 5 days." },
+          { type: "If FQ Resistant", drug: "TMP-SMX DS BID x 14 days", notes: "Only if susceptible." }
+        ],
+        duration: "5-14 days depending on agent"
+      },
+      {
+        name: "Pyelonephritis (Inpatient)",
+        source: "IDSA 2011",
+        criteria: "Fever, flank pain, or unable to tolerate PO.",
+        regimens: [
+          { type: "Primary", drug: "Ceftriaxone 1g IV Daily", notes: "Excellent E. coli coverage." },
+          { type: "PCN Allergy", drug: "Ciprofloxacin 400mg IV q12h", notes: "If susceptible." },
+          { type: "ESBL Risk", drug: "Meropenem 1g IV q8h", notes: "History of ESBL or critical illness." }
+        ],
+        duration: "7-14 days"
+      },
+      {
+        name: "Catheter-Associated UTI (CAUTI)",
+        source: "IDSA 2010",
+        criteria: "Symptomatic + catheter in place >48h. Remove/change catheter!",
+        regimens: [
+          { type: "Standard", drug: "Ceftriaxone 1g IV Daily", notes: "Broad gram-negative coverage." },
+          { type: "Pseudomonas Risk", drug: "Cefepime 2g IV q8h OR Pip/Tazo", notes: "Long-term catheter, recent abx." }
+        ],
+        duration: "7 days (14 if slow response)"
+      }
+    ]
   },
-  "Piperacillin-Tazobactam": {
-    class: "Extended-spectrum Penicillin", spectrum: ["gp", "gn", "anaerobe"], spectrumDetail: "MSSA, Strep, Enterococcus, Pseudomonas, Anaerobes, Enterobacteriaceae", source: "UpToDate 2024, IDSA",
-    dosing: { standard: { dose: "3.375g", freq: "q6h", route: "IV" }, high: { dose: "4.5g", freq: "q6h", route: "IV" }, extended: { dose: "3.375g over 4h", freq: "q8h", route: "IV" }, pediatric: "300-400 mg/kg/day divided q6-8h" },
-    indications: [{ name: "HAP/VAP", dose: "4.5g IV q6h" }, { name: "Intra-abdominal", dose: "3.375g IV q6h" }, { name: "Diabetic foot (severe)", dose: "3.375g IV q6h" }, { name: "Febrile neutropenia", dose: "4.5g IV q6h" }, { name: "Sepsis (empiric)", dose: "4.5g IV q6h" }],
-    renal: [{ gfr: ">40", dose: "3.375-4.5g q6h" }, { gfr: "20-40", dose: "2.25g q6h" }, { gfr: "<20", dose: "2.25g q8h" }, { gfr: "HD", dose: "2.25g q8h + 0.75g after HD" }, { gfr: "CRRT", dose: "2.25-3.375g q6h" }],
-    contraindications: [{ type: "Absolute", text: "Penicillin anaphylaxis" }],
-    interactions: [{ drug: "Vancomycin", severity: "major", effect: "↑ AKI risk - monitor closely" }, { drug: "Methotrexate", severity: "major", effect: "↓ clearance" }, { drug: "Vecuronium", severity: "moderate", effect: "Prolonged paralysis" }],
-    precautions: ["🚨 Pip/Tazo + Vancomycin = ↑ AKI risk", "High sodium (2.35 mEq/g) - caution in HF", "False-positive galactomannan test", "Seizure risk in renal impairment"],
-    pregnancy: "Category B", monitoring: "SCr daily, electrolytes, CBC weekly"
+  "Sepsis / Blood": {
+    icon: "🩸",
+    color: "#dc2626",
+    conditions: [
+      {
+        name: "Sepsis of Unclear Source",
+        source: "Surviving Sepsis 2021",
+        criteria: "Hemodynamic instability or organ dysfunction. START WITHIN 1 HOUR.",
+        regimens: [
+          { type: "Broad Spectrum", drug: "Vancomycin + Pip/Tazo 4.5g IV q6h", notes: "Covers MRSA + Pseudomonas + Anaerobes." },
+          { type: "PCN Allergy", drug: "Vancomycin + Aztreonam + Metronidazole", notes: "Aztreonam safe in PCN allergy." },
+          { type: "Immunocompromised", drug: "Add Caspofungin if fungal risk", notes: "Neutropenia, TPN, prior abx." }
+        ],
+        duration: "De-escalate based on cultures @ 48h"
+      },
+      {
+        name: "Gram Positive Bacteremia (MSSA)",
+        source: "IDSA 2015",
+        criteria: "Blood culture positive for MSSA.",
+        regimens: [
+          { type: "Primary", drug: "Cefazolin 2g IV q8h", notes: "Preferred over Nafcillin (less nephrotoxic)." },
+          { type: "PCN Allergy", drug: "Vancomycin (trough 15-20)", notes: "Only if true anaphylaxis." }
+        ],
+        duration: "2 weeks (uncomplicated) / 4-6 weeks (endocarditis)"
+      },
+      {
+        name: "Gram Positive Bacteremia (MRSA)",
+        source: "IDSA 2011",
+        criteria: "Blood culture positive for MRSA.",
+        regimens: [
+          { type: "Primary", drug: "Vancomycin (trough 15-20 AUC/MIC guided)", notes: "Standard of care." },
+          { type: "Vanc Intolerant", drug: "Daptomycin 8-10mg/kg IV Daily", notes: "NOT for pneumonia (inactivated by surfactant)." }
+        ],
+        duration: "2 weeks minimum, 4-6 weeks if complicated"
+      },
+      {
+        name: "Gram Negative Bacteremia",
+        source: "UpToDate 2023",
+        criteria: "Blood culture with GNR. Source control critical.",
+        regimens: [
+          { type: "Empiric", drug: "Ceftriaxone 2g IV Daily OR Cefepime 2g IV q8h", notes: "Adjust based on sensitivities." },
+          { type: "ESBL Suspected", drug: "Meropenem 1g IV q8h", notes: "Prior ESBL, recent hospitalization." },
+          { type: "Pseudomonas", drug: "Cefepime 2g IV q8h + Tobramycin", notes: "Double coverage initially, de-escalate." }
+        ],
+        duration: "7-14 days depending on source"
+      }
+    ]
   },
-  "Ceftriaxone": {
-    class: "3rd Gen Cephalosporin", spectrum: ["gp", "gn"], spectrumDetail: "Strep, MSSA, H. flu, E. coli, Klebsiella, N. gonorrhoeae, N. meningitidis", source: "UpToDate 2024, IDSA",
-    dosing: { standard: { dose: "1g", freq: "q24h", route: "IV/IM" }, high: { dose: "2g", freq: "q12-24h", route: "IV" }, meningitis: { dose: "2g", freq: "q12h", route: "IV" }, pediatric: "50-100 mg/kg/day divided q12-24h" },
-    indications: [{ name: "CAP (ward)", dose: "1g IV q24h" }, { name: "Pyelonephritis", dose: "1g IV q24h" }, { name: "Meningitis", dose: "2g IV q12h" }, { name: "Gonorrhea", dose: "500mg IM x1" }, { name: "SBP prophylaxis", dose: "1g IV q24h" }, { name: "Lyme (neurologic)", dose: "2g IV q24h x 14-28d" }],
-    renal: [{ gfr: ">10", dose: "No adjustment" }, { gfr: "<10", dose: "Max 2g/day" }, { gfr: "HD", dose: "1-2g q24h (not removed)" }],
-    contraindications: [{ type: "Absolute", text: "Cephalosporin anaphylaxis" }, { type: "Absolute", text: "Neonates <28d receiving IV calcium" }, { type: "Relative", text: "Severe PCN allergy (2% cross-react)" }],
-    interactions: [{ drug: "IV Calcium", severity: "major", effect: "Fatal precipitation in neonates - AVOID" }, { drug: "Warfarin", severity: "moderate", effect: "↑ INR" }, { drug: "Ringer's", severity: "moderate", effect: "Incompatible" }],
-    precautions: ["🚨 NEVER mix with calcium IV solutions", "Biliary sludging (reversible)", "False-positive Coombs test", "IM painful - use lidocaine diluent"],
-    pregnancy: "Category B", monitoring: "CBC, LFTs if prolonged"
+  "Skin/Soft Tissue": {
+    icon: "🦵",
+    color: "#10b981",
+    conditions: [
+      {
+        name: "Cellulitis (Non-Purulent)",
+        source: "IDSA 2014",
+        criteria: "Erythema, warmth, swelling. No abscess or purulent drainage.",
+        regimens: [
+          { type: "Outpatient", drug: "Cephalexin 500mg QID x 5 days", notes: "Targets Strep & MSSA." },
+          { type: "Inpatient", drug: "Cefazolin 1-2g IV q8h", notes: "Step down to PO when improving." },
+          { type: "PCN Allergy", drug: "Clindamycin 300-450mg TID", notes: "Watch for C. diff." }
+        ],
+        duration: "5 days (extend if not improving)"
+      },
+      {
+        name: "Cellulitis (Purulent/Abscess)",
+        source: "IDSA 2014",
+        criteria: "Abscess present OR purulent drainage. I&D IS PRIMARY TREATMENT.",
+        regimens: [
+          { type: "Post I&D", drug: "TMP-SMX DS BID x 5-7 days", notes: "MRSA coverage. May not need abx if I&D adequate." },
+          { type: "Severe", drug: "Vancomycin IV + I&D", notes: "Systemic signs, immunocompromised." }
+        ],
+        duration: "5-7 days"
+      },
+      {
+        name: "Diabetic Foot Infection (Mild)",
+        source: "IDSA 2012",
+        criteria: "Superficial ulcer, <2cm erythema, no systemic signs.",
+        regimens: [
+          { type: "Primary", drug: "Cephalexin 500mg QID OR Amox/Clav 875mg BID", notes: "Strep + MSSA." },
+          { type: "MRSA Risk", drug: "Add TMP-SMX DS BID or Doxycycline", notes: "Prior MRSA, high local prevalence." }
+        ],
+        duration: "1-2 weeks"
+      },
+      {
+        name: "Diabetic Foot Infection (Moderate-Severe)",
+        source: "IDSA 2012",
+        criteria: ">2cm erythema, deep tissue involvement, systemic signs.",
+        regimens: [
+          { type: "Standard", drug: "Pip/Tazo 4.5g IV q8h OR Amp/Sulbactam 3g IV q6h", notes: "Polymicrobial coverage including anaerobes." },
+          { type: "MRSA Risk", drug: "Add Vancomycin", notes: "Prior MRSA, failed outpatient tx." },
+          { type: "Pseudomonas Risk", drug: "Pip/Tazo + Ciprofloxacin", notes: "Water exposure, chronic wound." }
+        ],
+        duration: "2-4 weeks, longer if osteomyelitis"
+      },
+      {
+        name: "Necrotizing Fasciitis",
+        source: "IDSA 2014",
+        criteria: "SURGICAL EMERGENCY. Pain out of proportion, crepitus, bullae, sepsis.",
+        regimens: [
+          { type: "Empiric", drug: "Vancomycin + Pip/Tazo + Clindamycin", notes: "Clindamycin inhibits toxin production." },
+          { type: "Alternative", drug: "Vanc + Meropenem + Clindamycin", notes: "If PCN allergy (not anaphylaxis)." }
+        ],
+        duration: "Continue until debridements complete + clinical improvement"
+      }
+    ]
   },
-  "Cefepime": {
-    class: "4th Gen Cephalosporin", spectrum: ["gp", "gn"], spectrumDetail: "MSSA, Strep, Pseudomonas, Enterobacteriaceae (incl AmpC), H. flu", source: "UpToDate 2024",
-    dosing: { standard: { dose: "1-2g", freq: "q8-12h", route: "IV" }, pseudomonas: { dose: "2g", freq: "q8h", route: "IV" }, meningitis: { dose: "2g", freq: "q8h", route: "IV" }, pediatric: "50 mg/kg q8-12h" },
-    indications: [{ name: "HAP/VAP", dose: "2g IV q8h" }, { name: "Febrile Neutropenia", dose: "2g IV q8h" }, { name: "Pseudomonas", dose: "2g IV q8h" }, { name: "Meningitis", dose: "2g IV q8h" }, { name: "UTI (complicated)", dose: "1-2g IV q12h" }],
-    renal: [{ gfr: ">60", dose: "2g q8h" }, { gfr: "30-60", dose: "2g q12h" }, { gfr: "11-29", dose: "2g q24h" }, { gfr: "<11", dose: "1g q24h" }, { gfr: "HD", dose: "1g q24h after HD" }],
-    contraindications: [{ type: "Absolute", text: "Cephalosporin anaphylaxis" }],
-    interactions: [{ drug: "Aminoglycosides", severity: "moderate", effect: "Synergy but ↑ nephrotoxicity" }, { drug: "Warfarin", severity: "moderate", effect: "↑ INR" }],
-    precautions: ["🧠 NEUROTOXICITY in renal impairment (confusion, seizures, myoclonus)", "Must dose-adjust for renal function!", "Not active vs MRSA, Enterococcus, anaerobes"],
-    pregnancy: "Category B", monitoring: "SCr daily, neuro status"
+  "Intra-abdominal": {
+    icon: "🫃",
+    color: "#8b5cf6",
+    conditions: [
+      {
+        name: "Appendicitis (Uncomplicated)",
+        source: "SIS 2017",
+        criteria: "Non-perforated, no abscess.",
+        regimens: [
+          { type: "Pre-op Only", drug: "Cefazolin 2g IV x 1", notes: "Single dose prophylaxis if surgery planned." },
+          { type: "Non-operative", drug: "Ciprofloxacin + Metronidazole", notes: "If surgery delayed or refused." }
+        ],
+        duration: "24h post-op (or 5-7 days if non-op)"
+      },
+      {
+        name: "Appendicitis (Complicated/Perforated)",
+        source: "SIS 2017",
+        criteria: "Perforation, abscess, or peritonitis.",
+        regimens: [
+          { type: "Primary", drug: "Pip/Tazo 4.5g IV q6h", notes: "Monotherapy covering anaerobes." },
+          { type: "Alternative", drug: "Ceftriaxone 1g Daily + Metronidazole 500mg q8h", notes: "If Pip/Tazo unavailable." }
+        ],
+        duration: "4-5 days post source control"
+      },
+      {
+        name: "Cholecystitis/Cholangitis",
+        source: "Tokyo Guidelines 2018",
+        criteria: "RUQ pain, fever, elevated LFTs.",
+        regimens: [
+          { type: "Mild-Moderate", drug: "Ceftriaxone 1g IV Daily + Metronidazole 500mg q8h", notes: "OR Amp/Sulbactam 3g q6h." },
+          { type: "Severe/Septic", drug: "Pip/Tazo 4.5g IV q6h", notes: "Consider Meropenem if ESBL risk." }
+        ],
+        duration: "4-7 days (longer if no source control)"
+      },
+      {
+        name: "Spontaneous Bacterial Peritonitis (SBP)",
+        source: "AASLD 2021",
+        criteria: "Ascites PMN >250/mm³. Cirrhosis patient.",
+        regimens: [
+          { type: "Primary", drug: "Ceftriaxone 2g IV Daily", notes: "Cover E. coli, Klebsiella, Strep." },
+          { type: "Nosocomial SBP", drug: "Pip/Tazo OR Meropenem", notes: "Prior hospitalization, recent abx." }
+        ],
+        duration: "5 days + Albumin 1.5g/kg Day 1, 1g/kg Day 3"
+      },
+      {
+        name: "C. difficile Infection",
+        source: "IDSA/SHEA 2021",
+        criteria: "Diarrhea + positive C. diff toxin/PCR. STOP CAUSATIVE ABX.",
+        regimens: [
+          { type: "Non-Severe", drug: "Fidaxomicin 200mg BID OR Vancomycin 125mg PO QID", notes: "Fidaxomicin preferred (lower recurrence)." },
+          { type: "Severe", drug: "Vancomycin 125mg PO QID", notes: "WBC >15k or Cr >1.5x baseline." },
+          { type: "Fulminant", drug: "Vanc 500mg PO/NG QID + Metronidazole 500mg IV q8h", notes: "Ileus, toxic megacolon. Surgery consult!" }
+        ],
+        duration: "10 days (extended for recurrence)"
+      }
+    ]
   },
-  "Vancomycin": {
-    class: "Glycopeptide", spectrum: ["gp"], spectrumDetail: "MRSA, MSSA, Strep, Enterococcus (not VRE), C. diff (PO only)", source: "IDSA Vanc Guidelines 2020",
-    dosing: { standard: { dose: "15-20 mg/kg", freq: "q8-12h", route: "IV" }, loading: { dose: "25-30 mg/kg", freq: "x1", route: "IV" }, oral: { dose: "125mg", freq: "q6h", route: "PO" }, pediatric: "15 mg/kg q6h" },
-    indications: [{ name: "MRSA bacteremia", dose: "15-20 mg/kg q8-12h (AUC 400-600)" }, { name: "MRSA pneumonia", dose: "15-20 mg/kg q8-12h" }, { name: "Meningitis (empiric)", dose: "15-20 mg/kg q8-12h" }, { name: "C. diff (PO)", dose: "125mg PO q6h x 10d" }, { name: "C. diff severe", dose: "500mg PO q6h + 500mg PR q6h" }],
-    renal: [{ gfr: ">90", dose: "15-20mg/kg q8-12h" }, { gfr: "50-89", dose: "15-20mg/kg q12h" }, { gfr: "15-49", dose: "15-20mg/kg q24h" }, { gfr: "<15", dose: "15-20mg/kg, redose when trough <15-20" }, { gfr: "HD", dose: "15-25mg/kg load, redose for trough" }],
-    contraindications: [{ type: "Caution", text: "Prior Red Man Syndrome (premedicate & slow infusion)" }],
-    interactions: [{ drug: "Pip-Tazo", severity: "major", effect: "↑ AKI risk" }, { drug: "Aminoglycosides", severity: "major", effect: "↑↑ nephro/ototoxicity" }, { drug: "Loop diuretics", severity: "moderate", effect: "↑ ototoxicity" }],
-    precautions: ["🎯 TARGET: AUC/MIC 400-600 or Trough 15-20", "Red Man: Slow infusion ≥1h, premedicate", "⚠️ Vanc + Pip/Tazo = ↑ AKI", "IV vanc useless for C. diff", "PO vanc useless for systemic MRSA"],
-    pregnancy: "Category C", monitoring: "AUC or Trough, SCr daily"
-  },
-  "Levofloxacin": {
-    class: "Respiratory Fluoroquinolone", spectrum: ["gp", "gn", "atypical"], spectrumDetail: "S. pneumo, H. flu, E. coli, Klebsiella, Pseudomonas, Legionella, Mycoplasma", source: "UpToDate 2024, FDA",
-    dosing: { standard: { dose: "500mg", freq: "q24h", route: "PO/IV" }, high: { dose: "750mg", freq: "q24h", route: "PO/IV" }, pediatric: "Not recommended <18y" },
-    indications: [{ name: "CAP", dose: "750mg PO/IV q24h x 5d" }, { name: "Acute sinusitis", dose: "500mg PO q24h x 5-7d" }, { name: "UTI (uncomplicated)", dose: "250mg PO q24h x 3d" }, { name: "Pyelonephritis", dose: "750mg PO q24h x 5d" }],
-    renal: [{ gfr: ">50", dose: "750mg q24h" }, { gfr: "20-49", dose: "750mg q48h" }, { gfr: "10-19", dose: "500mg q48h" }, { gfr: "<10", dose: "500mg then 250mg q48h" }],
-    contraindications: [{ type: "Absolute", text: "FQ-associated tendon rupture history" }, { type: "Absolute", text: "Myasthenia gravis (can be fatal)" }, { type: "Relative", text: "QT prolongation" }],
-    interactions: [{ drug: "Antacids/Ca/Mg/Fe", severity: "major", effect: "↓ absorption - separate 2h" }, { drug: "Warfarin", severity: "major", effect: "↑↑ INR" }, { drug: "QT drugs", severity: "major", effect: "↑ Torsades risk" }, { drug: "NSAIDs", severity: "moderate", effect: "↑ seizure risk" }],
-    precautions: ["⚫ FDA BLACK BOX: Tendinitis/rupture, neuropathy, CNS effects", "⚫ BLACK BOX: Avoid in aortic aneurysm risk", "🚨 AVOID in Myasthenia Gravis", "QT prolongation - check ECG", "Photosensitivity"],
-    pregnancy: "Category C - Avoid", monitoring: "Tendon symptoms, neuro, QTc"
-  },
-  "Ciprofloxacin": {
-    class: "Fluoroquinolone", spectrum: ["gn", "atypical"], spectrumDetail: "Excellent: Pseudomonas, E. coli, Salmonella. Poor: S. pneumo", source: "UpToDate 2024, FDA",
-    dosing: { standard: { dose: "500mg", freq: "q12h", route: "PO" }, iv: { dose: "400mg", freq: "q12h", route: "IV" }, pseudomonas: { dose: "750mg PO q12h OR 400mg IV q8h", freq: "", route: "" }, pediatric: "10-20 mg/kg q12h (no alternatives)" },
-    indications: [{ name: "UTI (complicated)", dose: "500mg PO q12h x 7d" }, { name: "Pyelonephritis", dose: "500mg PO q12h x 7d" }, { name: "Pseudomonas UTI", dose: "750mg PO q12h" }, { name: "Traveler's diarrhea", dose: "500mg PO q12h x 1-3d" }],
-    renal: [{ gfr: ">30", dose: "No adjustment" }, { gfr: "<30", dose: "250-500mg q12h" }, { gfr: "HD", dose: "250-500mg q24h after HD" }],
-    contraindications: [{ type: "Absolute", text: "Concurrent tizanidine" }, { type: "Absolute", text: "FQ tendon rupture history" }, { type: "Absolute", text: "Myasthenia gravis" }],
-    interactions: [{ drug: "Tizanidine", severity: "major", effect: "↑↑ tizanidine - CONTRAINDICATED" }, { drug: "Theophylline", severity: "major", effect: "↑↑ theophylline (reduce 30-50%)" }, { drug: "Antacids/Dairy", severity: "major", effect: "↓ absorption - separate 2h" }],
-    precautions: ["⚫ FDA BLACK BOX: Same as levofloxacin", "NOT for Strep pneumo - don't use for respiratory", "Take 2h before/6h after antacids", "PO = IV bioavailability"],
-    pregnancy: "Category C", monitoring: "Tendon, neuro, renal"
-  },
-  "Azithromycin": {
-    class: "Macrolide", spectrum: ["gp", "atypical"], spectrumDetail: "Strep, H. flu, Atypicals (Mycoplasma, Chlamydia, Legionella), MAC", source: "UpToDate 2024",
-    dosing: { standard: { dose: "500mg x1, then 250mg", freq: "daily x 4d", route: "PO" }, cap: { dose: "500mg", freq: "q24h x 3-5d", route: "IV/PO" }, pediatric: "10 mg/kg day 1, then 5 mg/kg days 2-5" },
-    indications: [{ name: "CAP (with beta-lactam)", dose: "500mg IV/PO q24h" }, { name: "COPD exacerbation", dose: "500mg x1, then 250mg x4d" }, { name: "Chlamydia", dose: "1g PO x1" }, { name: "Traveler's diarrhea", dose: "1g PO x1" }],
-    renal: [{ gfr: "Any", dose: "No adjustment" }],
-    contraindications: [{ type: "Absolute", text: "Cholestatic jaundice history with azithromycin" }, { type: "Caution", text: "QT prolongation, hypokalemia" }],
-    interactions: [{ drug: "QT drugs", severity: "major", effect: "↑ Torsades risk" }, { drug: "Warfarin", severity: "moderate", effect: "↑ INR" }, { drug: "Digoxin", severity: "moderate", effect: "↑ digoxin levels" }],
-    precautions: ["⚠️ QT prolongation risk", "Long half-life (68h) - tissue levels ~10d", "Hepatotoxicity rare", "GI upset common"],
-    pregnancy: "Category B", monitoring: "ECG if QT risk"
-  },
-  "Doxycycline": {
-    class: "Tetracycline", spectrum: ["gp", "gn", "atypical"], spectrumDetail: "MRSA (skin), Atypicals, Rickettsia, Spirochetes, Malaria prophylaxis", source: "UpToDate 2024",
-    dosing: { standard: { dose: "100mg", freq: "q12h", route: "PO/IV" }, loading: { dose: "200mg x1, then 100mg", freq: "q12h", route: "PO" }, pediatric: ">8y: 2-4 mg/kg/day divided q12h" },
-    indications: [{ name: "MRSA skin", dose: "100mg PO q12h x 5-10d" }, { name: "CAP (atypical)", dose: "100mg PO q12h" }, { name: "Lyme (early)", dose: "100mg PO q12h x 10-14d" }, { name: "Chlamydia", dose: "100mg PO q12h x 7d" }, { name: "RMSF", dose: "100mg PO/IV q12h" }, { name: "Malaria prophylaxis", dose: "100mg PO daily" }],
-    renal: [{ gfr: "Any", dose: "No adjustment (hepatic)" }],
-    contraindications: [{ type: "Absolute", text: "Pregnancy (2nd/3rd trimester)" }, { type: "Absolute", text: "Children <8y (tooth staining)" }, { type: "Caution", text: "Myasthenia gravis" }],
-    interactions: [{ drug: "Antacids/Ca/Fe", severity: "major", effect: "↓ absorption - separate 2h" }, { drug: "Warfarin", severity: "moderate", effect: "↑ INR" }, { drug: "Isotretinoin", severity: "major", effect: "↑↑ pseudotumor cerebri - AVOID" }],
-    precautions: ["🚫 Avoid pregnancy & <8y", "SEVERE photosensitivity", "Take with food", "Esophageal ulcer - full water, stay upright 30min", "Can use in renal failure"],
-    pregnancy: "Category D - AVOID", monitoring: "LFTs if prolonged"
-  },
-  "Metronidazole": {
-    class: "Nitroimidazole", spectrum: ["anaerobe"], spectrumDetail: "Anaerobes (Bacteroides, Clostridium), C. diff, Giardia, Trichomonas, H. pylori", source: "UpToDate 2024",
-    dosing: { standard: { dose: "500mg", freq: "q8h", route: "IV/PO" }, cdiff: { dose: "500mg", freq: "q8h x 10d", route: "PO" }, pediatric: "7.5 mg/kg q6h" },
-    indications: [{ name: "Intra-abdominal", dose: "500mg IV/PO q8h" }, { name: "C. diff (non-severe)", dose: "500mg PO q8h x 10d" }, { name: "Bacterial vaginosis", dose: "500mg PO q12h x 7d" }, { name: "Trichomoniasis", dose: "2g PO x1" }, { name: "H. pylori", dose: "500mg PO q8h x 14d" }, { name: "Brain abscess", dose: "500mg IV q8h" }],
-    renal: [{ gfr: ">10", dose: "No adjustment" }, { gfr: "<10", dose: "Consider 50% dose" }],
-    contraindications: [{ type: "Absolute", text: "1st trimester pregnancy" }, { type: "Absolute", text: "Concurrent alcohol" }],
-    interactions: [{ drug: "Alcohol", severity: "major", effect: "Disulfiram reaction - AVOID +3d after" }, { drug: "Warfarin", severity: "major", effect: "↑↑ INR - reduce warfarin" }, { drug: "Lithium", severity: "moderate", effect: "↑ lithium" }, { drug: "Disulfiram", severity: "major", effect: "Psychosis - avoid 2wk" }],
-    precautions: ["🍷 NO ALCOHOL - severe reaction", "Metallic taste common", "Peripheral neuropathy if prolonged", "CNS toxicity with high doses", "Dark urine (harmless)"],
-    pregnancy: "Category B (avoid 1st tri)", monitoring: "CBC, neuro symptoms"
-  },
-  "TMP-SMX": {
-    class: "Sulfonamide combination", spectrum: ["gp", "gn"], spectrumDetail: "MRSA (CA-MRSA), E. coli, Klebsiella, PCP, Nocardia, Stenotrophomonas", source: "UpToDate 2024",
-    dosing: { standard: { dose: "1 DS (160/800mg)", freq: "q12h", route: "PO" }, uti: { dose: "1 DS", freq: "q12h x 3d", route: "PO" }, pcp_tx: { dose: "15-20 mg/kg/day TMP", freq: "divided q6-8h", route: "IV/PO" }, pcp_ppx: { dose: "1 DS", freq: "daily", route: "PO" }, pediatric: "8-10 mg/kg/day TMP divided q12h" },
-    indications: [{ name: "UTI (uncomplicated)", dose: "1 DS PO q12h x 3d" }, { name: "MRSA skin", dose: "1-2 DS PO q12h x 5-10d" }, { name: "PCP treatment", dose: "15-20 mg/kg/day TMP x 21d" }, { name: "PCP prophylaxis", dose: "1 DS daily" }, { name: "Nocardia", dose: "15 mg/kg/day TMP" }, { name: "Stenotrophomonas", dose: "15 mg/kg/day TMP" }],
-    renal: [{ gfr: ">30", dose: "No adjustment" }, { gfr: "15-30", dose: "50% dose" }, { gfr: "<15", dose: "Avoid" }, { gfr: "HD", dose: "50% after HD" }],
-    contraindications: [{ type: "Absolute", text: "Severe sulfa allergy" }, { type: "Absolute", text: "Pregnancy at term (kernicterus)" }, { type: "Absolute", text: "G6PD deficiency" }, { type: "Absolute", text: "Megaloblastic anemia" }],
-    interactions: [{ drug: "Warfarin", severity: "major", effect: "↑↑ INR - reduce warfarin 25-50%" }, { drug: "Methotrexate", severity: "major", effect: "↑↑ MTX toxicity" }, { drug: "ACE-I/ARBs", severity: "major", effect: "↑ hyperkalemia" }, { drug: "Phenytoin", severity: "moderate", effect: "↑ phenytoin" }],
-    precautions: ["🍌 HYPERKALEMIA - especially with ACE-I/ARB/renal", "Bone marrow suppression", "Rash - stop if severe (SJS/TEN)", "Photosensitivity", "May ↑ Cr without true injury"],
-    pregnancy: "Category D (at term)", monitoring: "K+, SCr, CBC"
-  },
-  "Nitrofurantoin": {
-    class: "Nitrofuran", spectrum: ["gp", "gn"], spectrumDetail: "E. coli, Enterococcus, S. saprophyticus. NOT: Proteus, Pseudomonas", source: "IDSA UTI 2011",
-    dosing: { standard: { dose: "100mg", freq: "q12h x 5d", route: "PO" }, prophylaxis: { dose: "50-100mg", freq: "qhs", route: "PO" } },
-    indications: [{ name: "Acute cystitis", dose: "100mg PO q12h x 5d" }, { name: "UTI prophylaxis", dose: "50-100mg PO qhs" }],
-    renal: [{ gfr: ">60", dose: "100mg q12h" }, { gfr: "30-60", dose: "Use with caution" }, { gfr: "<30", dose: "AVOID - ineffective & toxic" }],
-    contraindications: [{ type: "Absolute", text: "CrCl <30 (ineffective & neurotoxic)" }, { type: "Absolute", text: "G6PD deficiency (hemolysis)" }, { type: "Absolute", text: "Pregnancy at term" }],
-    interactions: [{ drug: "Antacids (Mg)", severity: "moderate", effect: "↓ absorption" }, { drug: "Probenecid", severity: "moderate", effect: "↓ urine levels" }],
-    precautions: ["⚠️ AVOID if CrCl <30", "Pulmonary toxicity if >6mo", "Peripheral neuropathy", "Hepatotoxicity (rare)", "Take with food", "Only for lower UTI"],
-    pregnancy: "Category B (avoid term)", monitoring: "Pulmonary sx, LFTs"
-  },
-  "Clindamycin": {
-    class: "Lincosamide", spectrum: ["gp", "anaerobe"], spectrumDetail: "MSSA, MRSA (some), Strep, Anaerobes. NOT: Enterococcus, C. diff", source: "UpToDate 2024",
-    dosing: { standard: { dose: "300-450mg", freq: "q6-8h", route: "PO" }, iv: { dose: "600-900mg", freq: "q8h", route: "IV" }, toxin: { dose: "900mg", freq: "q8h", route: "IV" }, pediatric: "10-30 mg/kg/day divided q6-8h" },
-    indications: [{ name: "MRSA skin (if susceptible)", dose: "300-450mg PO q8h" }, { name: "Aspiration PNA", dose: "600mg IV q8h" }, { name: "Nec fasciitis (adjunct)", dose: "900mg IV q8h" }, { name: "Toxic shock (adjunct)", dose: "900mg IV q8h" }, { name: "Bone/joint", dose: "600mg IV q8h" }],
-    renal: [{ gfr: "Any", dose: "No adjustment" }],
-    contraindications: [{ type: "Relative", text: "History of C. diff colitis" }],
-    interactions: [{ drug: "NM blockers", severity: "major", effect: "Prolonged paralysis" }, { drug: "Erythromycin", severity: "moderate", effect: "Antagonism - avoid" }],
-    precautions: ["🚨 HIGH C. DIFF RISK", "Excellent bone penetration", "Toxin suppression (GAS, S. aureus)", "Check D-test for MRSA", "Not active vs Enterococcus"],
-    pregnancy: "Category B", monitoring: "Diarrhea/C. diff, LFTs"
-  },
-  "Meropenem": {
-    class: "Carbapenem", spectrum: ["gp", "gn", "anaerobe"], spectrumDetail: "Broadest - MSSA, Strep, ESBL/AmpC, Pseudomonas, Anaerobes. NOT MRSA/VRE", source: "UpToDate 2024, IDSA",
-    dosing: { standard: { dose: "1g", freq: "q8h", route: "IV" }, meningitis: { dose: "2g", freq: "q8h", route: "IV" }, extended: { dose: "1-2g over 3h", freq: "q8h", route: "IV" }, pediatric: "20-40 mg/kg q8h" },
-    indications: [{ name: "ESBL infection", dose: "1g IV q8h" }, { name: "Meningitis", dose: "2g IV q8h" }, { name: "Febrile neutropenia", dose: "1g IV q8h" }, { name: "Severe intra-abdominal", dose: "1g IV q8h" }, { name: "HAP/VAP (MDR)", dose: "1-2g IV q8h" }],
-    renal: [{ gfr: ">50", dose: "1-2g q8h" }, { gfr: "26-50", dose: "1g q12h" }, { gfr: "10-25", dose: "500mg q12h" }, { gfr: "<10", dose: "500mg q24h" }, { gfr: "CRRT", dose: "1g q12h" }],
-    contraindications: [{ type: "Absolute", text: "Carbapenem anaphylaxis" }, { type: "Caution", text: "PCN anaphylaxis (1% cross)" }],
-    interactions: [{ drug: "Valproic Acid", severity: "major", effect: "↓↓ VPA 60-100% - AVOID" }, { drug: "Probenecid", severity: "moderate", effect: "↑ meropenem - avoid" }],
-    precautions: ["🚨 AVOID with Valproic Acid", "Lower seizure risk than imipenem", "Reserve for serious/resistant infections", "Does NOT cover MRSA, VRE, Stenotrophomonas"],
-    pregnancy: "Category B", monitoring: "SCr, CBC, LFTs, seizures"
-  },
-  "Gentamicin": {
-    class: "Aminoglycoside", spectrum: ["gn"], spectrumDetail: "E. coli, Klebsiella, Pseudomonas, Enterobacter. Synergy for GP", source: "UpToDate 2024",
-    dosing: { traditional: { dose: "1-2.5 mg/kg", freq: "q8h", route: "IV" }, extended: { dose: "5-7 mg/kg", freq: "q24h", route: "IV" }, synergy: { dose: "1 mg/kg", freq: "q8h", route: "IV" }, pediatric: "2.5 mg/kg q8h or 5-7.5 mg/kg q24h" },
-    indications: [{ name: "GN sepsis (combo)", dose: "5-7 mg/kg IV q24h" }, { name: "Enterococcal endocarditis (synergy)", dose: "1 mg/kg IV q8h" }, { name: "UTI (severe)", dose: "5 mg/kg IV q24h" }],
-    renal: [{ gfr: ">60", dose: "5-7mg/kg q24h" }, { gfr: "40-60", dose: "5-7mg/kg q36h" }, { gfr: "20-40", dose: "5-7mg/kg q48h" }, { gfr: "<20", dose: "Level-guided" }, { gfr: "HD", dose: "2mg/kg after HD" }],
-    contraindications: [{ type: "Relative", text: "Myasthenia gravis" }, { type: "Caution", text: "Pre-existing hearing loss" }],
-    interactions: [{ drug: "Vancomycin", severity: "major", effect: "↑↑ nephro/ototoxicity" }, { drug: "Loop diuretics", severity: "major", effect: "↑↑ ototoxicity" }, { drug: "NSAIDs", severity: "major", effect: "↑ nephrotoxicity" }, { drug: "NM blockers", severity: "major", effect: "Prolonged paralysis" }],
-    precautions: ["🔊 OTOTOXICITY - irreversible", "🫘 NEPHROTOXICITY - usually reversible", "Extended-interval = less toxicity", "Concentration-dependent killing", "Poor lung penetration"],
-    pregnancy: "Category D - Ototoxicity", monitoring: "Peak/trough, SCr daily, hearing"
-  },
-  "Cefazolin": {
-    class: "1st Gen Cephalosporin", spectrum: ["gp"], spectrumDetail: "MSSA, Strep (excellent), E. coli, Klebsiella (limited GN)", source: "UpToDate 2024",
-    dosing: { standard: { dose: "1-2g", freq: "q8h", route: "IV" }, surgical: { dose: "2g", freq: "pre-op", route: "IV" }, pediatric: "25-100 mg/kg/day divided q8h" },
-    indications: [{ name: "Cellulitis", dose: "1-2g IV q8h" }, { name: "MSSA bacteremia", dose: "2g IV q8h" }, { name: "Surgical prophylaxis", dose: "2g IV pre-op (3g if >120kg)" }, { name: "MSSA endocarditis", dose: "2g IV q8h x 6wk" }],
-    renal: [{ gfr: ">55", dose: "1-2g q8h" }, { gfr: "35-54", dose: "1g q8h" }, { gfr: "11-34", dose: "1g q12h" }, { gfr: "<10", dose: "1g q24h" }, { gfr: "HD", dose: "1g after HD" }],
-    contraindications: [{ type: "Absolute", text: "Cephalosporin anaphylaxis" }],
-    interactions: [{ drug: "Warfarin", severity: "moderate", effect: "↑ INR" }, { drug: "Probenecid", severity: "minor", effect: "↑ cefazolin" }],
-    precautions: ["Drug of choice for MSSA bacteremia", "NOT active vs MRSA, Enterococcus, Pseudomonas", "Safe for most PCN-allergic (except anaphylaxis)"],
-    pregnancy: "Category B", monitoring: "CBC, SCr"
+  "CNS": {
+    icon: "🧠",
+    color: "#ec4899",
+    conditions: [
+      {
+        name: "Bacterial Meningitis (Community)",
+        source: "IDSA 2004/2017",
+        criteria: "Fever, headache, neck stiffness, altered mental status. EMERGENCY.",
+        regimens: [
+          { type: "Empiric", drug: "Ceftriaxone 2g IV q12h + Vancomycin + Dexamethasone", notes: "Dex 0.15mg/kg q6h x 4d, give BEFORE or WITH first abx dose." },
+          { type: "Age >50 or Immunocompromised", drug: "Add Ampicillin 2g IV q4h", notes: "Covers Listeria." },
+          { type: "PCN Allergy", drug: "Meropenem + Vancomycin + Dex", notes: "Or Chloramphenicol + Vanc + TMP-SMX." }
+        ],
+        duration: "10-14 days (7 days for H. flu/Meningococcus)"
+      },
+      {
+        name: "Brain Abscess",
+        source: "UpToDate 2023",
+        criteria: "Ring-enhancing lesion. Often polymicrobial.",
+        regimens: [
+          { type: "Empiric", drug: "Ceftriaxone 2g IV q12h + Metronidazole 500mg q8h", notes: "Add Vancomycin if post-surgical or trauma." },
+          { type: "Post-Neurosurgery", drug: "Vancomycin + Cefepime + Metronidazole", notes: "Cover MRSA + Pseudomonas." }
+        ],
+        duration: "4-8 weeks (longer if not drained)"
+      }
+    ]
   }
 };
 
-const EMPIRIC = {
-  "CAP - Outpatient": { source: "IDSA/ATS 2019", criteria: "No comorbidities, no recent abx", regimens: [{ name: "Primary", drugs: "Amoxicillin 1g PO TID x 5d", notes: "OR Doxycycline 100mg BID" }] },
-  "CAP - Ward": { source: "IDSA/ATS 2019", criteria: "No Pseudomonas/MRSA risk", regimens: [{ name: "Primary", drugs: "Ceftriaxone 1g IV + Azithromycin 500mg", notes: "Beta-lactam + macrolide" }, { name: "PCN Allergy", drugs: "Levofloxacin 750mg IV/PO daily", notes: "Respiratory FQ monotherapy" }] },
-  "CAP - ICU": { source: "IDSA/ATS 2019", criteria: "Severe CAP, ICU admission", regimens: [{ name: "Primary", drugs: "Ceftriaxone 1g IV + Azithromycin 500mg IV", notes: "Or + Levofloxacin" }, { name: "Pseudomonas risk", drugs: "Pip/Tazo 4.5g q6h + Levofloxacin", notes: "Structural lung dz, prior Pseudomonas" }] },
-  "UTI - Cystitis": { source: "IDSA 2011", criteria: "Female, no fever, no flank pain", regimens: [{ name: "1st Line", drugs: "Nitrofurantoin 100mg BID x 5d", notes: "Avoid if CrCl <30" }, { name: "2nd Line", drugs: "TMP-SMX DS BID x 3d", notes: "If resistance <20%" }] },
-  "Pyelonephritis - Outpatient": { source: "IDSA 2011", criteria: "Mild, tolerates PO", regimens: [{ name: "Primary", drugs: "Ciprofloxacin 500mg BID x 7d", notes: "Or Levofloxacin 750mg daily x 5d" }] },
-  "Pyelonephritis - Inpatient": { source: "IDSA 2011", criteria: "Fever, flank pain, can't tolerate PO", regimens: [{ name: "Primary", drugs: "Ceftriaxone 1g IV daily", notes: "E. coli coverage" }, { name: "ESBL Risk", drugs: "Meropenem 1g IV q8h", notes: "Prior ESBL, critical illness" }] },
-  "Sepsis - Unknown Source": { source: "Surviving Sepsis 2021", criteria: "Hemodynamic instability. START IN 1 HOUR!", regimens: [{ name: "Broad Spectrum", drugs: "Vancomycin + Pip/Tazo 4.5g IV q6h", notes: "MRSA + Pseudomonas + anaerobes" }, { name: "PCN Allergy", drugs: "Vancomycin + Aztreonam + Metronidazole", notes: "Aztreonam safe in PCN allergy" }] },
-  "Cellulitis - Non-purulent": { source: "IDSA 2014", criteria: "No abscess, no drainage", regimens: [{ name: "Outpatient", drugs: "Cephalexin 500mg QID x 5d", notes: "Strep & MSSA" }, { name: "Inpatient", drugs: "Cefazolin 1-2g IV q8h", notes: "Step down when improving" }] },
-  "Cellulitis - Purulent/MRSA": { source: "IDSA 2014", criteria: "Abscess or purulent drainage. I&D PRIMARY!", regimens: [{ name: "Post I&D", drugs: "TMP-SMX DS BID x 5-7d", notes: "MRSA coverage" }, { name: "Severe", drugs: "Vancomycin IV + I&D", notes: "Systemic signs" }] },
-  "Intra-abdominal": { source: "SIS 2017", criteria: "Perforated appendix, diverticulitis, etc.", regimens: [{ name: "Primary", drugs: "Pip/Tazo 4.5g IV q6h", notes: "Monotherapy" }, { name: "Alternative", drugs: "Ceftriaxone + Metronidazole", notes: "If Pip/Tazo unavailable" }] },
-  "C. difficile - Non-severe": { source: "IDSA 2021", criteria: "WBC <15k, Cr <1.5x baseline", regimens: [{ name: "Primary", drugs: "Fidaxomicin 200mg BID x 10d", notes: "Preferred (lower recurrence)" }, { name: "Alternative", drugs: "Vancomycin 125mg PO QID x 10d", notes: "If fidaxomicin unavailable" }] },
-  "C. difficile - Severe/Fulminant": { source: "IDSA 2021", criteria: "WBC >15k, Cr >1.5x, hypotension, ileus", regimens: [{ name: "Severe", drugs: "Vancomycin 125mg PO QID x 10d", notes: "Consider fidaxomicin" }, { name: "Fulminant", drugs: "Vanc 500mg PO/NG QID + Metronidazole 500mg IV q8h", notes: "± Vanc enemas. Surgery consult!" }] },
-  "Meningitis - Empiric": { source: "IDSA 2004", criteria: "Fever, headache, neck stiffness, AMS. EMERGENCY!", regimens: [{ name: "Primary", drugs: "Ceftriaxone 2g IV q12h + Vancomycin + Dexamethasone", notes: "Dex BEFORE or WITH 1st abx dose" }, { name: "Age >50 or Immunocompromised", drugs: "Add Ampicillin 2g IV q4h", notes: "Listeria coverage" }] }
-};
-
-let currentDrug = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-  renderDrugGrid();
-  renderEmpiricList();
-  populateCalcDrugs();
-});
-
-function showTab(tab, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-drugs').classList.add('hidden');
-  document.getElementById('tab-empiric').classList.add('hidden');
-  document.getElementById('tab-calculator').classList.add('hidden');
-  document.getElementById('tab-' + tab).classList.remove('hidden');
-  document.getElementById('drugGrid').classList.remove('hidden');
-  document.getElementById('drugDetail').classList.remove('active');
-}
-
-function renderDrugGrid() {
-  const grid = document.getElementById('drugGrid');
+// Render system grid
+function renderSystems() {
+  const grid = document.getElementById('systemGrid');
   grid.innerHTML = '';
-  Object.keys(ANTIBIOTICS).sort().forEach(name => {
-    const drug = ANTIBIOTICS[name];
-    grid.innerHTML += '<div class="drug-card" onclick="showDrugDetail(\'' + name + '\')"><div class="drug-name">' + name + '</div><div class="drug-class">' + drug.class + '</div><div class="drug-spectrum">' + drug.spectrum.map(s => '<span class="spectrum-tag ' + s + '">' + s.toUpperCase() + '</span>').join('') + '</div></div>';
+  
+  Object.keys(ABX_PROTOCOLS).forEach(key => {
+    const sys = ABX_PROTOCOLS[key];
+    const condCount = sys.conditions.length;
+    const div = document.createElement('div');
+    div.className = 'abx-tile';
+    div.style.borderTop = `4px solid ${sys.color}`;
+    div.onclick = () => showCategory(key);
+    div.innerHTML = `
+      <span class="abx-icon">${sys.icon}</span>
+      <span class="abx-label">${key}</span>
+      <span class="abx-count">${condCount} protocol${condCount > 1 ? 's' : ''}</span>
+    `;
+    grid.appendChild(div);
   });
 }
 
-function filterDrugs() {
-  const q = document.getElementById('drugSearch').value.toLowerCase();
-  if (document.getElementById('drugDetail').classList.contains('active')) {
-    document.getElementById('drugDetail').classList.remove('active');
-    document.getElementById('drugGrid').classList.remove('hidden');
-  }
-  document.querySelectorAll('.drug-card').forEach(c => {
-    const name = c.querySelector('.drug-name').textContent.toLowerCase();
-    const cls = c.querySelector('.drug-class').textContent.toLowerCase();
-    c.style.display = (name.includes(q) || cls.includes(q)) ? '' : 'none';
+// Show category detail
+function showCategory(category) {
+  document.getElementById('systemGrid').classList.add('hidden');
+  document.getElementById('detailView').classList.add('active');
+  document.getElementById('searchResults').classList.add('hidden');
+  document.getElementById('searchInput').value = '';
+  
+  const sys = ABX_PROTOCOLS[category];
+  document.getElementById('categoryTitle').innerHTML = `${sys.icon} ${category} Protocols`;
+  
+  const container = document.getElementById('protocolList');
+  container.innerHTML = '';
+  
+  sys.conditions.forEach(cond => {
+    container.innerHTML += renderProtocolCard(cond, sys.color);
   });
 }
 
-function showDrugDetail(name) {
-  currentDrug = name;
-  const d = ANTIBIOTICS[name];
-  document.getElementById('drugGrid').classList.add('hidden');
-  const det = document.getElementById('drugDetail');
-  det.classList.add('active');
-  
-  let contraHTML = '';
-  if (d.contraindications) d.contraindications.forEach(c => {
-    contraHTML += '<div class="warning-box ' + (c.type === 'Absolute' ? '' : 'caution') + '"><div class="warning-title">' + (c.type === 'Absolute' ? '🚫' : '⚠️') + ' ' + c.type + '</div><div class="warning-text">' + c.text + '</div></div>';
+// Render a single protocol card
+function renderProtocolCard(cond, color) {
+  let regimensHTML = '';
+  cond.regimens.forEach(reg => {
+    let tagClass = 'tag-primary';
+    if (reg.type.toLowerCase().includes('allergy')) tagClass = 'tag-allergy';
+    else if (reg.type.toLowerCase().includes('risk') || reg.type.toLowerCase().includes('severe')) tagClass = 'tag-risk';
+    else if (reg.type.toLowerCase().includes('alternative') || reg.type.toLowerCase().includes('second')) tagClass = 'tag-alt';
+    
+    regimensHTML += `
+      <div class="regimen-box">
+        <span class="regimen-tag ${tagClass}">${reg.type}</span>
+        <div class="regimen-drug">${reg.drug}</div>
+        <div class="regimen-notes">ℹ️ ${reg.notes}</div>
+      </div>
+    `;
   });
-  
-  let interHTML = '';
-  if (d.interactions) interHTML = d.interactions.map(i => '<span class="interaction-badge ' + i.severity + '">' + i.drug + ': ' + i.effect + '</span>').join('');
-  
-  let precHTML = '';
-  if (d.precautions) precHTML = '<ul style="margin:0;padding-left:20px">' + d.precautions.map(p => '<li style="margin-bottom:8px;font-size:0.85rem;color:var(--text-secondary)">' + p + '</li>').join('') + '</ul>';
-  
-  let indHTML = '';
-  if (d.indications) indHTML = d.indications.map(i => '<div class="indication-item"><span class="indication-icon">•</span><div><div class="indication-text">' + i.name + '</div><div class="indication-dose">' + i.dose + '</div></div></div>').join('');
-  
-  let renalHTML = '';
-  if (d.renal) renalHTML = '<table class="renal-table"><tr><th>eGFR</th><th>Dose Adjustment</th></tr>' + d.renal.map(r => '<tr><td><span class="renal-gfr">' + r.gfr + '</span></td><td>' + r.dose + '</td></tr>').join('') + '</table>';
-  
-  det.innerHTML = '<div class="back-link" onclick="closeDrugDetail()">← Back to Antibiotics</div>' +
-    '<div class="detail-header"><div class="detail-drug-name">' + name + '</div><div class="detail-drug-class">' + d.class + '</div><div class="detail-source">' + d.source + '</div></div>' +
-    '<div class="section-card expanded"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">🎯</span><span class="section-title">Spectrum & Indications</span><span class="section-chevron">▼</span></div><div class="section-body"><div class="info-row"><div class="info-label">Coverage</div><div class="info-value">' + d.spectrumDetail + '</div></div><div style="margin-top:16px"><div class="info-label">Common Indications</div>' + indHTML + '</div></div></div>' +
-    '<div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">💊</span><span class="section-title">Dosing</span><span class="section-chevron">▼</span></div><div class="section-body"><div class="info-row"><div class="info-label">Standard</div><div class="info-value" style="font-family:\'JetBrains Mono\',monospace;font-weight:600">' + d.dosing.standard.dose + ' ' + d.dosing.standard.route + ' ' + d.dosing.standard.freq + '</div></div>' + (d.dosing.high ? '<div class="info-row"><div class="info-label">High Dose</div><div class="info-value" style="font-family:\'JetBrains Mono\',monospace">' + d.dosing.high.dose + ' ' + (d.dosing.high.route||'') + ' ' + d.dosing.high.freq + '</div></div>' : '') + (d.dosing.pediatric ? '<div class="info-row"><div class="info-label">Pediatric</div><div class="info-value">' + d.dosing.pediatric + '</div></div>' : '') + '<div class="info-row"><div class="info-label">Pregnancy</div><div class="info-value">' + d.pregnancy + '</div></div></div></div>' +
-    '<div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">🫘</span><span class="section-title">Renal Adjustment</span><span class="section-chevron">▼</span></div><div class="section-body">' + renalHTML + '</div></div>' +
-    '<div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">🚫</span><span class="section-title">Contraindications</span><span class="section-chevron">▼</span></div><div class="section-body">' + (contraHTML || '<div style="color:var(--text-muted)">No absolute contraindications</div>') + '</div></div>' +
-    '<div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">⚡</span><span class="section-title">Drug Interactions</span><span class="section-chevron">▼</span></div><div class="section-body"><div style="display:flex;flex-wrap:wrap">' + (interHTML || '<div style="color:var(--text-muted)">No major interactions</div>') + '</div></div></div>' +
-    '<div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">⚠️</span><span class="section-title">Precautions & Monitoring</span><span class="section-chevron">▼</span></div><div class="section-body">' + precHTML + '<div class="info-row" style="margin-top:16px"><div class="info-label">Monitoring</div><div class="info-value">' + d.monitoring + '</div></div></div></div>';
+
+  return `
+    <div class="proto-card" style="border-left: 4px solid ${color || '#3b82f6'}">
+      <div class="proto-header">
+        <span class="proto-name">${cond.name}</span>
+        <span class="proto-source">${cond.source}</span>
+      </div>
+      <div class="proto-criteria">
+        <strong>Criteria:</strong> ${cond.criteria}
+      </div>
+      ${regimensHTML}
+      <div class="proto-duration">
+        🕒 Duration: ${cond.duration}
+      </div>
+    </div>
+  `;
 }
 
-function closeDrugDetail() {
-  document.getElementById('drugDetail').classList.remove('active');
-  document.getElementById('drugGrid').classList.remove('hidden');
-  document.getElementById('drugSearch').value = '';
-  filterDrugs();
+// Reset to main view
+function resetView() {
+  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('systemGrid').classList.remove('hidden');
+  document.getElementById('searchResults').classList.add('hidden');
+  document.getElementById('searchInput').value = '';
 }
 
-function toggleSection(h) { h.parentElement.classList.toggle('expanded'); }
-
-function renderEmpiricList() {
-  const c = document.getElementById('empiricList');
-  c.innerHTML = '';
-  Object.keys(EMPIRIC).forEach(name => {
-    const p = EMPIRIC[name];
-    let regHTML = p.regimens.map(r => '<div style="padding:12px;border-bottom:1px solid var(--border)"><div style="font-weight:600;color:var(--primary);font-size:0.8rem;margin-bottom:4px">' + r.name + '</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:0.85rem;margin-bottom:4px">' + r.drugs + '</div><div style="font-size:0.75rem;color:var(--text-muted)">' + r.notes + '</div></div>').join('');
-    c.innerHTML += '<div class="section-card" style="margin-bottom:12px"><div style="padding:14px 16px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-bottom:1px solid var(--border)"><div style="font-weight:700;font-size:0.95rem;color:var(--text-main)">' + name + '</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">' + p.source + '</div><div style="font-size:0.8rem;color:var(--text-secondary);margin-top:8px;background:var(--warning-light);padding:8px;border-radius:6px"><strong>Criteria:</strong> ' + p.criteria + '</div></div>' + regHTML + '</div>';
-  });
-}
-
-function filterEmpiric() {
-  const q = document.getElementById('empiricSearch').value.toLowerCase();
-  document.querySelectorAll('#empiricList .section-card').forEach(c => {
-    c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-
-function populateCalcDrugs() {
-  const s = document.getElementById('calcDrug');
-  Object.keys(ANTIBIOTICS).sort().forEach(n => { s.innerHTML += '<option value="' + n + '">' + n + '</option>'; });
-}
-
-function calculateDose() {
-  const drugName = document.getElementById('calcDrug').value;
-  const weight = parseFloat(document.getElementById('calcWeight').value);
-  const gfr = parseFloat(document.getElementById('calcGFR').value);
-  const indication = document.getElementById('calcIndication').value;
+// Search functionality
+function handleSearch() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
   
-  if (!drugName) {
-    document.getElementById('calcResult').innerHTML = '<div class="dose-result warning"><div class="dose-title">⚠️ Select an antibiotic</div></div>';
+  if (!query) {
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('systemGrid').classList.remove('hidden');
+    document.getElementById('detailView').classList.remove('active');
     return;
   }
   
-  const d = ANTIBIOTICS[drugName];
-  let resultClass = '';
-  let doseText = '';
-  let notes = [];
+  document.getElementById('systemGrid').classList.add('hidden');
+  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('searchResults').classList.remove('hidden');
   
-  let baseDose = d.dosing.standard;
-  if (indication === 'severe' && d.dosing.high) baseDose = d.dosing.high;
-  else if (indication === 'meningitis' && d.dosing.meningitis) baseDose = d.dosing.meningitis;
+  const results = [];
   
-  doseText = baseDose.dose + ' ' + baseDose.route + ' ' + baseDose.freq;
-  
-  // Weight-based drugs
-  if (drugName === 'Vancomycin' && weight) {
-    const dose = Math.round(weight * 17.5 / 50) * 50;
-    doseText = dose + 'mg IV q8-12h';
-    notes.push('Based on ' + weight + 'kg × 15-20 mg/kg');
-    if (indication === 'severe') {
-      const loading = Math.round(weight * 27.5 / 50) * 50;
-      notes.push('Consider loading: ' + loading + 'mg (25-30 mg/kg)');
-    }
-  }
-  
-  if (drugName === 'Gentamicin' && weight) {
-    const dose = Math.round(weight * 6 * 10) / 10;
-    doseText = dose + 'mg IV q24h (extended-interval)';
-    notes.push('Based on ' + weight + 'kg × 5-7 mg/kg');
-  }
-  
-  if (drugName === 'Piperacillin-Tazobactam' && weight && weight > 120) {
-    notes.push('Consider 4.5g q6h for weight >120kg');
-  }
-  
-  // Renal adjustment
-  if (gfr && d.renal) {
-    const renalAdj = d.renal.find(r => {
-      if (r.gfr.includes('>')) return gfr > parseInt(r.gfr.replace('>',''));
-      if (r.gfr.includes('<')) return gfr < parseInt(r.gfr.replace('<',''));
-      if (r.gfr.includes('-')) { const [min,max] = r.gfr.split('-').map(Number); return gfr >= min && gfr <= max; }
-      return false;
+  Object.keys(ABX_PROTOCOLS).forEach(cat => {
+    const sys = ABX_PROTOCOLS[cat];
+    sys.conditions.forEach(cond => {
+      const matchName = cond.name.toLowerCase().includes(query);
+      const matchDrug = cond.regimens.some(r => r.drug.toLowerCase().includes(query));
+      const matchCriteria = cond.criteria.toLowerCase().includes(query);
+      
+      if (matchName || matchDrug || matchCriteria) {
+        results.push({ ...cond, category: cat, color: sys.color, icon: sys.icon });
+      }
     });
-    if (renalAdj && renalAdj.dose !== 'No adjustment') {
-      resultClass = 'warning';
-      notes.push('⚠️ Renal adjustment (eGFR ' + gfr + '): ' + renalAdj.dose);
-    }
-  }
-  
-  // Critical warnings
-  if (drugName === 'Nitrofurantoin' && gfr && gfr < 30) {
-    resultClass = 'danger';
-    notes.push('🚫 AVOID - Ineffective and toxic when CrCl <30');
-  }
-  if (drugName === 'Cefepime' && gfr && gfr < 30) {
-    resultClass = 'warning';
-    notes.push('🧠 Monitor for neurotoxicity');
-  }
-  if (drugName === 'Levofloxacin' || drugName === 'Ciprofloxacin') {
-    notes.push('⚫ FDA Black Box: Tendon rupture, neuropathy risk');
-  }
-  if (drugName === 'Vancomycin') {
-    notes.push('🎯 Target AUC 400-600 or Trough 15-20');
-  }
-  
-  document.getElementById('calcResult').innerHTML = '<div class="dose-result ' + resultClass + '"><div class="dose-title">📋 Calculated Dose</div><div class="dose-value">' + doseText + '</div>' + (notes.length ? '<div class="dose-note">' + notes.join('<br>') + '</div>' : '') + '</div>';
-}
-
-function goBack() { window.location.href = 'index.html'; }
-</script>
-</body>
-</html>
-const ANTIBIOTICS = {
-"Amoxicillin": {
-  class: "Penicillin",
-  spectrum: ["gp", "gn"],
-  spectrumDetail: "Strep, E. coli, H. flu, Listeria, Enterococcus faecalis",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "500mg", freq: "q8h", route: "PO" },
-    high: { dose: "1g", freq: "q8h", route: "PO" },
-    weightBased: false,
-    pediatric: "25-50 mg/kg/day divided q8h (max 3g/day)"
-  },
-  indications: [
-    { name: "Otitis Media", dose: "500-1000mg PO q8h × 5-7d" },
-    { name: "Strep Pharyngitis", dose: "500mg PO q12h × 10d (or 1g daily)" },
-    { name: "Sinusitis (acute bacterial)", dose: "500-1000mg PO q8h × 5-7d" },
-    { name: "H. pylori (triple therapy)", dose: "1g PO BID × 14d" },
-    { name: "Endocarditis prophylaxis", dose: "2g PO × 1 dose (30-60min before)" }
-  ],
-  renal: [
-    { gfr: ">30", dose: "No adjustment" },
-    { gfr: "10-30", dose: "250-500mg q12h" },
-    { gfr: "<10", dose: "250-500mg q24h" },
-    { gfr: "HD", dose: "250-500mg q24h + dose after HD" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Penicillin anaphylaxis or severe hypersensitivity" },
-    { type: "Caution", text: "Cephalosporin allergy (1-2% cross-reactivity)" },
-    { type: "Caution", text: "Infectious mononucleosis (high rash risk)" }
-  ],
-  interactions: [
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR - monitor closely" },
-    { drug: "Methotrexate", severity: "major", effect: "↓ MTX clearance → toxicity" },
-    { drug: "Allopurinol", severity: "moderate", effect: "↑ rash risk (not allergy)" }
-  ],
-  blackbox: null,
-  precautions: [
-    "C. difficile risk with prolonged use - monitor for diarrhea",
-    "Infectious mononucleosis: 70-100% develop rash - AVOID if EBV suspected",
-    "Chewable tabs contain phenylalanine - caution in PKU"
-  ],
-  pregnancy: "Category B - Compatible with pregnancy & breastfeeding",
-  monitoring: "CBC if prolonged use; renal function in impairment"
-},
-
-"Amoxicillin-Clavulanate": {
-  class: "Penicillin + β-lactamase inhibitor",
-  spectrum: ["gp", "gn", "anaerobe"],
-  spectrumDetail: "MSSA, Strep, H. flu, Moraxella, E. coli, Klebsiella, Anaerobes (including Bacteroides)",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "875/125mg", freq: "q12h", route: "PO" },
-    high: { dose: "2000/125mg XR", freq: "q12h", route: "PO" },
-    weightBased: false,
-    pediatric: "25-45 mg/kg/day (amox) divided q12h"
-  },
-  indications: [
-    { name: "Sinusitis (bacterial)", dose: "875mg PO q12h × 5-7d" },
-    { name: "Animal/Human bite", dose: "875mg PO q12h × 3-5d" },
-    { name: "Diabetic foot (mild)", dose: "875mg PO q12h × 7-14d" },
-    { name: "Aspiration pneumonia", dose: "875mg PO q12h × 7d" },
-    { name: "Acute otitis media (severe)", dose: "875mg PO q12h × 10d" }
-  ],
-  renal: [
-    { gfr: ">30", dose: "No adjustment" },
-    { gfr: "10-30", dose: "500/125mg q12h (avoid XR)" },
-    { gfr: "<10", dose: "500/125mg q24h" },
-    { gfr: "HD", dose: "500/125mg q24h + dose after HD" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Penicillin anaphylaxis" },
-    { type: "Absolute", text: "History of cholestatic jaundice with prior amox-clav" }
-  ],
-  interactions: [
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR" },
-    { drug: "Methotrexate", severity: "major", effect: "↓ MTX clearance" }
-  ],
-  blackbox: null,
-  precautions: [
-    "⚠️ HEPATOTOXICITY: Monitor LFTs if therapy >10 days",
-    "Cholestatic jaundice may occur during or after treatment",
-    "GI upset more common than amoxicillin alone - take with food",
-    "Diarrhea common (~9%) - C. diff risk"
-  ],
-  pregnancy: "Category B",
-  monitoring: "LFTs if prolonged therapy; CBC"
-},
-
-"Piperacillin-Tazobactam": {
-  class: "Extended-spectrum Penicillin + β-lactamase inhibitor",
-  spectrum: ["gp", "gn", "anaerobe"],
-  spectrumDetail: "MSSA, Strep, Enterococcus faecalis, Pseudomonas, Enterobacteriaceae, Anaerobes",
-  source: "UpToDate 2024, IDSA",
-  dosing: {
-    standard: { dose: "3.375g", freq: "q6h", route: "IV" },
-    high: { dose: "4.5g", freq: "q6h", route: "IV" },
-    extended: { dose: "3.375g over 4h", freq: "q8h", route: "IV" },
-    weightBased: false,
-    pediatric: "300-400 mg/kg/day (pip) divided q6-8h (max 16g/day)"
-  },
-  indications: [
-    { name: "HAP/VAP", dose: "4.5g IV q6h (or 3.375g q8h extended infusion)" },
-    { name: "Intra-abdominal infection", dose: "3.375g IV q6h" },
-    { name: "Diabetic foot (moderate-severe)", dose: "3.375g IV q6h" },
-    { name: "Febrile neutropenia", dose: "4.5g IV q6h" },
-    { name: "Sepsis (empiric)", dose: "4.5g IV q6h" }
-  ],
-  renal: [
-    { gfr: ">40", dose: "3.375-4.5g q6h" },
-    { gfr: "20-40", dose: "2.25g q6h" },
-    { gfr: "<20", dose: "2.25g q8h" },
-    { gfr: "HD", dose: "2.25g q8h + 0.75g after HD" },
-    { gfr: "CRRT", dose: "2.25-3.375g q6-8h" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Penicillin anaphylaxis" }
-  ],
-  interactions: [
-    { drug: "Vancomycin", severity: "major", effect: "↑ AKI risk - prefer alternative (cefepime)" },
-    { drug: "Methotrexate", severity: "major", effect: "↓ MTX clearance" },
-    { drug: "Vecuronium", severity: "moderate", effect: "Prolonged neuromuscular blockade" },
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🚨 Pip/Tazo + Vancomycin = ↑ AKI risk - consider cefepime instead",
-    "High sodium: 2.35 mEq/g - caution in CHF, fluid restriction",
-    "False-positive galactomannan (Aspergillus test)",
-    "Seizure risk with high doses in renal impairment",
-    "Extended infusion (4h) improves outcomes in severe infections"
-  ],
-  pregnancy: "Category B",
-  monitoring: "SCr daily, electrolytes, CBC weekly"
-},
-
-"Ceftriaxone": {
-  class: "3rd Generation Cephalosporin",
-  spectrum: ["gp", "gn"],
-  spectrumDetail: "Strep, MSSA, H. flu, Moraxella, E. coli, Klebsiella, Proteus, N. gonorrhoeae, N. meningitidis",
-  source: "UpToDate 2024, IDSA",
-  dosing: {
-    standard: { dose: "1g", freq: "q24h", route: "IV/IM" },
-    high: { dose: "2g", freq: "q12-24h", route: "IV" },
-    meningitis: { dose: "2g", freq: "q12h", route: "IV" },
-    weightBased: false,
-    pediatric: "50-100 mg/kg/day divided q12-24h (max 4g/day)"
-  },
-  indications: [
-    { name: "CAP (inpatient)", dose: "1g IV q24h" },
-    { name: "Pyelonephritis", dose: "1g IV q24h" },
-    { name: "Bacterial meningitis", dose: "2g IV q12h" },
-    { name: "Gonorrhea (uncomplicated)", dose: "500mg IM × 1" },
-    { name: "SBP (treatment/prophylaxis)", dose: "1g IV q24h" },
-    { name: "Lyme (early disseminated/late)", dose: "2g IV q24h × 14-28d" }
-  ],
-  renal: [
-    { gfr: ">10", dose: "No adjustment" },
-    { gfr: "<10", dose: "Max 2g/day" },
-    { gfr: "HD", dose: "1-2g q24h (not dialyzed)" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Cephalosporin anaphylaxis" },
-    { type: "Absolute", text: "Neonates (<28d) receiving IV calcium - fatal precipitation" },
-    { type: "Absolute", text: "Hyperbilirubinemic neonates - displaces bilirubin" },
-    { type: "Caution", text: "Severe PCN allergy (2% cross-reactivity)" }
-  ],
-  interactions: [
-    { drug: "IV Calcium", severity: "major", effect: "Fatal precipitation in neonates - CONTRAINDICATED" },
-    { drug: "Ringer's Lactate", severity: "moderate", effect: "Incompatible - use NS or D5W" },
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR (vitamin K antagonism)" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🚨 NEVER mix with calcium-containing IV solutions",
-    "Biliary sludging/pseudolithiasis (reversible) - especially with prolonged use",
-    "False-positive Coombs test",
-    "IM injection painful - reconstitute with 1% lidocaine"
-  ],
-  pregnancy: "Category B",
-  monitoring: "CBC, LFTs if prolonged; RUQ ultrasound if abdominal symptoms"
-},
-
-"Cefepime": {
-  class: "4th Generation Cephalosporin",
-  spectrum: ["gp", "gn"],
-  spectrumDetail: "MSSA, Strep, Pseudomonas, Enterobacteriaceae (including AmpC producers), H. flu",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "1-2g", freq: "q8-12h", route: "IV" },
-    high: { dose: "2g", freq: "q8h", route: "IV" },
-    meningitis: { dose: "2g", freq: "q8h", route: "IV" },
-    weightBased: false,
-    pediatric: "50 mg/kg q8-12h (max 2g/dose)"
-  },
-  indications: [
-    { name: "HAP/VAP", dose: "2g IV q8h" },
-    { name: "Febrile neutropenia", dose: "2g IV q8h" },
-    { name: "Pseudomonas infection", dose: "2g IV q8h" },
-    { name: "Meningitis", dose: "2g IV q8h" },
-    { name: "UTI (complicated)", dose: "1-2g IV q12h" }
-  ],
-  renal: [
-    { gfr: ">60", dose: "2g q8h" },
-    { gfr: "30-60", dose: "2g q12h" },
-    { gfr: "11-29", dose: "2g q24h" },
-    { gfr: "<11", dose: "1g q24h" },
-    { gfr: "HD", dose: "1g q24h + 1g after HD" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Cephalosporin anaphylaxis" },
-    { type: "Caution", text: "Severe PCN allergy" }
-  ],
-  interactions: [
-    { drug: "Aminoglycosides", severity: "moderate", effect: "Synergistic but separate administration" },
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🧠 NEUROTOXICITY in renal impairment: encephalopathy, myoclonus, seizures, coma",
-    "Must adjust dose for CrCl - critical to avoid neurotoxicity",
-    "NOT active against MRSA, VRE, or anaerobes",
-    "Better Pseudomonas coverage than ceftazidime with AmpC stability"
-  ],
-  pregnancy: "Category B",
-  monitoring: "SCr daily, NEURO STATUS (esp if renal impairment), CBC"
-},
-
-"Cefazolin": {
-  class: "1st Generation Cephalosporin",
-  spectrum: ["gp"],
-  spectrumDetail: "MSSA (excellent), Streptococci, E. coli, Klebsiella, Proteus (limited GN)",
-  source: "UpToDate 2024, IDSA",
-  dosing: {
-    standard: { dose: "1-2g", freq: "q8h", route: "IV" },
-    surgical: { dose: "2g (3g if >120kg)", freq: "pre-op", route: "IV" },
-    weightBased: false,
-    pediatric: "25-100 mg/kg/day divided q8h"
-  },
-  indications: [
-    { name: "MSSA bacteremia", dose: "2g IV q8h" },
-    { name: "MSSA endocarditis", dose: "2g IV q8h × 4-6 weeks" },
-    { name: "Cellulitis (non-purulent)", dose: "1-2g IV q8h" },
-    { name: "Surgical prophylaxis", dose: "2g IV within 60min (3g if >120kg)" },
-    { name: "MSSA osteomyelitis", dose: "2g IV q8h" }
-  ],
-  renal: [
-    { gfr: ">55", dose: "1-2g q8h" },
-    { gfr: "35-54", dose: "1g q8h" },
-    { gfr: "11-34", dose: "1g q12h" },
-    { gfr: "<10", dose: "1g q24h" },
-    { gfr: "HD", dose: "1-2g after each HD" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Cephalosporin anaphylaxis" }
-  ],
-  interactions: [
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR" },
-    { drug: "Probenecid", severity: "minor", effect: "↑ cefazolin levels" }
-  ],
-  blackbox: null,
-  precautions: [
-    "Drug of choice for MSSA bacteremia - superior to vancomycin",
-    "Safe in most PCN-allergic patients (except anaphylaxis)",
-    "NOT active against MRSA, Enterococcus, Pseudomonas, anaerobes"
-  ],
-  pregnancy: "Category B",
-  monitoring: "CBC, SCr"
-},
-
-"Meropenem": {
-  class: "Carbapenem",
-  spectrum: ["gp", "gn", "anaerobe"],
-  spectrumDetail: "Broadest: MSSA, Strep, most GN (ESBL, AmpC), Pseudomonas, Anaerobes. NOT: MRSA, VRE",
-  source: "UpToDate 2024, IDSA",
-  dosing: {
-    standard: { dose: "1g", freq: "q8h", route: "IV" },
-    high: { dose: "2g", freq: "q8h", route: "IV" },
-    meningitis: { dose: "2g", freq: "q8h", route: "IV" },
-    extended: { dose: "1-2g over 3h", freq: "q8h", route: "IV" },
-    weightBased: false,
-    pediatric: "20-40 mg/kg q8h (max 2g/dose)"
-  },
-  indications: [
-    { name: "ESBL infection", dose: "1g IV q8h" },
-    { name: "Meningitis", dose: "2g IV q8h" },
-    { name: "Febrile neutropenia (2nd line)", dose: "1g IV q8h" },
-    { name: "Severe intra-abdominal", dose: "1g IV q8h" },
-    { name: "HAP/VAP (MDR risk)", dose: "1-2g IV q8h" }
-  ],
-  renal: [
-    { gfr: ">50", dose: "1-2g q8h" },
-    { gfr: "26-50", dose: "1g q12h" },
-    { gfr: "10-25", dose: "500mg q12h" },
-    { gfr: "<10", dose: "500mg q24h" },
-    { gfr: "HD", dose: "500mg q24h + dose after HD" },
-    { gfr: "CRRT", dose: "1g q12h" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Carbapenem anaphylaxis" },
-    { type: "Caution", text: "PCN anaphylaxis (1% cross-reactivity)" }
-  ],
-  interactions: [
-    { drug: "Valproic Acid", severity: "major", effect: "↓↓ VPA 60-100% → breakthrough seizures - AVOID" },
-    { drug: "Probenecid", severity: "moderate", effect: "↑ meropenem - avoid combination" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🚨 AVOID with Valproic Acid - drops VPA levels dramatically",
-    "Lower seizure risk than imipenem - preferred for CNS infections",
-    "Reserve for serious/resistant infections (antimicrobial stewardship)",
-    "Does NOT cover MRSA, VRE, Stenotrophomonas, Acinetobacter (most)"
-  ],
-  pregnancy: "Category B",
-  monitoring: "SCr, CBC, LFTs, valproic acid level if applicable"
-},
-
-"Vancomycin": {
-  class: "Glycopeptide",
-  spectrum: ["gp"],
-  spectrumDetail: "MRSA, MSSA, Strep (including PCN-resistant), Enterococcus (not VRE), C. diff (PO only)",
-  source: "IDSA Vancomycin Guidelines 2020",
-  dosing: {
-    standard: { dose: "15-20 mg/kg", freq: "q8-12h", route: "IV" },
-    loading: { dose: "25-30 mg/kg", freq: "× 1", route: "IV" },
-    oral: { dose: "125mg", freq: "q6h", route: "PO" },
-    weightBased: true,
-    pediatric: "15 mg/kg q6h"
-  },
-  indications: [
-    { name: "MRSA bacteremia", dose: "15-20 mg/kg IV q8-12h (AUC 400-600)" },
-    { name: "MRSA pneumonia", dose: "15-20 mg/kg IV q8-12h" },
-    { name: "MRSA skin/soft tissue", dose: "15-20 mg/kg IV q12h" },
-    { name: "Bacterial meningitis (empiric)", dose: "15-20 mg/kg IV q8-12h (target trough 15-20)" },
-    { name: "C. difficile infection", dose: "125mg PO q6h × 10d (vanc PO only)" },
-    { name: "C. diff (fulminant)", dose: "500mg PO/NG q6h + 500mg PR q6h" }
-  ],
-  renal: [
-    { gfr: ">90", dose: "15-20mg/kg q8-12h" },
-    { gfr: "50-89", dose: "15-20mg/kg q12h" },
-    { gfr: "15-49", dose: "15-20mg/kg q24h" },
-    { gfr: "<15", dose: "15-20mg/kg, redose when trough <15-20" },
-    { gfr: "HD", dose: "15-25mg/kg load, redose for trough 15-20" }
-  ],
-  contraindications: [
-    { type: "Caution", text: "Prior Red Man Syndrome - slow infusion & premedicate" }
-  ],
-  interactions: [
-    { drug: "Piperacillin-Tazobactam", severity: "major", effect: "↑ AKI risk - prefer cefepime" },
-    { drug: "Aminoglycosides", severity: "major", effect: "↑↑ nephro/ototoxicity" },
-    { drug: "Loop diuretics", severity: "moderate", effect: "↑ ototoxicity" },
-    { drug: "NSAIDs", severity: "moderate", effect: "↑ nephrotoxicity" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🎯 TARGET: AUC/MIC 400-600 (preferred) or Trough 15-20 mcg/mL",
-    "Red Man Syndrome: Infuse over ≥1h, premedicate with diphenhydramine",
-    "⚠️ Vanc + Pip/Tazo = ↑ AKI - consider cefepime alternative",
-    "IV vanc NOT absorbed orally - useless for C. diff",
-    "PO vanc NOT absorbed systemically - only for GI (C. diff)",
-    "Ototoxicity risk - especially with aminoglycosides"
-  ],
-  pregnancy: "Category C (ototoxicity risk to fetus)",
-  monitoring: "AUC/MIC or Trough (before 4th dose), SCr daily, audiometry if prolonged"
-},
-
-"Levofloxacin": {
-  class: "Respiratory Fluoroquinolone",
-  spectrum: ["gp", "gn", "atypical"],
-  spectrumDetail: "Strep pneumo, H. flu, Moraxella, E. coli, Klebsiella, Pseudomonas, Legionella, Mycoplasma, Chlamydia",
-  source: "UpToDate 2024, FDA",
-  dosing: {
-    standard: { dose: "500mg", freq: "q24h", route: "PO/IV" },
-    high: { dose: "750mg", freq: "q24h", route: "PO/IV" },
-    weightBased: false,
-    pediatric: "Not recommended <18 years (cartilage toxicity)"
-  },
-  indications: [
-    { name: "CAP", dose: "750mg PO/IV q24h × 5d" },
-    { name: "Acute bacterial sinusitis", dose: "500mg PO q24h × 5-7d" },
-    { name: "UTI (uncomplicated)", dose: "250mg PO q24h × 3d" },
-    { name: "Pyelonephritis", dose: "750mg PO q24h × 5d" },
-    { name: "Chronic prostatitis", dose: "500mg PO q24h × 28d" }
-  ],
-  renal: [
-    { gfr: ">50", dose: "750mg q24h" },
-    { gfr: "20-49", dose: "750mg q48h" },
-    { gfr: "10-19", dose: "750mg initially, then 500mg q48h" },
-    { gfr: "<10", dose: "500mg initially, then 250mg q48h" },
-    { gfr: "HD", dose: "500mg initially, then 250mg q48h" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "History of FQ-associated tendon rupture" },
-    { type: "Absolute", text: "Myasthenia gravis - can cause fatal weakness" },
-    { type: "Caution", text: "QT prolongation or concurrent QT-prolonging drugs" },
-    { type: "Caution", text: "Aortic aneurysm risk factors" }
-  ],
-  interactions: [
-    { drug: "Antacids/Ca/Mg/Fe/Zn", severity: "major", effect: "↓↓ absorption - separate by 2h" },
-    { drug: "Warfarin", severity: "major", effect: "↑↑ INR - monitor closely" },
-    { drug: "QT-prolonging drugs", severity: "major", effect: "↑ Torsades de Pointes risk" },
-    { drug: "NSAIDs", severity: "moderate", effect: "↑ seizure risk" },
-    { drug: "Theophylline", severity: "moderate", effect: "↑ theophylline levels" },
-    { drug: "Corticosteroids", severity: "moderate", effect: "↑ tendon rupture risk" }
-  ],
-  blackbox: "FDA BLACK BOX WARNING: Tendinitis/tendon rupture, peripheral neuropathy, CNS effects (seizures, psychosis), aortic aneurysm/dissection. Reserve for when no alternatives exist.",
-  precautions: [
-    "⚫ BLACK BOX: Tendinitis, tendon rupture (esp >60y, steroids, transplant)",
-    "⚫ BLACK BOX: Peripheral neuropathy (may be irreversible)",
-    "⚫ BLACK BOX: CNS effects - seizures, confusion, psychosis",
-    "⚫ BLACK BOX: Aortic aneurysm/dissection risk",
-    "🚨 CONTRAINDICATED in Myasthenia Gravis",
-    "QT prolongation - check ECG in at-risk patients",
-    "Photosensitivity - advise sun protection",
-    "NOT first-line for uncomplicated UTI - reserve for serious infections"
-  ],
-  pregnancy: "Category C - Avoid (cartilage toxicity in animals)",
-  monitoring: "Tendon symptoms, neuro symptoms, QTc if at risk, INR with warfarin"
-},
-
-"Ciprofloxacin": {
-  class: "Fluoroquinolone",
-  spectrum: ["gn", "atypical"],
-  spectrumDetail: "Excellent: Pseudomonas, E. coli, Klebsiella, Salmonella, Shigella. POOR: Strep pneumo",
-  source: "UpToDate 2024, FDA",
-  dosing: {
-    standard: { dose: "500mg", freq: "q12h", route: "PO" },
-    iv: { dose: "400mg", freq: "q12h", route: "IV" },
-    high: { dose: "750mg PO or 400mg IV", freq: "q12h", route: "PO/IV" },
-    weightBased: false,
-    pediatric: "10-20 mg/kg q12h (only when no alternatives)"
-  },
-  indications: [
-    { name: "UTI (complicated)", dose: "500mg PO q12h × 7d" },
-    { name: "Pyelonephritis", dose: "500mg PO q12h × 7d" },
-    { name: "Pseudomonas UTI", dose: "750mg PO q12h" },
-    { name: "Traveler's diarrhea", dose: "500mg PO q12h × 1-3d" },
-    { name: "Anthrax (post-exposure)", dose: "500mg PO q12h × 60d" },
-    { name: "Pseudomonas (IV)", dose: "400mg IV q8h" }
-  ],
-  renal: [
-    { gfr: ">30", dose: "No adjustment" },
-    { gfr: "<30", dose: "250-500mg q12-24h" },
-    { gfr: "HD", dose: "250-500mg q24h after HD" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Concurrent tizanidine - CONTRAINDICATED" },
-    { type: "Absolute", text: "FQ-associated tendon rupture history" },
-    { type: "Absolute", text: "Myasthenia gravis" }
-  ],
-  interactions: [
-    { drug: "Tizanidine", severity: "major", effect: "↑↑ tizanidine levels → hypotension, sedation - CONTRAINDICATED" },
-    { drug: "Theophylline", severity: "major", effect: "↑↑ theophylline (reduce dose 30-50%)" },
-    { drug: "Antacids/Dairy/Ca/Fe", severity: "major", effect: "↓↓ absorption - separate 2h before or 6h after" },
-    { drug: "Warfarin", severity: "major", effect: "↑ INR" },
-    { drug: "Cyclosporine", severity: "moderate", effect: "↑ nephrotoxicity" }
-  ],
-  blackbox: "FDA BLACK BOX WARNING: Same as levofloxacin - tendinitis, neuropathy, CNS effects, aortic aneurysm.",
-  precautions: [
-    "⚫ BLACK BOX: Same serious risks as all fluoroquinolones",
-    "NOT reliable for Strep pneumo - avoid for respiratory infections",
-    "Take 2h before or 6h after antacids, dairy, calcium, iron",
-    "Excellent oral bioavailability (PO ≈ IV)",
-    "NEVER combine with tizanidine"
-  ],
-  pregnancy: "Category C - Avoid",
-  monitoring: "Tendon symptoms, neuro, renal function, theophylline levels"
-},
-
-"Azithromycin": {
-  class: "Macrolide",
-  spectrum: ["gp", "atypical"],
-  spectrumDetail: "Strep, H. flu, Moraxella, Atypicals (Mycoplasma, Chlamydia, Legionella), MAC",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "500mg day 1, then 250mg", freq: "q24h × 4d", route: "PO" },
-    cap: { dose: "500mg", freq: "q24h", route: "IV/PO" },
-    weightBased: false,
-    pediatric: "10 mg/kg day 1, then 5 mg/kg days 2-5"
-  },
-  indications: [
-    { name: "CAP (with beta-lactam)", dose: "500mg IV/PO q24h" },
-    { name: "COPD exacerbation", dose: "500mg × 1, then 250mg daily × 4d" },
-    { name: "Chlamydia trachomatis", dose: "1g PO × 1 dose" },
-    { name: "Traveler's diarrhea", dose: "1g PO × 1 or 500mg daily × 3d" },
-    { name: "MAC prophylaxis (HIV)", dose: "1200mg PO weekly" },
-    { name: "Pertussis", dose: "500mg × 1, then 250mg daily × 4d" }
-  ],
-  renal: [
-    { gfr: "Any", dose: "No adjustment required" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "History of cholestatic jaundice with prior azithromycin" },
-    { type: "Caution", text: "QT prolongation, hypokalemia, hypomagnesemia" }
-  ],
-  interactions: [
-    { drug: "QT-prolonging drugs", severity: "major", effect: "↑ Torsades risk" },
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR" },
-    { drug: "Digoxin", severity: "moderate", effect: "↑ digoxin levels (P-gp inhibition)" },
-    { drug: "Nelfinavir", severity: "moderate", effect: "↑ azithromycin levels" }
-  ],
-  blackbox: null,
-  precautions: [
-    "⚠️ QT prolongation - caution in cardiac patients, avoid with other QT drugs",
-    "Very long half-life (68h) - tissue levels persist ~10 days",
-    "Hepatotoxicity rare but reported",
-    "↑ Strep pneumo resistance in some regions",
-    "No renal adjustment needed"
-  ],
-  pregnancy: "Category B - Compatible with pregnancy",
-  monitoring: "ECG if QT risk factors, LFTs if hepatic symptoms"
-},
-
-"Doxycycline": {
-  class: "Tetracycline",
-  spectrum: ["gp", "gn", "atypical"],
-  spectrumDetail: "MRSA (CA-MRSA skin), Atypicals, Rickettsia, Spirochetes (Lyme, syphilis), Malaria prophylaxis",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "100mg", freq: "q12h", route: "PO/IV" },
-    loading: { dose: "200mg", freq: "× 1, then 100mg q12h", route: "PO" },
-    weightBased: false,
-    pediatric: ">8 years: 2-4 mg/kg/day divided q12h"
-  },
-  indications: [
-    { name: "MRSA skin infection", dose: "100mg PO q12h × 5-10d" },
-    { name: "CAP (atypical)", dose: "100mg PO q12h" },
-    { name: "Lyme disease (early)", dose: "100mg PO q12h × 10-14d" },
-    { name: "Chlamydia", dose: "100mg PO q12h × 7d" },
-    { name: "Rocky Mountain Spotted Fever", dose: "100mg PO/IV q12h" },
-    { name: "Malaria prophylaxis", dose: "100mg PO daily" },
-    { name: "Syphilis (PCN allergy)", dose: "100mg PO q12h × 14d (primary/secondary)" }
-  ],
-  renal: [
-    { gfr: "Any", dose: "No adjustment (hepatic metabolism)" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Pregnancy (2nd/3rd trimester) - fetal teeth/bone" },
-    { type: "Absolute", text: "Children <8 years - permanent tooth discoloration" },
-    { type: "Caution", text: "Myasthenia gravis (may worsen weakness)" }
-  ],
-  interactions: [
-    { drug: "Antacids/Ca/Fe/Mg", severity: "major", effect: "↓↓ absorption - separate 2h" },
-    { drug: "Warfarin", severity: "moderate", effect: "↑ INR" },
-    { drug: "Isotretinoin", severity: "major", effect: "↑↑ pseudotumor cerebri - AVOID" },
-    { drug: "Barbiturates/Phenytoin", severity: "moderate", effect: "↓ doxycycline (enzyme induction)" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🚫 AVOID in pregnancy & children <8 years (teeth/bone effects)",
-    "☀️ SEVERE photosensitivity - sunscreen essential",
-    "Take with full glass of water, stay upright 30min (esophageal ulceration)",
-    "Food improves tolerance but may ↓ absorption slightly",
-    "Can be used in renal failure (unlike other tetracyclines)"
-  ],
-  pregnancy: "Category D - AVOID",
-  monitoring: "Photosensitivity symptoms, LFTs if prolonged use"
-},
-
-"Metronidazole": {
-  class: "Nitroimidazole",
-  spectrum: ["anaerobe"],
-  spectrumDetail: "Anaerobes (Bacteroides, Clostridium, Fusobacterium), C. diff, Giardia, Trichomonas, H. pylori",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "500mg", freq: "q8h", route: "IV/PO" },
-    cdiff: { dose: "500mg", freq: "q8h", route: "PO" },
-    weightBased: false,
-    pediatric: "7.5 mg/kg q6h (max 500mg/dose)"
-  },
-  indications: [
-    { name: "Intra-abdominal (anaerobic)", dose: "500mg IV/PO q8h" },
-    { name: "C. difficile (initial non-severe)", dose: "500mg PO q8h × 10d" },
-    { name: "Bacterial vaginosis", dose: "500mg PO q12h × 7d" },
-    { name: "Trichomoniasis", dose: "2g PO × 1 dose (treat partner)" },
-    { name: "H. pylori (combination)", dose: "500mg PO q8h × 14d" },
-    { name: "Brain abscess", dose: "500mg IV q6-8h" }
-  ],
-  renal: [
-    { gfr: ">10", dose: "No adjustment" },
-    { gfr: "<10 or HD", dose: "Consider 50% dose or q12h dosing" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "First trimester pregnancy (teratogenic in animals)" },
-    { type: "Absolute", text: "Concurrent alcohol or within 3 days (disulfiram reaction)" },
-    { type: "Absolute", text: "Concurrent disulfiram or within 2 weeks" }
-  ],
-  interactions: [
-    { drug: "Alcohol", severity: "major", effect: "Disulfiram-like reaction - AVOID during + 3 days after" },
-    { drug: "Warfarin", severity: "major", effect: "↑↑ INR - reduce warfarin 25-50%" },
-    { drug: "Lithium", severity: "moderate", effect: "↑ lithium levels - monitor" },
-    { drug: "Disulfiram", severity: "major", effect: "Psychosis/confusion - avoid 2 weeks" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🍷 NO ALCOHOL - disulfiram reaction (nausea, flushing, tachycardia, hypotension)",
-    "Metallic taste is common",
-    "Peripheral neuropathy with prolonged use (>4 weeks) - usually reversible",
-    "CNS toxicity with high doses (encephalopathy, seizures)",
-    "Dark urine is harmless (metabolite)"
-  ],
-  pregnancy: "Category B (but avoid 1st trimester if possible)",
-  monitoring: "Neuro symptoms (neuropathy) if prolonged, LFTs"
-},
-
-"TMP-SMX": {
-  class: "Sulfonamide + DHFR inhibitor",
-  spectrum: ["gp", "gn"],
-  spectrumDetail: "MRSA (CA-MRSA), E. coli, Klebsiella, PCP, Nocardia, Toxoplasma, Stenotrophomonas, Listeria",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "1 DS tab (160/800mg)", freq: "q12h", route: "PO" },
-    pcp_treatment: { dose: "15-20 mg/kg/day TMP", freq: "divided q6-8h", route: "IV/PO" },
-    pcp_prophylaxis: { dose: "1 DS tab", freq: "daily or 3×/week", route: "PO" },
-    weightBased: true,
-    pediatric: "8-10 mg/kg/day TMP divided q12h"
-  },
-  indications: [
-    { name: "UTI (uncomplicated)", dose: "1 DS PO q12h × 3d" },
-    { name: "MRSA skin infection", dose: "1-2 DS PO q12h × 5-10d" },
-    { name: "PCP treatment", dose: "15-20 mg/kg/day TMP divided q6-8h × 21d" },
-    { name: "PCP prophylaxis", dose: "1 DS PO daily" },
-    { name: "Nocardia", dose: "15 mg/kg/day TMP (high dose)" },
-    { name: "Stenotrophomonas", dose: "15 mg/kg/day TMP" }
-  ],
-  renal: [
-    { gfr: ">30", dose: "No adjustment" },
-    { gfr: "15-30", dose: "50% dose" },
-    { gfr: "<15", dose: "Avoid if possible" },
-    { gfr: "HD", dose: "50% dose after HD" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "Severe sulfonamide allergy (SJS/TEN history)" },
-    { type: "Absolute", text: "Pregnancy at term (kernicterus risk)" },
-    { type: "Absolute", text: "G6PD deficiency (hemolysis)" },
-    { type: "Absolute", text: "Megaloblastic anemia from folate deficiency" }
-  ],
-  interactions: [
-    { drug: "Warfarin", severity: "major", effect: "↑↑ INR - reduce warfarin 25-50%" },
-    { drug: "Methotrexate", severity: "major", effect: "↑↑ MTX toxicity (both antifolates)" },
-    { drug: "ACE-I/ARBs", severity: "major", effect: "↑ hyperkalemia risk" },
-    { drug: "Phenytoin", severity: "moderate", effect: "↑ phenytoin levels" },
-    { drug: "Dapsone", severity: "moderate", effect: "↑ levels of both drugs" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🍌 HYPERKALEMIA risk - especially with ACE-I, ARB, renal impairment, elderly",
-    "Bone marrow suppression (esp prolonged use) - check CBC",
-    "Rash common - STOP if severe (SJS/TEN risk with sulfa)",
-    "☀️ Photosensitivity",
-    "May ↑ SCr without true renal injury (blocks tubular creatinine secretion)",
-    "Folate supplementation for prolonged high-dose therapy"
-  ],
-  pregnancy: "Category D (at term - kernicterus)",
-  monitoring: "K+ (especially with ACE-I/ARB), SCr, CBC with prolonged use"
-},
-
-"Nitrofurantoin": {
-  class: "Nitrofuran",
-  spectrum: ["gp", "gn"],
-  spectrumDetail: "E. coli, Enterococcus, Staph saprophyticus. NOT: Proteus, Pseudomonas, Serratia, Klebsiella (variable)",
-  source: "IDSA UTI Guidelines 2011",
-  dosing: {
-    standard: { dose: "100mg", freq: "q12h × 5d", route: "PO" },
-    prophylaxis: { dose: "50-100mg", freq: "qhs", route: "PO" },
-    weightBased: false,
-    pediatric: "5-7 mg/kg/day divided q6h"
-  },
-  indications: [
-    { name: "Acute cystitis", dose: "100mg (macrocrystal) PO q12h × 5d" },
-    { name: "UTI prophylaxis", dose: "50-100mg PO qhs" }
-  ],
-  renal: [
-    { gfr: ">60", dose: "100mg q12h" },
-    { gfr: "30-60", dose: "Use with caution, may be less effective" },
-    { gfr: "<30", dose: "AVOID - ineffective & neurotoxic" }
-  ],
-  contraindications: [
-    { type: "Absolute", text: "CrCl <30 mL/min - ineffective & toxic" },
-    { type: "Absolute", text: "G6PD deficiency - hemolytic anemia" },
-    { type: "Absolute", text: "Pregnancy at term (38+ weeks) - neonatal hemolysis" },
-    { type: "Absolute", text: "Infants <1 month (immature enzyme systems)" }
-  ],
-  interactions: [
-    { drug: "Magnesium (antacids)", severity: "moderate", effect: "↓ absorption" },
-    { drug: "Probenecid", severity: "moderate", effect: "↓ urine concentration (less effective)" },
-    { drug: "Quinolones", severity: "minor", effect: "Antagonism in vitro" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🚫 AVOID if CrCl <30 - won't concentrate in urine & causes toxicity",
-    "Pulmonary toxicity with long-term use (>6 months) - acute & chronic",
-    "Peripheral neuropathy (especially in renal impairment)",
-    "Hepatotoxicity (rare, usually with long-term use)",
-    "Take with food to improve absorption & reduce GI upset",
-    "Only for lower UTI - no systemic absorption"
-  ],
-  pregnancy: "Category B (avoid at term)",
-  monitoring: "Pulmonary symptoms if prolonged, LFTs, neuro symptoms"
-},
-
-"Clindamycin": {
-  class: "Lincosamide",
-  spectrum: ["gp", "anaerobe"],
-  spectrumDetail: "MSSA, MRSA (some), Strep, Anaerobes (above diaphragm). NOT: Enterococcus, most Bacteroides fragilis, C. diff",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "300-450mg", freq: "q6-8h", route: "PO" },
-    iv: { dose: "600-900mg", freq: "q8h", route: "IV" },
-    toxin: { dose: "900mg", freq: "q8h", route: "IV" },
-    weightBased: false,
-    pediatric: "10-40 mg/kg/day divided q6-8h"
-  },
-  indications: [
-    { name: "MRSA skin (if susceptible)", dose: "300-450mg PO q8h × 5-10d" },
-    { name: "Aspiration pneumonia", dose: "600mg IV q8h" },
-    { name: "Necrotizing fasciitis (adjunct)", dose: "900mg IV q8h (toxin suppression)" },
-    { name: "Toxic shock syndrome (adjunct)", dose: "900mg IV q8h" },
-    { name: "Bone/joint infection", dose: "600-900mg IV q8h" },
-    { name: "Bacterial vaginosis", dose: "300mg PO q12h × 7d" }
-  ],
-  renal: [
-    { gfr: "Any", dose: "No adjustment (hepatic metabolism)" }
-  ],
-  contraindications: [
-    { type: "Relative", text: "History of C. difficile colitis" },
-    { type: "Relative", text: "History of antibiotic-associated colitis" }
-  ],
-  interactions: [
-    { drug: "Neuromuscular blockers", severity: "major", effect: "Prolonged paralysis" },
-    { drug: "Erythromycin", severity: "moderate", effect: "Antagonism at ribosome - avoid combo" },
-    { drug: "Kaolin-pectin", severity: "moderate", effect: "↓ absorption - separate by 2h" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🚨 HIGHEST C. DIFF RISK of all antibiotics - warn patient about diarrhea",
-    "Excellent bone penetration - good for osteomyelitis",
-    "Important for TOXIN SUPPRESSION (Group A Strep, S. aureus toxic shock)",
-    "Check D-test for inducible clindamycin resistance in MRSA (erm gene)",
-    "NOT active against Enterococcus",
-    "GI upset very common"
-  ],
-  pregnancy: "Category B",
-  monitoring: "Diarrhea/C. diff symptoms throughout therapy, LFTs"
-},
-
-"Gentamicin": {
-  class: "Aminoglycoside",
-  spectrum: ["gn"],
-  spectrumDetail: "E. coli, Klebsiella, Pseudomonas, Enterobacter, Serratia. Synergy with beta-lactams for Enterococcus, Staph",
-  source: "UpToDate 2024",
-  dosing: {
-    standard: { dose: "5-7 mg/kg", freq: "q24h", route: "IV" },
-    traditional: { dose: "1-2.5 mg/kg", freq: "q8h", route: "IV" },
-    synergy: { dose: "1 mg/kg", freq: "q8h", route: "IV" },
-    weightBased: true,
-    pediatric: "2.5 mg/kg q8h or 5-7.5 mg/kg q24h"
-  },
-  indications: [
-    { name: "Gram-negative sepsis (combo)", dose: "5-7 mg/kg IV q24h" },
-    { name: "Enterococcal endocarditis (synergy)", dose: "1 mg/kg IV q8h (with ampicillin)" },
-    { name: "Pseudomonas (double coverage)", dose: "5-7 mg/kg IV q24h (with antipseudomonal β-lactam)" },
-    { name: "UTI (severe, resistant)", dose: "5-7 mg/kg IV q24h" }
-  ],
-  renal: [
-    { gfr: ">60", dose: "5-7 mg/kg q24h" },
-    { gfr: "40-60", dose: "5-7 mg/kg q36h" },
-    { gfr: "20-40", dose: "5-7 mg/kg q48h" },
-    { gfr: "<20", dose: "Level-guided dosing - check levels" },
-    { gfr: "HD", dose: "2 mg/kg post-HD, check levels" }
-  ],
-  contraindications: [
-    { type: "Relative", text: "Myasthenia gravis (neuromuscular blockade)" },
-    { type: "Caution", text: "Pre-existing hearing loss or vestibular dysfunction" },
-    { type: "Caution", text: "Pre-existing renal impairment" }
-  ],
-  interactions: [
-    { drug: "Vancomycin", severity: "major", effect: "↑↑ nephro/ototoxicity" },
-    { drug: "Loop diuretics", severity: "major", effect: "↑↑ ototoxicity" },
-    { drug: "NSAIDs", severity: "major", effect: "↑ nephrotoxicity" },
-    { drug: "Neuromuscular blockers", severity: "major", effect: "Prolonged paralysis" },
-    { drug: "Amphotericin B", severity: "major", effect: "↑↑ nephrotoxicity" },
-    { drug: "Cyclosporine", severity: "major", effect: "↑↑ nephrotoxicity" }
-  ],
-  blackbox: null,
-  precautions: [
-    "🔊 OTOTOXICITY - irreversible hearing loss, vestibular damage (tinnitus, vertigo)",
-    "🫘 NEPHROTOXICITY - usually reversible with discontinuation",
-    "Extended-interval dosing (5-7 mg/kg q24h) = less toxicity, same efficacy",
-    "Concentration-dependent killing - high peaks important",
-    "Poor lung penetration - not monotherapy for pneumonia",
-    "Adjust dose with renal impairment - check levels"
-  ],
-  pregnancy: "Category D - Fetal ototoxicity risk",
-  monitoring: "Peak/trough or random levels, SCr daily, hearing if prolonged"
-}
-};
-
-let currentDrug = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-  renderDrugGrid();
-  populateCalcDrugs();
-});
-
-function showTab(tab, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-drugs').classList.add('hidden');
-  document.getElementById('tab-calculator').classList.add('hidden');
-  document.getElementById('tab-' + tab).classList.remove('hidden');
-  if (tab === 'drugs') {
-    document.getElementById('drugGrid').classList.remove('hidden');
-    document.getElementById('drugDetail').classList.remove('active');
-  }
-}
-
-function renderDrugGrid() {
-  const grid = document.getElementById('drugGrid');
-  grid.innerHTML = '';
-  Object.keys(ANTIBIOTICS).sort().forEach(name => {
-    const drug = ANTIBIOTICS[name];
-    grid.innerHTML += '<div class="drug-card" onclick="showDrugDetail(\'' + name + '\')"><div class="drug-name">' + name + '</div><div class="drug-class">' + drug.class + '</div><div class="drug-spectrum">' + drug.spectrum.map(s => '<span class="spectrum-tag ' + s + '">' + s.toUpperCase() + '</span>').join('') + '</div></div>';
   });
-}
-
-function filterDrugs() {
-  const query = document.getElementById('drugSearch').value.toLowerCase();
-  if (document.getElementById('drugDetail').classList.contains('active')) {
-    document.getElementById('drugDetail').classList.remove('active');
-    document.getElementById('drugGrid').classList.remove('hidden');
-  }
-  document.querySelectorAll('.drug-card').forEach(card => {
-    const name = card.querySelector('.drug-name').textContent.toLowerCase();
-    const cls = card.querySelector('.drug-class').textContent.toLowerCase();
-    card.style.display = (name.includes(query) || cls.includes(query)) ? '' : 'none';
-  });
-}
-
-function showDrugDetail(name) {
-  currentDrug = name;
-  const drug = ANTIBIOTICS[name];
-  document.getElementById('drugGrid').classList.add('hidden');
-  const detail = document.getElementById('drugDetail');
-  detail.classList.add('active');
   
-  let contraindicationsHTML = '';
-  if (drug.contraindications) {
-    drug.contraindications.forEach(c => {
-      const isAbsolute = c.type === 'Absolute';
-      contraindicationsHTML += '<div class="warning-box ' + (isAbsolute ? '' : 'caution') + '"><div class="warning-title">' + (isAbsolute ? '🚫' : '⚠️') + ' ' + c.type + '</div><div class="warning-text">' + c.text + '</div></div>';
+  const container = document.getElementById('searchResults');
+  if (results.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">
+      <div style="font-size:2rem;margin-bottom:12px">🔍</div>
+      <div>No results for "${query}"</div>
+    </div>`;
+  } else {
+    container.innerHTML = `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px">${results.length} result${results.length > 1 ? 's' : ''} found</div>`;
+    results.forEach(r => {
+      container.innerHTML += `<div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px">${r.icon} ${r.category}</div>`;
+      container.innerHTML += renderProtocolCard(r, r.color);
     });
   }
-  
-  let interactionsHTML = '';
-  if (drug.interactions) {
-    interactionsHTML = drug.interactions.map(i => '<span class="interaction-badge ' + i.severity + '">' + i.drug + ': ' + i.effect + '</span>').join('');
-  }
-  
-  let precautionsHTML = '';
-  if (drug.precautions) {
-    precautionsHTML = '<ul style="margin:0;padding-left:20px;">' + drug.precautions.map(p => '<li style="margin-bottom:8px;font-size:0.85rem;color:var(--text-secondary)">' + p + '</li>').join('') + '</ul>';
-  }
-  
-  let indicationsHTML = '';
-  if (drug.indications) {
-    indicationsHTML = drug.indications.map(ind => '<div class="indication-item"><span>•</span><div><div class="indication-text">' + ind.name + '</div><div class="indication-dose">' + ind.dose + '</div></div></div>').join('');
-  }
-  
-  let renalHTML = '';
-  if (drug.renal) {
-    renalHTML = '<table class="renal-table"><tr><th>CrCl/eGFR</th><th>Dose Adjustment</th></tr>' + drug.renal.map(r => '<tr><td><span class="renal-gfr">' + r.gfr + '</span></td><td>' + r.dose + '</td></tr>').join('') + '</table>';
-  }
-  
-  let blackboxHTML = '';
-  if (drug.blackbox) {
-    blackboxHTML = '<div class="blackbox"><div class="blackbox-title">⚫ FDA BLACK BOX WARNING</div><div class="blackbox-text">' + drug.blackbox + '</div></div>';
-  }
-  
-  detail.innerHTML = '<div class="back-link" onclick="closeDrugDetail()">← Back to Antibiotics</div><div class="detail-header"><div class="detail-drug-name">' + name + '</div><div class="detail-drug-class">' + drug.class + '</div><div class="detail-source">' + drug.source + '</div></div>' + blackboxHTML + '<div class="section-card expanded"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">🎯</span><span class="section-title">Spectrum & Indications</span><span class="section-chevron">▼</span></div><div class="section-body"><div class="info-row"><div class="info-label">Coverage</div><div class="info-value">' + drug.spectrumDetail + '</div></div><div style="margin-top:16px"><div class="info-label">Common Indications & Dosing</div>' + indicationsHTML + '</div></div></div><div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">💊</span><span class="section-title">Standard Dosing</span><span class="section-chevron">▼</span></div><div class="section-body"><div class="info-row"><div class="info-label">Adult Dose</div><div class="info-value" style="font-family:\'JetBrains Mono\',monospace;font-weight:600;">' + drug.dosing.standard.dose + ' ' + drug.dosing.standard.route + ' ' + drug.dosing.standard.freq + '</div></div>' + (drug.dosing.pediatric ? '<div class="info-row"><div class="info-label">Pediatric</div><div class="info-value">' + drug.dosing.pediatric + '</div></div>' : '') + '<div class="info-row"><div class="info-label">Pregnancy</div><div class="info-value">' + drug.pregnancy + '</div></div></div></div><div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">🫘</span><span class="section-title">Renal Adjustment</span><span class="section-chevron">▼</span></div><div class="section-body">' + renalHTML + '</div></div><div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">🚫</span><span class="section-title">Contraindications</span><span class="section-chevron">▼</span></div><div class="section-body">' + (contraindicationsHTML || '<div style="color:var(--text-muted)">No absolute contraindications</div>') + '</div></div><div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">⚡</span><span class="section-title">Drug Interactions</span><span class="section-chevron">▼</span></div><div class="section-body"><div style="display:flex;flex-wrap:wrap;">' + (interactionsHTML || '<div style="color:var(--text-muted)">No major interactions</div>') + '</div></div></div><div class="section-card"><div class="section-header" onclick="toggleSection(this)"><span class="section-icon">⚠️</span><span class="section-title">Precautions & Monitoring</span><span class="section-chevron">▼</span></div><div class="section-body">' + precautionsHTML + '<div class="info-row" style="margin-top:16px"><div class="info-label">Monitoring</div><div class="info-value">' + drug.monitoring + '</div></div></div></div>';
 }
 
-function closeDrugDetail() {
-  document.getElementById('drugDetail').classList.remove('active');
-  document.getElementById('drugGrid').classList.remove('hidden');
-  document.getElementById('drugSearch').value = '';
-  filterDrugs();
+// Navigation
+function goBack() {
+  window.location.href = 'index.html';
 }
 
-function toggleSection(header) {
-  header.parentElement.classList.toggle('expanded');
-}
-
-function populateCalcDrugs() {
-  const select = document.getElementById('calcDrug');
-  Object.keys(ANTIBIOTICS).sort().forEach(name => {
-    select.innerHTML += '<option value="' + name + '">' + name + '</option>';
-  });
-}
-
-function updateCalcInfo() {
-  const name = document.getElementById('calcDrug').value;
-  const info = document.getElementById('calcDrugInfo');
-  if (!name) { info.innerHTML = ''; return; }
-  const drug = ANTIBIOTICS[name];
-  info.innerHTML = '<div style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:16px;font-size:0.85rem;"><strong>Standard:</strong> ' + drug.dosing.standard.dose + ' ' + drug.dosing.standard.route + ' ' + drug.dosing.standard.freq + (drug.dosing.weightBased ? '<br><span style="color:var(--warning)">⚠️ Weight-based dosing required</span>' : '') + '</div>';
-}
-
-function calculateDose() {
-  const drugName = document.getElementById('calcDrug').value;
-  const weight = parseFloat(document.getElementById('calcWeight').value);
-  const gfr = parseFloat(document.getElementById('calcGFR').value);
-  const indication = document.getElementById('calcIndication').value;
-  
-  if (!drugName) {
-    document.getElementById('calcResult').innerHTML = '<div class="dose-result warning"><div class="dose-title">⚠️ Please select an antibiotic</div></div>';
-    return;
-  }
-  
-  const drug = ANTIBIOTICS[drugName];
-  let resultClass = '';
-  let doseText = '';
-  let notes = [];
-  
-  // Get base dose
-  let baseDose = drug.dosing.standard;
-  if (indication === 'severe' && drug.dosing.high) baseDose = drug.dosing.high;
-  if (indication === 'meningitis' && drug.dosing.meningitis) baseDose = drug.dosing.meningitis;
-  
-  doseText = baseDose.dose + ' ' + baseDose.route + ' ' + baseDose.freq;
-  
-  // Weight-based calculations
-  if (drug.dosing.weightBased && weight) {
-    if (drugName === 'Vancomycin') {
-      const dose = Math.round(weight * 17.5 / 50) * 50;
-      doseText = dose + 'mg IV q8-12h';
-      notes.push('Based on ' + weight + 'kg × 15-20 mg/kg');
-      if (indication === 'severe' || indication === 'meningitis') {
-        const loading = Math.round(weight * 27.5 / 50) * 50;
-        notes.push('🎯 Consider loading dose: ' + loading + 'mg (25-30 mg/kg)');
-      }
-      notes.push('🎯 Target: AUC 400-600 or Trough 15-20 mcg/mL');
-    }
-    if (drugName === 'Gentamicin') {
-      const dose = Math.round(weight * 6 * 10) / 10;
-      doseText = dose + 'mg IV q24h (extended-interval)';
-      notes.push('Based on ' + weight + 'kg × 5-7 mg/kg');
-      notes.push('Use IDEAL body weight if obese');
-    }
-    if (drugName === 'TMP-SMX' && indication === 'severe') {
-      const tmp = Math.round(weight * 17.5);
-      doseText = tmp + 'mg TMP component IV/PO divided q6-8h';
-      notes.push('Based on ' + weight + 'kg × 15-20 mg/kg/day TMP');
-      notes.push('For PCP treatment');
-    }
-  }
-  
-  // Renal adjustments
-  if (gfr && drug.renal) {
-    let renalAdj = null;
-    for (let r of drug.renal) {
-      if (r.gfr.includes('>')) {
-        const threshold = parseInt(r.gfr.replace('>', ''));
-        if (gfr > threshold) { renalAdj = r; break; }
-      } else if (r.gfr.includes('<')) {
-        const threshold = parseInt(r.gfr.replace('<', ''));
-        if (gfr < threshold) { renalAdj = r; break; }
-      } else if (r.gfr.includes('-')) {
-        const parts = r.gfr.split('-');
-        if (gfr >= parseInt(parts[0]) && gfr <= parseInt(parts[1])) { renalAdj = r; break; }
-      } else if (r.gfr === 'Any') {
-        renalAdj = r; break;
-      }
-    }
-    if (renalAdj && !renalAdj.dose.includes('No adjustment')) {
-      resultClass = 'warning';
-      notes.push('⚠️ RENAL ADJUSTMENT (CrCl ' + gfr + '): ' + renalAdj.dose);
-    }
-  }
-  
-  // Critical warnings
-  if (drugName === 'Nitrofurantoin' && gfr && gfr < 30) {
-    resultClass = 'danger';
-    notes = ['🚫 AVOID - Ineffective & neurotoxic when CrCl <30 mL/min'];
-    doseText = 'CONTRAINDICATED';
-  }
-  if (drugName === 'Cefepime' && gfr && gfr < 30) {
-    resultClass = 'warning';
-    notes.push('🧠 HIGH NEUROTOXICITY RISK - monitor mental status closely');
-  }
-  if (drugName === 'Levofloxacin' || drugName === 'Ciprofloxacin') {
-    notes.push('⚫ BLACK BOX: Tendon rupture, neuropathy, CNS effects');
-  }
-  if (drugName === 'Vancomycin') {
-    notes.push('⚠️ Avoid with Pip/Tazo if possible (↑ AKI risk)');
-  }
-  
-  document.getElementById('calcResult').innerHTML = '<div class="dose-result ' + resultClass + '"><div class="dose-title">📋 Calculated Dose for ' + drugName + '</div><div class="dose-value">' + doseText + '</div>' + (notes.length ? '<div class="dose-note">' + notes.join('<br>') + '</div>' : '') + '</div>';
-}
-
-function goBack() { window.location.href = 'index.html'; }
+// Initialize
+document.addEventListener('DOMContentLoaded', renderSystems);
 </script>
 </body>
 </html>
