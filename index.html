@@ -7741,13 +7741,13 @@ function renderProfileHistory() {
           ${state.isAnalyzingHistory ? `
             <div class="upload-spinner"></div>
             <div class="meds-upload-content">
-              <div class="upload-text">Analyzing document...</div>
+              <div class="upload-text">Analyzing${state.historyUploadQueue > 1 ? ` (${state.historyUploadComplete + 1}/${state.historyUploadQueue})` : ''}...</div>
             </div>
           ` : `
             <div class="upload-icon">📄</div>
             <div class="meds-upload-content">
-              <div class="upload-text">Upload Document</div>
-              <div class="upload-hint">Photo or PDF • EMR, notes, labs, reports</div>
+              <div class="upload-text">Upload Documents</div>
+              <div class="upload-hint">Photos or PDFs • Select multiple</div>
             </div>
           `}
         </div>
@@ -7851,82 +7851,90 @@ window.triggerHistoryUpload = function() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*,.pdf';
-  input.onchange = e => handleHistoryUpload(e.target.files[0]);
+  input.multiple = true; // Allow multiple files
+  input.onchange = e => handleHistoryUpload(e.target.files);
   input.click();
 };
 
-async function handleHistoryUpload(file) {
-  if (!file) return;
+async function handleHistoryUpload(files) {
+  if (!files || files.length === 0) return;
   
+  const fileArray = Array.from(files);
   state.isAnalyzingHistory = true;
+  state.historyUploadQueue = fileArray.length;
+  state.historyUploadComplete = 0;
   renderProfileHistory();
   
-  // Check if it's a PDF
-  const isPDF = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf');
-  
-  if (isPDF) {
-    // For PDFs, read as base64 and send directly
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      try {
-        const base64Data = e.target.result;
-        const rawBase64 = base64Data.split(',')[1];
-        
-        const res = await fetch(state.settings.apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ 
-            action: 'analyzeDocument', 
-            image: rawBase64,
-            mediaType: 'application/pdf'
-          })
-        });
-        const data = await res.json();
-        
-        if (!data.success) {
-          throw new Error(data.error || 'Analysis failed');
-        }
-        
-        processDocumentResult(data, base64Data);
-        
-      } catch (e) {
-        state.isAnalyzingHistory = false;
-        renderProfileHistory();
-        console.error('PDF analysis error:', e);
-        toast('Failed to analyze PDF: ' + e.message, true);
-      }
-    };
-    reader.readAsDataURL(file);
-  } else {
-    // For images, compress first
-    compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
-      try {
-        const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
-        
-        const res = await fetch(state.settings.apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ 
-            action: 'analyzeDocument', 
-            image: rawBase64
-          })
-        });
-        const data = await res.json();
-        
-        if (!data.success) {
-          throw new Error(data.error || 'Analysis failed');
-        }
-        
-        processDocumentResult(data, imageData);
-        
-      } catch (e) {
-        state.isAnalyzingHistory = false;
-        renderProfileHistory();
-        console.error('Document analysis error:', e);
-        toast('Failed to analyze document: ' + e.message, true);
-      }
-    });
+  // Process each file
+  for (const file of fileArray) {
+    await processHistoryFile(file);
+    state.historyUploadComplete++;
+    renderProfileHistory();
   }
+  
+  state.isAnalyzingHistory = false;
+  renderProfileHistory();
+  toast(`✅ ${fileArray.length} document(s) processed`);
+}
+
+async function processHistoryFile(file) {
+  return new Promise((resolve) => {
+    const isPDF = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf');
+    
+    if (isPDF) {
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const base64Data = e.target.result;
+          const rawBase64 = base64Data.split(',')[1];
+          
+          const res = await fetch(state.settings.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ 
+              action: 'analyzeDocument', 
+              image: rawBase64,
+              mediaType: 'application/pdf'
+            })
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            processDocumentResult(data, base64Data);
+          }
+          resolve();
+        } catch (e) {
+          console.error('PDF analysis error:', e);
+          resolve();
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
+        try {
+          const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
+          
+          const res = await fetch(state.settings.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ 
+              action: 'analyzeDocument', 
+              image: rawBase64
+            })
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            processDocumentResult(data, imageData);
+          }
+          resolve();
+        } catch (e) {
+          console.error('Image analysis error:', e);
+          resolve();
+        }
+      });
+    }
+  });
 }
 
 function processDocumentResult(data, fileData) {
