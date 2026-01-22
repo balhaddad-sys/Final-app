@@ -742,8 +742,20 @@ body {
 .lab-value-card.normal .lab-value-number{color:var(--emerald)}
 .lab-value-unit{font-size:0.7rem;color:var(--text-muted)}
 .lab-value-range{font-size:0.65rem;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-/* Sparkline & Trend Styles */
-.lab-sparkline{flex-shrink:0}
+/* Professional Trend Row Styles (Delta Card Design) */
+.trend-row{display:grid;grid-template-columns:1fr 70px 80px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-card)}
+.trend-row:last-child{border-bottom:none}
+.test-meta{display:flex;flex-direction:column}
+.test-name{font-weight:600;color:var(--text-main);font-size:0.9rem}
+.test-unit{font-size:0.7rem;color:var(--text-muted);margin-top:2px}
+.delta-badge{font-size:0.7rem;font-weight:700;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:6px;display:inline-block;margin-top:4px}
+.delta-bad{background:#fee2e2;color:#dc2626}
+.delta-good{background:#d1fae5;color:#059669}
+.delta-neutral{background:#f3f4f6;color:#6b7280}
+.current-val{text-align:right;font-size:1.15rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text-main)}
+.val-abnormal{color:#dc2626}
+.val-low{color:#3b82f6}
+.lab-sparkline{flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .lab-trend-indicator{font-family:'JetBrains Mono',monospace}
 /* Trend Section */
 .lab-trend-section{margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
@@ -4500,48 +4512,52 @@ function analyzeTrend(param) {
   };
 }
 
-function generateSparkline(param, maxPoints = 5) {
+function generateSparkline(param, maxPoints = 7) {
   // param.values is array sorted newest first
-  if (!param?.values || param.values.length < 2) return '';
+  if (!param?.values || param.values.length < 2) return '<div style="height:25px;width:60px;"></div>';
   
   // Extract the last N values, reversed so time goes Left → Right
   const dataPoints = param.values.slice(0, maxPoints).reverse()
     .map(v => parseFloat(v.value))
     .filter(v => !isNaN(v));
   
-  if (dataPoints.length < 2) return '';
+  if (dataPoints.length < 2) return '<div style="height:25px;width:60px;"></div>';
   
-  // Dimensions
-  const width = 50;
-  const height = 18;
+  // Dimensions - larger for better visibility
+  const width = 60;
+  const height = 25;
   const max = Math.max(...dataPoints);
   const min = Math.min(...dataPoints);
-  const range = max - min || 1; // Avoid divide by zero
-  const padding = 2;
+  const range = max - min || 1;
   
-  // Build the SVG Path
-  const stepX = (width - padding * 2) / (dataPoints.length - 1);
-  let pathD = '';
-  
-  dataPoints.forEach((val, i) => {
-    const x = padding + i * stepX;
-    const y = padding + (height - padding * 2) - ((val - min) / range * (height - padding * 2));
-    pathD += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`;
+  // Build points array
+  const points = dataPoints.map((val, i) => {
+    const x = (i / (dataPoints.length - 1)) * width;
+    const y = height - ((val - min) / range * height);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
   
   // Determine color based on trend
   const trend = analyzeTrend(param);
   const lineColor = trend?.status === 'worsening' ? '#dc2626' : 
                     trend?.status === 'improving' ? '#10b981' : 
-                    'var(--primary)';
+                    '#6366f1'; // Indigo for neutral
   
-  // Final point coordinates for the dot
-  const finalX = padding + (dataPoints.length - 1) * stepX;
-  const finalY = padding + (height - padding * 2) - ((dataPoints[dataPoints.length - 1] - min) / range * (height - padding * 2));
+  // First and last point coordinates
+  const lastX = (dataPoints.length - 1) / (dataPoints.length - 1) * width;
+  const lastY = height - ((dataPoints[dataPoints.length - 1] - min) / range * height);
+  const firstY = height - ((dataPoints[0] - min) / range * height);
   
-  return `<svg width="${width}" height="${height}" style="overflow:visible;vertical-align:middle">
-    <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${finalX}" cy="${finalY}" r="2.5" fill="${lineColor}"/>
+  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="overflow:visible">
+    <polyline points="${points.join(' ')}" 
+      fill="none" 
+      stroke="${lineColor}" 
+      stroke-width="2" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      opacity="0.85"/>
+    <circle cx="${lastX}" cy="${lastY.toFixed(1)}" r="3" fill="${lineColor}"/>
+    <circle cx="0" cy="${firstY.toFixed(1)}" r="1.5" fill="#cbd5e1"/>
   </svg>`;
 }
 
@@ -8449,8 +8465,7 @@ function renderProfileLabs() {
       html += `
         <div class="lab-category">
           <div class="lab-category-header">${catData?.icon || '🔬'} ${cat}</div>
-          <div class="lab-category-body">
-            <div class="lab-values-grid">
+          <div class="lab-category-body" style="padding:0;">
       `;
       
       categories[cat].forEach((param, catIdx) => {
@@ -8463,39 +8478,43 @@ function renderProfileLabs() {
         const trend = analyzeTrend(param);
         const sparkline = generateSparkline(param);
         
-        // Build trend HTML if we have trend data
-        let trendHTML = '';
+        // Build Delta Badge HTML (professional pill style)
+        let badgeHTML = '';
         if (trend && trend.arrow !== '→') {
-          trendHTML = `
-            <div class="lab-trend-indicator" style="display:flex;align-items:center;gap:4px;margin-top:4px;">
-              <span style="font-size:0.85rem;color:${trend.color};font-weight:700;">${trend.arrow}</span>
-              <span style="font-size:0.7rem;color:${trend.color};">${trend.diff > 0 ? '+' : ''}${trend.diff.toFixed(1)}</span>
-              <span style="font-size:0.65rem;color:var(--text-muted);">from ${trend.previous}</span>
-            </div>
-          `;
+          // Determine badge class based on clinical context
+          let badgeClass = 'delta-neutral';
+          if (trend.status === 'worsening') {
+            badgeClass = 'delta-bad';
+          } else if (trend.status === 'improving') {
+            badgeClass = 'delta-good';
+          } else if (Math.abs(parseFloat(trend.percentChange)) > 10) {
+            badgeClass = trend.arrow === '↗' ? 'delta-bad' : 'delta-good';
+          }
+          
+          badgeHTML = `<span class="delta-badge ${badgeClass}">${trend.arrow} ${trend.diff > 0 ? '+' : ''}${Math.abs(trend.diff).toFixed(1)}</span>`;
         }
         
+        // Value class for abnormal highlighting
+        const valClass = status === 'high' || status === 'critical' ? 'val-abnormal' : 
+                         status === 'low' ? 'val-low' : '';
+        
+        // Professional Trend Row Layout
         html += `
-          <div class="lab-value-card ${status}" onclick="openLabOverride(${paramIdx}, ${valueIdx})" title="Click to override">
-            <div class="lab-value-name">
-              ${esc(param.name)}
-              ${v.manualOverride ? '<span class="lab-override-indicator">✏️</span>' : ''}
-              ${status !== 'normal' ? `<span class="lab-value-status ${status}">${status === 'high' ? 'HIGH' : status === 'low' ? 'LOW' : '!'}</span>` : ''}
+          <div class="trend-row" onclick="openLabOverride(${paramIdx}, ${valueIdx})" title="Click to override">
+            <div class="test-meta">
+              <span class="test-name">${esc(param.name)}${v.manualOverride ? ' ✏️' : ''}${status !== 'normal' ? ` <span class="lab-value-status ${status}" style="font-size:0.6rem;padding:1px 4px;border-radius:3px;vertical-align:middle;">${status === 'high' ? 'H' : status === 'low' ? 'L' : '!'}</span>` : ''}</span>
+              <span class="test-unit">${esc(param.unit || '')}${param.refMin !== undefined && param.refMax !== undefined ? ` (${param.refMin}-${param.refMax})` : ''}</span>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-              <div>
-                <div class="lab-value-number" style="color:${trend?.status === 'worsening' ? '#dc2626' : status !== 'normal' ? '#dc2626' : 'var(--primary-dark)'}">${esc(v.value)}</div>
-                <div class="lab-value-unit">${esc(param.unit || '')}</div>
-              </div>
-              ${sparkline ? `<div class="lab-sparkline">${sparkline}</div>` : ''}
+            <div class="lab-sparkline">${sparkline}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;">
+              <span class="current-val ${valClass}">${esc(v.value)}</span>
+              ${badgeHTML}
             </div>
-            ${trendHTML}
-            ${param.refMin !== undefined && param.refMax !== undefined ? `<div class="lab-value-range">Ref: ${param.refMin} - ${param.refMax}</div>` : ''}
           </div>
         `;
       });
       
-      html += `</div></div></div>`;
+      html += `</div></div>`;
     });
   }
   
