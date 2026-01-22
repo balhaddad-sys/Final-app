@@ -171,21 +171,15 @@ a.nav-item{color:var(--text-muted)}
 .consult-intro{font-size:.8rem;color:var(--text-muted);margin:-8px 0 16px;padding:10px 14px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(236,72,153,0.1));border-radius:10px;border-left:3px solid #8b5cf6}
 .consult-card{border-left:4px solid #8b5cf6}
 .consult-critical{border-left-color:#dc2626;background:linear-gradient(to right,rgba(220,38,38,0.03),var(--bg-card))}
-.consult-surgery{border-left-color:#059669;background:linear-gradient(to right,rgba(5,150,105,0.03),var(--bg-card))}
 .consult-cardio{border-left-color:#dc2626;background:linear-gradient(to right,rgba(220,38,38,0.03),var(--bg-card))}
 .consult-neuro{border-left-color:#ec4899;background:linear-gradient(to right,rgba(236,72,153,0.03),var(--bg-card))}
 .consult-gi{border-left-color:#f59e0b;background:linear-gradient(to right,rgba(245,158,11,0.03),var(--bg-card))}
 .consult-renal{border-left-color:#8b5cf6;background:linear-gradient(to right,rgba(139,92,246,0.03),var(--bg-card))}
-.consult-pulm{border-left-color:#06b6d4;background:linear-gradient(to right,rgba(6,182,212,0.03),var(--bg-card))}
-.consult-id{border-left-color:#84cc16;background:linear-gradient(to right,rgba(132,204,22,0.03),var(--bg-card))}
 .consult-icon-critical{background:linear-gradient(135deg,#dc2626,#991b1b)!important;color:#fff!important;border:none!important}
-.consult-icon-surgery{background:linear-gradient(135deg,#059669,#047857)!important;color:#fff!important;border:none!important}
 .consult-icon-cardio{background:linear-gradient(135deg,#dc2626,#be123c)!important;color:#fff!important;border:none!important}
 .consult-icon-neuro{background:linear-gradient(135deg,#ec4899,#db2777)!important;color:#fff!important;border:none!important}
 .consult-icon-gi{background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;border:none!important}
 .consult-icon-renal{background:linear-gradient(135deg,#8b5cf6,#7c3aed)!important;color:#fff!important;border:none!important}
-.consult-icon-pulm{background:linear-gradient(135deg,#06b6d4,#0891b2)!important;color:#fff!important;border:none!important}
-.consult-icon-id{background:linear-gradient(135deg,#84cc16,#65a30d)!important;color:#fff!important;border:none!important}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:500;z-index:9999;opacity:0;transition:opacity 0.3s}
 .toast.show{opacity:1}
 </style>
@@ -452,55 +446,20 @@ a.nav-item{color:var(--text-muted)}
 <div class="handover-framework">
 <div class="protocol-step" style="border-left-color:#3b82f6">
 <div class="protocol-header"><div class="protocol-number" style="background:#3b82f6">S</div><div class="protocol-title">Situation</div></div>
-<div class="protocol-content">"I am calling about [patient name], MRN [X], in [bed/ward]"<br>• State the problem concisely<br>• "The patient is [stable/deteriorating/critical]"</div>
+<div class="protocol-content">"I am calling about [patient], MRN [X], in [bed/ward]"</div>
 </div>
 <div class="protocol-step" style="border-left-color:#8b5cf6">
 <div class="protocol-header"><div class="protocol-number" style="background:#8b5cf6">B</div><div class="protocol-title">Background</div></div>
-<div class="protocol-content">• Admission diagnosis & date<br>• Relevant PMHx<br>• Recent procedures/interventions<br>• Current medications<br>• Allergies & code status</div>
+<div class="protocol-content">Admission Dx, PMHx, Meds, Allergies, Code status</div>
 </div>
 <div class="protocol-step" style="border-left-color:#f59e0b">
 <div class="protocol-header"><div class="protocol-number" style="background:#f59e0b">A</div><div class="protocol-title">Assessment</div></div>
-<div class="protocol-content">• Current vitals: HR, BP, RR, SpO2, Temp<br>• Mental status change?<br>• Physical exam findings<br>• Recent labs/imaging<br>• Your clinical impression</div>
+<div class="protocol-content">Vitals, exam findings, labs, your impression</div>
 </div>
 <div class="protocol-step" style="border-left-color:#10b981">
 <div class="protocol-header"><div class="protocol-number" style="background:#10b981">R</div><div class="protocol-title">Recommendation</div></div>
-<div class="protocol-content">• What do you need?<br>• Specific orders requested<br>• "I think we should..."<br>• Clarify response time needed</div>
+<div class="protocol-content">What do you need? Specific orders requested</div>
 </div>
-</div>
-</div>
-</div>
-<div class="tool-card handover-card" data-category="handover">
-<div class="tool-header" onclick="toggleTool(this)">
-<div class="tool-header-left">
-<div class="tool-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;">✅</div>
-<div><div class="tool-title">Shift Handover Checklist</div><div class="tool-subtitle">End-of-shift essentials</div></div>
-</div>
-<div class="tool-chevron">▼</div>
-</div>
-<div class="tool-content">
-<div class="tool-divider"></div>
-<div class="checklist-section">
-<div class="checklist-title">🔴 Critical Items</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Unstable patients & active issues</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Pending critical results (labs, imaging, cultures)</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Time-sensitive medications due</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Pending consults & expected callbacks</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Code status & goals of care discussions</div>
-</div>
-<div class="checklist-section">
-<div class="checklist-title">🟡 Important Updates</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> New admissions & their plans</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Procedures scheduled/completed</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Family meetings pending</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Anticipated discharges</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> PRN orders & parameters</div>
-</div>
-<div class="checklist-section">
-<div class="checklist-title">🟢 Routine</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> IV fluids & drip rates</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Diet orders & restrictions</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> Activity level & fall risk</div>
-<div class="checklist-item"><span class="checklist-box">☐</span> VTE prophylaxis status</div>
 </div>
 </div>
 </div>
@@ -519,15 +478,11 @@ a.nav-item{color:var(--text-muted)}
 <div class="consult-box critical">
 <div class="consult-title">📞 Before Calling ICU</div>
 <div class="consult-grid">
-<div class="consult-item"><strong>Airway:</strong> Patent? Protecting? GCS?</div>
-<div class="consult-item"><strong>Breathing:</strong> RR, SpO2, O2 requirement, ABG</div>
-<div class="consult-item"><strong>Circulation:</strong> HR, BP, MAP, lactate, access</div>
-<div class="consult-item"><strong>Interventions:</strong> What you've done so far</div>
+<div class="consult-item"><strong>Airway:</strong> Patent? GCS?</div>
+<div class="consult-item"><strong>Breathing:</strong> RR, SpO2, ABG</div>
+<div class="consult-item"><strong>Circulation:</strong> HR, BP, lactate</div>
+<div class="consult-item"><strong>Done:</strong> Interventions so far</div>
 </div>
-</div>
-<div class="consult-box">
-<div class="consult-title">📋 ICU Admission Criteria</div>
-<div class="protocol-content">• Mechanical ventilation or imminent intubation<br>• Vasopressor requirement<br>• Severe sepsis/septic shock<br>• Active MI with hemodynamic instability<br>• Status epilepticus<br>• Acute renal failure requiring CRRT<br>• GCS ≤8 or rapidly declining<br>• Post-cardiac arrest<br>• DKA/HHS with pH &lt;7.1 or altered mental status</div>
 </div>
 </div>
 </div>
@@ -542,12 +497,8 @@ a.nav-item{color:var(--text-muted)}
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="consult-box critical">
-<div class="consult-title">🚨 STEMI - Activate Cath Lab</div>
-<div class="protocol-content">• <strong>Call cath lab FIRST</strong> - don't wait for consult<br>• ECG with ST elevation or new LBBB<br>• Symptom onset time (door-to-balloon &lt;90 min)<br>• Aspirin 300mg + Ticagrelor 180mg given?<br>• Anticoagulation given?</div>
-</div>
-<div class="consult-box">
-<div class="consult-title">📋 Non-STEMI/Unstable Angina</div>
-<div class="protocol-content">• Serial ECGs (at least 2)<br>• Troponin at 0, 3, 6 hours<br>• GRACE/TIMI score if possible<br>• Current anti-ischemic therapy</div>
+<div class="consult-title">🚨 STEMI - Call Cath Lab FIRST</div>
+<div class="protocol-content">ECG, symptom onset time, ASA+Ticagrelor given?</div>
 </div>
 </div>
 </div>
@@ -563,31 +514,7 @@ a.nav-item{color:var(--text-muted)}
 <div class="tool-divider"></div>
 <div class="consult-box critical">
 <div class="consult-title">🚨 Stroke Alert</div>
-<div class="protocol-content">• <strong>Time last seen normal</strong> - CRITICAL<br>• NIHSS score (or key deficits)<br>• CT head done? Hemorrhage ruled out?<br>• Glucose checked?<br>• BP - do NOT lower unless &gt;220/120<br>• Anticoagulant use? (INR if on warfarin)</div>
-</div>
-<div class="consult-box">
-<div class="consult-title">📋 Seizure/AMS</div>
-<div class="protocol-content">• Witnessed description of event<br>• Duration & post-ictal state<br>• GCS and trend<br>• Labs: glucose, Na+, Ca2+, Mg2+, ammonia</div>
-</div>
-</div>
-</div>
-<div class="tool-card consult-card consult-gi" data-category="consult">
-<div class="tool-header" onclick="toggleTool(this)">
-<div class="tool-header-left">
-<div class="tool-icon consult-icon-gi">🔬</div>
-<div><div class="tool-title">GI</div><div class="tool-subtitle">Gastroenterology</div></div>
-</div>
-<div class="tool-chevron">▼</div>
-</div>
-<div class="tool-content">
-<div class="tool-divider"></div>
-<div class="consult-box critical">
-<div class="consult-title">🚨 GI Bleed</div>
-<div class="protocol-content">• Hemodynamic status: HR, BP, orthostatics<br>• Type: Hematemesis vs melena vs BRBPR<br>• Labs: Hgb, plt, INR, type & screen<br>• Access: 2 large-bore IVs in place?<br>• Resuscitation started?</div>
-</div>
-<div class="consult-box">
-<div class="consult-title">📋 Liver/Pancreatitis</div>
-<div class="protocol-content">• LFTs with trend<br>• Lipase level<br>• RUQ US or CT findings<br>• Signs of encephalopathy?</div>
+<div class="protocol-content">Time last seen normal, NIHSS, CT done?, glucose, BP</div>
 </div>
 </div>
 </div>
@@ -603,11 +530,7 @@ a.nav-item{color:var(--text-muted)}
 <div class="tool-divider"></div>
 <div class="consult-box critical">
 <div class="consult-title">🚨 Urgent Dialysis (AEIOU)</div>
-<div class="protocol-content">• <strong>A</strong>cidosis - pH &lt;7.1 refractory<br>• <strong>E</strong>lectrolytes - K+ &gt;6.5 refractory<br>• <strong>I</strong>ngestion - toxic alcohol, lithium<br>• <strong>O</strong>verload - pulmonary edema refractory<br>• <strong>U</strong>remia - encephalopathy, pericarditis</div>
-</div>
-<div class="consult-box">
-<div class="consult-title">📋 AKI Workup</div>
-<div class="protocol-content">• Baseline Cr and trend<br>• Urine output over 6-12 hours<br>• Urine studies: UA, Na, Cr<br>• Renal US - obstruction?</div>
+<div class="protocol-content"><strong>A</strong>cidosis, <strong>E</strong>lectrolytes (K+&gt;6.5), <strong>I</strong>ngestion, <strong>O</strong>verload, <strong>U</strong>remia</div>
 </div>
 </div>
 </div>
@@ -619,9 +542,9 @@ a.nav-item{color:var(--text-muted)}
 </div>
 <div class="ai-body">
 <div class="ai-prompts">
-<button class="ai-prompt-btn" onclick="setPrompt('Hyponatremia workup and management')">Hyponatremia</button>
-<button class="ai-prompt-btn" onclick="setPrompt('Chest pain differential diagnosis')">Chest Pain DDx</button>
-<button class="ai-prompt-btn" onclick="setPrompt('Antibiotic dosing in renal impairment')">Abx in CKD</button>
+<button class="ai-prompt-btn" onclick="setPrompt('Hyponatremia workup')">Hyponatremia</button>
+<button class="ai-prompt-btn" onclick="setPrompt('Chest pain DDx')">Chest Pain</button>
+<button class="ai-prompt-btn" onclick="setPrompt('Abx dosing in CKD')">Abx in CKD</button>
 </div>
 <div class="ai-input-row">
 <input type="text" class="ai-input" id="aiInput" placeholder="Ask anything...">
@@ -630,12 +553,12 @@ a.nav-item{color:var(--text-muted)}
 <div class="ai-response" id="aiResponse"></div>
 </div>
 </div>
-<div class="section-label">Quick Reference • Kuwait SI Units</div>
+<div class="section-label">Quick Reference</div>
 <div class="quick-ref-grid">
 <div class="quick-ref-card" onclick="showRef('K+: 3.5-5.0 mmol/L')"><div class="quick-ref-icon">🧪</div><div class="quick-ref-title">K+</div><div class="quick-ref-value">3.5-5.0</div></div>
 <div class="quick-ref-card" onclick="showRef('Na+: 136-145 mmol/L')"><div class="quick-ref-icon">🧂</div><div class="quick-ref-title">Na+</div><div class="quick-ref-value">136-145</div></div>
-<div class="quick-ref-card" onclick="showRef('Mg: 0.7-1.0 mmol/L')"><div class="quick-ref-icon">💎</div><div class="quick-ref-title">Mg</div><div class="quick-ref-value">0.7-1.0</div></div>
 <div class="quick-ref-card" onclick="showRef('Ca: 2.1-2.6 mmol/L')"><div class="quick-ref-icon">🦴</div><div class="quick-ref-title">Ca</div><div class="quick-ref-value">2.1-2.6</div></div>
+<div class="quick-ref-card" onclick="showRef('Glucose: 3.9-5.6 mmol/L')"><div class="quick-ref-icon">🍬</div><div class="quick-ref-title">Gluc</div><div class="quick-ref-value">3.9-5.6</div></div>
 </div>
 </div>
 </div>
@@ -646,10 +569,143 @@ a.nav-item{color:var(--text-muted)}
 <a class="nav-item" href="ai_assistant.html"><div class="nav-icon">🤖</div><span>AI</span></a>
 </nav>
 <div id="toast" class="toast"></div>
-PO: Olanzapine 5-10mg OR Lorazepam 1-2mg\nIM: Haloperidol 5mg + Lorazepam 2mg\n\n🚨 NEVER IM olanzapine with benzos',
-  htn:'📈 HYPERTENSION\n\nMild: Amlodipine 5mg PO\nModerate: Labetalol 100-200mg PO\nSevere: Labetalol 20mg IV\n\n⚠️ Rule out emergency first',
-  wheeze:'🌬️ WHEEZE\n\nSalbutamol 2.5-5mg neb q20min x3\nIpratropium 500mcg neb\nHydrocortisone 100mg IV\n\n⚠️ Continuous nebs if severe',
-  diarrhea:'🚽 DIARRHEA\n\nRehydrate first!\nLoperamide 4mg then 2mg PRN\n\n🚨 AVOID if bloody/fever/C.diff'
+<script>
+var apiUrl='https://script.google.com/macros/s/AKfycbznXa9YNna26Srt1eZVEnSV-dIiubFLTwg3ryLdE-maGNCQhydP_8E6AK4QPXkeQrw7lA/exec';
+var gfrSex='';
+var callLogs = JSON.parse(localStorage.getItem('ONCALL_CALLS')) || [];
+
+(function(){
+  var savedTheme=localStorage.getItem('oncall-theme')||'light';
+  document.documentElement.setAttribute('data-theme',savedTheme);
+})();
+
+document.addEventListener('DOMContentLoaded',function(){
+  var savedTheme=localStorage.getItem('oncall-theme')||'light';
+  var btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=savedTheme==='dark'?'☀️':'🌙';
+  renderCallLogs();
+  if(window.location.hash === '#emergency') {
+    switchMode('tools');
+    filterCategory('emergency', null);
+  }
+  document.getElementById('call-issue').addEventListener('keydown', function(e) {
+    if(e.key === 'Enter') addCallLog();
+  });
+});
+
+function switchMode(mode) {
+  document.getElementById('call-log-view').classList.add('hidden');
+  document.getElementById('tools-view').classList.add('hidden');
+  document.getElementById('btn-mode-tasks').classList.remove('active');
+  document.getElementById('btn-mode-tools').classList.remove('active');
+  if(mode === 'tasks') {
+    document.getElementById('call-log-view').classList.remove('hidden');
+    document.getElementById('btn-mode-tasks').classList.add('active');
+  } else {
+    document.getElementById('tools-view').classList.remove('hidden');
+    document.getElementById('btn-mode-tools').classList.add('active');
+  }
+}
+
+function addCallLog() {
+  var loc = document.getElementById('call-location').value.trim();
+  var mrn = document.getElementById('call-mrn').value.trim();
+  var issue = document.getElementById('call-issue').value.trim();
+  var priority = document.getElementById('call-priority').value;
+  if (!loc || !issue) { toast("Location and Issue required"); return; }
+  var newCall = {
+    id: Date.now(), loc: loc, mrn: mrn, issue: issue, priority: priority,
+    timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+    done: false
+  };
+  callLogs.unshift(newCall);
+  saveCalls();
+  renderCallLogs();
+  document.getElementById('call-issue').value = '';
+  document.getElementById('call-mrn').value = '';
+  document.getElementById('call-priority').value = 'routine';
+  toast("✓ Call Logged");
+}
+
+function renderCallLogs() {
+  var container = document.getElementById('call-log-list');
+  container.innerHTML = '';
+  var activeCount = callLogs.filter(function(c){return !c.done;}).length;
+  var badge = document.getElementById('task-badge');
+  badge.innerText = activeCount;
+  badge.classList.toggle('hidden', activeCount === 0);
+  if (callLogs.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No calls logged</div><div class="empty-state-text">Add your first call above</div></div>';
+    return;
+  }
+  callLogs.forEach(function(call) {
+    var div = document.createElement('div');
+    div.className = 'task-card priority-' + call.priority + (call.done ? ' done' : '');
+    div.innerHTML = '<div class="check-circle" onclick="toggleCallDone(' + call.id + ')">' + (call.done ? '✓' : '') + '</div><div class="task-content" onclick="toggleCallDone(' + call.id + ')"><div class="task-meta"><span>' + call.timestamp + ' • ' + call.loc + '</span><span class="task-priority ' + call.priority + '">' + call.priority + '</span></div><div class="task-issue">' + escapeHtml(call.issue) + '</div>' + (call.mrn ? '<div class="task-detail">' + escapeHtml(call.mrn) + '</div>' : '') + '</div><button class="delete-btn" onclick="deleteCall(' + call.id + ')">✕</button>';
+    container.appendChild(div);
+  });
+}
+
+function toggleCallDone(id) {
+  var call = callLogs.find(function(c){return c.id === id;});
+  if (call) {
+    call.done = !call.done;
+    callLogs.sort(function(a, b){return a.done === b.done ? 0 : a.done ? 1 : -1;});
+    saveCalls();
+    renderCallLogs();
+  }
+}
+
+function deleteCall(id) {
+  if(confirm("Delete this log?")) {
+    callLogs = callLogs.filter(function(c){return c.id !== id;});
+    saveCalls();
+    renderCallLogs();
+    toast("Deleted");
+  }
+}
+
+function saveCalls() { localStorage.setItem('ONCALL_CALLS', JSON.stringify(callLogs)); }
+function escapeHtml(text) { var div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+function toast(message) { var t = document.getElementById('toast'); t.textContent = message; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');}, 2000); }
+function toggleTheme(){
+  var current=document.documentElement.getAttribute('data-theme');
+  var newTheme=current==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',newTheme);
+  localStorage.setItem('oncall-theme',newTheme);
+  document.getElementById('themeBtn').textContent=newTheme==='dark'?'☀️':'🌙';
+}
+function goBack(){ window.location.href = window.location.href.split('/').slice(0, -1).join('/') + '/index.html'; }
+function filterCategory(cat,btn){
+  var pills=document.querySelectorAll('.pill');
+  for(var i=0;i<pills.length;i++){pills[i].classList.remove('active');}
+  if(btn)btn.classList.add('active');
+  var cards=document.querySelectorAll('.tool-card,.ai-section');
+  for(var i=0;i<cards.length;i++){
+    var c=cards[i];
+    var cats=c.getAttribute('data-category');
+    if(cat==='all'||(cats&&cats.indexOf(cat)>=0)){c.style.display='block';}
+    else{c.style.display='none';}
+  }
+}
+function toggleTool(header){ header.parentElement.classList.toggle('expanded'); }
+function setGFRSex(s,btn,e){ if(e)e.stopPropagation(); gfrSex=s; var btns=btn.parentElement.querySelectorAll('.gender-btn'); for(var i=0;i<btns.length;i++){btns[i].classList.remove('selected');} btn.classList.add('selected'); }
+function showRef(text){alert(text);}
+function setPrompt(t){document.getElementById('aiInput').value=t;}
+
+var prnData={
+  pain:'😣 PAIN<br><br>Mild: Paracetamol 1g PO q6h (max 4g/day)<br>Moderate: Tramadol 50-100mg PO q6h<br>Severe: Morphine 2.5-5mg IV q4h<br><br>⚠️ Reduce opioids in elderly/renal',
+  nausea:'🤢 NAUSEA<br><br>1st: Ondansetron 4-8mg IV/PO q8h<br>Alt: Metoclopramide 10mg q8h<br><br>⚠️ Avoid metoclopramide >5 days',
+  fever:'🌡️ FEVER<br><br>Paracetamol 1g PO/IV q6h<br>Ibuprofen 400mg PO q6-8h<br><br>⚠️ Avoid NSAIDs in renal/GI',
+  sleep:'😴 SLEEP<br><br>Melatonin 3-5mg PO hs<br>Zopiclone 3.75-7.5mg hs<br><br>⚠️ Avoid benzos in elderly',
+  anxiety:'😰 ANXIETY<br><br>Hydroxyzine 25-50mg PO q6h<br>Lorazepam 0.5-1mg PO/SL q6h<br><br>⚠️ Benzos worsen delirium',
+  constipation:'💩 CONSTIPATION<br><br>Lactulose 15-30mL PO BD<br>Senna 15mg PO hs<br>Bisacodyl 10mg PR<br><br>⚠️ Rule out obstruction',
+  itch:'🖐️ ITCH<br><br>Cetirizine 10mg PO daily<br>Chlorpheniramine 4mg q6h<br><br>⚠️ Sedating in elderly',
+  heartburn:'🔥 HEARTBURN<br><br>Gaviscon 10-20mL PRN<br>Omeprazole 20-40mg daily<br><br>⚠️ Long-term PPI risks',
+  agitation:'😤 AGITATION<br><br>⚠️ Verbal de-escalation first!<br><br>PO: Olanzapine 5-10mg OR Lorazepam 1-2mg<br>IM: Haloperidol 5mg + Lorazepam 2mg<br><br>🚨 NEVER IM olanzapine with benzos',
+  htn:'📈 HYPERTENSION<br><br>Mild: Amlodipine 5mg PO<br>Moderate: Labetalol 100-200mg PO<br>Severe: Labetalol 20mg IV<br><br>⚠️ Rule out emergency first',
+  wheeze:'🌬️ WHEEZE<br><br>Salbutamol 2.5-5mg neb q20min x3<br>Ipratropium 500mcg neb<br>Hydrocortisone 100mg IV<br><br>⚠️ Continuous nebs if severe',
+  diarrhea:'🚽 DIARRHEA<br><br>Rehydrate first!<br>Loperamide 4mg then 2mg PRN<br><br>🚨 AVOID if bloody/fever/C.diff'
 };
 
 function showPRN(type,card){
@@ -657,7 +713,7 @@ function showPRN(type,card){
   for(var i=0;i<cards.length;i++){cards[i].classList.remove('active');}
   card.classList.add('active');
   var det=document.getElementById('prnDetails');
-  det.innerHTML='<pre style="white-space:pre-wrap;font-family:inherit;">'+prnData[type]+'</pre>';
+  det.innerHTML='<div style="font-family:inherit;line-height:1.6;">'+prnData[type]+'</div>';
   det.classList.add('visible');
 }
 
