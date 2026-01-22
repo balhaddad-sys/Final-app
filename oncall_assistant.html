@@ -117,6 +117,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .nav-icon{font-size:1.3rem}
 .hidden{display:none!important}
 .section-label{font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px;margin-top:24px}
+/* Handover & Consultation Styles */
+.handover-framework{padding:0}
+.checklist-section{margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px}
+.checklist-title{font-weight:700;font-size:.85rem;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:.85rem;border-bottom:1px solid var(--border)}
+.checklist-item:last-child{border-bottom:none}
+.checklist-box{font-size:1rem;color:var(--primary)}
+.consult-box{background:var(--bg);border-radius:10px;padding:14px;margin-bottom:12px;border-left:3px solid var(--primary)}
+.consult-box.critical{border-left-color:var(--danger);background:var(--danger-light)}
+.consult-box.warning{border-left-color:var(--warning);background:var(--warning-light)}
+.consult-title{font-weight:700;font-size:.9rem;margin-bottom:10px;color:var(--text)}
+.consult-box.critical .consult-title{color:var(--danger)}
+.consult-box.warning .consult-title{color:var(--warning)}
+.consult-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:400px){.consult-grid{grid-template-columns:1fr}}
+.consult-item{font-size:.8rem;padding:8px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border)}
 </style>
 </head>
 <body>
@@ -136,9 +152,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="category-pills">
 <button class="pill active" onclick="filterCategory('all',this)">All Tools</button>
 <button class="pill" onclick="filterCategory('emergency',this)">🚨 Emergency</button>
+<button class="pill" onclick="filterCategory('handover',this)">📋 Handover</button>
+<button class="pill" onclick="filterCategory('consult',this)">📞 Consults</button>
 <button class="pill" onclick="filterCategory('prn',this)">💊 PRN</button>
 <button class="pill" onclick="filterCategory('lytes',this)">🧪 Lytes</button>
-<button class="pill" onclick="filterCategory('renal',this)">🫘 Renal</button>
 <button class="pill" onclick="filterCategory('cardiac',this)">❤️ Cardiac</button>
 </div>
 
@@ -360,6 +377,474 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 <button class="calc-btn" onclick="calcQTc(event)">Calculate</button>
 <div id="resultQTc" class="result-box hidden"></div>
+</div>
+</div>
+
+<!-- SBAR HANDOVER -->
+<div class="tool-card" data-category="handover">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">📋</div>
+<div><div class="tool-title">SBAR Handover</div><div class="tool-subtitle">Structured communication</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="handover-framework">
+<div class="protocol-step" style="border-left-color:#3b82f6">
+<div class="protocol-header"><div class="protocol-number" style="background:#3b82f6">S</div><div class="protocol-title">Situation</div></div>
+<div class="protocol-content">"I am calling about [patient name], MRN [X], in [bed/ward]"<br>• State the problem concisely<br>• "The patient is [stable/deteriorating/critical]"</div>
+</div>
+<div class="protocol-step" style="border-left-color:#8b5cf6">
+<div class="protocol-header"><div class="protocol-number" style="background:#8b5cf6">B</div><div class="protocol-title">Background</div></div>
+<div class="protocol-content">• Admission diagnosis & date<br>• Relevant PMHx<br>• Recent procedures/interventions<br>• Current medications<br>• Allergies & code status</div>
+</div>
+<div class="protocol-step" style="border-left-color:#f59e0b">
+<div class="protocol-header"><div class="protocol-number" style="background:#f59e0b">A</div><div class="protocol-title">Assessment</div></div>
+<div class="protocol-content">• Current vitals: HR, BP, RR, SpO2, Temp<br>• Mental status change?<br>• Physical exam findings<br>• Recent labs/imaging<br>• Your clinical impression</div>
+</div>
+<div class="protocol-step" style="border-left-color:#10b981">
+<div class="protocol-header"><div class="protocol-number" style="background:#10b981">R</div><div class="protocol-title">Recommendation</div></div>
+<div class="protocol-content">• What do you need?<br>• Specific orders requested<br>• "I think we should..."<br>• Clarify response time needed</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- SHIFT HANDOVER CHECKLIST -->
+<div class="tool-card" data-category="handover">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">✅</div>
+<div><div class="tool-title">Shift Handover Checklist</div><div class="tool-subtitle">End-of-shift essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="checklist-section">
+<div class="checklist-title">🔴 Critical Items</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Unstable patients & active issues</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Pending critical results (labs, imaging, cultures)</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Time-sensitive medications due</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Pending consults & expected callbacks</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Code status & goals of care discussions</div>
+</div>
+<div class="checklist-section">
+<div class="checklist-title">🟡 Important Updates</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> New admissions & their plans</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Procedures scheduled/completed</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Family meetings pending</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Anticipated discharges</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> PRN orders & parameters</div>
+</div>
+<div class="checklist-section">
+<div class="checklist-title">🟢 Routine</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> IV fluids & drip rates</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Diet orders & restrictions</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> Activity level & fall risk</div>
+<div class="checklist-item"><span class="checklist-box">☐</span> VTE prophylaxis status</div>
+</div>
+</div>
+</div>
+
+<!-- ICU CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">🏥</div>
+<div><div class="tool-title">ICU Consultation<span class="tool-badge urgent">Critical</span></div><div class="tool-subtitle">What ICU needs to know</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box critical">
+<div class="consult-title">📞 Before Calling ICU</div>
+<div class="consult-grid">
+<div class="consult-item"><strong>Airway:</strong> Patent? Protecting? GCS?</div>
+<div class="consult-item"><strong>Breathing:</strong> RR, SpO2, O2 requirement, ABG</div>
+<div class="consult-item"><strong>Circulation:</strong> HR, BP, MAP, lactate, access</div>
+<div class="consult-item"><strong>Interventions:</strong> What you've done so far</div>
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 ICU Admission Criteria</div>
+<div class="protocol-content">
+• Mechanical ventilation or imminent intubation<br>
+• Vasopressor requirement<br>
+• Severe sepsis/septic shock<br>
+• Active MI with hemodynamic instability<br>
+• Status epilepticus<br>
+• Acute renal failure requiring CRRT<br>
+• GCS ≤8 or rapidly declining<br>
+• Post-cardiac arrest<br>
+• DKA/HHS with pH &lt;7.1 or altered mental status
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Must-Have Information</div>
+<div class="protocol-content">
+• <strong>Recent ABG</strong> with FiO2<br>
+• <strong>Lactate</strong> (ideally serial)<br>
+• <strong>Current vitals</strong> & trend over last 2-4 hours<br>
+• <strong>Fluid balance</strong> & urine output<br>
+• <strong>Recent labs:</strong> CBC, BMP, coags, LFTs<br>
+• <strong>ECG</strong> within last hour if cardiac concern<br>
+• <strong>Code status</strong> & goals of care<br>
+• <strong>Family contact</strong> information
+</div>
+</div>
+</div>
+</div>
+
+<!-- SURGERY CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">🔪</div>
+<div><div class="tool-title">Surgery Consultation</div><div class="tool-subtitle">Surgical referral essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box">
+<div class="consult-title">📞 Before Calling Surgery</div>
+<div class="consult-grid">
+<div class="consult-item"><strong>Localize:</strong> Where is the problem?</div>
+<div class="consult-item"><strong>Imaging:</strong> CT/US done? Results?</div>
+<div class="consult-item"><strong>NPO status:</strong> Last oral intake?</div>
+<div class="consult-item"><strong>Anticoag:</strong> On blood thinners?</div>
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Required Information</div>
+<div class="protocol-content">
+• <strong>Chief complaint</strong> with timeline<br>
+• <strong>Physical exam:</strong> Peritonitis? Guarding? Rebound?<br>
+• <strong>Labs:</strong> CBC, BMP, lipase, LFTs, lactate, coags<br>
+• <strong>Imaging results</strong> (CT report or images available)<br>
+• <strong>Hemodynamic status</strong><br>
+• <strong>Surgical history</strong> & previous abdominal surgeries<br>
+• <strong>Comorbidities</strong> affecting surgical risk
+</div>
+</div>
+<div class="consult-box warning">
+<div class="consult-title">🚨 Urgent Surgical Conditions</div>
+<div class="protocol-content">
+• Perforated viscus / free air<br>
+• Acute appendicitis with peritonitis<br>
+• Small bowel obstruction with strangulation<br>
+• Acute mesenteric ischemia<br>
+• Necrotizing fasciitis<br>
+• Compartment syndrome<br>
+• Hemorrhage requiring operative control<br>
+• Acute cholecystitis (Tokyo Grade II-III)
+</div>
+</div>
+</div>
+</div>
+
+<!-- CARDIOLOGY CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">❤️</div>
+<div><div class="tool-title">Cardiology Consultation</div><div class="tool-subtitle">Cardiac referral essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box critical">
+<div class="consult-title">🚨 STEMI - Activate Cath Lab</div>
+<div class="protocol-content">
+• <strong>Call cath lab FIRST</strong> - don't wait for consult<br>
+• ECG with ST elevation or new LBBB<br>
+• Symptom onset time (door-to-balloon &lt;90 min)<br>
+• Aspirin 300mg + Ticagrelor 180mg given?<br>
+• Anticoagulation given?<br>
+• Contraindications to intervention?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Non-STEMI/Unstable Angina</div>
+<div class="protocol-content">
+• <strong>Serial ECGs</strong> (at least 2)<br>
+• <strong>Troponin</strong> at 0, 3, 6 hours<br>
+• <strong>GRACE/TIMI score</strong> if possible<br>
+• Current anti-ischemic therapy<br>
+• Bleeding risk assessment<br>
+• Echo findings if available
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Arrhythmia Consult</div>
+<div class="protocol-content">
+• <strong>12-lead ECG</strong> (during arrhythmia if possible)<br>
+• <strong>Rhythm strip</strong> showing onset/termination<br>
+• Hemodynamic stability during episodes<br>
+• Electrolytes: K+, Mg2+, Ca2+<br>
+• Current medications (esp. QT-prolonging)<br>
+• Previous ablations or device history
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">🫀 Heart Failure Consult</div>
+<div class="protocol-content">
+• <strong>BNP/NT-proBNP</strong> level<br>
+• <strong>Echo</strong> with EF (recent or pending)<br>
+• Volume status: JVP, edema, crackles<br>
+• Daily weights & I/O balance<br>
+• Current diuretic regimen & response<br>
+• Renal function trend
+</div>
+</div>
+</div>
+</div>
+
+<!-- NEUROLOGY CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">🧠</div>
+<div><div class="tool-title">Neurology Consultation</div><div class="tool-subtitle">Neuro referral essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box critical">
+<div class="consult-title">🚨 Stroke Alert</div>
+<div class="protocol-content">
+• <strong>Time last seen normal</strong> - CRITICAL<br>
+• <strong>NIHSS score</strong> (or key deficits)<br>
+• <strong>CT head</strong> done? Hemorrhage ruled out?<br>
+• <strong>Glucose</strong> checked?<br>
+• <strong>BP</strong> - do NOT lower unless &gt;220/120<br>
+• <strong>Anticoagulant use?</strong> (INR if on warfarin)<br>
+• Contraindications to tPA?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Seizure Consult</div>
+<div class="protocol-content">
+• <strong>Witnessed description</strong> of event<br>
+• Duration & post-ictal state<br>
+• First seizure vs known epilepsy<br>
+• AED levels if applicable<br>
+• Labs: glucose, Na+, Ca2+, Mg2+<br>
+• CT/MRI done?<br>
+• EEG ordered?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Altered Mental Status</div>
+<div class="protocol-content">
+• <strong>GCS</strong> and trend<br>
+• <strong>Focal deficits?</strong> Pupils, motor exam<br>
+• <strong>Metabolic workup:</strong> glucose, Na+, ammonia, TSH<br>
+• <strong>Infectious workup:</strong> WBC, UA, CXR, blood Cx<br>
+• <strong>Toxicology</strong> screen if indicated<br>
+• CT head ± LP if meningitis suspected
+</div>
+</div>
+</div>
+</div>
+
+<!-- GI CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">🔬</div>
+<div><div class="tool-title">GI Consultation</div><div class="tool-subtitle">GI referral essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box critical">
+<div class="consult-title">🚨 GI Bleed</div>
+<div class="protocol-content">
+• <strong>Hematemesis vs melena vs hematochezia</strong><br>
+• <strong>Hemodynamics:</strong> HR, BP, orthostatics<br>
+• <strong>Hgb</strong> - current and baseline<br>
+• <strong>Coags:</strong> INR, PTT, platelets<br>
+• <strong>Type & screen</strong> sent?<br>
+• <strong>IV access:</strong> 2 large bore IVs<br>
+• <strong>NPO status</strong><br>
+• <strong>PPI</strong> given? (80mg bolus + drip for UGIB)<br>
+• Anticoagulant/antiplatelet use?<br>
+• Cirrhosis? Varices?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Acute Pancreatitis</div>
+<div class="protocol-content">
+• <strong>Lipase</strong> level (≥3x ULN diagnostic)<br>
+• <strong>CT abdomen</strong> (if diagnosis unclear or severe)<br>
+• <strong>Etiology:</strong> gallstones? alcohol? meds?<br>
+• <strong>BISAP score</strong> for severity<br>
+• <strong>Fluid resuscitation</strong> status<br>
+• Trending BUN/Cr/Hct
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Liver Failure</div>
+<div class="protocol-content">
+• <strong>LFTs:</strong> AST, ALT, ALP, bilirubin, albumin<br>
+• <strong>Coags:</strong> INR, fibrinogen<br>
+• <strong>Ammonia</strong> level<br>
+• <strong>Encephalopathy grade</strong> (West Haven)<br>
+• <strong>Etiology workup:</strong> viral, autoimmune, toxin<br>
+• Acetaminophen level & time of ingestion<br>
+• Consider transplant hepatology if ALF
+</div>
+</div>
+</div>
+</div>
+
+<!-- NEPHROLOGY CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">🫘</div>
+<div><div class="tool-title">Nephrology Consultation</div><div class="tool-subtitle">Renal referral essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box critical">
+<div class="consult-title">🚨 Urgent Dialysis Indications (AEIOU)</div>
+<div class="protocol-content">
+• <strong>A</strong>cidosis - severe metabolic (pH &lt;7.1)<br>
+• <strong>E</strong>lectrolytes - refractory hyperkalemia<br>
+• <strong>I</strong>ngestion - toxic alcohols, lithium, salicylates<br>
+• <strong>O</strong>verload - pulmonary edema refractory to diuretics<br>
+• <strong>U</strong>remia - encephalopathy, pericarditis, bleeding
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 AKI Workup</div>
+<div class="protocol-content">
+• <strong>Baseline Cr</strong> vs current<br>
+• <strong>Urine output</strong> (last 6-12 hours)<br>
+• <strong>Volume status</strong> assessment<br>
+• <strong>Urinalysis</strong> with microscopy<br>
+• <strong>FENa</strong> or FEUrea<br>
+• <strong>Renal ultrasound</strong> (obstruction?)<br>
+• Nephrotoxin exposure review<br>
+• Contrast exposure?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Electrolyte Emergencies</div>
+<div class="protocol-content">
+• <strong>Hyperkalemia:</strong> K+, ECG, current treatment<br>
+• <strong>Hyponatremia:</strong> Na+, serum osm, urine Na/osm<br>
+• <strong>Hypercalcemia:</strong> Ca2+, PTH, volume status<br>
+• Trend of values over past 24-48h<br>
+• Symptoms attributable to electrolyte abnormality
+</div>
+</div>
+</div>
+</div>
+
+<!-- PULMONOLOGY CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">🫁</div>
+<div><div class="tool-title">Pulmonology Consultation</div><div class="tool-subtitle">Pulm referral essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box critical">
+<div class="consult-title">🚨 Respiratory Failure</div>
+<div class="protocol-content">
+• <strong>ABG</strong> on current O2 support<br>
+• <strong>Current support:</strong> NC/HFNC/BiPAP/vent settings<br>
+• <strong>Work of breathing</strong> assessment<br>
+• <strong>CXR/CT</strong> findings<br>
+• Intubation anticipated?<br>
+• Code status
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Bronchoscopy Request</div>
+<div class="protocol-content">
+• <strong>Indication:</strong> BAL, biopsy, therapeutic?<br>
+• <strong>Imaging</strong> showing lesion/infiltrate<br>
+• <strong>Coags:</strong> INR, PTT, platelets (&gt;50k)<br>
+• <strong>NPO</strong> status<br>
+• Antiplatelet/anticoagulant held?<br>
+• Consent obtained?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 COPD/Asthma Exacerbation</div>
+<div class="protocol-content">
+• <strong>Baseline</strong> FEV1 or home O2 use<br>
+• <strong>Current treatment</strong> given<br>
+• <strong>ABG</strong> if severe<br>
+• <strong>CXR</strong> for infiltrate/PTX<br>
+• Previous intubations?<br>
+• Steroid duration so far
+</div>
+</div>
+</div>
+</div>
+
+<!-- INFECTIOUS DISEASE CONSULTATION -->
+<div class="tool-card" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon">🦠</div>
+<div><div class="tool-title">ID Consultation</div><div class="tool-subtitle">Infectious disease essentials</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box">
+<div class="consult-title">📋 Before Calling ID</div>
+<div class="protocol-content">
+• <strong>Source:</strong> Where is the infection?<br>
+• <strong>Cultures:</strong> Blood, urine, sputum, wound - BEFORE abx!<br>
+• <strong>Current antibiotics</strong> with start dates<br>
+• <strong>Prior cultures</strong> & sensitivities<br>
+• <strong>Allergies</strong> - specify reaction type<br>
+• <strong>Renal function</strong> for dosing<br>
+• <strong>Imaging</strong> supporting diagnosis
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">🔬 Key Microbiology Data</div>
+<div class="protocol-content">
+• <strong>Gram stain</strong> results<br>
+• <strong>Culture</strong> finalized or pending<br>
+• <strong>Sensitivities</strong> if available<br>
+• <strong>Procalcitonin</strong> level<br>
+• HIV status if relevant<br>
+• Recent hospitalization/healthcare exposure?
+</div>
+</div>
+<div class="consult-box warning">
+<div class="consult-title">🚨 Urgent ID Consults</div>
+<div class="protocol-content">
+• Bacterial meningitis<br>
+• Necrotizing fasciitis<br>
+• Endocarditis (new murmur + bacteremia)<br>
+• Febrile neutropenia<br>
+• Severe sepsis with unclear source<br>
+• CNS infection (abscess, encephalitis)
+</div>
+</div>
 </div>
 </div>
 
