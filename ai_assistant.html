@@ -231,12 +231,13 @@ body{
 }
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .message.user{align-self:flex-end}
-.message.assistant{align-self:flex-start}
+.message.assistant{align-self:flex-start;max-width:95%}
 .message-bubble{
   padding:14px 16px;
   border-radius:16px;
   font-size:.9rem;
   line-height:1.7;
+  overflow:hidden;
 }
 .message.user .message-bubble{
   background:var(--primary);
@@ -247,6 +248,7 @@ body{
   background:var(--bg);
   border:1px solid var(--border);
   border-bottom-left-radius:4px;
+  overflow-x:auto;
 }
 .message-time{
   font-size:.65rem;
@@ -341,14 +343,18 @@ body{
 .send-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 
 /* Response Formatting */
+.response-content{overflow-x:auto}
 .response-content h2{font-size:1.1rem;font-weight:700;color:var(--primary-dark);margin:0 0 12px;padding-bottom:8px;border-bottom:2px solid var(--primary-light)}
 .response-content h3{font-size:1rem;font-weight:700;color:var(--text);margin:16px 0 8px}
 .response-content h4{font-size:.9rem;font-weight:700;color:var(--primary);margin:12px 0 6px}
 .response-content p{margin:10px 0}
 .response-content strong{color:var(--text);font-weight:600}
-.response-content table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.85rem}
-.response-content th{padding:10px 12px;text-align:left;background:var(--primary-light);font-weight:600;border-bottom:2px solid var(--primary)}
-.response-content td{padding:10px 12px;border-bottom:1px solid var(--border)}
+/* Table wrapper for horizontal scroll */
+.table-wrapper{overflow-x:auto;margin:12px -8px;padding:0 8px}
+.response-content table{width:100%;min-width:400px;border-collapse:collapse;margin:12px 0;font-size:.8rem;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.response-content th{padding:10px 12px;text-align:left;background:var(--primary-light);font-weight:600;border-bottom:2px solid var(--primary);white-space:nowrap}
+.response-content td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.response-content tr:last-child td{border-bottom:none}
 .response-content hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .response-content li{margin:6px 0;margin-left:20px}
 
@@ -561,7 +567,7 @@ function parseMarkdown(text){
       var cells = row.split('|').map(function(c){return c.trim();}).filter(Boolean);
       return '<tr>' + cells.map(function(c){return '<td>'+c+'</td>';}).join('') + '</tr>';
     }).join('');
-    return '<table>'+headerHtml+rows+'</table>';
+    return '<div class="table-wrapper"><table>'+headerHtml+rows+'</table></div>';
   });
   // Headers
   text = text.replace(/^### (.+)$/gm, '<h4>$1</h4>');
