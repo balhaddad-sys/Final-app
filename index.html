@@ -742,6 +742,9 @@ body {
 .lab-value-card.normal .lab-value-number{color:var(--emerald)}
 .lab-value-unit{font-size:0.7rem;color:var(--text-muted)}
 .lab-value-range{font-size:0.65rem;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+/* Sparkline & Trend Styles */
+.lab-sparkline{flex-shrink:0}
+.lab-trend-indicator{font-family:'JetBrains Mono',monospace}
 /* Trend Section */
 .lab-trend-section{margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
 .lab-trend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
@@ -4386,6 +4389,160 @@ function getLabCategory(name) {
     if (data.terms.some(t => n.includes(t.toLowerCase()))) return cat;
   }
   return 'Other';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LAB TREND ANALYSIS ENGINE - Medical Grade Trend Detection
+// ═══════════════════════════════════════════════════════════════════
+
+function analyzeTrend(param) {
+  // param has: name, values (array sorted newest first), unit, refMin, refMax
+  if (!param?.values || param.values.length < 2) return null;
+  
+  const current = parseFloat(param.values[0]?.value);
+  const previous = parseFloat(param.values[1]?.value);
+  
+  if (isNaN(current) || isNaN(previous)) return null;
+  
+  const diff = current - previous;
+  const percentChange = previous !== 0 ? ((diff / previous) * 100) : 0;
+  
+  // Clinical Context Rules (The "Doctor's Brain")
+  let status = 'stable';
+  let color = 'var(--text-muted)';
+  let arrow = '→';
+  const name = (param.name || '').toLowerCase();
+  
+  // Rule 1: Creatinine (AKI Check) - rise of ≥0.3 mg/dL (≈26.5 µmol/L) is concerning
+  if (name.includes('creat') || name.includes('cr')) {
+    // Handle both mg/dL and µmol/L units
+    const threshold = (param.unit || '').toLowerCase().includes('mol') ? 26.5 : 0.3;
+    if (diff >= threshold) { 
+      status = 'worsening'; 
+      color = '#dc2626'; 
+      arrow = '↗'; 
+    } else if (diff <= -threshold * 0.7) { 
+      status = 'improving'; 
+      color = '#10b981'; 
+      arrow = '↘'; 
+    }
+  }
+  // Rule 2: Hemoglobin (Bleed Check) - drop of 1+ g/dL (10 g/L) is concerning
+  else if (name.includes('hgb') || name.includes('hemoglobin') || name.includes('haemoglobin') || name.includes('hb')) {
+    const threshold = (param.unit || '').toLowerCase().includes('g/l') ? 10 : 1;
+    if (diff <= -threshold) { 
+      status = 'worsening'; 
+      color = '#dc2626'; 
+      arrow = '↘'; 
+    } else if (diff >= threshold) { 
+      status = 'improving'; 
+      color = '#10b981'; 
+      arrow = '↗'; 
+    }
+  }
+  // Rule 3: Potassium - any significant change is important
+  else if (name.includes('potassium') || name === 'k' || name === 'k+') {
+    if (diff >= 0.5) { 
+      status = current > 5.0 ? 'worsening' : 'rising'; 
+      color = current > 5.0 ? '#dc2626' : '#d97706'; 
+      arrow = '↗'; 
+    } else if (diff <= -0.5) { 
+      status = current < 3.5 ? 'worsening' : 'falling'; 
+      color = current < 3.5 ? '#dc2626' : '#d97706'; 
+      arrow = '↘'; 
+    }
+  }
+  // Rule 4: WBC - infection/sepsis monitoring
+  else if (name.includes('wbc') || name.includes('white')) {
+    if (diff >= 3) { 
+      status = 'rising'; 
+      color = '#d97706'; 
+      arrow = '↗'; 
+    } else if (diff <= -3) { 
+      status = 'falling'; 
+      color = '#d97706'; 
+      arrow = '↘'; 
+    }
+  }
+  // Rule 5: Platelets - bleeding risk
+  else if (name.includes('platelet') || name.includes('plt')) {
+    if (diff <= -30) { 
+      status = current < 100 ? 'worsening' : 'falling'; 
+      color = current < 100 ? '#dc2626' : '#d97706'; 
+      arrow = '↘'; 
+    } else if (diff >= 30) { 
+      status = 'improving'; 
+      color = '#10b981'; 
+      arrow = '↗'; 
+    }
+  }
+  // General Rule (Significant Change > 15%)
+  else {
+    if (percentChange > 15) { 
+      arrow = '↗'; 
+      color = 'var(--text-main)'; 
+      status = 'rising';
+    } else if (percentChange < -15) { 
+      arrow = '↘'; 
+      color = 'var(--text-main)'; 
+      status = 'falling';
+    }
+  }
+  
+  return { 
+    diff: diff, 
+    percentChange: percentChange.toFixed(1), 
+    previous: previous, 
+    previousDate: param.values[1]?.date,
+    arrow: arrow, 
+    color: color, 
+    status: status 
+  };
+}
+
+function generateSparkline(param, maxPoints = 5) {
+  // param.values is array sorted newest first
+  if (!param?.values || param.values.length < 2) return '';
+  
+  // Extract the last N values, reversed so time goes Left → Right
+  const dataPoints = param.values.slice(0, maxPoints).reverse()
+    .map(v => parseFloat(v.value))
+    .filter(v => !isNaN(v));
+  
+  if (dataPoints.length < 2) return '';
+  
+  // Dimensions
+  const width = 50;
+  const height = 18;
+  const max = Math.max(...dataPoints);
+  const min = Math.min(...dataPoints);
+  const range = max - min || 1; // Avoid divide by zero
+  const padding = 2;
+  
+  // Build the SVG Path
+  const stepX = (width - padding * 2) / (dataPoints.length - 1);
+  let pathD = '';
+  
+  dataPoints.forEach((val, i) => {
+    const x = padding + i * stepX;
+    const y = padding + (height - padding * 2) - ((val - min) / range * (height - padding * 2));
+    pathD += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`;
+  });
+  
+  // Determine color based on trend
+  const trend = analyzeTrend(param);
+  const lineColor = trend?.status === 'worsening' ? '#dc2626' : 
+                    trend?.status === 'improving' ? '#10b981' : 
+                    'var(--primary)';
+  
+  // Final point coordinates for the dot
+  const finalX = padding + (dataPoints.length - 1) * stepX;
+  const finalY = padding + (height - padding * 2) - ((dataPoints[dataPoints.length - 1] - min) / range * (height - padding * 2));
+  
+  return `<svg width="${width}" height="${height}" style="overflow:visible;vertical-align:middle">
+    <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${finalX}" cy="${finalY}" r="2.5" fill="${lineColor}"/>
+  </svg>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -8301,6 +8458,23 @@ function renderProfileLabs() {
         const status = v.status || 'normal';
         const paramIdx = labData.parameters.findIndex(p => p.name === param.name);
         const valueIdx = param.values?.findIndex(val => val.date === latestDate) || 0;
+        
+        // Generate trend analysis and sparkline
+        const trend = analyzeTrend(param);
+        const sparkline = generateSparkline(param);
+        
+        // Build trend HTML if we have trend data
+        let trendHTML = '';
+        if (trend && trend.arrow !== '→') {
+          trendHTML = `
+            <div class="lab-trend-indicator" style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+              <span style="font-size:0.85rem;color:${trend.color};font-weight:700;">${trend.arrow}</span>
+              <span style="font-size:0.7rem;color:${trend.color};">${trend.diff > 0 ? '+' : ''}${trend.diff.toFixed(1)}</span>
+              <span style="font-size:0.65rem;color:var(--text-muted);">from ${trend.previous}</span>
+            </div>
+          `;
+        }
+        
         html += `
           <div class="lab-value-card ${status}" onclick="openLabOverride(${paramIdx}, ${valueIdx})" title="Click to override">
             <div class="lab-value-name">
@@ -8308,9 +8482,15 @@ function renderProfileLabs() {
               ${v.manualOverride ? '<span class="lab-override-indicator">✏️</span>' : ''}
               ${status !== 'normal' ? `<span class="lab-value-status ${status}">${status === 'high' ? 'HIGH' : status === 'low' ? 'LOW' : '!'}</span>` : ''}
             </div>
-            <div class="lab-value-number">${esc(v.value)}</div>
-            <div class="lab-value-unit">${esc(param.unit || '')}</div>
-            ${param.refMin !== undefined && param.refMax !== undefined ? `<div class="lab-value-range">Reference: ${param.refMin} - ${param.refMax}</div>` : ''}
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div>
+                <div class="lab-value-number" style="color:${trend?.status === 'worsening' ? '#dc2626' : status !== 'normal' ? '#dc2626' : 'var(--primary-dark)'}">${esc(v.value)}</div>
+                <div class="lab-value-unit">${esc(param.unit || '')}</div>
+              </div>
+              ${sparkline ? `<div class="lab-sparkline">${sparkline}</div>` : ''}
+            </div>
+            ${trendHTML}
+            ${param.refMin !== undefined && param.refMax !== undefined ? `<div class="lab-value-range">Ref: ${param.refMin} - ${param.refMax}</div>` : ''}
           </div>
         `;
       });
@@ -11113,10 +11293,10 @@ window.saveLabOverride = function() {
 async function init() {
   // Check if user has seen onboarding - show to ALL users (new version flag)
   // Change this version string to force onboarding for all users again
-  const onboardingVersion = 'v3_professional'; // Updated to show new professional onboarding
+  const onboardingVersion = 'v4_sparklines'; // Updated to show new professional onboarding
   if (localStorage.getItem('medward_onboarding_version') !== onboardingVersion) {
-    // Redirect to onboarding
-    window.location.href = 'onboarding.html';
+    // Redirect to onboarding demo
+    window.location.href = 'https://balhaddad-sys.github.io/Final-app/onboarding_demo.html';
     return;
   }
   
