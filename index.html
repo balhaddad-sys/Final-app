@@ -11111,6 +11111,14 @@ window.saveLabOverride = function() {
 // ═══════════════════════════════════════════════════════════════════
 
 async function init() {
+  // Check if user has seen onboarding - show to ALL users (new version flag)
+  const onboardingVersion = 'v2'; // Increment this to show onboarding to all users again
+  if (localStorage.getItem('medward_onboarding_version') !== onboardingVersion) {
+    // Redirect to onboarding demo
+    window.location.href = 'onboarding_demo.html';
+    return;
+  }
+  
   loadLocal();
 
   // Check for saved login FIRST before showing any page
