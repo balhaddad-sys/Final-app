@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>OnCall Assistant | MedWard Pro</title>
+<title>OnCall Assistant</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--primary:#0f766e;--primary-dark:#115e59;--primary-light:#ccfbf1;--danger:#dc2626;--danger-light:#fef2f2;--warning:#d97706;--warning-light:#fffbeb;--success:#059669;--success-light:#d1fae5;--bg:#f8fafc;--bg-card:#fff;--text:#0f172a;--text-secondary:#475569;--text-muted:#94a3b8;--border:#e2e8f0;--radius:16px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+:root{--primary:#0f766e;--primary-dark:#115e59;--primary-light:#ccfbf1;--danger:#dc2626;--danger-light:#fef2f2;--warning:#d97706;--warning-light:#fffbeb;--success:#059669;--success-light:#d1fae5;--bg:#f8fafc;--bg-card:#fff;--text:#0f172a;--text-secondary:#475569;--text-muted:#94a3b8;--border:#e2e8f0;--radius:16px}
 [data-theme="dark"]{--primary:#2dd4bf;--primary-dark:#14b8a6;--primary-light:#134e4a;--danger:#f87171;--danger-light:#450a0a;--warning:#fbbf24;--warning-light:#451a03;--success:#4ade80;--success-light:#14532d;--bg:#0f172a;--bg-card:#1e293b;--text:#f1f5f9;--text-secondary:#cbd5e1;--text-muted:#64748b;--border:#334155}
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
 .app-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:100}
 .header-row{display:flex;align-items:center;justify-content:space-between;max-width:800px;margin:0 auto}
@@ -18,24 +18,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .header-title{font-weight:700;font-size:1.1rem}
 .header-subtitle{font-size:.75rem;color:var(--text-muted)}
 .header-actions{display:flex;gap:8px}
-.icon-btn{width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;-webkit-tap-highlight-color:transparent}
-.icon-btn:active{background:var(--primary-light)}
+.icon-btn{width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem}
 .main-content{max-width:800px;margin:0 auto;padding:20px;padding-bottom:100px}
-.category-pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:20px;-webkit-overflow-scrolling:touch}
-.category-pills::-webkit-scrollbar{display:none}
-.pill{flex-shrink:0;padding:10px 18px;border-radius:20px;font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.category-pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:20px}
+.pill{flex-shrink:0;padding:10px 18px;border-radius:20px;font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer}
 .pill.active{background:var(--primary);border-color:var(--primary);color:#fff}
-.tool-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.tool-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
 .tool-card.emergency{border-left:4px solid var(--danger)}
-.tool-header{padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.tool-header:active{background:var(--bg)}
-.tool-header-left{display:flex;align-items:center;gap:12px;pointer-events:none}
+.tool-header{padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.tool-header-left{display:flex;align-items:center;gap:12px}
 .tool-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:var(--bg);border:1px solid var(--border)}
 .tool-title{font-weight:700;font-size:.95rem}
 .tool-subtitle{font-size:.8rem;color:var(--text-muted)}
 .tool-badge{padding:3px 8px;border-radius:6px;font-size:.65rem;font-weight:700;text-transform:uppercase;margin-left:8px}
 .tool-badge.urgent{background:var(--danger-light);color:var(--danger)}
-.tool-chevron{width:28px;height:28px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:transform .3s;pointer-events:none}
+.tool-chevron{width:28px;height:28px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:transform .3s}
 .tool-card.expanded .tool-chevron{transform:rotate(180deg);color:var(--primary)}
 .tool-content{display:none;padding:0 16px 16px}
 .tool-card.expanded .tool-content{display:block}
@@ -43,14 +40,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .form-group{margin-bottom:16px}
 .form-label{display:block;font-size:.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase}
 .form-input,.form-select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:var(--bg);color:var(--text);-webkit-appearance:none}
-.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:400px){.form-row{grid-template-columns:1fr}}
 .gender-buttons{display:flex;gap:10px}
-.gender-btn{flex:1;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-size:.9rem;font-weight:600;cursor:pointer;color:var(--text-secondary);-webkit-tap-highlight-color:transparent}
-.gender-btn:active,.gender-btn.selected{background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
-.calc-btn{width:100%;padding:14px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.calc-btn:active{opacity:0.8}
+.gender-btn{flex:1;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-size:.9rem;font-weight:600;cursor:pointer;color:var(--text-secondary)}
+.gender-btn.selected{background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
+.calc-btn{width:100%;padding:14px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer}
 .calc-btn.danger{background:var(--danger)}
 .result-box{margin-top:16px;padding:16px;border-radius:12px;background:var(--bg);border:1px solid var(--border)}
 .result-box.danger{background:var(--danger-light);border-color:var(--danger)}
@@ -61,8 +56,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .result-box.warning .result-title{color:var(--warning)}
 .result-box.success .result-title{color:var(--success)}
 .result-content{font-size:.9rem;color:var(--text-secondary);line-height:1.7}
-.result-item{margin-bottom:6px;padding-left:16px;position:relative}
-.result-item::before{content:"•";position:absolute;left:0;color:var(--primary)}
 .protocol-step{background:var(--bg-card);border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid var(--primary)}
 .protocol-step.danger{border-left-color:var(--danger);background:var(--danger-light)}
 .protocol-step.warning{border-left-color:var(--warning);background:var(--warning-light)}
@@ -74,8 +67,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .protocol-content{font-size:.85rem;color:var(--text-secondary);margin-left:34px}
 .prn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:500px){.prn-grid{grid-template-columns:repeat(2,1fr)}}
-.prn-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 8px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
-.prn-card:active,.prn-card.active{border-color:var(--primary);background:var(--primary-light)}
+.prn-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 8px;cursor:pointer;text-align:center}
+.prn-card.active{border-color:var(--primary);background:var(--primary-light)}
 .prn-icon{font-size:1.5rem;margin-bottom:6px}
 .prn-name{font-weight:700;font-size:.8rem}
 .prn-indication{font-size:.65rem;color:var(--text-muted)}
@@ -94,18 +87,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ai-subtitle{font-size:.8rem;color:var(--text-muted)}
 .ai-body{padding:16px}
 .ai-prompts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.ai-prompt-btn{padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.75rem;font-weight:500;color:var(--text-secondary);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ai-prompt-btn:active{border-color:var(--primary);background:var(--primary-light)}
+.ai-prompt-btn{padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.75rem;font-weight:500;color:var(--text-secondary);cursor:pointer}
 .ai-input-row{display:flex;gap:10px}
 .ai-input{flex:1;min-width:0;padding:14px 16px;border:1px solid var(--border);border-radius:12px;font-size:16px;background:var(--bg);color:var(--text)}
-.ai-send-btn{width:50px;height:50px;border-radius:12px;background:var(--primary);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
-.ai-send-btn:active{opacity:0.8}
+.ai-send-btn{width:50px;height:50px;border-radius:12px;background:var(--primary);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ai-response{display:none;margin-top:16px;background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .ai-response.visible{display:block}
 .ai-response-header{padding:12px 16px;background:var(--primary-light);border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
 .ai-response-label{font-size:.75rem;font-weight:600;color:var(--primary);text-transform:uppercase}
 .ai-response-time{font-size:.75rem;color:var(--text-muted)}
-.ai-response-body{padding:16px;font-size:.9rem;line-height:1.8;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ai-response-body{padding:16px;font-size:.9rem;line-height:1.8;max-height:50vh;overflow-y:auto}
 .ai-alert{padding:12px;border-radius:10px;margin:12px 0;display:flex;align-items:flex-start;gap:10px}
 .ai-alert.danger{background:var(--danger-light);border:1px solid var(--danger)}
 .ai-alert-icon{font-size:1.1rem}
@@ -116,14 +107,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 @keyframes spin{to{transform:rotate(360deg)}}
 .quick-ref-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
 @media(max-width:500px){.quick-ref-grid{grid-template-columns:repeat(2,1fr)}}
-.quick-ref-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.quick-ref-card:active{border-color:var(--primary)}
+.quick-ref-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer}
 .quick-ref-icon{font-size:1.3rem;margin-bottom:6px}
 .quick-ref-title{font-weight:600;font-size:.8rem;margin-bottom:2px}
 .quick-ref-value{font-size:.7rem;color:var(--text-muted)}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;z-index:1000}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 20px;border-radius:12px;cursor:pointer;color:var(--text-muted);font-size:.7rem;font-weight:600;-webkit-tap-highlight-color:transparent}
-.nav-item:active{background:var(--bg)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 20px;border-radius:12px;cursor:pointer;color:var(--text-muted);font-size:.7rem;font-weight:600}
 .nav-item.active{color:var(--primary);background:var(--primary-light)}
 .nav-icon{font-size:1.3rem}
 .hidden{display:none!important}
@@ -138,27 +127,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div><div class="header-title">OnCall Assistant</div><div class="header-subtitle">Evidence-Based Decision Support</div></div>
 </div>
 <div class="header-actions">
-<button class="icon-btn" id="themeBtn">🌙</button>
-<button class="icon-btn" id="backBtn">✕</button>
+<button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+<button class="icon-btn" id="backBtn" onclick="goBack()">✕</button>
 </div>
 </div>
 </header>
 <div class="main-content">
-<div class="category-pills" id="categoryPills">
-<button class="pill active" data-cat="all">All Tools</button>
-<button class="pill" data-cat="emergency">🚨 Emergency</button>
-<button class="pill" data-cat="prn">💊 PRN</button>
-<button class="pill" data-cat="lytes">🧪 Lytes</button>
-<button class="pill" data-cat="renal">🫘 Renal</button>
-<button class="pill" data-cat="cardiac">❤️ Cardiac</button>
+<div class="category-pills">
+<button class="pill active" onclick="filterCategory('all',this)">All Tools</button>
+<button class="pill" onclick="filterCategory('emergency',this)">🚨 Emergency</button>
+<button class="pill" onclick="filterCategory('prn',this)">💊 PRN</button>
+<button class="pill" onclick="filterCategory('lytes',this)">🧪 Lytes</button>
+<button class="pill" onclick="filterCategory('renal',this)">🫘 Renal</button>
+<button class="pill" onclick="filterCategory('cardiac',this)">❤️ Cardiac</button>
 </div>
 
 <!-- HYPOGLYCEMIA -->
 <div class="tool-card emergency" data-category="emergency">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">🍬</div>
-<div><div class="tool-title">Hypoglycemia Protocol<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Glucose &lt; 3.9 mmol/L</div></div>
+<div><div class="tool-title">Hypoglycemia<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Glucose &lt; 3.9 mmol/L</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -167,47 +156,46 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="form-group"><label class="form-label">Blood Glucose (mmol/L)</label><input type="number" class="form-input" id="inputHypoGlucose" placeholder="e.g., 2.8" step="0.1"></div>
 <div class="form-group"><label class="form-label">Patient Status</label>
 <select class="form-select" id="inputHypoStatus">
-<option value="conscious">Conscious &amp; able to swallow</option>
-<option value="confused">Confused / Drowsy</option>
-<option value="unconscious">Unconscious / Seizing</option>
+<option value="conscious">Conscious</option>
+<option value="confused">Confused/Drowsy</option>
+<option value="unconscious">Unconscious/Seizing</option>
 </select></div>
-<button class="calc-btn danger" id="calcHypo">Get Treatment Protocol</button>
+<button class="calc-btn danger" onclick="calcHypo(event)">Get Protocol</button>
 <div id="resultHypo" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- HYPERKALEMIA -->
 <div class="tool-card emergency" data-category="emergency">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">⚡</div>
-<div><div class="tool-title">Hyperkalemia Emergency<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">K+ &gt; 6.0 mmol/L treatment</div></div>
+<div><div class="tool-title">Hyperkalemia<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">K+ &gt; 6.0 mmol/L</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="form-row">
-<div class="form-group"><label class="form-label">Potassium (mmol/L)</label><input type="number" class="form-input" id="inputHyperK" placeholder="e.g., 6.5" step="0.1"></div>
+<div class="form-group"><label class="form-label">K+ (mmol/L)</label><input type="number" class="form-input" id="inputHyperK" placeholder="e.g., 6.5" step="0.1"></div>
 <div class="form-group"><label class="form-label">ECG Changes?</label>
 <select class="form-select" id="inputHyperKECG">
 <option value="none">None</option>
-<option value="peaked">Peaked T waves</option>
-<option value="wide">Widened QRS</option>
-<option value="sine">Sine wave</option>
+<option value="peaked">Peaked T</option>
+<option value="wide">Wide QRS</option>
 </select></div>
 </div>
-<button class="calc-btn danger" id="calcHyperK">Get Emergency Protocol</button>
+<button class="calc-btn danger" onclick="calcHyperK(event)">Get Protocol</button>
 <div id="resultHyperK" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- ANAPHYLAXIS -->
 <div class="tool-card emergency" data-category="emergency">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">💉</div>
-<div><div class="tool-title">Anaphylaxis Protocol<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Severe allergic reaction</div></div>
+<div><div class="tool-title">Anaphylaxis<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Severe allergic reaction</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -215,93 +203,41 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="tool-divider"></div>
 <div class="form-group"><label class="form-label">Age Group</label>
 <select class="form-select" id="inputAnapAge">
-<option value="adult">Adult (&gt;12 years)</option>
-<option value="child">Child 6-12 years</option>
-<option value="infant">Child &lt;6 years</option>
+<option value="adult">Adult (&gt;12y)</option>
+<option value="child">Child 6-12y</option>
+<option value="infant">Child &lt;6y</option>
 </select></div>
-<button class="calc-btn danger" id="calcAnap">Get Emergency Protocol</button>
+<button class="calc-btn danger" onclick="calcAnap(event)">Get Protocol</button>
 <div id="resultAnap" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- SEPSIS -->
 <div class="tool-card emergency" data-category="emergency">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">🦠</div>
-<div><div class="tool-title">Sepsis / Septic Shock<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Hour-1 Bundle (Surviving Sepsis 2021)</div></div>
+<div><div class="tool-title">Sepsis<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Hour-1 Bundle</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="form-row">
-<div class="form-group"><label class="form-label">Lactate (mmol/L)</label><input type="number" class="form-input" id="inputSepsisLactate" placeholder="e.g., 4.2" step="0.1"></div>
-<div class="form-group"><label class="form-label">MAP (mmHg)</label><input type="number" class="form-input" id="inputSepsisMAP" placeholder="e.g., 55"></div>
+<div class="form-group"><label class="form-label">Lactate</label><input type="number" class="form-input" id="inputSepsisLactate" placeholder="mmol/L" step="0.1"></div>
+<div class="form-group"><label class="form-label">MAP</label><input type="number" class="form-input" id="inputSepsisMAP" placeholder="mmHg"></div>
 </div>
-<button class="calc-btn danger" id="calcSepsis">Get Hour-1 Bundle</button>
+<button class="calc-btn danger" onclick="calcSepsis(event)">Get Bundle</button>
 <div id="resultSepsis" class="result-box hidden"></div>
-</div>
-</div>
-
-<!-- ACS -->
-<div class="tool-card emergency" data-category="emergency cardiac">
-<div class="tool-header">
-<div class="tool-header-left">
-<div class="tool-icon">💔</div>
-<div><div class="tool-title">ACS / STEMI Protocol<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Acute coronary syndrome</div></div>
-</div>
-<div class="tool-chevron">▼</div>
-</div>
-<div class="tool-content">
-<div class="tool-divider"></div>
-<div class="form-group"><label class="form-label">ECG Findings</label>
-<select class="form-select" id="inputACSType">
-<option value="stemi">STEMI (ST elevation)</option>
-<option value="nstemi">NSTEMI (Trop positive)</option>
-<option value="ua">Unstable Angina</option>
-</select></div>
-<div class="form-row">
-<div class="form-group"><label class="form-label">SBP (mmHg)</label><input type="number" class="form-input" id="inputACSSBP" placeholder="e.g., 120"></div>
-<div class="form-group"><label class="form-label">HR (bpm)</label><input type="number" class="form-input" id="inputACSHR" placeholder="e.g., 80"></div>
-</div>
-<button class="calc-btn danger" id="calcACS">Get Management Protocol</button>
-<div id="resultACS" class="result-box hidden"></div>
-</div>
-</div>
-
-<!-- STROKE -->
-<div class="tool-card emergency" data-category="emergency">
-<div class="tool-header">
-<div class="tool-header-left">
-<div class="tool-icon">🧠</div>
-<div><div class="tool-title">Acute Stroke Protocol<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">tPA/Thrombectomy eligibility</div></div>
-</div>
-<div class="tool-chevron">▼</div>
-</div>
-<div class="tool-content">
-<div class="tool-divider"></div>
-<div class="form-row">
-<div class="form-group"><label class="form-label">Time Since Onset</label>
-<select class="form-select" id="inputStrokeTime">
-<option value="0-3">0-3 hours</option>
-<option value="3-4.5">3-4.5 hours</option>
-<option value="4.5-6">4.5-6 hours</option>
-<option value="6-24">6-24 hours</option>
-</select></div>
-<div class="form-group"><label class="form-label">NIHSS Score</label><input type="number" class="form-input" id="inputStrokeNIHSS" placeholder="e.g., 12"></div>
-</div>
-<button class="calc-btn danger" id="calcStroke">Check tPA Eligibility</button>
-<div id="resultStroke" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- DKA -->
 <div class="tool-card emergency" data-category="emergency">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">💧</div>
-<div><div class="tool-title">DKA Management<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Diabetic ketoacidosis</div></div>
+<div><div class="tool-title">DKA<span class="tool-badge urgent">Urgent</span></div><div class="tool-subtitle">Diabetic ketoacidosis</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
@@ -311,35 +247,35 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="form-group"><label class="form-label">pH</label><input type="number" class="form-input" id="inputDKApH" placeholder="e.g., 7.15" step="0.01"></div>
 <div class="form-group"><label class="form-label">K+ (mmol/L)</label><input type="number" class="form-input" id="inputDKAK" placeholder="e.g., 5.2" step="0.1"></div>
 </div>
-<button class="calc-btn danger" id="calcDKA">Get DKA Protocol</button>
+<button class="calc-btn danger" onclick="calcDKA(event)">Get Protocol</button>
 <div id="resultDKA" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- PRN MEDICATIONS -->
 <div class="tool-card" data-category="prn">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">💊</div>
-<div><div class="tool-title">PRN Medications</div><div class="tool-subtitle">Common as-needed prescriptions</div></div>
+<div><div class="tool-title">PRN Medications</div><div class="tool-subtitle">As-needed prescriptions</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
 <div class="tool-content">
 <div class="tool-divider"></div>
-<div class="prn-grid" id="prnGrid">
-<div class="prn-card" data-prn="pain"><div class="prn-icon">😣</div><div class="prn-name">Pain</div><div class="prn-indication">Analgesia</div></div>
-<div class="prn-card" data-prn="nausea"><div class="prn-icon">🤢</div><div class="prn-name">Nausea</div><div class="prn-indication">Antiemetics</div></div>
-<div class="prn-card" data-prn="fever"><div class="prn-icon">🌡️</div><div class="prn-name">Fever</div><div class="prn-indication">Antipyretics</div></div>
-<div class="prn-card" data-prn="sleep"><div class="prn-icon">😴</div><div class="prn-name">Sleep</div><div class="prn-indication">Sedatives</div></div>
-<div class="prn-card" data-prn="anxiety"><div class="prn-icon">😰</div><div class="prn-name">Anxiety</div><div class="prn-indication">Anxiolytics</div></div>
-<div class="prn-card" data-prn="constipation"><div class="prn-icon">💩</div><div class="prn-name">Constipation</div><div class="prn-indication">Laxatives</div></div>
-<div class="prn-card" data-prn="itch"><div class="prn-icon">🖐️</div><div class="prn-name">Itch</div><div class="prn-indication">Antihistamines</div></div>
-<div class="prn-card" data-prn="heartburn"><div class="prn-icon">🔥</div><div class="prn-name">Heartburn</div><div class="prn-indication">Antacids/PPI</div></div>
-<div class="prn-card" data-prn="agitation"><div class="prn-icon">😤</div><div class="prn-name">Agitation</div><div class="prn-indication">Rapid tranq</div></div>
-<div class="prn-card" data-prn="hypertension"><div class="prn-icon">📈</div><div class="prn-name">HTN</div><div class="prn-indication">PRN BP meds</div></div>
-<div class="prn-card" data-prn="bronchospasm"><div class="prn-icon">🌬️</div><div class="prn-name">Wheeze</div><div class="prn-indication">Bronchodilators</div></div>
-<div class="prn-card" data-prn="diarrhea"><div class="prn-icon">🚽</div><div class="prn-name">Diarrhea</div><div class="prn-indication">Antidiarrheals</div></div>
+<div class="prn-grid">
+<div class="prn-card" onclick="showPRN('pain',this)"><div class="prn-icon">😣</div><div class="prn-name">Pain</div></div>
+<div class="prn-card" onclick="showPRN('nausea',this)"><div class="prn-icon">🤢</div><div class="prn-name">Nausea</div></div>
+<div class="prn-card" onclick="showPRN('fever',this)"><div class="prn-icon">🌡️</div><div class="prn-name">Fever</div></div>
+<div class="prn-card" onclick="showPRN('sleep',this)"><div class="prn-icon">😴</div><div class="prn-name">Sleep</div></div>
+<div class="prn-card" onclick="showPRN('anxiety',this)"><div class="prn-icon">😰</div><div class="prn-name">Anxiety</div></div>
+<div class="prn-card" onclick="showPRN('constipation',this)"><div class="prn-icon">💩</div><div class="prn-name">Constipation</div></div>
+<div class="prn-card" onclick="showPRN('itch',this)"><div class="prn-icon">🖐️</div><div class="prn-name">Itch</div></div>
+<div class="prn-card" onclick="showPRN('heartburn',this)"><div class="prn-icon">🔥</div><div class="prn-name">Heartburn</div></div>
+<div class="prn-card" onclick="showPRN('agitation',this)"><div class="prn-icon">😤</div><div class="prn-name">Agitation</div></div>
+<div class="prn-card" onclick="showPRN('htn',this)"><div class="prn-icon">📈</div><div class="prn-name">HTN</div></div>
+<div class="prn-card" onclick="showPRN('wheeze',this)"><div class="prn-icon">🌬️</div><div class="prn-name">Wheeze</div></div>
+<div class="prn-card" onclick="showPRN('diarrhea',this)"><div class="prn-icon">🚽</div><div class="prn-name">Diarrhea</div></div>
 </div>
 <div id="prnDetails" class="prn-details"></div>
 </div>
@@ -347,82 +283,82 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <!-- POTASSIUM -->
 <div class="tool-card" data-category="lytes">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">🧪</div>
-<div><div class="tool-title">Potassium Correction</div><div class="tool-subtitle">IV/PO KCl dosing</div></div>
+<div><div class="tool-title">K+ Correction</div><div class="tool-subtitle">Replacement dosing</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
 <div class="tool-content">
 <div class="tool-divider"></div>
-<div class="form-group"><label class="form-label">Current K+ (mmol/L)</label><input type="number" class="form-input" id="inputK" placeholder="e.g., 3.2" step="0.1"></div>
-<button class="calc-btn" id="calcK">Calculate Replacement</button>
+<div class="form-group"><label class="form-label">K+ (mmol/L)</label><input type="number" class="form-input" id="inputK" placeholder="e.g., 3.2" step="0.1"></div>
+<button class="calc-btn" onclick="calcK(event)">Calculate</button>
 <div id="resultK" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- CALCIUM -->
 <div class="tool-card" data-category="lytes">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">🦴</div>
-<div><div class="tool-title">Corrected Calcium</div><div class="tool-subtitle">Albumin adjustment</div></div>
+<div><div class="tool-title">Corrected Ca</div><div class="tool-subtitle">Albumin adjustment</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="form-row">
-<div class="form-group"><label class="form-label">Total Ca (mmol/L)</label><input type="number" class="form-input" id="inputCa" placeholder="e.g., 2.0" step="0.01"></div>
+<div class="form-group"><label class="form-label">Ca (mmol/L)</label><input type="number" class="form-input" id="inputCa" placeholder="e.g., 2.0" step="0.01"></div>
 <div class="form-group"><label class="form-label">Albumin (g/L)</label><input type="number" class="form-input" id="inputAlb" placeholder="e.g., 28"></div>
 </div>
-<button class="calc-btn" id="calcCa">Calculate</button>
+<button class="calc-btn" onclick="calcCa(event)">Calculate</button>
 <div id="resultCa" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- eGFR -->
 <div class="tool-card" data-category="renal">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">🫘</div>
-<div><div class="tool-title">eGFR Calculator</div><div class="tool-subtitle">CKD-EPI 2021</div></div>
+<div><div class="tool-title">eGFR</div><div class="tool-subtitle">CKD-EPI 2021</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="form-row">
-<div class="form-group"><label class="form-label">Creatinine (µmol/L)</label><input type="number" class="form-input" id="inputCr" placeholder="e.g., 120"></div>
-<div class="form-group"><label class="form-label">Age (years)</label><input type="number" class="form-input" id="inputAge" placeholder="e.g., 65"></div>
+<div class="form-group"><label class="form-label">Cr (µmol/L)</label><input type="number" class="form-input" id="inputCr" placeholder="e.g., 120"></div>
+<div class="form-group"><label class="form-label">Age</label><input type="number" class="form-input" id="inputAge" placeholder="years"></div>
 </div>
 <div class="form-group"><label class="form-label">Sex</label>
-<div class="gender-buttons" id="gfrSex">
-<button class="gender-btn" data-sex="m">♂️ Male</button>
-<button class="gender-btn" data-sex="f">♀️ Female</button>
+<div class="gender-buttons">
+<button class="gender-btn" onclick="setGFRSex('m',this,event)">♂️ Male</button>
+<button class="gender-btn" onclick="setGFRSex('f',this,event)">♀️ Female</button>
 </div></div>
-<button class="calc-btn" id="calcEGFR">Calculate eGFR</button>
+<button class="calc-btn" onclick="calcEGFR(event)">Calculate</button>
 <div id="resultEGFR" class="result-box hidden"></div>
 </div>
 </div>
 
 <!-- QTc -->
 <div class="tool-card" data-category="cardiac">
-<div class="tool-header">
+<div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
 <div class="tool-icon">❤️</div>
-<div><div class="tool-title">QTc Calculator</div><div class="tool-subtitle">Bazett formula</div></div>
+<div><div class="tool-title">QTc</div><div class="tool-subtitle">Bazett formula</div></div>
 </div>
 <div class="tool-chevron">▼</div>
 </div>
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="form-row">
-<div class="form-group"><label class="form-label">QT Interval (ms)</label><input type="number" class="form-input" id="inputQT" placeholder="e.g., 400"></div>
-<div class="form-group"><label class="form-label">Heart Rate (bpm)</label><input type="number" class="form-input" id="inputHR" placeholder="e.g., 80"></div>
+<div class="form-group"><label class="form-label">QT (ms)</label><input type="number" class="form-input" id="inputQT" placeholder="e.g., 400"></div>
+<div class="form-group"><label class="form-label">HR (bpm)</label><input type="number" class="form-input" id="inputHR" placeholder="e.g., 80"></div>
 </div>
-<button class="calc-btn" id="calcQTc">Calculate QTc</button>
+<button class="calc-btn" onclick="calcQTc(event)">Calculate</button>
 <div id="resultQTc" class="result-box hidden"></div>
 </div>
 </div>
@@ -431,365 +367,277 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="ai-section" data-category="ai">
 <div class="ai-header">
 <div class="ai-icon">🤖</div>
-<div><div class="ai-title">Clinical AI Assistant</div><div class="ai-subtitle">Powered by Claude • Kuwait SI Units</div></div>
+<div><div class="ai-title">AI Assistant</div><div class="ai-subtitle">Kuwait SI Units</div></div>
 </div>
 <div class="ai-body">
-<div class="ai-prompts" id="aiPrompts">
-<button class="ai-prompt-btn" data-prompt="Hyperkalemia ECG changes">Hyperkalemia ECG</button>
-<button class="ai-prompt-btn" data-prompt="DKA management protocol">DKA Protocol</button>
-<button class="ai-prompt-btn" data-prompt="Neutropenic fever workup">Neutropenic Fever</button>
-<button class="ai-prompt-btn" data-prompt="Causes of SIADH">SIADH Causes</button>
-<button class="ai-prompt-btn" data-prompt="Acute pancreatitis management">Pancreatitis</button>
-<button class="ai-prompt-btn" data-prompt="GI bleed workup">GI Bleed</button>
+<div class="ai-prompts">
+<button class="ai-prompt-btn" onclick="setPrompt('Hyperkalemia ECG changes')">Hyperkalemia</button>
+<button class="ai-prompt-btn" onclick="setPrompt('DKA protocol')">DKA</button>
+<button class="ai-prompt-btn" onclick="setPrompt('Neutropenic fever')">Neutropenic Fever</button>
+<button class="ai-prompt-btn" onclick="setPrompt('GI bleed workup')">GI Bleed</button>
 </div>
 <div class="ai-input-row">
 <input type="text" class="ai-input" id="aiInput" placeholder="Ask a clinical question...">
-<button class="ai-send-btn" id="aiSend">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-</button>
+<button class="ai-send-btn" onclick="askAI()">➤</button>
 </div>
 <div class="ai-response" id="aiResponse"></div>
 </div>
 </div>
 
 <!-- QUICK REFERENCE -->
-<div class="section-label">Quick Reference • Kuwait SI Units</div>
-<div class="quick-ref-grid" id="quickRef">
-<div class="quick-ref-card" data-ref="K+: 3.5-5.0 mmol/L&#10;Critical: <2.5 or >6.0"><div class="quick-ref-icon">🧪</div><div class="quick-ref-title">K+</div><div class="quick-ref-value">3.5-5.0</div></div>
-<div class="quick-ref-card" data-ref="Na+: 136-145 mmol/L&#10;Max correction: 8-10 mEq/24hr"><div class="quick-ref-icon">🧂</div><div class="quick-ref-title">Na+</div><div class="quick-ref-value">136-145</div></div>
-<div class="quick-ref-card" data-ref="Ca: 2.1-2.6 mmol/L&#10;Formula: Ca + 0.02×(40-Alb)"><div class="quick-ref-icon">🦴</div><div class="quick-ref-title">Ca</div><div class="quick-ref-value">2.1-2.6</div></div>
-<div class="quick-ref-card" data-ref="Glucose: 3.9-5.6 mmol/L&#10;Hypoglycemia: <3.9"><div class="quick-ref-icon">🍬</div><div class="quick-ref-title">Glucose</div><div class="quick-ref-value">3.9-5.6</div></div>
-<div class="quick-ref-card" data-ref="Hgb: M 130-175 g/L&#10;F 120-160 g/L"><div class="quick-ref-icon">🩸</div><div class="quick-ref-title">Hgb</div><div class="quick-ref-value">130-175</div></div>
-<div class="quick-ref-card" data-ref="Cr: M 62-106 µmol/L&#10;F 44-80 µmol/L"><div class="quick-ref-icon">🫘</div><div class="quick-ref-title">Cr</div><div class="quick-ref-value">62-106</div></div>
-<div class="quick-ref-card" data-ref="QTc: Normal <440 ms&#10;Prolonged >470 ms&#10;Danger >500 ms"><div class="quick-ref-icon">❤️</div><div class="quick-ref-title">QTc</div><div class="quick-ref-value">&lt;440 ms</div></div>
-<div class="quick-ref-card" data-ref="Mg: 0.7-1.0 mmol/L&#10;Critical: <0.4"><div class="quick-ref-icon">💎</div><div class="quick-ref-title">Mg</div><div class="quick-ref-value">0.7-1.0</div></div>
+<div class="section-label">Quick Reference</div>
+<div class="quick-ref-grid">
+<div class="quick-ref-card" onclick="showRef('K+: 3.5-5.0 mmol/L')"><div class="quick-ref-icon">🧪</div><div class="quick-ref-title">K+</div><div class="quick-ref-value">3.5-5.0</div></div>
+<div class="quick-ref-card" onclick="showRef('Na+: 136-145 mmol/L')"><div class="quick-ref-icon">🧂</div><div class="quick-ref-title">Na+</div><div class="quick-ref-value">136-145</div></div>
+<div class="quick-ref-card" onclick="showRef('Ca: 2.1-2.6 mmol/L')"><div class="quick-ref-icon">🦴</div><div class="quick-ref-title">Ca</div><div class="quick-ref-value">2.1-2.6</div></div>
+<div class="quick-ref-card" onclick="showRef('Glucose: 3.9-5.6 mmol/L')"><div class="quick-ref-icon">🍬</div><div class="quick-ref-title">Glc</div><div class="quick-ref-value">3.9-5.6</div></div>
 </div>
 </div>
 
-<nav class="bottom-nav" id="bottomNav">
-<div class="nav-item" data-nav="home"><div class="nav-icon">🏠</div><span>Home</span></div>
-<div class="nav-item active" data-nav="oncall"><div class="nav-icon">⚡</div><span>OnCall</span></div>
-<div class="nav-item" data-nav="emergency"><div class="nav-icon">🚨</div><span>Emergency</span></div>
-<div class="nav-item" data-nav="ai"><div class="nav-icon">🤖</div><span>AI</span></div>
+<nav class="bottom-nav">
+<div class="nav-item" onclick="goBack()"><div class="nav-icon">🏠</div><span>Home</span></div>
+<div class="nav-item active"><div class="nav-icon">⚡</div><span>OnCall</span></div>
+<div class="nav-item" onclick="filterCategory('emergency',this)"><div class="nav-icon">🚨</div><span>Emergency</span></div>
+<div class="nav-item" onclick="scrollToAI()"><div class="nav-icon">🤖</div><span>AI</span></div>
 </nav>
 
 <script>
-(function(){
-  var apiUrl='https://script.google.com/macros/s/AKfycbznXa9YNna26Srt1eZVEnSV-dIiubFLTwg3ryLdE-maGNCQhydP_8E6AK4QPXkeQrw7lA/exec';
-  var selectedGFRSex='';
+var apiUrl='https://script.google.com/macros/s/AKfycbznXa9YNna26Srt1eZVEnSV-dIiubFLTwg3ryLdE-maGNCQhydP_8E6AK4QPXkeQrw7lA/exec';
+var gfrSex='';
 
-  // Theme
-  var theme=localStorage.getItem('oncall-theme')||'light';
-  document.documentElement.setAttribute('data-theme',theme);
-  document.getElementById('themeBtn').textContent=theme==='dark'?'☀️':'🌙';
-  
-  document.getElementById('themeBtn').addEventListener('click',function(){
-    var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
-    document.documentElement.setAttribute('data-theme',t);
-    localStorage.setItem('oncall-theme',t);
-    this.textContent=t==='dark'?'☀️':'🌙';
-  });
+// Initialize theme
+var savedTheme=localStorage.getItem('oncall-theme')||'light';
+document.documentElement.setAttribute('data-theme',savedTheme);
+document.getElementById('themeBtn').textContent=savedTheme==='dark'?'☀️':'🌙';
 
-  // Back button
-  document.getElementById('backBtn').addEventListener('click',function(){
-    if(window.history.length>1){window.history.back();}else{window.location.href='/';}
-  });
+function toggleTheme(){
+  var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('oncall-theme',t);
+  document.getElementById('themeBtn').textContent=t==='dark'?'☀️':'🌙';
+}
 
-  // Category pills
-  document.getElementById('categoryPills').addEventListener('click',function(e){
-    var pill=e.target.closest('.pill');
-    if(!pill)return;
-    document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active');});
-    pill.classList.add('active');
-    var cat=pill.dataset.cat;
-    document.querySelectorAll('.tool-card,.ai-section').forEach(function(c){
-      var cats=c.dataset.category?c.dataset.category.split(' '):[];
-      c.style.display=(cat==='all'||cats.indexOf(cat)>=0)?'block':'none';
-    });
-  });
-
-  // Tool headers toggle
-  document.querySelectorAll('.tool-header').forEach(function(h){
-    h.addEventListener('click',function(e){
-      if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='BUTTON')return;
-      this.closest('.tool-card').classList.toggle('expanded');
-    });
-  });
-
-  // Bottom nav
-  document.getElementById('bottomNav').addEventListener('click',function(e){
-    var item=e.target.closest('.nav-item');
-    if(!item)return;
-    var nav=item.dataset.nav;
-    if(nav==='home'){
-      if(window.history.length>1){window.history.back();}else{window.location.href='/';}
-    }else if(nav==='emergency'){
-      document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active');});
-      document.querySelector('.pill[data-cat="emergency"]').classList.add('active');
-      document.querySelectorAll('.tool-card,.ai-section').forEach(function(c){
-        c.style.display=c.dataset.category&&c.dataset.category.indexOf('emergency')>=0?'block':'none';
-      });
-      window.scrollTo({top:0,behavior:'smooth'});
-    }else if(nav==='ai'){
-      document.querySelector('.ai-section').scrollIntoView({behavior:'smooth'});
-    }
-  });
-
-  // Gender buttons for eGFR
-  document.getElementById('gfrSex').addEventListener('click',function(e){
-    var btn=e.target.closest('.gender-btn');
-    if(!btn)return;
-    e.stopPropagation();
-    this.querySelectorAll('.gender-btn').forEach(function(b){b.classList.remove('selected');});
-    btn.classList.add('selected');
-    selectedGFRSex=btn.dataset.sex;
-  });
-
-  // PRN grid
-  var prnData={
-    pain:{title:'😣 Pain Management',items:[['Mild','Paracetamol 1g PO/IV q6h (max 4g/day)'],['Moderate','Tramadol 50-100mg PO q6h'],['Severe','Morphine 2.5-5mg IV q4h PRN']],warn:'Reduce opioids in elderly/renal impairment'},
-    nausea:{title:'🤢 Nausea/Vomiting',items:[['First Line','Ondansetron 4-8mg IV/PO q8h'],['Alternative','Metoclopramide 10mg IV/PO q8h']],warn:'Metoclopramide: avoid in obstruction, max 5 days'},
-    fever:{title:'🌡️ Fever',items:[['First Line','Paracetamol 1g PO/IV q6h'],['Alternative','Ibuprofen 400mg PO q6-8h']],warn:'Avoid NSAIDs in renal/GI/HF'},
-    sleep:{title:'😴 Sleep',items:[['First Line','Melatonin 3-5mg PO hs'],['Short-term','Zopiclone 3.75-7.5mg PO hs']],warn:'Avoid benzos in elderly - falls/delirium'},
-    anxiety:{title:'😰 Anxiety',items:[['Mild','Hydroxyzine 25-50mg PO q6h'],['Moderate','Lorazepam 0.5-1mg PO/SL q6h']],warn:'Benzos can worsen delirium'},
-    constipation:{title:'💩 Constipation',items:[['Osmotic','Lactulose 15-30mL PO BD'],['Stimulant','Senna 15mg PO hs'],['Severe','Bisacodyl 10mg PR + enema']],warn:'Rule out obstruction first'},
-    itch:{title:'🖐️ Itch',items:[['Non-sedating','Cetirizine 10mg PO daily'],['Sedating','Chlorpheniramine 4mg PO q6h']],warn:'Sedating antihistamines in elderly'},
-    heartburn:{title:'🔥 Heartburn',items:[['Immediate','Gaviscon 10-20mL PRN'],['PPI','Omeprazole 20-40mg PO daily']],warn:'Long-term PPI risks'},
-    agitation:{title:'😤 Agitation',items:[['','⚠️ Try verbal de-escalation first!'],['PO','Olanzapine 5-10mg OR Lorazepam 1-2mg'],['IM','Haloperidol 5mg + Lorazepam 2mg IM']],danger:'NEVER give IM olanzapine with benzos'},
-    hypertension:{title:'📈 Hypertension',items:[['Mild','Amlodipine 5mg PO'],['Moderate','Labetalol 100-200mg PO'],['Severe','Labetalol 20mg IV q10min']],warn:'Rule out HTN emergency first'},
-    bronchospasm:{title:'🌬️ Wheeze',items:[['First Line','Salbutamol 2.5-5mg neb q20min x3'],['Add','Ipratropium 500mcg neb'],['Systemic','Hydrocortisone 100mg IV']],warn:'Continuous nebs if severe'},
-    diarrhea:{title:'🚽 Diarrhea',items:[['First!','ORS or IV fluid rehydration'],['Non-infective','Loperamide 4mg then 2mg PRN']],danger:'AVOID if bloody/fever/C.diff suspected'}
-  };
-
-  document.getElementById('prnGrid').addEventListener('click',function(e){
-    var card=e.target.closest('.prn-card');
-    if(!card)return;
-    var type=card.dataset.prn;
-    var data=prnData[type];
-    if(!data)return;
-    document.querySelectorAll('.prn-card').forEach(function(c){c.classList.remove('active');});
-    card.classList.add('active');
-    var html='<div style="font-weight:700;font-size:1rem;margin-bottom:12px;">'+data.title+'</div>';
-    data.items.forEach(function(item){
-      if(item[1]){html+='<div class="prn-dose-row"><div class="prn-dose-label">'+item[0]+'</div><div class="prn-dose-value">'+item[1]+'</div></div>';}
-      else{html+='<div style="font-weight:600;color:var(--warning);margin:8px 0;">'+item[0]+'</div>';}
-    });
-    if(data.danger)html+='<div class="prn-danger">⚠️ '+data.danger+'</div>';
-    if(data.warn)html+='<div class="prn-warning">💡 '+data.warn+'</div>';
-    var det=document.getElementById('prnDetails');
-    det.innerHTML=html;
-    det.classList.add('visible');
-  });
-
-  // Quick reference
-  document.getElementById('quickRef').addEventListener('click',function(e){
-    var card=e.target.closest('.quick-ref-card');
-    if(!card)return;
-    var text=card.dataset.ref;
-    showModal(text);
-  });
-
-  function showModal(text){
-    var old=document.getElementById('refModal');
-    if(old)old.remove();
-    var dark=document.documentElement.getAttribute('data-theme')==='dark';
-    var modal=document.createElement('div');
-    modal.id='refModal';
-    modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
-    modal.innerHTML='<div style="background:'+(dark?'#1e293b':'white')+';border-radius:16px;padding:24px;max-width:320px;width:100%;"><div style="font-weight:700;margin-bottom:16px;color:'+(dark?'#2dd4bf':'#0f766e')+';">📚 Reference</div><div style="font-size:0.9rem;line-height:1.7;white-space:pre-line;padding:16px;background:'+(dark?'#334155':'#f8fafc')+';border-radius:12px;color:'+(dark?'#f1f5f9':'#1e293b')+';">'+text+'</div><button style="width:100%;margin-top:16px;padding:14px;background:'+(dark?'#2dd4bf':'#0f766e')+';color:'+(dark?'#0f172a':'white')+';border:none;border-radius:10px;font-weight:600;cursor:pointer;">OK</button></div>';
-    modal.addEventListener('click',function(e){if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});
-    document.body.appendChild(modal);
+function goBack(){
+  if(window.opener||window.history.length<=1){
+    window.location.href='/';
+  }else{
+    window.history.back();
   }
+}
 
-  // AI prompts
-  document.getElementById('aiPrompts').addEventListener('click',function(e){
-    var btn=e.target.closest('.ai-prompt-btn');
-    if(!btn)return;
-    document.getElementById('aiInput').value=btn.dataset.prompt;
-    document.getElementById('aiInput').focus();
-  });
+function scrollToAI(){
+  document.querySelector('.ai-section').scrollIntoView({behavior:'smooth'});
+}
 
-  // AI send
-  document.getElementById('aiSend').addEventListener('click',askClaude);
-  document.getElementById('aiInput').addEventListener('keydown',function(e){if(e.key==='Enter')askClaude();});
-
-  function askClaude(){
-    var input=document.getElementById('aiInput');
-    var resp=document.getElementById('aiResponse');
-    var q=input.value.trim();
-    if(!q){alert('Enter a question');return;}
-    resp.classList.add('visible');
-    resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label">Loading...</span></div><div class="ai-response-body"><div class="ai-loading"><div class="ai-loading-spinner"></div><span>Analyzing...</span></div></div>';
-    fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'oncallAskClinical',question:q})})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.error)throw new Error(d.error);
-      var ans=d.answer||d.response||'No response';
-      ans=ans.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
-      resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label">Response</span><span class="ai-response-time">'+new Date().toLocaleTimeString()+'</span></div><div class="ai-response-body">'+ans+'</div>';
-      input.value='';
-    })
-    .catch(function(e){
-      resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label" style="color:var(--danger)">Error</span></div><div class="ai-response-body"><div class="ai-alert danger"><div class="ai-alert-icon">⚠️</div><div class="ai-alert-content">'+(e.message||'Failed to connect')+'</div></div></div>';
-    });
-  }
-
-  // Calculator buttons
-  document.getElementById('calcHypo').addEventListener('click',function(e){
-    e.stopPropagation();
-    var g=parseFloat(document.getElementById('inputHypoGlucose').value);
-    var s=document.getElementById('inputHypoStatus').value;
-    var box=document.getElementById('resultHypo');
-    if(!g){alert('Enter glucose');return;}
-    box.classList.remove('hidden','danger','warning','success');
-    if(g>=3.9){box.classList.add('success');box.innerHTML='<div class="result-title">✓ Normal</div><div class="result-content">'+g+' mmol/L is normal.</div>';return;}
-    if(s==='unconscious'){
-      box.classList.add('danger');
-      box.innerHTML='<div class="result-title">🚨 SEVERE</div><div class="result-content"><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">IV/IM</div></div><div class="protocol-content"><strong>D50 25-50mL IV</strong> or Glucagon 1mg IM</div></div><div class="protocol-step warning"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">Recheck 15min</div></div><div class="protocol-content">Repeat if &lt;3.9. Consider D10 infusion.</div></div></div>';
-    }else if(s==='confused'){
-      box.classList.add('warning');
-      box.innerHTML='<div class="result-title">⚠️ Moderate</div><div class="result-content"><div class="protocol-step warning"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">Try Oral</div></div><div class="protocol-content"><strong>Glucose gel 15-20g</strong> buccal</div></div><div class="protocol-step"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">If no response</div></div><div class="protocol-content">D50 25mL IV or Glucagon 1mg IM</div></div></div>';
+function filterCategory(cat,btn){
+  var pills=document.querySelectorAll('.pill');
+  for(var i=0;i<pills.length;i++){pills[i].classList.remove('active');}
+  if(btn)btn.classList.add('active');
+  var cards=document.querySelectorAll('.tool-card,.ai-section');
+  for(var i=0;i<cards.length;i++){
+    var c=cards[i];
+    var cats=c.getAttribute('data-category');
+    if(cat==='all'||(cats&&cats.indexOf(cat)>=0)){
+      c.style.display='block';
     }else{
-      box.innerHTML='<div class="result-title">📋 Mild</div><div class="result-content"><div class="protocol-step"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">Fast carbs 15-20g</div></div><div class="protocol-content">Juice, glucose tabs, honey</div></div><div class="protocol-step"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">Rule of 15</div></div><div class="protocol-content">Recheck 15min, repeat if &lt;3.9</div></div></div>';
+      c.style.display='none';
     }
-  });
+  }
+}
 
-  document.getElementById('calcHyperK').addEventListener('click',function(e){
-    e.stopPropagation();
-    var k=parseFloat(document.getElementById('inputHyperK').value);
-    var ecg=document.getElementById('inputHyperKECG').value;
-    var box=document.getElementById('resultHyperK');
-    if(!k){alert('Enter K+');return;}
-    box.classList.remove('hidden','danger','warning','success');
-    if(k<5.5&&ecg==='none'){box.classList.add('success');box.innerHTML='<div class="result-title">✓ Normal/Mild</div><div class="result-content">Review meds, diet.</div>';return;}
-    var severe=k>=6.5||ecg==='wide'||ecg==='sine';
-    box.classList.add(severe?'danger':'warning');
-    var ecgAlert=ecg!=='none'?'<div class="ai-alert danger"><div class="ai-alert-icon">⚡</div><div class="ai-alert-content"><strong>ECG CHANGES - Treat NOW!</strong></div></div>':'';
-    box.innerHTML='<div class="result-title">'+(severe?'🚨 EMERGENCY':'⚠️ Moderate')+' K+ '+k+'</div><div class="result-content">'+ecgAlert+'<div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">Stabilize</div></div><div class="protocol-content"><strong>Ca Gluconate 10% 10mL IV</strong> over 2-3min</div></div><div class="protocol-step warning"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">Shift</div></div><div class="protocol-content"><strong>Insulin 10U + D50 25g IV</strong><br>Salbutamol 10-20mg neb</div></div><div class="protocol-step"><div class="protocol-header"><div class="protocol-number">3</div><div class="protocol-title">Remove</div></div><div class="protocol-content">Furosemide 40-80mg IV</div></div></div>';
-  });
+function toggleTool(header){
+  var card=header.parentElement;
+  if(card){card.classList.toggle('expanded');}
+}
 
-  document.getElementById('calcAnap').addEventListener('click',function(e){
-    e.stopPropagation();
-    var age=document.getElementById('inputAnapAge').value;
-    var box=document.getElementById('resultAnap');
-    box.classList.remove('hidden');box.classList.add('danger');
-    var dose=age==='adult'?'0.5mg (0.5mL 1:1000)':age==='child'?'0.3mg (0.3mL 1:1000)':'0.15mg (0.15mL 1:1000)';
-    box.innerHTML='<div class="result-title">🚨 ANAPHYLAXIS</div><div class="result-content"><div class="ai-alert danger"><div class="ai-alert-icon">💉</div><div class="ai-alert-content"><strong>ADRENALINE FIRST!</strong></div></div><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">ADRENALINE</div></div><div class="protocol-content"><strong>'+dose+'</strong> IM thigh - repeat q5min</div></div><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">Position</div></div><div class="protocol-content">Lie flat, elevate legs</div></div><div class="protocol-step warning"><div class="protocol-header"><div class="protocol-number">3</div><div class="protocol-title">O2 + IV</div></div><div class="protocol-content">High-flow O2, NS 20mL/kg if hypotensive</div></div></div>';
-  });
+function setGFRSex(s,btn,e){
+  if(e)e.stopPropagation();
+  gfrSex=s;
+  var btns=btn.parentElement.querySelectorAll('.gender-btn');
+  for(var i=0;i<btns.length;i++){btns[i].classList.remove('selected');}
+  btn.classList.add('selected');
+}
 
-  document.getElementById('calcSepsis').addEventListener('click',function(e){
-    e.stopPropagation();
-    var lactate=parseFloat(document.getElementById('inputSepsisLactate').value);
-    var map=parseFloat(document.getElementById('inputSepsisMAP').value);
-    var box=document.getElementById('resultSepsis');
-    box.classList.remove('hidden','danger','warning','success');
-    var shock=(map&&map<65)||(lactate&&lactate>2);
-    box.classList.add(shock?'danger':'warning');
-    box.innerHTML='<div class="result-title">'+(shock?'🚨 SEPTIC SHOCK':'⚠️ SEPSIS')+' Hour-1 Bundle</div><div class="result-content"><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">Lactate</div></div><div class="protocol-content">'+(lactate?lactate+' mmol/L':'Draw NOW')+'</div></div><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">Blood Cx</div></div><div class="protocol-content">2 sets BEFORE abx</div></div><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">3</div><div class="protocol-title">Antibiotics</div></div><div class="protocol-content"><strong>Within 1hr:</strong> Pip-Tazo 4.5g IV</div></div><div class="protocol-step warning"><div class="protocol-header"><div class="protocol-number">4</div><div class="protocol-title">Fluids</div></div><div class="protocol-content">30mL/kg crystalloid</div></div></div>';
-  });
+function showRef(text){alert(text);}
+function setPrompt(t){document.getElementById('aiInput').value=t;}
 
-  document.getElementById('calcACS').addEventListener('click',function(e){
-    e.stopPropagation();
-    var type=document.getElementById('inputACSType').value;
-    var sbp=parseFloat(document.getElementById('inputACSSBP').value);
-    var hr=parseFloat(document.getElementById('inputACSHR').value);
-    var box=document.getElementById('resultACS');
-    box.classList.remove('hidden','danger','warning','success');
-    var stemi=type==='stemi';
-    box.classList.add(stemi?'danger':'warning');
-    var canN=!sbp||sbp>90;
-    var canB=!hr||hr>60;
-    box.innerHTML='<div class="result-title">'+(stemi?'🚨 STEMI - CATH LAB':'⚠️ '+(type==='nstemi'?'NSTEMI':'UA'))+'</div><div class="result-content"><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">MONA-B</div></div><div class="protocol-content"><strong>M</strong>orphine PRN | <strong>O</strong>2 if SpO2&lt;94%<br><strong>N</strong>itrates '+(canN?'':'(HOLD-low BP)')+'<br><strong>A</strong>spirin 300mg | <strong>B</strong>-blocker '+(canB?'':'(HOLD-low HR)')+'</div></div><div class="protocol-step warning"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">P2Y12 + Anticoag</div></div><div class="protocol-content">Ticagrelor 180mg + Enoxaparin 1mg/kg</div></div></div>';
-  });
+var prnData={
+  pain:'😣 PAIN\n\nMild: Paracetamol 1g PO q6h (max 4g/day)\nModerate: Tramadol 50-100mg PO q6h\nSevere: Morphine 2.5-5mg IV q4h\n\n⚠️ Reduce opioids in elderly/renal',
+  nausea:'🤢 NAUSEA\n\n1st: Ondansetron 4-8mg IV/PO q8h\nAlt: Metoclopramide 10mg q8h\n\n⚠️ Avoid metoclopramide >5 days',
+  fever:'🌡️ FEVER\n\nParacetamol 1g PO/IV q6h\nIbuprofen 400mg PO q6-8h\n\n⚠️ Avoid NSAIDs in renal/GI',
+  sleep:'😴 SLEEP\n\nMelatonin 3-5mg PO hs\nZopiclone 3.75-7.5mg hs\n\n⚠️ Avoid benzos in elderly',
+  anxiety:'😰 ANXIETY\n\nHydroxyzine 25-50mg PO q6h\nLorazepam 0.5-1mg PO/SL q6h\n\n⚠️ Benzos worsen delirium',
+  constipation:'💩 CONSTIPATION\n\nLactulose 15-30mL PO BD\nSenna 15mg PO hs\nBisacodyl 10mg PR\n\n⚠️ Rule out obstruction',
+  itch:'🖐️ ITCH\n\nCetirizine 10mg PO daily\nChlorpheniramine 4mg q6h\n\n⚠️ Sedating in elderly',
+  heartburn:'🔥 HEARTBURN\n\nGaviscon 10-20mL PRN\nOmeprazole 20-40mg daily\n\n⚠️ Long-term PPI risks',
+  agitation:'😤 AGITATION\n\n⚠️ Verbal de-escalation first!\n\nPO: Olanzapine 5-10mg OR Lorazepam 1-2mg\nIM: Haloperidol 5mg + Lorazepam 2mg\n\n🚨 NEVER IM olanzapine with benzos',
+  htn:'📈 HYPERTENSION\n\nMild: Amlodipine 5mg PO\nModerate: Labetalol 100-200mg PO\nSevere: Labetalol 20mg IV\n\n⚠️ Rule out emergency first',
+  wheeze:'🌬️ WHEEZE\n\nSalbutamol 2.5-5mg neb q20min x3\nIpratropium 500mcg neb\nHydrocortisone 100mg IV\n\n⚠️ Continuous nebs if severe',
+  diarrhea:'🚽 DIARRHEA\n\nRehydrate first!\nLoperamide 4mg then 2mg PRN\n\n🚨 AVOID if bloody/fever/C.diff'
+};
 
-  document.getElementById('calcStroke').addEventListener('click',function(e){
-    e.stopPropagation();
-    var time=document.getElementById('inputStrokeTime').value;
-    var nihss=parseFloat(document.getElementById('inputStrokeNIHSS').value)||0;
-    var box=document.getElementById('resultStroke');
-    box.classList.remove('hidden','danger','warning','success');
-    var canTPA=time==='0-3'||time==='3-4.5';
-    box.classList.add(canTPA?'danger':'warning');
-    box.innerHTML='<div class="result-title">'+(canTPA?'🚨 tPA CANDIDATE':'⚠️ Stroke')+'</div><div class="result-content"><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">STAT</div></div><div class="protocol-content">CT head, glucose, CBC, coags</div></div><div class="protocol-step '+(canTPA?'danger':'warning')+'"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">tPA</div></div><div class="protocol-content">'+(canTPA?'<strong>0.9mg/kg (max 90mg)</strong><br>10% bolus, 90% over 60min':'Outside window')+'</div></div><div class="protocol-step"><div class="protocol-header"><div class="protocol-number">3</div><div class="protocol-title">Thrombectomy</div></div><div class="protocol-content">'+(nihss>=6?'Consider - NIHSS ≥6':'If NIHSS ≥6, LVO')+'</div></div></div>';
-  });
+function showPRN(type,card){
+  var cards=document.querySelectorAll('.prn-card');
+  for(var i=0;i<cards.length;i++){cards[i].classList.remove('active');}
+  card.classList.add('active');
+  var det=document.getElementById('prnDetails');
+  det.innerHTML='<pre style="white-space:pre-wrap;font-family:inherit;">'+prnData[type]+'</pre>';
+  det.classList.add('visible');
+}
 
-  document.getElementById('calcDKA').addEventListener('click',function(e){
-    e.stopPropagation();
-    var pH=parseFloat(document.getElementById('inputDKApH').value);
-    var k=parseFloat(document.getElementById('inputDKAK').value);
-    var box=document.getElementById('resultDKA');
-    box.classList.remove('hidden','danger','warning','success');
-    var severe=pH&&pH<7.0;
-    box.classList.add(severe?'danger':'warning');
-    var kMsg=k?((k<3.3)?'<strong style="color:var(--danger)">HOLD insulin until K+>3.3</strong>':(k<5.3)?'Add 20-30 mEq KCl/L':'No K+ initially'):'Check K+ first';
-    box.innerHTML='<div class="result-title">'+(severe?'🚨 SEVERE DKA':'⚠️ DKA')+(pH?' pH '+pH:'')+'</div><div class="result-content"><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">1</div><div class="protocol-title">Fluids</div></div><div class="protocol-content"><strong>NS 1-1.5L/hr</strong> x1h</div></div><div class="protocol-step danger"><div class="protocol-header"><div class="protocol-number">2</div><div class="protocol-title">Insulin</div></div><div class="protocol-content"><strong>0.1 U/kg/hr</strong> infusion</div></div><div class="protocol-step warning"><div class="protocol-header"><div class="protocol-number">3</div><div class="protocol-title">Potassium</div></div><div class="protocol-content">'+kMsg+'</div></div></div>';
-  });
+function calcHypo(e){
+  if(e)e.stopPropagation();
+  var g=parseFloat(document.getElementById('inputHypoGlucose').value);
+  var s=document.getElementById('inputHypoStatus').value;
+  var box=document.getElementById('resultHypo');
+  if(!g){alert('Enter glucose');return;}
+  box.className='result-box';
+  if(g>=3.9){
+    box.className+=' success';
+    box.innerHTML='<div class="result-title">✓ Normal</div><div class="result-content">'+g+' mmol/L is normal</div>';
+  }else if(s==='unconscious'){
+    box.className+=' danger';
+    box.innerHTML='<div class="result-title">🚨 SEVERE</div><div class="result-content"><strong>D50 25-50mL IV</strong> or Glucagon 1mg IM<br><br>Recheck 15min, repeat if &lt;3.9</div>';
+  }else if(s==='confused'){
+    box.className+=' warning';
+    box.innerHTML='<div class="result-title">⚠️ Moderate</div><div class="result-content"><strong>Glucose gel 15-20g</strong> buccal<br><br>If no response: D50 25mL IV</div>';
+  }else{
+    box.innerHTML='<div class="result-title">📋 Mild</div><div class="result-content"><strong>15-20g fast carbs</strong><br>Juice, glucose tabs, honey<br><br>Recheck 15min</div>';
+  }
+}
 
-  document.getElementById('calcK').addEventListener('click',function(e){
-    e.stopPropagation();
-    var k=parseFloat(document.getElementById('inputK').value);
-    var box=document.getElementById('resultK');
-    if(!k){alert('Enter K+');return;}
-    box.classList.remove('hidden','danger','warning','success');
-    if(k<2.5){box.classList.add('danger');box.innerHTML='<div class="result-title">🚨 Critical</div><div class="result-content"><strong>40 mEq/hr IV central</strong><br>Cardiac monitor, check Mg</div>';}
-    else if(k<3.0){box.classList.add('warning');box.innerHTML='<div class="result-title">⚠️ Moderate</div><div class="result-content"><strong>40 mEq KCl PO/IV</strong><br>Recheck 4h</div>';}
-    else if(k<3.5){box.innerHTML='<div class="result-title">📋 Mild</div><div class="result-content"><strong>40 mEq KCl PO</strong><br>Recheck AM</div>';}
-    else if(k>5.5){box.classList.add('danger');box.innerHTML='<div class="result-title">🚨 Hyperkalemia</div><div class="result-content">Use Hyperkalemia tool!</div>';}
-    else{box.classList.add('success');box.innerHTML='<div class="result-title">✓ Normal</div><div class="result-content">'+k+' mmol/L (3.5-5.0)</div>';}
-  });
+function calcHyperK(e){
+  if(e)e.stopPropagation();
+  var k=parseFloat(document.getElementById('inputHyperK').value);
+  var ecg=document.getElementById('inputHyperKECG').value;
+  var box=document.getElementById('resultHyperK');
+  if(!k){alert('Enter K+');return;}
+  box.className='result-box';
+  if(k<5.5&&ecg==='none'){
+    box.className+=' success';
+    box.innerHTML='<div class="result-title">✓ Normal</div><div class="result-content">Review meds</div>';
+  }else{
+    var severe=k>=6.5||ecg!=='none';
+    box.className+=' '+(severe?'danger':'warning');
+    box.innerHTML='<div class="result-title">'+(severe?'🚨 EMERGENCY':'⚠️ Moderate')+' K+ '+k+'</div><div class="result-content">'+(ecg!=='none'?'<strong>⚡ ECG CHANGES - Treat NOW</strong><br><br>':'')+'<strong>1. Ca Gluconate 10% 10mL IV</strong> (2-3min)<br><br><strong>2. Insulin 10U + D50 25g IV</strong><br>Salbutamol 10-20mg neb<br><br><strong>3. Furosemide 40-80mg IV</strong></div>';
+  }
+}
 
-  document.getElementById('calcCa').addEventListener('click',function(e){
-    e.stopPropagation();
-    var ca=parseFloat(document.getElementById('inputCa').value);
-    var alb=parseFloat(document.getElementById('inputAlb').value);
-    var box=document.getElementById('resultCa');
-    if(!ca||!alb){alert('Enter Ca and Alb');return;}
-    var corr=(ca+0.02*(40-alb)).toFixed(2);
-    box.classList.remove('hidden','danger','warning','success');
-    if(corr<1.9){box.classList.add('danger');box.innerHTML='<div class="result-title">🚨 Severe Hypocalcemia</div><div class="result-content">Corrected: <strong>'+corr+'</strong><br>Ca Gluconate 1-2g IV</div>';}
-    else if(corr<2.1){box.classList.add('warning');box.innerHTML='<div class="result-title">⚠️ Low</div><div class="result-content">Corrected: <strong>'+corr+'</strong></div>';}
-    else if(corr>3.0){box.classList.add('danger');box.innerHTML='<div class="result-title">🚨 Severe Hypercalcemia</div><div class="result-content">Corrected: <strong>'+corr+'</strong><br>IV NS aggressively</div>';}
-    else if(corr>2.6){box.classList.add('warning');box.innerHTML='<div class="result-title">⚠️ High</div><div class="result-content">Corrected: <strong>'+corr+'</strong></div>';}
-    else{box.classList.add('success');box.innerHTML='<div class="result-title">✓ Normal</div><div class="result-content">Corrected: '+corr+' (2.1-2.6)</div>';}
-  });
+function calcAnap(e){
+  if(e)e.stopPropagation();
+  var age=document.getElementById('inputAnapAge').value;
+  var box=document.getElementById('resultAnap');
+  box.className='result-box danger';
+  var dose=age==='adult'?'0.5mg (0.5mL 1:1000)':age==='child'?'0.3mg (0.3mL 1:1000)':'0.15mg (0.15mL 1:1000)';
+  box.innerHTML='<div class="result-title">🚨 ANAPHYLAXIS</div><div class="result-content"><strong>💉 ADRENALINE FIRST!</strong><br><br><strong>'+dose+' IM thigh</strong><br>Repeat q5min PRN<br><br>Lie flat, elevate legs<br>High-flow O2<br>NS 20mL/kg if hypotensive</div>';
+}
 
-  document.getElementById('calcEGFR').addEventListener('click',function(e){
-    e.stopPropagation();
-    var cr=parseFloat(document.getElementById('inputCr').value);
-    var age=parseFloat(document.getElementById('inputAge').value);
-    var box=document.getElementById('resultEGFR');
-    if(!cr||!age||!selectedGFRSex){alert('Enter all values');return;}
-    var crMg=cr/88.4;
-    var egfr;
-    if(selectedGFRSex==='f'){egfr=142*Math.pow(Math.min(crMg/0.7,1),-0.241)*Math.pow(Math.max(crMg/0.7,1),-1.2)*Math.pow(0.9938,age)*1.012;}
-    else{egfr=142*Math.pow(Math.min(crMg/0.9,1),-0.302)*Math.pow(Math.max(crMg/0.9,1),-1.2)*Math.pow(0.9938,age);}
-    egfr=Math.round(egfr);
-    box.classList.remove('hidden','danger','warning','success');
-    var stage;
-    if(egfr>=90){stage='G1 Normal';box.classList.add('success');}
-    else if(egfr>=60){stage='G2 Mild';box.classList.add('success');}
-    else if(egfr>=45){stage='G3a';box.classList.add('warning');}
-    else if(egfr>=30){stage='G3b';box.classList.add('warning');}
-    else if(egfr>=15){stage='G4';box.classList.add('danger');}
-    else{stage='G5';box.classList.add('danger');}
-    box.innerHTML='<div class="result-title">eGFR: '+egfr+' mL/min</div><div class="result-content">CKD Stage: '+stage+'</div>';
-  });
+function calcSepsis(e){
+  if(e)e.stopPropagation();
+  var lac=parseFloat(document.getElementById('inputSepsisLactate').value);
+  var map=parseFloat(document.getElementById('inputSepsisMAP').value);
+  var box=document.getElementById('resultSepsis');
+  var shock=(map&&map<65)||(lac&&lac>2);
+  box.className='result-box '+(shock?'danger':'warning');
+  box.innerHTML='<div class="result-title">'+(shock?'🚨 SEPTIC SHOCK':'⚠️ SEPSIS')+' Hour-1</div><div class="result-content"><strong>1. Lactate</strong> '+(lac?lac+' mmol/L':'Draw NOW')+'<br><br><strong>2. Blood Cx x2</strong> before abx<br><br><strong>3. Pip-Tazo 4.5g IV</strong> within 1hr<br><br><strong>4. NS 30mL/kg</strong> if hypotensive</div>';
+}
 
-  document.getElementById('calcQTc').addEventListener('click',function(e){
-    e.stopPropagation();
-    var qt=parseFloat(document.getElementById('inputQT').value);
-    var hr=parseFloat(document.getElementById('inputHR').value);
-    var box=document.getElementById('resultQTc');
-    if(!qt||!hr){alert('Enter QT and HR');return;}
-    var qtc=Math.round(qt/Math.sqrt(60/hr));
-    box.classList.remove('hidden','danger','warning','success');
-    if(qtc>500){box.classList.add('danger');box.innerHTML='<div class="result-title">🚨 '+qtc+'ms</div><div class="result-content">HIGH TdP risk - STOP QT drugs<br>Keep K+>4, Mg>0.8</div>';}
-    else if(qtc>470){box.classList.add('warning');box.innerHTML='<div class="result-title">⚠️ '+qtc+'ms</div><div class="result-content">Prolonged - review meds</div>';}
-    else if(qtc>440){box.innerHTML='<div class="result-title">📋 '+qtc+'ms</div><div class="result-content">Borderline</div>';}
-    else{box.classList.add('success');box.innerHTML='<div class="result-title">✓ '+qtc+'ms</div><div class="result-content">Normal (&lt;440)</div>';}
-  });
+function calcDKA(e){
+  if(e)e.stopPropagation();
+  var pH=parseFloat(document.getElementById('inputDKApH').value);
+  var k=parseFloat(document.getElementById('inputDKAK').value);
+  var box=document.getElementById('resultDKA');
+  var severe=pH&&pH<7.0;
+  box.className='result-box '+(severe?'danger':'warning');
+  var kMsg=k?((k<3.3)?'🚨 HOLD insulin until K+>3.3!':(k<5.3)?'Add 20-30 mEq KCl/L':'No K+ initially'):'Check K+ first';
+  box.innerHTML='<div class="result-title">'+(severe?'🚨 SEVERE DKA':'⚠️ DKA')+(pH?' pH '+pH:'')+'</div><div class="result-content"><strong>1. NS 1-1.5L/hr</strong> x1h<br><br><strong>2. Insulin 0.1 U/kg/hr</strong><br><br><strong>3. K+:</strong> '+kMsg+'<br><br>BG q1h, lytes q2-4h</div>';
+}
 
-})();
+function calcK(e){
+  if(e)e.stopPropagation();
+  var k=parseFloat(document.getElementById('inputK').value);
+  var box=document.getElementById('resultK');
+  if(!k){alert('Enter K+');return;}
+  box.className='result-box';
+  if(k<2.5){box.className+=' danger';box.innerHTML='<div class="result-title">🚨 Critical</div><div class="result-content"><strong>40 mEq/hr IV central</strong><br>Cardiac monitor</div>';}
+  else if(k<3.0){box.className+=' warning';box.innerHTML='<div class="result-title">⚠️ Moderate</div><div class="result-content"><strong>40 mEq KCl PO/IV</strong><br>Recheck 4h</div>';}
+  else if(k<3.5){box.innerHTML='<div class="result-title">📋 Mild</div><div class="result-content"><strong>40 mEq KCl PO</strong><br>Recheck AM</div>';}
+  else if(k>5.5){box.className+=' danger';box.innerHTML='<div class="result-title">🚨 High</div><div class="result-content">Use Hyperkalemia tool!</div>';}
+  else{box.className+=' success';box.innerHTML='<div class="result-title">✓ Normal</div><div class="result-content">'+k+' mmol/L</div>';}
+}
+
+function calcCa(e){
+  if(e)e.stopPropagation();
+  var ca=parseFloat(document.getElementById('inputCa').value);
+  var alb=parseFloat(document.getElementById('inputAlb').value);
+  var box=document.getElementById('resultCa');
+  if(!ca||!alb){alert('Enter values');return;}
+  var corr=(ca+0.02*(40-alb)).toFixed(2);
+  box.className='result-box';
+  if(corr<1.9){box.className+=' danger';box.innerHTML='<div class="result-title">🚨 Severe Hypocalcemia</div><div class="result-content">Corrected: <strong>'+corr+'</strong><br>Ca Gluconate 1-2g IV</div>';}
+  else if(corr<2.1){box.className+=' warning';box.innerHTML='<div class="result-title">⚠️ Low</div><div class="result-content">Corrected: <strong>'+corr+'</strong></div>';}
+  else if(corr>3.0){box.className+=' danger';box.innerHTML='<div class="result-title">🚨 Severe Hypercalcemia</div><div class="result-content">Corrected: <strong>'+corr+'</strong><br>IV NS aggressively</div>';}
+  else if(corr>2.6){box.className+=' warning';box.innerHTML='<div class="result-title">⚠️ High</div><div class="result-content">Corrected: <strong>'+corr+'</strong></div>';}
+  else{box.className+=' success';box.innerHTML='<div class="result-title">✓ Normal</div><div class="result-content">Corrected: '+corr+'</div>';}
+}
+
+function calcEGFR(e){
+  if(e)e.stopPropagation();
+  var cr=parseFloat(document.getElementById('inputCr').value);
+  var age=parseFloat(document.getElementById('inputAge').value);
+  var box=document.getElementById('resultEGFR');
+  if(!cr||!age||!gfrSex){alert('Enter all values');return;}
+  var crMg=cr/88.4;
+  var egfr;
+  if(gfrSex==='f'){egfr=142*Math.pow(Math.min(crMg/0.7,1),-0.241)*Math.pow(Math.max(crMg/0.7,1),-1.2)*Math.pow(0.9938,age)*1.012;}
+  else{egfr=142*Math.pow(Math.min(crMg/0.9,1),-0.302)*Math.pow(Math.max(crMg/0.9,1),-1.2)*Math.pow(0.9938,age);}
+  egfr=Math.round(egfr);
+  box.className='result-box';
+  var stage;
+  if(egfr>=90){stage='G1';box.className+=' success';}
+  else if(egfr>=60){stage='G2';box.className+=' success';}
+  else if(egfr>=45){stage='G3a';box.className+=' warning';}
+  else if(egfr>=30){stage='G3b';box.className+=' warning';}
+  else if(egfr>=15){stage='G4';box.className+=' danger';}
+  else{stage='G5';box.className+=' danger';}
+  box.innerHTML='<div class="result-title">eGFR: '+egfr+'</div><div class="result-content">CKD Stage: '+stage+'</div>';
+}
+
+function calcQTc(e){
+  if(e)e.stopPropagation();
+  var qt=parseFloat(document.getElementById('inputQT').value);
+  var hr=parseFloat(document.getElementById('inputHR').value);
+  var box=document.getElementById('resultQTc');
+  if(!qt||!hr){alert('Enter values');return;}
+  var qtc=Math.round(qt/Math.sqrt(60/hr));
+  box.className='result-box';
+  if(qtc>500){box.className+=' danger';box.innerHTML='<div class="result-title">🚨 '+qtc+'ms</div><div class="result-content">HIGH TdP risk<br>STOP QT drugs</div>';}
+  else if(qtc>470){box.className+=' warning';box.innerHTML='<div class="result-title">⚠️ '+qtc+'ms</div><div class="result-content">Prolonged</div>';}
+  else if(qtc>440){box.innerHTML='<div class="result-title">📋 '+qtc+'ms</div><div class="result-content">Borderline</div>';}
+  else{box.className+=' success';box.innerHTML='<div class="result-title">✓ '+qtc+'ms</div><div class="result-content">Normal</div>';}
+}
+
+function askAI(){
+  var input=document.getElementById('aiInput');
+  var resp=document.getElementById('aiResponse');
+  var q=input.value;
+  if(!q){alert('Enter question');return;}
+  resp.className='ai-response visible';
+  resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label">Loading...</span></div><div class="ai-response-body"><div class="ai-loading"><div class="ai-loading-spinner"></div></div></div>';
+  fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'oncallAskClinical',question:q})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var ans=d.answer||d.response||'No response';
+    ans=ans.replace(/\n/g,'<br>');
+    resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label">Response</span></div><div class="ai-response-body">'+ans+'</div>';
+    input.value='';
+  })
+  .catch(function(err){
+    resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label" style="color:var(--danger)">Error</span></div><div class="ai-response-body">'+err.message+'</div>';
+  });
+}
+
+document.getElementById('aiInput').onkeydown=function(e){if(e.keyCode===13)askAI();};
 </script>
 </body>
 </html>
