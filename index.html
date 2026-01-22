@@ -7929,46 +7929,90 @@ async function handleLabUpload(files) {
       throw new Error('Server returned HTML error page. Check Apps Script deployment.');
     }
     
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (jsonError) {
-      console.error('❌ JSON Parse Error:', jsonError.message);
-      console.error('❌ Full response:', responseText);
-      
-      // Try to fix common JSON issues
-      let cleanedResponse = responseText
-        .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '') // Remove control chars
-        .replace(/\n/g, '\\n')  // Escape newlines in strings
-        .replace(/\r/g, '\\r')  // Escape carriage returns
-        .replace(/\t/g, '\\t'); // Escape tabs
-      
-      // Try to extract just the JSON object
-      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        cleanedResponse = jsonMatch[0];
+    // Robust JSON parser for AI responses
+    function robustJSONParse(text) {
+      // First try direct parse
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.log('⚠️ Direct parse failed, attempting fixes...');
       }
       
+      let cleaned = text;
+      
+      // Step 1: Extract JSON object/array
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleaned = jsonMatch[0];
+      }
+      
+      // Step 2: Fix common issues
+      cleaned = cleaned
+        // Remove trailing commas before ] or }
+        .replace(/,(\s*[\]}])/g, '$1')
+        // Remove any BOM or zero-width chars
+        .replace(/[\uFEFF\u200B-\u200D\u2060]/g, '')
+        // Fix unescaped newlines inside strings (tricky but common)
+        .replace(/:\s*"([^"]*)\n([^"]*)"/g, ':"$1\\n$2"')
+        // Remove control characters
+        .replace(/[\x00-\x1F\x7F]/g, (match) => {
+          if (match === '\n' || match === '\r' || match === '\t') return match;
+          return '';
+        });
+      
       try {
-        data = JSON.parse(cleanedResponse);
-        console.log('✅ Fixed JSON parse succeeded');
-      } catch (retryError) {
-        console.error('❌ JSON fix failed:', retryError.message);
-        
-        // Last resort: try to build a minimal response from what we can extract
-        const errorMatch = responseText.match(/"error"\s*:\s*"([^"]+)"/);
-        const successMatch = responseText.match(/"success"\s*:\s*(true|false)/);
-        
-        if (errorMatch) {
-          data = { success: false, error: errorMatch[1] };
-        } else if (successMatch && successMatch[1] === 'false') {
-          data = { success: false, error: 'Server returned invalid JSON response' };
-        } else {
-          // Show the user what went wrong
-          toast('Server response error - check console', true);
-          throw new Error('Invalid JSON from server: ' + jsonError.message + '\nResponse: ' + responseText.substring(0, 200));
+        return JSON.parse(cleaned);
+      } catch (e) {
+        console.log('⚠️ Standard fixes failed, trying aggressive repair...');
+      }
+      
+      // Step 3: Aggressive repair - rebuild the JSON structure
+      try {
+        // Use Function constructor as a lenient JSON parser (handles trailing commas)
+        const result = (new Function('return ' + cleaned))();
+        if (typeof result === 'object' && result !== null) {
+          return result;
         }
+      } catch (e) {
+        console.log('⚠️ Function eval failed');
+      }
+      
+      // Step 4: Try to extract labData specifically using regex
+      console.log('⚠️ Attempting regex extraction of labData...');
+      try {
+        // Look for labData object
+        const labDataMatch = cleaned.match(/"labData"\s*:\s*(\{[\s\S]*?"parameters"\s*:\s*\[[\s\S]*?\]\s*\})/);
+        if (labDataMatch) {
+          const labDataStr = labDataMatch[1]
+            .replace(/,(\s*[\]}])/g, '$1'); // Remove trailing commas
+          
+          const labData = JSON.parse(labDataStr);
+          console.log('✅ Extracted labData via regex');
+          return { success: true, labData: labData, confidence: 0.7 };
+        }
+      } catch (e) {
+        console.log('⚠️ Regex extraction failed:', e.message);
+      }
+      
+      // Give up
+      throw new Error('Could not parse server response');
+    }
+    
+    let data;
+    try {
+      data = robustJSONParse(responseText);
+      console.log('✅ JSON parsed successfully');
+    } catch (jsonError) {
+      console.error('❌ All JSON parse attempts failed:', jsonError.message);
+      console.error('❌ Full response:', responseText);
+      
+      // Extract any error message we can find
+      const errorMatch = responseText.match(/"error"\s*:\s*"([^"]+)"/);
+      if (errorMatch) {
+        data = { success: false, error: errorMatch[1] };
+      } else {
+        toast('Failed to parse server response', true);
+        throw jsonError;
       }
     }
     console.log('📦 Extraction result:', data);
