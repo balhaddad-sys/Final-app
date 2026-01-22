@@ -7123,15 +7123,18 @@ function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
 }
 
 function renderDrugInfoContent(data, drugName, context) {
-  const warnings = data.warnings || [];
-  const mechanism = data.mechanism || 'Information not available.';
-  const drugClass = data.drugClass || '';
-  const dosing = data.dosing || '';
-  const indications = data.indications || [];
-  const sideEffects = data.sideEffects || [];
-  const contraindications = data.contraindications || [];
-  const monitoring = data.monitoring || [];
-  const interactions = data.interactions || [];
+  // Extract drugInfo from response - backend returns { success: true, drugInfo: {...} }
+  const info = data.drugInfo || data;
+  
+  const warnings = info.warnings || [];
+  const mechanism = info.mechanism || 'Information not available.';
+  const drugClass = info.drugClass || '';
+  const dosing = info.dosing || '';
+  const indications = info.indications || [];
+  const sideEffects = info.sideEffects || [];
+  const contraindications = info.contraindications || [];
+  const monitoring = info.monitoring || [];
+  const interactions = info.interactions || [];
   
   let html = '';
   
