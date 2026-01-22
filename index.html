@@ -1153,39 +1153,39 @@ body {
   padding:10px 12px;background:var(--bg-app);
   border-bottom:1px solid var(--border)
 }
-.clinical-note-type{font-size:0.75rem;font-weight:600;color:var(--text-main);display:flex;align-items:center;gap:6px}
-.clinical-note-date{font-size:0.68rem;color:var(--text-secondary)}
+.clinical-note-type{font-size:0.78rem;font-weight:600;color:var(--text-main);display:flex;align-items:center;gap:6px}
+.clinical-note-date{font-size:0.72rem;color:var(--text-secondary)}
 .clinical-note-image{
-  width:100%;max-height:120px;object-fit:cover;cursor:pointer;
-  border-bottom:1px solid rgba(255,255,255,0.04)
+  width:100%;max-height:150px;object-fit:cover;cursor:pointer;
+  border-bottom:1px solid var(--border)
 }
 .clinical-note-ai{
-  padding:10px 12px;background:rgba(46,160,67,0.06);
-  border-bottom:1px solid rgba(255,255,255,0.04)
+  padding:12px;background:rgba(46,160,67,0.12);
+  border-bottom:1px solid var(--border)
 }
 .clinical-note-ai-badge{
-  font-size:0.62rem;font-weight:600;color:#3fb950;
-  margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px
+  font-size:0.65rem;font-weight:700;color:#22c55e;
+  margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px
 }
 .clinical-note-ai-text{
-  font-size:0.78rem;color:#c9d1d9;line-height:1.35;
+  font-size:0.82rem;color:var(--text-main);line-height:1.45;
   display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
   overflow:hidden;text-overflow:ellipsis
 }
 .clinical-note-ai-text.expanded{-webkit-line-clamp:unset;display:block}
 .clinical-note-expand{
-  font-size:0.7rem;color:#3fb950;cursor:pointer;margin-top:6px;
-  font-weight:500;display:inline-block
+  font-size:0.72rem;color:#22c55e;cursor:pointer;margin-top:8px;
+  font-weight:600;display:inline-block
 }
 .clinical-note-expand:hover{text-decoration:underline}
-.clinical-note-text{padding:10px 12px;font-size:0.8rem;color:#c9d1d9;line-height:1.4;white-space:pre-wrap}
-.clinical-note-author{padding:0 12px 8px;font-size:0.68rem;color:#8b949e;font-style:italic}
-.clinical-note-extracted{padding:8px 12px;border-top:1px solid rgba(255,255,255,0.04)}
-.clinical-note-extracted-title{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
-.clinical-note-extracted-content{font-size:0.75rem;line-height:1.3}
+.clinical-note-text{padding:12px;font-size:0.85rem;color:var(--text-main);line-height:1.45;white-space:pre-wrap}
+.clinical-note-author{padding:0 12px 10px;font-size:0.72rem;color:var(--text-secondary);font-style:italic}
+.clinical-note-extracted{padding:10px 12px;border-top:1px solid var(--border)}
+.clinical-note-extracted-title{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.clinical-note-extracted-content{font-size:0.78rem;line-height:1.35}
 .btn-icon-sm{
   background:transparent;border:none;padding:4px;
-  font-size:0.8rem;cursor:pointer;opacity:0.6;transition:opacity 0.15s
+  font-size:0.85rem;cursor:pointer;opacity:0.7;transition:opacity 0.15s
 }
 .btn-icon-sm:hover{opacity:1}
 .btn-danger{background:#da3633!important;border-color:#da3633!important;color:#fff!important}
@@ -7747,7 +7747,7 @@ function renderProfileHistory() {
             <div class="upload-icon">📄</div>
             <div class="meds-upload-content">
               <div class="upload-text">Upload Document</div>
-              <div class="upload-hint">EMR screenshot, note, lab, echo, MRI...</div>
+              <div class="upload-hint">Photo or PDF • EMR, notes, labs, reports</div>
             </div>
           `}
         </div>
@@ -7850,7 +7850,7 @@ window.triggerHistoryUpload = function() {
   if (state.isAnalyzingHistory) return;
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/*';
+  input.accept = 'image/*,.pdf';
   input.onchange = e => handleHistoryUpload(e.target.files[0]);
   input.click();
 };
@@ -7861,86 +7861,127 @@ async function handleHistoryUpload(file) {
   state.isAnalyzingHistory = true;
   renderProfileHistory();
   
-  compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
-    try {
-      // Strip data URL prefix
-      const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
-      
-      const res = await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ 
-          action: 'analyzeDocument', 
-          image: rawBase64
-        })
-      });
-      const data = await res.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Analysis failed');
+  // Check if it's a PDF
+  const isPDF = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf');
+  
+  if (isPDF) {
+    // For PDFs, read as base64 and send directly
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        const base64Data = e.target.result;
+        const rawBase64 = base64Data.split(',')[1];
+        
+        const res = await fetch(state.settings.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ 
+            action: 'analyzeDocument', 
+            image: rawBase64,
+            mediaType: 'application/pdf'
+          })
+        });
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Analysis failed');
+        }
+        
+        processDocumentResult(data, base64Data);
+        
+      } catch (e) {
+        state.isAnalyzingHistory = false;
+        renderProfileHistory();
+        console.error('PDF analysis error:', e);
+        toast('Failed to analyze PDF: ' + e.message, true);
       }
-      
-      const p = state.currentPatient;
-      if (!p.clinicalNotes) p.clinicalNotes = [];
-      
-      // Build summary from findings
-      let summary = data.findings?.summary || '';
-      if (data.diagnoses?.length) {
-        summary = (summary ? summary + ' | ' : '') + 'Dx: ' + data.diagnoses.join(', ');
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // For images, compress first
+    compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
+      try {
+        const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
+        
+        const res = await fetch(state.settings.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ 
+            action: 'analyzeDocument', 
+            image: rawBase64
+          })
+        });
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Analysis failed');
+        }
+        
+        processDocumentResult(data, imageData);
+        
+      } catch (e) {
+        state.isAnalyzingHistory = false;
+        renderProfileHistory();
+        console.error('Document analysis error:', e);
+        toast('Failed to analyze document: ' + e.message, true);
       }
-      if (data.medications?.length) {
-        summary = (summary ? summary + ' | ' : '') + data.medications.length + ' medications found';
-      }
-      if (data.labValues?.length) {
-        summary = (summary ? summary + ' | ' : '') + data.labValues.length + ' lab values';
-      }
-      
-      // Create the note
-      const note = {
-        date: data.date || new Date().toISOString(),
-        type: data.documentType || 'other',
-        image: imageData,
-        aiSummary: summary || 'Document analyzed',
-        author: state.settings.userName || 'Unknown',
-        // Store extracted data
-        diagnoses: data.diagnoses || [],
-        medsExtracted: data.medications || [],
-        labValues: data.labValues || [],
-        planItems: data.planItems || [],
-        vitals: data.vitals || null,
-        patientInfo: data.patientInfo || null,
-        findings: data.findings || {},
-        confidence: data.confidence || 0
-      };
-      
-      p.clinicalNotes.push(note);
-      
-      // Auto-update patient info if found and patient has none
-      if (data.patientInfo?.name && !p.name) {
-        p.name = data.patientInfo.name;
-      }
-      if (data.diagnoses?.length && !p.diagnosis) {
-        p.diagnosis = data.diagnoses.join(', ');
-      }
-      
-      saveCloud();
-      state.isAnalyzingHistory = false;
-      renderProfileHistory();
-      
-      // Show what was extracted
-      let msg = '✅ Document analyzed';
-      if (data.documentType) msg += ` (${data.documentType.replace(/_/g, ' ')})`;
-      if (data.medications?.length) msg += ` • ${data.medications.length} meds`;
-      if (data.diagnoses?.length) msg += ` • ${data.diagnoses.length} diagnoses`;
-      toast(msg);
-      
-    } catch (e) {
-      state.isAnalyzingHistory = false;
-      renderProfileHistory();
-      console.error('Document analysis error:', e);
-      toast('Failed to analyze document: ' + e.message, true);
-    }
-  });
+    });
+  }
+}
+
+function processDocumentResult(data, fileData) {
+  const p = state.currentPatient;
+  if (!p.clinicalNotes) p.clinicalNotes = [];
+  
+  // Build summary from findings
+  let summary = data.findings?.summary || '';
+  if (data.diagnoses?.length) {
+    summary = (summary ? summary + ' | ' : '') + 'Dx: ' + data.diagnoses.join(', ');
+  }
+  if (data.medications?.length) {
+    summary = (summary ? summary + ' | ' : '') + data.medications.length + ' medications found';
+  }
+  if (data.labValues?.length) {
+    summary = (summary ? summary + ' | ' : '') + data.labValues.length + ' lab values';
+  }
+  
+  // Create the note
+  const note = {
+    date: data.date || new Date().toISOString(),
+    type: data.documentType || 'other',
+    image: fileData,
+    aiSummary: summary || 'Document analyzed',
+    author: state.settings.userName || 'Unknown',
+    diagnoses: data.diagnoses || [],
+    medsExtracted: data.medications || [],
+    labValues: data.labValues || [],
+    planItems: data.planItems || [],
+    vitals: data.vitals || null,
+    patientInfo: data.patientInfo || null,
+    findings: data.findings || {},
+    confidence: data.confidence || 0
+  };
+  
+  p.clinicalNotes.push(note);
+  
+  // Auto-update patient info if found and patient has none
+  if (data.patientInfo?.name && !p.name) {
+    p.name = data.patientInfo.name;
+  }
+  if (data.diagnoses?.length && !p.diagnosis) {
+    p.diagnosis = data.diagnoses.join(', ');
+  }
+  
+  saveCloud();
+  state.isAnalyzingHistory = false;
+  renderProfileHistory();
+  
+  // Show what was extracted
+  let msg = '✅ Document analyzed';
+  if (data.documentType) msg += ` (${data.documentType.replace(/_/g, ' ')})`;
+  if (data.medications?.length) msg += ` • ${data.medications.length} meds`;
+  if (data.diagnoses?.length) msg += ` • ${data.diagnoses.length} diagnoses`;
+  toast(msg);
 }
 
 // Import medications from a clinical note
