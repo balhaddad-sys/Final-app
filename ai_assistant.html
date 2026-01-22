@@ -537,10 +537,12 @@ function toggleTheme(){
 }
 
 function goBack(){
+  // Navigate to oncall_assistant.html - works both locally and deployed
+  var baseUrl = window.location.href.split('/').slice(0, -1).join('/');
   if(document.referrer && document.referrer.includes(window.location.hostname)){
     window.history.back();
   }else{
-    window.location.href='oncall_assistant.html';
+    window.location.href = baseUrl + '/oncall_assistant.html';
   }
 }
 
