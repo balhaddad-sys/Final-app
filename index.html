@@ -1187,22 +1187,23 @@ body {
 .meds-upload-card{
   background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);
   border:1px solid rgba(255,255,255,0.06);
-  border-radius:12px;margin-bottom:16px;overflow:hidden
+  border-radius:12px;margin-bottom:12px;overflow:hidden
 }
 .meds-upload-header{
-  padding:16px;background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(59,130,246,0.08));
+  padding:12px 16px;background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(59,130,246,0.08));
   border-bottom:1px solid rgba(255,255,255,0.04)
 }
 .meds-upload-title{
-  font-size:0.9rem;font-weight:600;color:#e6edf3;
+  font-size:0.85rem;font-weight:600;color:#e6edf3;
   display:flex;align-items:center;gap:8px
 }
-.meds-upload-subtitle{font-size:0.75rem;color:#8b949e;margin-top:4px}
-.meds-upload-body{padding:16px}
+.meds-upload-subtitle{font-size:0.7rem;color:#8b949e;margin-top:2px}
+.meds-upload-body{padding:12px}
 .meds-upload-zone{
   border:2px dashed rgba(139,92,246,0.3);border-radius:10px;
-  padding:28px 20px;text-align:center;cursor:pointer;
-  transition:all 0.2s;background:rgba(139,92,246,0.02)
+  padding:16px;text-align:center;cursor:pointer;
+  transition:all 0.2s;background:rgba(139,92,246,0.02);
+  display:flex;align-items:center;gap:12px
 }
 .meds-upload-zone:active{
   background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.5)
@@ -1211,9 +1212,21 @@ body {
   border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.05);
   pointer-events:none
 }
-.meds-upload-icon{font-size:2rem;margin-bottom:8px}
-.meds-upload-text{font-size:0.85rem;font-weight:500;color:#c9d1d9}
-.meds-upload-hint{font-size:0.72rem;color:#8b949e;margin-top:4px}
+.meds-upload-icon{font-size:1.5rem;flex-shrink:0}
+.meds-upload-text{font-size:0.82rem;font-weight:500;color:#c9d1d9;text-align:left}
+.meds-upload-hint{font-size:0.7rem;color:#8b949e;margin-top:2px;text-align:left}
+.meds-upload-content{flex:1;min-width:0}
+
+/* Compact upload zone variant */
+.upload-zone-compact{
+  border:1px dashed rgba(139,92,246,0.25);border-radius:10px;
+  padding:14px 16px;cursor:pointer;transition:all 0.2s;
+  background:rgba(139,92,246,0.02);display:flex;align-items:center;gap:12px
+}
+.upload-zone-compact:active{background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.5)}
+.upload-zone-compact .upload-icon{font-size:1.3rem;flex-shrink:0}
+.upload-zone-compact .upload-text{font-size:0.8rem;font-weight:500;color:#c9d1d9}
+.upload-zone-compact .upload-hint{font-size:0.68rem;color:#8b949e;margin-top:1px}
 
 /* Medications List Header */
 .meds-list-header{
@@ -5537,27 +5550,20 @@ function renderProfileMeds() {
   
   let html = `
     <div class="meds-container">
-      <!-- Upload Card -->
-      <div class="meds-upload-card">
-        <div class="meds-upload-header">
-          <div class="meds-upload-title">
-            <span>📷</span> Smart Medication Import
+      <!-- Compact Upload Zone -->
+      <div class="upload-zone-compact ${state.isAnalyzingMeds ? 'analyzing' : ''}" onclick="triggerMedsUpload()" style="margin-bottom:12px">
+        ${state.isAnalyzingMeds ? `
+          <div class="upload-icon">⏳</div>
+          <div class="meds-upload-content">
+            <div class="upload-text">Analyzing...</div>
           </div>
-          <div class="meds-upload-subtitle">AI-powered extraction from medication lists, prescriptions & MAR sheets</div>
-        </div>
-        <div class="meds-upload-body">
-          <div class="meds-upload-zone ${state.isAnalyzingMeds ? 'analyzing' : ''}" onclick="triggerMedsUpload()">
-            ${state.isAnalyzingMeds ? `
-              <div class="meds-upload-icon">⏳</div>
-              <div class="meds-upload-text">Analyzing medications...</div>
-              <div class="meds-upload-hint">Extracting drug names, doses & indications</div>
-            ` : `
-              <div class="meds-upload-icon">💊</div>
-              <div class="meds-upload-text">Tap to upload medication list</div>
-              <div class="meds-upload-hint">Supports handwritten & printed formats</div>
-            `}
+        ` : `
+          <div class="upload-icon">📋</div>
+          <div class="meds-upload-content">
+            <div class="upload-text">Upload Medication List</div>
+            <div class="upload-hint">Photo of med list, MAR sheet, or EMR screen</div>
           </div>
-        </div>
+        `}
       </div>
       
       <!-- Quick Actions -->
@@ -6103,47 +6109,69 @@ async function handleMedsUpload(file) {
   
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
+      // Strip data URL prefix
+      const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
+      
+      // Use the document analyzer - it extracts medications from any document type
       const res = await fetch(state.settings.apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ 
-          action: 'extractMedications',
-          image: imageData,
-          patientDiagnosis: state.currentPatient.diagnosis || ''
+          action: 'analyzeDocument',
+          image: rawBase64
         })
       });
       const data = await res.json();
       
       state.isAnalyzingMeds = false;
       
-      if (data.medications && Array.isArray(data.medications)) {
+      if (!data.success) {
+        throw new Error(data.error || 'Analysis failed');
+      }
+      
+      const meds = data.medications || [];
+      
+      if (meds.length > 0) {
         const p = state.currentPatient;
         if (!p.medications) p.medications = [];
         
-        // Add extracted medications
-        data.medications.forEach(med => {
-          p.medications.push({
-            name: med.name || med.drug || 'Unknown',
-            dose: med.dose || med.dosage || '',
-            route: med.route || 'PO',
-            frequency: med.frequency || med.schedule || 'OD',
-            indication: med.indication || med.reason || '',
-            generic: med.generic || '',
-            status: 'new',
-            addedDate: new Date().toISOString()
-          });
+        let added = 0;
+        meds.forEach(med => {
+          // Check for duplicates
+          const exists = p.medications.some(m => 
+            m.name?.toLowerCase() === (med.name || med.drugName)?.toLowerCase()
+          );
+          if (!exists) {
+            p.medications.push({
+              name: med.name || med.drugName || 'Unknown',
+              dose: med.dose || med.strength || '',
+              route: med.route || 'PO',
+              frequency: med.frequency || 'OD',
+              indication: med.indication || med.notes || '',
+              status: med.status || 'active',
+              addedDate: new Date().toISOString(),
+              source: 'scan'
+            });
+            added++;
+          }
         });
+        
+        // Also update diagnosis if found and empty
+        if (data.diagnoses?.length && !p.diagnosis) {
+          p.diagnosis = data.diagnoses.join(', ');
+        }
         
         saveCloud();
         renderProfileMeds();
-        toast(`${data.medications.length} medication(s) imported`);
+        toast(`✅ ${added} medication(s) imported` + (meds.length - added > 0 ? ` (${meds.length - added} duplicates skipped)` : ''));
       } else {
         toast('No medications found in image', true);
         renderProfileMeds();
       }
     } catch (e) {
       state.isAnalyzingMeds = false;
-      toast('Failed to analyze medications', true);
+      console.error('Meds upload error:', e);
+      toast('Failed to analyze: ' + e.message, true);
       renderProfileMeds();
     }
   });
@@ -7684,31 +7712,37 @@ function renderProfileHistory() {
         <button class="btn btn-primary btn-sm" onclick="addClinicalNote()">+ Add Note</button>
       </div>
       <div class="section-body">
-        <div class="history-upload-area" onclick="triggerHistoryUpload()">
-          <div style="font-size:1.5rem;margin-bottom:6px">📷</div>
-          <div style="font-weight:600;font-size:0.85rem">Upload Document</div>
-          <div style="font-size:0.75rem;color:#8b949e">Progress notes, referrals, consults, discharge summaries</div>
+        <!-- Compact upload zone -->
+        <div class="upload-zone-compact" onclick="triggerHistoryUpload()" style="margin-bottom:12px">
+          <div class="upload-icon">📄</div>
+          <div class="meds-upload-content">
+            <div class="upload-text">Upload Document</div>
+            <div class="upload-hint">EMR screenshot, progress note, consult, lab report, echo, MRI...</div>
+          </div>
         </div>
   `;
   
   if (!p.clinicalNotes.length) {
-    html += `<div style="text-align:center;padding:24px;color:#8b949e">
-      <div style="font-size:1.5rem;margin-bottom:8px">📝</div>
-      <div>No clinical notes yet</div>
-      <div style="font-size:0.75rem;margin-top:4px">Add notes or upload documents</div>
+    html += `<div style="text-align:center;padding:20px;color:#8b949e">
+      <div style="font-size:1.3rem;margin-bottom:6px">📝</div>
+      <div style="font-size:0.85rem">No clinical notes yet</div>
     </div>`;
   } else {
     html += `<div class="clinical-notes-list">`;
     
     p.clinicalNotes.slice().reverse().forEach((note, idx) => {
       const realIdx = p.clinicalNotes.length - 1 - idx;
-      const typeIcons = { progress: '📝', consult: '👨‍⚕️', referral: '📤', discharge: '🏥', imaging: '🩻', other: '📄' };
+      const typeIcons = { 
+        progress: '📝', consult: '👨‍⚕️', referral: '📤', discharge: '🏥', 
+        imaging: '🩻', lab_report: '🔬', echo: '❤️', holter: '💓',
+        radiology: '📷', emr_screenshot: '🖥️', medication_list: '💊', other: '📄' 
+      };
       const icon = typeIcons[note.type] || '📄';
       
       html += `
         <div class="clinical-note-card">
           <div class="clinical-note-header">
-            <div class="clinical-note-type">${icon} ${(note.type || 'Note').charAt(0).toUpperCase() + (note.type || 'note').slice(1)}</div>
+            <div class="clinical-note-type">${icon} ${(note.type || 'Note').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
             <div style="display:flex;align-items:center;gap:8px">
               <span class="clinical-note-date">${formatDateTime(note.date)}</span>
               <button class="btn-icon-sm" onclick="deleteClinicalNote(${realIdx})" title="Delete">🗑️</button>
@@ -7719,6 +7753,19 @@ function renderProfileHistory() {
             <div class="clinical-note-ai">
               <div class="clinical-note-ai-badge">🤖 AI Summary</div>
               <div class="clinical-note-ai-text">${esc(note.aiSummary)}</div>
+            </div>
+          ` : ''}
+          ${note.diagnoses?.length ? `
+            <div style="margin:8px 0;padding:8px;background:rgba(239,68,68,0.1);border-radius:8px">
+              <div style="font-size:0.7rem;color:#f87171;font-weight:600;margin-bottom:4px">📋 DIAGNOSES</div>
+              <div style="font-size:0.8rem;color:#fca5a5">${note.diagnoses.map(d => esc(d)).join(' • ')}</div>
+            </div>
+          ` : ''}
+          ${note.medsExtracted?.length ? `
+            <div style="margin:8px 0;padding:8px;background:rgba(139,92,246,0.1);border-radius:8px">
+              <div style="font-size:0.7rem;color:#a78bfa;font-weight:600;margin-bottom:4px">💊 MEDICATIONS (${note.medsExtracted.length})</div>
+              <div style="font-size:0.75rem;color:#c4b5fd">${note.medsExtracted.slice(0,5).map(m => esc(m.name + (m.dose ? ' ' + m.dose : ''))).join(', ')}${note.medsExtracted.length > 5 ? '...' : ''}</div>
+              <button class="btn btn-sm" style="margin-top:6px;padding:4px 10px;font-size:0.7rem" onclick="importMedsFromNote(${realIdx})">Import to Medications</button>
             </div>
           ` : ''}
           ${note.text ? `<div class="clinical-note-text">${esc(note.text)}</div>` : ''}
@@ -7765,43 +7812,127 @@ window.triggerHistoryUpload = function() {
 async function handleHistoryUpload(file) {
   if (!file) return;
   
-  const type = prompt('Document type:\\n• progress\\n• consult\\n• referral\\n• discharge\\n• other') || 'other';
-  
-  toast('Analyzing document...');
+  toast('🔍 Analyzing document...', false, 10000);
   
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
+      // Strip data URL prefix
+      const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
+      
       const res = await fetch(state.settings.apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ 
-          action: 'interpret', 
-          documentType: 'clinical_note',
-          noteType: type,
-          image: imageData 
+          action: 'analyzeDocument', 
+          image: rawBase64
         })
       });
       const data = await res.json();
       
+      if (!data.success) {
+        throw new Error(data.error || 'Analysis failed');
+      }
+      
       const p = state.currentPatient;
       if (!p.clinicalNotes) p.clinicalNotes = [];
       
-      p.clinicalNotes.push({
-        date: new Date().toISOString(),
-        type: type,
+      // Build summary from findings
+      let summary = data.findings?.summary || '';
+      if (data.diagnoses?.length) {
+        summary = (summary ? summary + ' | ' : '') + 'Dx: ' + data.diagnoses.join(', ');
+      }
+      if (data.medications?.length) {
+        summary = (summary ? summary + ' | ' : '') + data.medications.length + ' medications found';
+      }
+      if (data.labValues?.length) {
+        summary = (summary ? summary + ' | ' : '') + data.labValues.length + ' lab values';
+      }
+      
+      // Create the note
+      const note = {
+        date: data.date || new Date().toISOString(),
+        type: data.documentType || 'other',
         image: imageData,
-        aiSummary: data.interpretation?.summary || data.interpretation?.text || 'Document uploaded',
-        author: state.settings.userName || 'Unknown'
-      });
+        aiSummary: summary || 'Document analyzed',
+        author: state.settings.userName || 'Unknown',
+        // Store extracted data
+        diagnoses: data.diagnoses || [],
+        medsExtracted: data.medications || [],
+        labValues: data.labValues || [],
+        planItems: data.planItems || [],
+        vitals: data.vitals || null,
+        patientInfo: data.patientInfo || null,
+        findings: data.findings || {},
+        confidence: data.confidence || 0
+      };
+      
+      p.clinicalNotes.push(note);
+      
+      // Auto-update patient info if found and patient has none
+      if (data.patientInfo?.name && !p.name) {
+        p.name = data.patientInfo.name;
+      }
+      if (data.diagnoses?.length && !p.diagnosis) {
+        p.diagnosis = data.diagnoses.join(', ');
+      }
       
       saveCloud();
       renderProfileHistory();
-      toast('Document analyzed and saved');
+      
+      // Show what was extracted
+      let msg = '✅ Document analyzed';
+      if (data.documentType) msg += ` (${data.documentType.replace(/_/g, ' ')})`;
+      if (data.medications?.length) msg += ` • ${data.medications.length} meds`;
+      if (data.diagnoses?.length) msg += ` • ${data.diagnoses.length} diagnoses`;
+      toast(msg);
+      
     } catch (e) {
-      toast('Failed to analyze document', true);
+      console.error('Document analysis error:', e);
+      toast('Failed to analyze document: ' + e.message, true);
     }
   });
 }
+
+// Import medications from a clinical note
+window.importMedsFromNote = function(noteIdx) {
+  const p = state.currentPatient;
+  const note = p.clinicalNotes?.[noteIdx];
+  if (!note?.medsExtracted?.length) {
+    toast('No medications to import', true);
+    return;
+  }
+  
+  if (!p.medications) p.medications = [];
+  
+  let imported = 0;
+  note.medsExtracted.forEach(med => {
+    // Check for duplicates
+    const exists = p.medications.some(m => 
+      m.name?.toLowerCase() === med.name?.toLowerCase()
+    );
+    if (!exists && med.name) {
+      p.medications.push({
+        name: med.name,
+        dose: med.dose || '',
+        route: med.route || 'PO',
+        frequency: med.frequency || 'OD',
+        indication: med.notes || '',
+        status: med.status || 'active',
+        addedDate: new Date().toISOString(),
+        source: 'document'
+      });
+      imported++;
+    }
+  });
+  
+  if (imported > 0) {
+    saveCloud();
+    renderProfileMeds();
+    toast(`✅ ${imported} medication(s) imported`);
+  } else {
+    toast('All medications already exist', true);
+  }
+};
 
 window.deleteClinicalNote = function(idx) {
   if (!confirm('Delete this note?')) return;
