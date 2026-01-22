@@ -7870,13 +7870,23 @@ async function handleLabUpload(files) {
       throw new Error('No valid images after compression');
     }
     
-    console.log('🖼️ Total payload size:', Math.round(validImages.reduce((sum, img) => sum + img.length, 0) / 1024), 'KB');
-    console.log('🖼️ First image preview:', validImages[0].substring(0, 50));
+    // Strip data URL prefix for API - Claude expects raw base64 only
+    const rawBase64Images = validImages.map(img => {
+      if (img.startsWith('data:')) {
+        // Extract just the base64 part after the comma
+        const base64Part = img.split(',')[1];
+        console.log('🔧 Stripped prefix, raw base64 preview:', base64Part.substring(0, 30));
+        return base64Part;
+      }
+      return img;
+    });
+    
+    console.log('🖼️ Total payload size:', Math.round(rawBase64Images.reduce((sum, img) => sum + img.length, 0) / 1024), 'KB');
 
     // 3. Send the STACK to the cloud
     const requestBody = {
       action: 'analyzeLabsEnhanced',
-      images: validImages, // Use validated images array
+      images: rawBase64Images, // Send raw base64 (no data URL prefix)
       extractionPrompt: LAB_EXTRACTION_PROMPT,
       patientContext: {
         existingLabs: state.currentPatient?.labData?.parameters?.map(p => ({
@@ -7887,7 +7897,7 @@ async function handleLabUpload(files) {
       }
     };
 
-    console.log('📤 Sending request with', validImages.length, 'images');
+    console.log('📤 Sending request with', rawBase64Images.length, 'images (raw base64)');
     console.log('📤 Request body size:', JSON.stringify(requestBody).length, 'bytes');
 
     const res = await fetch(state.settings.apiUrl, {
@@ -7904,7 +7914,30 @@ async function handleLabUpload(files) {
       throw new Error('HTTP ' + res.status + ': ' + errorText.substring(0, 100));
     }
 
-    const data = await res.json();
+    // Get response as text first, then parse with error handling
+    const responseText = await res.text();
+    console.log('📥 Response length:', responseText.length);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (jsonError) {
+      console.error('❌ JSON Parse Error:', jsonError.message);
+      console.error('❌ Response preview:', responseText.substring(0, 500));
+      
+      // Try to fix common JSON issues
+      let cleanedResponse = responseText
+        .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ''); // Remove control chars
+      
+      try {
+        data = JSON.parse(cleanedResponse);
+        console.log('✅ Fixed JSON parse succeeded');
+      } catch (retryError) {
+        console.error('❌ JSON fix failed:', retryError.message);
+        throw new Error('Invalid response from server: ' + jsonError.message);
+      }
+    }
     console.log('📦 Extraction result:', data);
 
     state.isAnalyzingLab = false;
