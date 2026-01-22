@@ -937,6 +937,19 @@ document.addEventListener('DOMContentLoaded',function(){
   var savedTheme=localStorage.getItem('oncall-theme')||'light';
   var btn=document.getElementById('themeBtn');
   if(btn) btn.textContent=savedTheme==='dark'?'☀️':'🌙';
+  
+  // Check for hash-based navigation
+  if(window.location.hash === '#emergency') {
+    filterCategory('emergency', null);
+    // Update pill states
+    var pills = document.querySelectorAll('.pill');
+    for(var i=0; i<pills.length; i++){
+      pills[i].classList.remove('active');
+      if(pills[i].textContent.indexOf('Emergency') >= 0 || pills[i].getAttribute('onclick')?.indexOf('emergency') >= 0){
+        pills[i].classList.add('active');
+      }
+    }
+  }
 });
 
 function toggleTheme(){
@@ -949,11 +962,9 @@ function toggleTheme(){
 }
 
 function goBack(){
-  if(window.opener||window.history.length<=1){
-    window.location.href='/';
-  }else{
-    window.history.back();
-  }
+  // Navigate to index.html - works both locally and deployed
+  var baseUrl = window.location.href.split('/').slice(0, -1).join('/');
+  window.location.href = baseUrl + '/index.html';
 }
 
 function scrollToAI(){
