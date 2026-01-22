@@ -105,14 +105,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ai-loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:30px;color:var(--text-muted)}
 .ai-loading-spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.quick-ref-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
+.quick-ref-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;margin-bottom:20px}
 @media(max-width:500px){.quick-ref-grid{grid-template-columns:repeat(2,1fr)}}
-.quick-ref-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer}
+.quick-ref-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.2s}
+.quick-ref-card:hover{border-color:var(--primary);transform:translateY(-2px)}
 .quick-ref-icon{font-size:1.3rem;margin-bottom:6px}
 .quick-ref-title{font-weight:600;font-size:.8rem;margin-bottom:2px}
 .quick-ref-value{font-size:.7rem;color:var(--text-muted)}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;z-index:1000}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 20px;border-radius:12px;cursor:pointer;color:var(--text-muted);font-size:.7rem;font-weight:600}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 20px;border-radius:12px;cursor:pointer;color:var(--text-muted);font-size:.7rem;font-weight:600;text-decoration:none;transition:all 0.2s}
+a.nav-item{color:var(--text-muted)}
+.nav-item:hover{color:var(--primary)}
 .nav-item.active{color:var(--primary);background:var(--primary-light)}
 .nav-icon{font-size:1.3rem}
 .hidden{display:none!important}
@@ -899,12 +902,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <!-- QUICK REFERENCE -->
-<div class="section-label">Quick Reference</div>
+<div class="section-label">Quick Reference • Kuwait SI Units</div>
 <div class="quick-ref-grid">
-<div class="quick-ref-card" onclick="showRef('K+: 3.5-5.0 mmol/L')"><div class="quick-ref-icon">🧪</div><div class="quick-ref-title">K+</div><div class="quick-ref-value">3.5-5.0</div></div>
-<div class="quick-ref-card" onclick="showRef('Na+: 136-145 mmol/L')"><div class="quick-ref-icon">🧂</div><div class="quick-ref-title">Na+</div><div class="quick-ref-value">136-145</div></div>
-<div class="quick-ref-card" onclick="showRef('Ca: 2.1-2.6 mmol/L')"><div class="quick-ref-icon">🦴</div><div class="quick-ref-title">Ca</div><div class="quick-ref-value">2.1-2.6</div></div>
-<div class="quick-ref-card" onclick="showRef('Glucose: 3.9-5.6 mmol/L')"><div class="quick-ref-icon">🍬</div><div class="quick-ref-title">Glc</div><div class="quick-ref-value">3.9-5.6</div></div>
+<div class="quick-ref-card" onclick="showRef('K+: 3.5-5.0 mmol/L\n\nCritical Low: <2.5\nCritical High: >6.0\n\nSymptoms:\n• Low: weakness, cramps, arrhythmias\n• High: peaked T, wide QRS, arrest')"><div class="quick-ref-icon">🧪</div><div class="quick-ref-title">K+</div><div class="quick-ref-value">3.5-5.0</div></div>
+<div class="quick-ref-card" onclick="showRef('Na+: 136-145 mmol/L\n\nCritical Low: <120\nCritical High: >160\n\nCorrection Rate:\n• Chronic: max 8-10 mEq/24hr\n• Acute: max 1-2 mEq/hr')"><div class="quick-ref-icon">🧂</div><div class="quick-ref-title">Na+</div><div class="quick-ref-value">136-145</div></div>
+<div class="quick-ref-card" onclick="showRef('Mg: 0.7-1.0 mmol/L\n\nCritical: <0.4\n\nReplacement:\n• Mild: 500mg PO TID\n• Severe: 2g IV over 1hr')"><div class="quick-ref-icon">💎</div><div class="quick-ref-title">Mg</div><div class="quick-ref-value">0.7-1.0</div></div>
+<div class="quick-ref-card" onclick="showRef('Ca (total): 2.1-2.6 mmol/L\n\nCorrected Ca:\nCa + 0.02 × (40 - Albumin)\n\nCritical Low: <1.9\nCritical High: >3.0')"><div class="quick-ref-icon">🦴</div><div class="quick-ref-title">Ca</div><div class="quick-ref-value">2.1-2.6</div></div>
+<div class="quick-ref-card" onclick="showRef('Glucose: 3.9-5.6 mmol/L\n\nHypoglycemia: <3.9\nDiabetes threshold: ≥7.0 fasting\n\nDKA: >13.9 + ketones + acidosis')"><div class="quick-ref-icon">🍬</div><div class="quick-ref-title">Glucose</div><div class="quick-ref-value">3.9-5.6</div></div>
+<div class="quick-ref-card" onclick="showRef('Creatinine:\n• Male: 62-106 µmol/L\n• Female: 44-80 µmol/L\n\neGFR Stages:\nG1: ≥90 | G2: 60-89\nG3a: 45-59 | G3b: 30-44\nG4: 15-29 | G5: <15')"><div class="quick-ref-icon">🫘</div><div class="quick-ref-title">Cr</div><div class="quick-ref-value">62-106</div></div>
+<div class="quick-ref-card" onclick="showRef('Hemoglobin:\n• Male: 130-175 g/L\n• Female: 120-160 g/L\n\nTransfusion threshold:\n• Stable: Hgb <70 g/L\n• ACS/hypoxia: <80 g/L')"><div class="quick-ref-icon">🩸</div><div class="quick-ref-title">Hgb</div><div class="quick-ref-value">130-175</div></div>
+<div class="quick-ref-card" onclick="showRef('QTc (Bazett):\n• Normal: <440 ms\n• Borderline: 440-470 ms\n• Prolonged: >470 ms\n• Danger: >500 ms (TdP risk)\n\nFormula: QT ÷ √RR')"><div class="quick-ref-icon">❤️</div><div class="quick-ref-title">QTc</div><div class="quick-ref-value"><440 ms</div></div>
 </div>
 </div>
 
@@ -912,23 +919,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="nav-item" onclick="goBack()"><div class="nav-icon">🏠</div><span>Home</span></div>
 <div class="nav-item active"><div class="nav-icon">⚡</div><span>OnCall</span></div>
 <div class="nav-item" onclick="filterCategory('emergency',this)"><div class="nav-icon">🚨</div><span>Emergency</span></div>
-<div class="nav-item" onclick="scrollToAI()"><div class="nav-icon">🤖</div><span>AI</span></div>
+<a class="nav-item" href="ai_assistant.html"><div class="nav-icon">🤖</div><span>AI</span></a>
 </nav>
 
 <script>
 var apiUrl='https://script.google.com/macros/s/AKfycbznXa9YNna26Srt1eZVEnSV-dIiubFLTwg3ryLdE-maGNCQhydP_8E6AK4QPXkeQrw7lA/exec';
 var gfrSex='';
 
-// Initialize theme
-var savedTheme=localStorage.getItem('oncall-theme')||'light';
-document.documentElement.setAttribute('data-theme',savedTheme);
-document.getElementById('themeBtn').textContent=savedTheme==='dark'?'☀️':'🌙';
+// Initialize theme immediately on html element
+(function(){
+  var savedTheme=localStorage.getItem('oncall-theme')||'light';
+  document.documentElement.setAttribute('data-theme',savedTheme);
+})();
+
+// Update button text after DOM loads
+document.addEventListener('DOMContentLoaded',function(){
+  var savedTheme=localStorage.getItem('oncall-theme')||'light';
+  var btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=savedTheme==='dark'?'☀️':'🌙';
+});
 
 function toggleTheme(){
-  var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',t);
-  localStorage.setItem('oncall-theme',t);
-  document.getElementById('themeBtn').textContent=t==='dark'?'☀️':'🌙';
+  var current=document.documentElement.getAttribute('data-theme');
+  var newTheme=current==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',newTheme);
+  localStorage.setItem('oncall-theme',newTheme);
+  var btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=newTheme==='dark'?'☀️':'🌙';
 }
 
 function goBack(){
