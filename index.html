@@ -686,12 +686,13 @@ body {
 .section-title{font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:10px}
 .section-body{padding:20px}
 /* Lab Upload Area */
-.lab-upload-area{background:var(--bg-surface);border:2px dashed var(--border-light);border-radius:var(--radius);padding:32px 24px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:24px}
-.lab-upload-area:hover{border-color:var(--primary);background:rgba(0,94,184,0.05)}
+.lab-upload-area{background:var(--bg-surface);border:1px dashed var(--border-light);border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;transition:all 0.2s;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.lab-upload-area:hover{border-color:var(--primary);background:rgba(0,94,184,0.03)}
 .lab-upload-area.analyzing{pointer-events:none;opacity:0.7}
-.lab-upload-icon{font-size:2.5rem;margin-bottom:12px}
-.lab-upload-title{font-weight:700;font-size:1rem;margin-bottom:4px}
-.lab-upload-subtitle{color:var(--text-muted);font-size:0.85rem}
+.lab-upload-icon{font-size:1.3rem;flex-shrink:0}
+.lab-upload-content{flex:1;min-width:0}
+.lab-upload-title{font-weight:600;font-size:0.82rem;margin-bottom:1px}
+.lab-upload-subtitle{color:var(--text-muted);font-size:0.7rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* AI Interpretation Card with Feedback */
 .ai-interpretation{background:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(59,130,246,0.08));border:1px solid rgba(20,184,166,0.2);border-radius:var(--radius);padding:20px;margin-bottom:24px}
@@ -8079,12 +8080,15 @@ function renderProfileLabs() {
         <div class="lab-upload-area ${state.isAnalyzingLab ? 'analyzing' : ''}" onclick="triggerLabUpload()">
           ${state.isAnalyzingLab ? `
             <div class="lab-upload-icon">⏳</div>
-            <div class="lab-upload-title">Analyzing Lab Report...</div>
-            <div class="lab-upload-subtitle">AI is extracting and interpreting values</div>
+            <div class="lab-upload-content">
+              <div class="lab-upload-title">Analyzing...</div>
+            </div>
           ` : `
-            <div class="lab-upload-icon">📷</div>
-            <div class="lab-upload-title">Upload Lab Report</div>
-            <div class="lab-upload-subtitle">Smart OCR • Kuwait MOH format supported</div>
+            <div class="lab-upload-icon">🔬</div>
+            <div class="lab-upload-content">
+              <div class="lab-upload-title">Upload Lab Report</div>
+              <div class="lab-upload-subtitle">Photo of lab results, blood gas, chemistry panel...</div>
+            </div>
           `}
         </div>
   `;
@@ -8959,11 +8963,15 @@ function renderProfileImaging() {
         <div class="lab-upload-area ${state.isAnalyzingImaging ? 'analyzing' : ''}" onclick="triggerImagingUpload()">
           ${state.isAnalyzingImaging ? `
             <div class="lab-upload-icon">⏳</div>
-            <div class="lab-upload-title">Analyzing...</div>
+            <div class="lab-upload-content">
+              <div class="lab-upload-title">Analyzing...</div>
+            </div>
           ` : `
             <div class="lab-upload-icon">🩻</div>
-            <div class="lab-upload-title">Upload Study</div>
-            <div class="lab-upload-subtitle">Echo • ECG • X-Ray • CT/MRI</div>
+            <div class="lab-upload-content">
+              <div class="lab-upload-title">Upload Study</div>
+              <div class="lab-upload-subtitle">Echo, ECG, X-Ray, CT/MRI reports</div>
+            </div>
           `}
         </div>
         
@@ -8981,7 +8989,7 @@ function renderProfileImaging() {
             </div>
             <div class="imaging-summary">${esc(img.summary) || 'No findings recorded'}</div>
           </div>
-        `).join('') : '<div style="text-align:center;padding:20px;color:var(--text-muted)">No imaging studies</div>'}
+        `).join('') : '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:0.85rem">No imaging studies</div>'}
       </div>
     </div>
   `;
