@@ -617,6 +617,37 @@ function calcQTc(e){
   else{box.className+=' success';box.innerHTML='<div class="result-title">✓ '+qtc+'ms</div><div class="result-content">Normal</div>';}
 }
 
+function parseMarkdown(text){
+  // Convert markdown tables to HTML
+  text = text.replace(/\n\|(.+)\|\n\|[-:| ]+\|\n([\s\S]*?)(?=\n\n|\n[^|]|$)/g, function(match, header, body) {
+    var headers = header.split('|').map(function(h){return h.trim();}).filter(Boolean);
+    var headerHtml = '<tr>' + headers.map(function(h){return '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);font-weight:600;">'+h+'</th>';}).join('') + '</tr>';
+    var rows = body.trim().split('\n').map(function(row){
+      var cells = row.split('|').map(function(c){return c.trim();}).filter(Boolean);
+      return '<tr>' + cells.map(function(c){return '<td style="padding:8px 12px;border-bottom:1px solid var(--border);">'+c+'</td>';}).join('') + '</tr>';
+    }).join('');
+    return '<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85rem;">'+headerHtml+rows+'</table>';
+  });
+  // Headers
+  text = text.replace(/^### (.+)$/gm, '<h4 style="font-size:0.95rem;font-weight:700;margin:16px 0 8px;color:var(--primary);">$1</h4>');
+  text = text.replace(/^## (.+)$/gm, '<h3 style="font-size:1.05rem;font-weight:700;margin:20px 0 10px;color:var(--text);">$1</h3>');
+  text = text.replace(/^# (.+)$/gm, '<h2 style="font-size:1.15rem;font-weight:700;margin:0 0 12px;color:var(--primary-dark);">$1</h2>');
+  // Bold and italic
+  text = text.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Horizontal rule
+  text = text.replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">');
+  // Lists
+  text = text.replace(/^\* (.+)$/gm, '<li style="margin:4px 0;margin-left:20px;">$1</li>');
+  text = text.replace(/^- (.+)$/gm, '<li style="margin:4px 0;margin-left:20px;">$1</li>');
+  text = text.replace(/^(\d+)\. (.+)$/gm, '<li style="margin:4px 0;margin-left:20px;list-style-type:decimal;">$2</li>');
+  // Line breaks
+  text = text.replace(/\n\n/g, '</p><p style="margin:12px 0;">');
+  text = text.replace(/\n/g, '<br>');
+  return '<p style="margin:0;">'+text+'</p>';
+}
+
 function askAI(){
   var input=document.getElementById('aiInput');
   var resp=document.getElementById('aiResponse');
@@ -628,7 +659,7 @@ function askAI(){
   .then(function(r){return r.json();})
   .then(function(d){
     var ans=d.answer||d.response||'No response';
-    ans=ans.replace(/\n/g,'<br>');
+    ans=parseMarkdown(ans);
     resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label">Response</span></div><div class="ai-response-body">'+ans+'</div>';
     input.value='';
   })
