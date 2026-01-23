@@ -5247,8 +5247,8 @@ async function syncFromCloud() {
   }
 }
 
-function getUnit(id) { return state.units.find(u => u.id === id); }
-function getPatient(id) { return state.patients.find(p => p.id === id); }
+function getUnit(id) { return state.units.find(u => u.id == id); }
+function getPatient(id) { return state.patients.find(p => p.id == id); }
 
 // ═══════════════════════════════════════════════════════════════════
 // FEEDBACK SYSTEM (RLHF)
@@ -5399,7 +5399,7 @@ function renderPatients() {
       else if (p.ward && p.ward.includes('ICU')) statusColor = 'var(--danger)';
 
       // Create the row using both patient-card (for compatibility) and patient-row classes
-      html += `<div class="patient-card ${p.status}" style="border-left-color:${statusColor}" onclick="openPatientProfile(${p.id})">
+      html += `<div class="patient-card ${p.status}" style="border-left-color:${statusColor}" onclick="openPatientProfile('${p.id}')">
         <div class="p-info">
           <div class="p-name">${esc(p.name)}</div>
           <div class="p-demographics p-details">
@@ -11650,7 +11650,7 @@ window.extractPatients = async function() {
     
     $('importResults').style.display = 'block';
     $('importCount').textContent = state.importPatients.length;
-    $('importList').innerHTML = state.importPatients.map(p => `<div class="import-item"><div style="flex:1"><b>${esc(p.name)}</b><div style="font-size:0.75rem;color:var(--text-muted)">${esc(p.room)}</div></div><select class="import-ward-select" onchange="state.importPatients.find(x=>x.id===${p.id}).ward=this.value">${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}</select></div>`).join('');
+    $('importList').innerHTML = state.importPatients.map(p => `<div class="import-item"><div style="flex:1"><b>${esc(p.name)}</b><div style="font-size:0.75rem;color:var(--text-muted)">${esc(p.room)}</div></div><select class="import-ward-select" onchange="state.importPatients.find(x=>x.id=='${p.id}').ward=this.value">${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}</select></div>`).join('');
     $('importConfirmBtn').disabled = false;
     
     console.log('✅ Found', state.importPatients.length, 'patients');
