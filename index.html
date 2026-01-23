@@ -3876,10 +3876,10 @@ const PATIENT_SCORES = {
     'diabetic ketoacidosis': ['DKA-Severity', 'Anion-Gap'],
     'hhs': ['HHS-Severity', 'Osmolality'],
     'diabetes': ['HbA1c-Control', 'UKPDS']
-  },
-  
-  // Complete scoring calculators with formulas
-  SCORING_CALCULATORS: {
+};
+
+// Complete scoring calculators with formulas
+const SCORING_CALCULATORS = {
     // ═══ CARDIAC SCORES ═══
     'CHA2DS2-VASc': {
       name: 'CHA₂DS₂-VASc Score',
@@ -4551,17 +4551,16 @@ const PATIENT_SCORES = {
         { min: 5, max: 5, risk: 'ASA V', action: 'Surgery only if life-saving', color: '#ef4444', mortality: '51%' }
       ]
     }
-  },
-  
-  REFS: [
+};
+
+const REFS = [
     { title: '🚨 Critical Labs', content: '<b>K:</b> <2.5 or >6.5<br><b>Na:</b> <120 or >160<br><b>Glucose:</b> <40 or >500' },
     { title: '⚡ Hyperkalemia', content: '<b>Stabilize:</b> Ca gluconate 1g<br><b>Shift:</b> Insulin + D50<br><b>Remove:</b> Kayexalate' },
     { title: '❤️ ACS', content: '<b>MONA:</b> Morphine, O₂, Nitrates, ASA<br><b>STEMI:</b> PCI <90min' },
     { title: '🧠 Stroke tPA', content: '<b>Window:</b> ≤4.5h<br><b>Dose:</b> 0.9mg/kg max 90mg' },
     { title: '🦠 Sepsis', content: '<b>Hour-1:</b> Lactate, cultures, abx<br><b>Fluids:</b> 30mL/kg' },
     { title: '💊 Status Epilepticus', content: '<b>1st:</b> Lorazepam 4mg<br><b>2nd:</b> Levetiracetam 60mg/kg' }
-  ]
-};
+];
 
 const state = {
   units: [], settings: {}, patients: [], currentUnit: null, currentUser: null, currentPatient: null,
@@ -5424,7 +5423,7 @@ function updateStats() {
 }
 
 function renderRef() {
-  $('refGrid').innerHTML = CONFIG.REFS.map(r => `<div class="ref-card"><h4>${r.title}</h4><p>${r.content}</p></div>`).join('');
+  $('refGrid').innerHTML = REFS.map(r => `<div class="ref-card"><h4>${r.title}</h4><p>${r.content}</p></div>`).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -5447,7 +5446,7 @@ const SCORE_CATEGORY_ICONS = {
 
 function renderScoresGrid() {
   const categories = {};
-  Object.entries(CONFIG.SCORING_CALCULATORS).forEach(([id, score]) => {
+  Object.entries(SCORING_CALCULATORS).forEach(([id, score]) => {
     const cat = score.category || 'Other';
     if (!categories[cat]) categories[cat] = [];
     categories[cat].push({ id, ...score });
@@ -5501,7 +5500,7 @@ window.filterScores = function(query) {
 };
 
 window.openScoreCalculator = function(scoreId) {
-  const score = CONFIG.SCORING_CALCULATORS[scoreId];
+  const score = SCORING_CALCULATORS[scoreId];
   if (!score) return;
   
   currentScoreId = scoreId;
@@ -5771,7 +5770,7 @@ window.updateScoreNumber = function(fieldId, value) {
 };
 
 function updateScoreResult() {
-  const score = CONFIG.SCORING_CALCULATORS[currentScoreId];
+  const score = SCORING_CALCULATORS[currentScoreId];
   if (!score) return;
   
   // Calculate total
@@ -5844,7 +5843,7 @@ function updateScoreResult() {
 window.savePatientScore = function() {
   if (!state.currentPatient || !currentScoreId) return;
   
-  const score = CONFIG.SCORING_CALCULATORS[currentScoreId];
+  const score = SCORING_CALCULATORS[currentScoreId];
   if (!score) return;
   
   // Calculate total
@@ -5915,7 +5914,7 @@ function getRelevantScoresForPatient(patient) {
     ['qSOFA', 'SOFA', 'NEWS2', 'Glasgow-Coma'].forEach(s => relevantScores.add(s));
   }
   
-  return Array.from(relevantScores).filter(s => CONFIG.SCORING_CALCULATORS[s]);
+  return Array.from(relevantScores).filter(s => SCORING_CALCULATORS[s]);
 }
 
 function renderProfileScores() {
@@ -5944,7 +5943,7 @@ function renderProfileScores() {
     `;
     
     relevantScores.forEach(scoreId => {
-      const score = CONFIG.SCORING_CALCULATORS[scoreId];
+      const score = SCORING_CALCULATORS[scoreId];
       const saved = savedScores.find(s => s.id === scoreId);
       const icon = SCORE_CATEGORY_ICONS[score.category] || '📊';
       
@@ -6007,7 +6006,7 @@ function renderProfileScores() {
       <div class="patient-scores-grid">
   `;
   
-  Object.entries(CONFIG.SCORING_CALCULATORS).slice(0, 12).forEach(([id, score]) => {
+  Object.entries(SCORING_CALCULATORS).slice(0, 12).forEach(([id, score]) => {
     const icon = SCORE_CATEGORY_ICONS[score.category] || '📊';
     const saved = savedScores.find(s => s.id === id);
     
