@@ -395,14 +395,14 @@ body {
 .modal-footer .btn{flex:1;min-height:48px;font-size:1rem}
 .modal-footer .btn-primary{flex:2} /* Make primary action larger/easier to hit */
 .modal-footer .btn-secondary{flex:1}
-.page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:1;background:var(--bg-app)}
+.page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:1;background:var(--bg-app);transition:background-color 0.3s ease}
 .page.active{display:flex;flex-direction:column;z-index:10;visibility:visible}
-#landing{align-items:center;justify-content:flex-start;padding:24px;padding-top:60px;padding-bottom:100px;background:var(--bg-app)}
-.landing-logo{width:72px;height:72px;background:var(--primary);border-radius:20px;display:grid;place-items:center;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,94,184,0.15);flex-shrink:0}
+#landing{align-items:center;justify-content:flex-start;padding:24px;padding-top:60px;padding-bottom:100px;background:var(--bg-app);transition:background-color 0.3s ease}
+.landing-logo{width:72px;height:72px;background:var(--primary);border-radius:20px;display:grid;place-items:center;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,94,184,0.15);flex-shrink:0;transition:background-color 0.3s ease}
 .landing-logo svg{width:40px;height:40px;stroke:#fff;stroke-width:2.5;fill:none}
-.landing-title{font-size:1.8rem;font-weight:800;margin-bottom:6px;color:var(--primary-dark)}
-.landing-subtitle{color:var(--text-secondary);margin-bottom:6px;font-size:0.9rem}
-.landing-version{color:var(--primary);font-size:0.7rem;font-weight:600;margin-bottom:20px}
+.landing-title{font-size:1.8rem;font-weight:800;margin-bottom:6px;color:var(--text-main);transition:color 0.3s ease}
+.landing-subtitle{color:var(--text-secondary);margin-bottom:6px;font-size:0.9rem;transition:color 0.3s ease}
+.landing-version{color:var(--primary);font-size:0.7rem;font-weight:600;margin-bottom:20px;transition:color 0.3s ease}
 .units-grid{display:grid;grid-template-columns:1fr;gap:12px;width:100%;max-width:400px}
 .unit-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
 .unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--unit-color,var(--primary));transform:scaleX(0);transition:transform 0.3s}
@@ -2688,6 +2688,15 @@ body {
 </style>
 </head>
 <body>
+<script>
+// Immediate theme initialization to prevent flash
+(function() {
+  const savedTheme = localStorage.getItem('MEDWARD_THEME');
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark-theme');
+  }
+})();
+</script>
 <!-- CLINICAL HEADER -->
 <header class="app-header" id="appHeader" style="display:none">
     <div class="brand-title">MedWard Pro</div>
@@ -3245,31 +3254,31 @@ Request New Unit Access
 <div class="modal-box wide">
 <div class="modal-header">
 <div class="modal-title">✅ Approve Unit Request</div>
-<button class="btn btn-ghost" onclick="closeModal('approveRequestModal')">✕</button>
+<button class="btn btn-ghost" onclick="closeModal('approveRequestModal')" aria-label="Close">✕</button>
 </div>
 <div class="modal-body">
 <div id="approveRequestDetails"></div>
-<div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
-<h4 style="margin-bottom:16px;font-size:0.9rem">Create Unit Access</h4>
+<div style="margin-top:20px;padding-top:20px;border-top:2px solid var(--primary);background:var(--bg);padding:20px;border-radius:var(--radius-sm)">
+<h4 style="margin-bottom:16px;font-size:0.95rem;color:var(--primary);display:flex;align-items:center;gap:8px">🔐 Create Unit Access</h4>
 <div class="request-form">
-<div class="request-form-row">
+<div class="request-form-row" style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
 <div class="form-group">
 <label class="form-label">Unit Name</label>
-<input type="text" id="approveUnitName" class="form-input">
+<input type="text" id="approveUnitName" class="form-input" style="font-weight:600">
 </div>
 <div class="form-group">
-<label class="form-label">Unit Icon</label>
+<label class="form-label">Icon</label>
 <input type="text" id="approveUnitIcon" class="form-input" style="font-size:1.5rem;text-align:center">
 </div>
 </div>
-<div class="request-form-row">
+<div class="request-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
 <div class="form-group">
-<label class="form-label">4-Digit Access Code *</label>
-<input type="text" id="approveUnitCode" class="form-input mono" maxlength="4" placeholder="1234" style="font-size:1.5rem;text-align:center;letter-spacing:8px">
+<label class="form-label" style="color:var(--danger);font-weight:700">🔑 4-Digit Access Code *</label>
+<input type="text" id="approveUnitCode" class="form-input mono" maxlength="4" placeholder="1234" style="font-size:1.8rem;text-align:center;letter-spacing:12px;font-weight:700;padding:16px">
 </div>
 <div class="form-group">
 <label class="form-label">Unit Color</label>
-<select id="approveUnitColor" class="form-input">
+<select id="approveUnitColor" class="form-input" style="padding:16px">
 <option value="#14b8a6">🟢 Teal</option>
 <option value="#f59e0b">🟡 Gold</option>
 <option value="#3b82f6">🔵 Blue</option>
@@ -3279,17 +3288,20 @@ Request New Unit Access
 </select>
 </div>
 </div>
-<div class="form-group">
+<div class="form-group" style="margin-top:16px">
 <label class="form-label">Unit Description</label>
 <input type="text" id="approveUnitDesc" class="form-input" placeholder="Brief description of the unit">
 </div>
+<div style="margin-top:16px;padding:12px;background:var(--success-bg);border-radius:var(--radius-sm);border:1px solid var(--success)">
+<div style="font-size:0.8rem;color:var(--success-text)">📧 <strong>The requester will receive an email</strong> with the access code and approval confirmation.</div>
 </div>
 </div>
 </div>
-<div class="modal-footer">
+</div>
+<div class="modal-footer" style="display:flex;gap:12px;justify-content:flex-end">
 <button class="btn btn-secondary" onclick="closeModal('approveRequestModal')">Cancel</button>
-<button class="btn btn-danger" onclick="rejectRequest()">❌ Reject</button>
-<button class="btn btn-primary" onclick="approveRequest()">✅ Approve & Create Unit</button>
+<button class="btn btn-danger" onclick="rejectRequest()" style="display:flex;align-items:center;gap:6px">✕ Reject</button>
+<button class="btn btn-primary" onclick="approveRequest()" style="display:flex;align-items:center;gap:6px;background:var(--success)">✅ Approve & Create Unit</button>
 </div>
 </div>
 </div>
@@ -11190,8 +11202,118 @@ window.approveRequest = async function() {
   renderUnitRequests();
   closeModal('approveRequestModal');
   
+  // Send approval email to requester
+  sendApprovalEmail(req, unitName, code, icon);
+  
   toast(`Unit "${unitName}" created with code ${code}!`);
 };
+
+// Send approval email via FormSubmit
+async function sendApprovalEmail(req, unitName, code, icon) {
+  try {
+    const emailBody = `
+Dear ${req.requesterName},
+
+Great news! Your MedWard Pro unit request has been APPROVED! 🎉
+
+═══════════════════════════════════════════
+UNIT ACCESS DETAILS
+═══════════════════════════════════════════
+
+Unit Name: ${unitName} ${icon}
+Access Code: ${code}
+
+═══════════════════════════════════════════
+HOW TO ACCESS
+═══════════════════════════════════════════
+
+1. Go to MedWard Pro: https://balhaddad-sys.github.io/Final-app/
+2. Click "Switch Unit" from the landing page
+3. Select "${unitName}" from the list
+4. Enter access code: ${code}
+
+═══════════════════════════════════════════
+YOUR REQUEST DETAILS
+═══════════════════════════════════════════
+
+Requested Unit: ${req.unitName}
+Department: ${req.department}
+Role: ${req.role}
+Request Date: ${new Date(req.timestamp).toLocaleDateString()}
+Approved: ${new Date().toLocaleDateString()}
+
+═══════════════════════════════════════════
+
+Thank you for using MedWard Pro!
+
+Best regards,
+MedWard Pro Admin Team
+
+---
+This is an automated message. Please do not reply.
+    `.trim();
+
+    await fetch('https://formsubmit.co/ajax/' + req.requesterEmail, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        _subject: `✅ MedWard Pro Unit Approved: ${unitName}`,
+        _template: 'box',
+        unit_name: unitName,
+        access_code: code,
+        message: emailBody
+      })
+    });
+    
+    console.log('✅ Approval email sent to:', req.requesterEmail);
+  } catch (e) {
+    console.error('Failed to send approval email:', e);
+  }
+}
+
+// Send rejection email via FormSubmit
+async function sendRejectionEmail(req, reason = '') {
+  try {
+    const emailBody = `
+Dear ${req.requesterName},
+
+Thank you for your interest in MedWard Pro.
+
+Unfortunately, your unit request has not been approved at this time.
+
+═══════════════════════════════════════════
+REQUEST DETAILS
+═══════════════════════════════════════════
+
+Requested Unit: ${req.unitName}
+Department: ${req.department}
+Request Date: ${new Date(req.timestamp).toLocaleDateString()}
+
+${reason ? `Reason: ${reason}` : ''}
+
+═══════════════════════════════════════════
+
+If you believe this was in error or have questions, please contact your hospital administrator.
+
+Best regards,
+MedWard Pro Admin Team
+    `.trim();
+
+    await fetch('https://formsubmit.co/ajax/' + req.requesterEmail, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        _subject: `MedWard Pro Unit Request Update: ${req.unitName}`,
+        _template: 'box',
+        message: emailBody
+      })
+    });
+    
+    console.log('📧 Rejection email sent to:', req.requesterEmail);
+  } catch (e) {
+    console.error('Failed to send rejection email:', e);
+  }
+}
 
 window.rejectRequest = async function() {
   if (!confirm('Are you sure you want to reject this request?')) return;
@@ -11215,6 +11337,9 @@ window.rejectRequest = async function() {
       console.error('Failed to update request:', e);
     }
   }
+  
+  // Send rejection email
+  sendRejectionEmail(req);
   
   saveLocal();
   renderUnitRequests();
@@ -11651,12 +11776,16 @@ window.saveLabOverride = function() {
 
 function initTheme() {
   const savedTheme = localStorage.getItem('MEDWARD_THEME');
+  const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
   
-  // Check saved preference OR system preference
-  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  if (isDark) {
     document.body.classList.add('dark-theme');
-    updateThemeIcon(true);
+  } else {
+    document.body.classList.remove('dark-theme');
   }
+  
+  // Update icons after DOM is ready
+  setTimeout(() => updateThemeIcon(isDark), 0);
 }
 
 function toggleTheme() {
@@ -11676,8 +11805,11 @@ function updateThemeIcon(isDark) {
   if (iconLanding) iconLanding.innerText = isDark ? "☀️" : "🌙";
 }
 
-// Initialize theme immediately (before DOMContentLoaded to prevent flash)
-initTheme();
+// Initialize theme on DOMContentLoaded to update icons
+document.addEventListener('DOMContentLoaded', function() {
+  const isDark = document.body.classList.contains('dark-theme');
+  updateThemeIcon(isDark);
+});
 
 async function init() {
   // Check if user has seen onboarding - show to ALL users (new version flag)
