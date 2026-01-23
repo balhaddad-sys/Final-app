@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root{--primary:#3b82f6;--bg:#f3f4f6;--card:#fff;--text:#0f172a;--text2:#475569;--muted:#94a3b8;--border:#e2e8f0;--success:#059669;--danger:#dc2626;--warning:#d97706}
+body.dark-theme{--primary:#60a5fa;--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--text2:#cbd5e1;--muted:#64748b;--border:#334155}
+body,input,select,.section,.card,.drug-card,.sys-card,.proto-card,.detail-hdr,.hdr,.nav{transition:background-color 0.3s ease,color 0.3s ease,border-color 0.3s ease}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:100px}
 .hdr{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100}
@@ -136,7 +138,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 <div class="hdr-icon">🛡️</div>
 <div><div class="hdr-title">Antibiotic Stewardship</div><div class="hdr-sub">IDSA & UpToDate Guidelines</div></div>
 </div>
+<div style="display:flex;gap:8px">
+<button class="close-btn" onclick="toggleTheme()" title="Night Shift"><span id="theme-icon">🌙</span></button>
 <button class="close-btn" onclick="location.href='index.html'">✕</button>
+</div>
 </div>
 </header>
 <div class="main">
@@ -239,6 +244,12 @@ const ABX={
 "Clindamycin":{c:"Lincosamide",sp:["gp","anaerobe"],spd:"MSSA, MRSA (some), Strep, Anaerobes. NOT: Enterococcus, C. diff",src:"UpToDate 2024",dos:{std:{d:"300-450mg",f:"q6-8h",r:"PO"},hi:{d:"600-900mg",f:"q8h",r:"IV"},ped:"10-40 mg/kg/day divided q6-8h"},ind:[{n:"MRSA skin",d:"300-450mg PO q8h x 5-10d"},{n:"Aspiration PNA",d:"600mg IV q8h"},{n:"Necrotizing fasciitis",d:"900mg IV q8h (TOXIN SUPPRESSION)"},{n:"Toxic shock",d:"900mg IV q8h"},{n:"Bone/joint infection",d:"600-900mg IV q8h"}],ren:[{g:"Any",d:"No adjustment"}],con:[{t:"Relative",x:"History of C. difficile"}],int:[{dr:"Neuromuscular blockers",s:"major",e:"Prolonged paralysis"},{dr:"Erythromycin",s:"moderate",e:"Antagonism - avoid combo"}],bb:null,pre:["🚨 HIGHEST C. DIFF RISK","Excellent bone penetration","Important for TOXIN SUPPRESSION (Group A Strep, S. aureus)","Check D-test for inducible resistance in MRSA"],preg:"Category B",mon:"Diarrhea/C. diff symptoms"},
 "Gentamicin":{c:"Aminoglycoside",sp:["gn"],spd:"E. coli, Klebsiella, Pseudomonas. Synergy for Enterococcus/Staph",src:"UpToDate 2024",dos:{std:{d:"5-7 mg/kg",f:"q24h",r:"IV"},hi:{d:"1-2.5 mg/kg",f:"q8h (traditional)",r:"IV"},ped:"2.5 mg/kg q8h or 5-7.5 mg/kg q24h",wb:true},ind:[{n:"GNR sepsis (combo)",d:"5-7 mg/kg IV q24h"},{n:"Enterococcal endocarditis (synergy)",d:"1 mg/kg IV q8h + ampicillin"},{n:"Pseudomonas (double coverage)",d:"5-7 mg/kg IV q24h"},{n:"UTI (severe)",d:"5-7 mg/kg IV q24h"}],ren:[{g:">60",d:"5-7 mg/kg q24h"},{g:"40-60",d:"5-7 mg/kg q36h"},{g:"20-40",d:"5-7 mg/kg q48h"},{g:"<20",d:"Level-guided dosing"},{g:"HD",d:"2 mg/kg post-HD, check levels"}],con:[{t:"Relative",x:"Myasthenia gravis"},{t:"Caution",x:"Pre-existing hearing/vestibular dysfunction"}],int:[{dr:"Vancomycin",s:"major",e:"↑↑ nephro/ototoxicity"},{dr:"Loop diuretics",s:"major",e:"↑↑ ototoxicity"},{dr:"NSAIDs",s:"major",e:"↑ nephrotoxicity"},{dr:"NM blockers",s:"major",e:"Prolonged paralysis"},{dr:"Amphotericin B",s:"major",e:"↑↑ nephrotoxicity"}],bb:null,pre:["🔊 OTOTOXICITY - irreversible hearing loss, vestibular damage","🫘 NEPHROTOXICITY - usually reversible","Extended-interval (q24h) = less toxicity","Use IDEAL body weight if obese"],preg:"Category D - Fetal ototoxicity",mon:"Peak/trough levels, SCr daily, hearing"}
 };
+
+// Theme System
+function initTheme(){const t=localStorage.getItem('MEDWARD_THEME');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.body.classList.add('dark-theme');updateThemeIcon(true);}}
+function toggleTheme(){const d=document.body.classList.toggle('dark-theme');updateThemeIcon(d);localStorage.setItem('MEDWARD_THEME',d?'dark':'light');}
+function updateThemeIcon(d){const i=document.getElementById('theme-icon');if(i)i.innerText=d?'☀️':'🌙';}
+initTheme();
 
 let curSys=null,curDrug=null;
 document.addEventListener('DOMContentLoaded',()=>{renderSysGrid();renderDrugGrid();populateCalc();});
