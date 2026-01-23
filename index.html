@@ -11,14 +11,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 /* 1. CLINICAL VARIABLES (The "UpToDate" Palette) */
+/* 1. Base Variables (Day Mode / Medscape Style) */
 :root {
     --primary: #005eb8;       /* NHS/Medical Standard Blue */
     --primary-dark: #003087;  /* Deep Navy for headings */
     --primary-light: #e6f0f9; /* Very faint blue for active states */
+    --primary-dim: #e0f2fe;   /* Light Blue for backgrounds */
     --accent: #009688;        /* Teal for secondary actions */
 
     --bg-app: #f3f4f6;        /* Light Gray Background (Reduces glare) */
     --bg-surface: #ffffff;    /* Pure White Cards */
+    --bg-input: #f9fafb;      /* Very light gray for inputs */
 
     --text-main: #111827;     /* Near Black (High Contrast) */
     --text-secondary: #6b7280;/* Gray for labels */
@@ -56,7 +59,50 @@
     --radius:16px;
     --radius-sm:10px;
     --bottom-nav-height:65px;
+    
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+/* 2. Night Shift Overrides (Dark Mode) */
+body.dark-theme {
+    --primary: #60a5fa;      /* Lighter Blue for dark backgrounds */
+    --primary-dark: #93c5fd;
+    --primary-light: #1e3a5f;
+    --primary-dim: #1e293b;  /* Dark Blue/Slate */
+    
+    --bg-app: #0f172a;       /* Deep Navy/Black */
+    --bg-surface: #1e293b;   /* Slate Gray */
+    --bg-input: #334155;     /* Dark input background */
+    
+    --text-main: #f8fafc;    /* White */
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    
+    --border: #334155;       /* Darker border */
+    
+    --success-bg: #064e3b; --success-text: #6ee7b7;
+    --danger-bg: #7f1d1d;  --danger-text: #fca5a5;
+    --warning-bg: #78350f; --warning-text: #fcd34d;
+    
+    /* Legacy color mappings for dark mode */
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --bg-elevated: #334155;
+    --bg-hover: #475569;
+    --text: #f8fafc;
+    --glass: rgba(30,41,59,0.95);
+    --border-light: #475569;
+    
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* 3. Global Transition (Makes the switch smooth) */
+body, .card, .patient-row, .app-header, .bottom-nav, input, select, textarea, 
+.modal-content, .action-sheet-content, .tab, .btn, .stat-card, .profile-card,
+.section-card, .proto-card, .drug-card, .sys-card {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
 /* 2. GLOBAL RESET */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -2621,6 +2667,9 @@ body {
 <header class="app-header" id="appHeader" style="display:none">
     <div class="brand-title">MedWard Pro</div>
     <div class="header-actions">
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle Dark Mode" title="Night Shift">
+            <span id="theme-icon" style="font-size:1.2rem">🌙</span>
+        </button>
         <button class="icon-btn" onclick="toggleSearch()" aria-label="Search">
             <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -2631,6 +2680,11 @@ body {
 
 <!-- LANDING PAGE -->
 <div class="page active" id="landing">
+
+<!-- Theme Toggle on Landing -->
+<button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle Dark Mode" style="position:absolute;top:16px;right:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10">
+    <span id="theme-icon-landing" style="font-size:1.3rem">🌙</span>
+</button>
 
 <!-- Sync Status Indicator -->
 <div class="sync-status" id="syncStatus">
@@ -10701,6 +10755,10 @@ $('adminTabs')?.addEventListener('click', e => {
   tab.classList.add('active');
   const panelId = 'admin' + tab.dataset.atab.charAt(0).toUpperCase() + tab.dataset.atab.slice(1);
   $(panelId)?.classList.add('active');
+  // Render requests when switching to requests tab
+  if (tab.dataset.atab === 'requests') {
+    renderUnitRequests();
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -10773,6 +10831,29 @@ window.submitUnitRequest = async function() {
     message
   };
   
+  // Send email notification to admin via FormSubmit
+  try {
+    const formData = new FormData();
+    formData.append('_subject', '🏥 New MedWard Unit Request: ' + unitName);
+    formData.append('Request ID', requestId);
+    formData.append('Unit Name', icon + ' ' + unitName);
+    formData.append('Requester', name);
+    formData.append('Email', email);
+    formData.append('Department', department);
+    formData.append('Role', role);
+    formData.append('Message', message || 'No additional message');
+    formData.append('Submitted', new Date().toLocaleString());
+    formData.append('_template', 'table');
+    formData.append('_captcha', 'false');
+    
+    fetch('https://formsubmit.co/ajax/b.alhaddad13@gmail.com', {
+      method: 'POST',
+      body: formData
+    }).then(r => console.log('Email notification sent')).catch(e => console.log('Email skipped'));
+  } catch (e) {
+    console.log('Email notification skipped:', e);
+  }
+  
   // Try to save to cloud if API is configured
   if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
     try {
@@ -10799,6 +10880,7 @@ window.submitUnitRequest = async function() {
   $('requestSuccessFooter').style.display = 'flex';
   
   toast('Request submitted successfully!');
+  updateRequestsBadge();
 };
 
 async function loadUnitRequests() {
@@ -10824,18 +10906,27 @@ async function loadUnitRequests() {
 
 window.refreshRequests = loadUnitRequests;
 
+function updateRequestsBadge() {
+  const pending = (state.unitRequests || []).filter(r => r.status === 'pending');
+  const badge = $('requestsCount');
+  if (badge) {
+    if (pending.length > 0) {
+      badge.textContent = pending.length;
+      badge.style.display = 'inline';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  // Also log for debugging
+  console.log('Unit requests:', state.unitRequests?.length || 0, 'Pending:', pending.length);
+}
+
 function renderUnitRequests() {
   const pending = (state.unitRequests || []).filter(r => r.status === 'pending');
   const processed = (state.unitRequests || []).filter(r => r.status !== 'pending');
   
   // Update badge
-  const badge = $('requestsCount');
-  if (pending.length > 0) {
-    badge.textContent = pending.length;
-    badge.style.display = 'inline';
-  } else {
-    badge.style.display = 'none';
-  }
+  updateRequestsBadge();
   
   if (!state.unitRequests?.length) {
     $('requestsList').innerHTML = `
@@ -11447,6 +11538,40 @@ window.saveLabOverride = function() {
 // INIT
 // ═══════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════
+// NIGHT SHIFT THEME SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('MEDWARD_THEME');
+  
+  // Check saved preference OR system preference
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark-theme');
+    updateThemeIcon(true);
+  }
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark-theme');
+  updateThemeIcon(isDark);
+  
+  // Save preference
+  localStorage.setItem('MEDWARD_THEME', isDark ? 'dark' : 'light');
+  
+  toast(isDark ? "🌙 Night Shift On" : "☀️ Day Mode On");
+}
+
+function updateThemeIcon(isDark) {
+  const icon = document.getElementById('theme-icon');
+  const iconLanding = document.getElementById('theme-icon-landing');
+  if (icon) icon.innerText = isDark ? "☀️" : "🌙";
+  if (iconLanding) iconLanding.innerText = isDark ? "☀️" : "🌙";
+}
+
+// Initialize theme immediately (before DOMContentLoaded to prevent flash)
+initTheme();
+
 async function init() {
   // Check if user has seen onboarding - show to ALL users (new version flag)
   // Change this version string to force onboarding for all users again
@@ -11458,6 +11583,9 @@ async function init() {
   }
   
   loadLocal();
+  
+  // Update requests badge after loading local data
+  updateRequestsBadge();
 
   // Check for saved login FIRST before showing any page
   const hasSavedLogin = checkSavedLogin();
@@ -11498,6 +11626,9 @@ async function init() {
 
   // Initial cloud sync
   await syncFromCloud();
+  
+  // Update requests badge if any pending
+  updateRequestsBadge();
 
   // If we had a saved login, now complete the auto-login after data is loaded
   if (hasSavedLogin && state.currentUnit) {
