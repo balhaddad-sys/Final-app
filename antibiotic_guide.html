@@ -11,6 +11,8 @@
 body.dark-theme{--primary:#60a5fa;--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--text2:#cbd5e1;--muted:#64748b;--border:#334155}
 body,input,select,.section,.card,.drug-card,.sys-card,.proto-card,.detail-hdr,.hdr,.nav{transition:background-color 0.3s ease,color 0.3s ease,border-color 0.3s ease}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible{box-shadow:0 0 0 4px rgba(59,130,246,0.15)}
 body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:100px}
 .hdr{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100}
 .hdr-row{display:flex;align-items:center;justify-content:space-between;max-width:600px;margin:0 auto}
@@ -145,6 +147,11 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 </div>
 </header>
 <div class="main">
+<!-- Clinical Disclaimer -->
+<div style="background:#fef3c7;border:1px solid #d97706;border-radius:8px;padding:10px 14px;margin-bottom:12px;text-align:left">
+<div style="font-size:0.75rem;font-weight:600;color:#92400e;margin-bottom:2px">⚕️ Antibiotic Stewardship Guidance</div>
+<div style="font-size:0.7rem;color:#92400e;line-height:1.4">Verify dosing with local formulary. Consider renal function, allergies, and culture data.</div>
+</div>
 <div class="search-box"><span class="search-icon">🔍</span><input type="text" class="search-input" id="searchInput" placeholder="Search conditions or antibiotics..." oninput="handleSearch()"></div>
 
 <div class="tabs">
@@ -325,7 +332,12 @@ det.innerHTML=`<div class="back-link" onclick="closeDrugDetail()">← Back</div>
 }
 
 function closeDrugDetail(){document.getElementById('drugDetail').classList.remove('active');document.getElementById('drugGrid').classList.remove('hidden');}
-function togSec(h){h.parentElement.classList.toggle('open');}
+function togSec(h){
+  const section = h.parentElement;
+  const isOpen = section.classList.toggle('open');
+  h.setAttribute('aria-expanded', isOpen);
+  h.setAttribute('role', 'button');
+}
 
 function populateCalc(){const s=document.getElementById('calcDrug');Object.keys(ABX).sort().forEach(n=>{s.innerHTML+=`<option value="${n}">${n}</option>`;});}
 
