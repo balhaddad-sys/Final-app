@@ -12028,14 +12028,15 @@ async function init() {
   // Show debug panel if ?debug=1 in URL
   Diagnostics.showDebugPanel();
   
-  // Check if user has seen onboarding - show to ALL users (new version flag)
-  // Change this version string to force onboarding for all users again
-  const onboardingVersion = 'v4_sparklines'; // Updated to show new professional onboarding
+  // Onboarding check disabled - app loads directly
+  // To re-enable onboarding, uncomment the block below
+  /*
+  const onboardingVersion = 'v4_sparklines';
   if (localStorage.getItem(CONFIG.ONBOARDING_KEY) !== onboardingVersion) {
-    // Redirect to onboarding demo
     window.location.href = 'https://balhaddad-sys.github.io/Final-app/onboarding_demo.html';
     return;
   }
+  */
   
   loadLocal();
   
