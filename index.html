@@ -2971,6 +2971,7 @@ Request New Unit Access
 <div class="admin-tabs" id="adminTabs">
 <button class="admin-tab active" data-atab="units" onclick="switchAdminTab('units')">🏥 Units</button>
 <button class="admin-tab" data-atab="requests" onclick="switchAdminTab('requests')">📩 Requests <span class="badge-count" id="requestsCount" style="display:none">0</span></button>
+<button class="admin-tab" data-atab="trash" onclick="switchAdminTab('trash')">🗑️ Trash</button>
 <button class="admin-tab" data-atab="settings" onclick="switchAdminTab('settings')">⚙️ Settings</button>
 </div>
 
@@ -2991,6 +2992,19 @@ Request New Unit Access
 <div class="admin-empty-text">No pending requests</div>
 <div class="admin-empty-hint">Unit access requests will appear here</div>
 </div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="admin-tab-panel" id="adminTrash">
+<div class="admin-section">
+<div class="section-header"><div class="section-title">🗑️ Trash</div><button class="btn btn-danger btn-sm" onclick="emptyTrash()">Empty Trash</button></div>
+<div class="section-body" id="trashContent">
+<div class="admin-empty-state">
+<div class="admin-empty-icon">🗑️</div>
+<div class="admin-empty-text">Trash is empty</div>
+<div class="admin-empty-hint">Deleted items will appear here for 30 days</div>
 </div>
 </div>
 </div>
@@ -4579,7 +4593,8 @@ const state = {
   selectedUnitId: null, editingUnitId: null, importImage: null, importPatients: [], currentFilter: 'all',
   fluidChart: null, trendChart: null, addDataType: null, isAnalyzingLab: false, isAnalyzingImaging: false,
   currentInteractionId: null, sessionId: null, unitRequests: [], selectedRequestId: null, selectedIcon: '🏥',
-  pendingLabData: null, pendingLabImage: null, labExtractionConfidence: 0, isAnalyzingMeds: false, dischargePatientId: null
+  pendingLabData: null, pendingLabImage: null, labExtractionConfidence: 0, isAnalyzingMeds: false, dischargePatientId: null,
+  trash: { patients: [], units: [], medications: [] } // Recycle bin for deleted items
 };
 
 // Generate session ID
@@ -4948,6 +4963,7 @@ function loadLocal() {
       if (d.settings) state.settings = { ...state.settings, ...d.settings };
       if (d.patients) state.patients = d.patients;
       if (d.unitRequests) state.unitRequests = d.unitRequests;
+      if (d.trash) state.trash = { ...state.trash, ...d.trash };
     }
   } catch (e) {}
   if (!state.units.length) state.units = [{ id: 'med-e', name: 'Medicine Unit E', icon: '🏥', desc: 'Internal Medicine', code: '1234', color: '#14b8a6' }];
@@ -4959,7 +4975,7 @@ function loadLocal() {
 function saveLocal() {
   try {
     localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
-      units: state.units, settings: state.settings, patients: state.patients, unitRequests: state.unitRequests, lastUpdated: new Date().toISOString()
+      units: state.units, settings: state.settings, patients: state.patients, unitRequests: state.unitRequests, trash: state.trash, lastUpdated: new Date().toISOString()
     }));
   } catch (e) {}
 }
@@ -6974,11 +6990,21 @@ window.editMedication = function(idx) {
 };
 
 window.deleteMedication = function(idx) {
-  if (!confirm('Delete this medication?')) return;
+  if (!confirm('Delete this medication? It can be restored from Trash.')) return;
+  const med = state.currentPatient.medications[idx];
+  if (med) {
+    // Move to trash
+    med.deletedAt = new Date().toISOString();
+    med.deletedBy = state.currentUser?.name || 'Unknown';
+    med.patientId = state.currentPatient.id;
+    med.patientName = state.currentPatient.name;
+    if (!state.trash.medications) state.trash.medications = [];
+    state.trash.medications.push(med);
+  }
   state.currentPatient.medications.splice(idx, 1);
   saveCloud();
   renderProfileMeds();
-  toast('Medication deleted');
+  toast('Medication moved to trash');
 };
 
 window.reconcileMeds = function() {
@@ -10814,11 +10840,19 @@ window.editCurrentPatient = function() {
 };
 
 window.deleteCurrentPatient = function() {
-  if (!confirm('Delete patient?')) return;
+  if (!confirm('Delete patient? They can be restored from Trash.')) return;
+  const patient = state.currentPatient;
+  if (patient) {
+    // Move to trash instead of permanent delete
+    patient.deletedAt = new Date().toISOString();
+    patient.deletedBy = state.currentUser?.name || 'Unknown';
+    if (!state.trash.patients) state.trash.patients = [];
+    state.trash.patients.push({...patient});
+  }
   state.patients = state.patients.filter(p => p.id !== state.currentPatient.id);
   saveCloud();
   closePatientProfile();
-  toast('Deleted');
+  toast('Patient moved to trash');
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -11015,15 +11049,22 @@ window.saveUnit = async function() {
   toast('Unit saved & synced!'); 
 };
 window.deleteUnit = async function(id) { 
-  if (!confirm('Delete this unit?')) return; 
+  if (!confirm('Delete this unit? It can be restored from Trash.')) return; 
   const unit = getUnit(id);
-  console.log('🗑️ Deleting unit:', unit?.name);
+  if (unit) {
+    // Move to trash instead of permanent delete
+    unit.deletedAt = new Date().toISOString();
+    unit.deletedBy = state.currentUser?.name || 'Unknown';
+    if (!state.trash.units) state.trash.units = [];
+    state.trash.units.push(unit);
+  }
+  console.log('🗑️ Moving unit to trash:', unit?.name);
   state.units = state.units.filter(u => u.id !== id); 
   renderUnitsTable(); 
   renderUnits(); 
   toast('Syncing...');
   await forceSync();
-  toast('Unit deleted & synced!'); 
+  toast('Unit moved to trash'); 
 };
 window.saveSettings = async function() { 
   const p = $('newAdminPwd').value.trim(), u = $('apiUrl').value.trim(), d = $('drugRefUrl').value.trim(); 
@@ -11053,6 +11094,11 @@ window.switchAdminTab = function(tabName) {
   if (tabName === 'requests') {
     renderUnitRequests();
   }
+  
+  // Render trash when switching to trash tab
+  if (tabName === 'trash') {
+    renderTrash();
+  }
 };
 
 $('adminTabs')?.addEventListener('click', e => {
@@ -11060,6 +11106,194 @@ $('adminTabs')?.addEventListener('click', e => {
   if (!tab) return;
   switchAdminTab(tab.dataset.atab);
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// TRASH MANAGEMENT SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+
+function renderTrash() {
+  const container = $('trashContent');
+  if (!container) return;
+  
+  const patients = state.trash.patients || [];
+  const units = state.trash.units || [];
+  const medications = state.trash.medications || [];
+  
+  const totalItems = patients.length + units.length + medications.length;
+  
+  if (totalItems === 0) {
+    container.innerHTML = `
+      <div class="admin-empty-state">
+        <div class="admin-empty-icon">🗑️</div>
+        <div class="admin-empty-text">Trash is empty</div>
+        <div class="admin-empty-hint">Deleted items will appear here for 30 days</div>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  
+  // Deleted Patients
+  if (patients.length > 0) {
+    html += `<div class="trash-section"><h4 style="margin:0 0 12px;font-size:0.9rem;color:var(--text-secondary)">👥 Patients (${patients.length})</h4>`;
+    patients.forEach((p, idx) => {
+      const deletedDate = p.deletedAt ? new Date(p.deletedAt).toLocaleDateString() : 'Unknown';
+      html += `
+        <div class="trash-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+          <div>
+            <div style="font-weight:600">${esc(p.name)}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">Deleted: ${deletedDate} by ${esc(p.deletedBy || 'Unknown')}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-success btn-xs" onclick="restorePatient(${idx})">↩️ Restore</button>
+            <button class="btn btn-danger btn-xs" onclick="permanentDeletePatient(${idx})">✕</button>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  // Deleted Units
+  if (units.length > 0) {
+    html += `<div class="trash-section" style="margin-top:20px"><h4 style="margin:0 0 12px;font-size:0.9rem;color:var(--text-secondary)">🏥 Units (${units.length})</h4>`;
+    units.forEach((u, idx) => {
+      const deletedDate = u.deletedAt ? new Date(u.deletedAt).toLocaleDateString() : 'Unknown';
+      html += `
+        <div class="trash-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+          <div>
+            <div style="font-weight:600">${u.icon || '🏥'} ${esc(u.name)}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">Deleted: ${deletedDate}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-success btn-xs" onclick="restoreUnit(${idx})">↩️ Restore</button>
+            <button class="btn btn-danger btn-xs" onclick="permanentDeleteUnit(${idx})">✕</button>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  // Deleted Medications
+  if (medications.length > 0) {
+    html += `<div class="trash-section" style="margin-top:20px"><h4 style="margin:0 0 12px;font-size:0.9rem;color:var(--text-secondary)">💊 Medications (${medications.length})</h4>`;
+    medications.forEach((m, idx) => {
+      const deletedDate = m.deletedAt ? new Date(m.deletedAt).toLocaleDateString() : 'Unknown';
+      html += `
+        <div class="trash-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+          <div>
+            <div style="font-weight:600">${esc(m.name)}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">From: ${esc(m.patientName || 'Unknown')} • Deleted: ${deletedDate}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-success btn-xs" onclick="restoreMedication(${idx})">↩️ Restore</button>
+            <button class="btn btn-danger btn-xs" onclick="permanentDeleteMedication(${idx})">✕</button>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  container.innerHTML = html;
+}
+
+window.restorePatient = function(idx) {
+  const patient = state.trash.patients[idx];
+  if (!patient) return;
+  
+  // Remove trash metadata
+  delete patient.deletedAt;
+  delete patient.deletedBy;
+  
+  // Restore to patients list
+  state.patients.push(patient);
+  state.trash.patients.splice(idx, 1);
+  
+  saveCloud();
+  renderTrash();
+  toast('Patient restored!');
+};
+
+window.restoreUnit = function(idx) {
+  const unit = state.trash.units[idx];
+  if (!unit) return;
+  
+  delete unit.deletedAt;
+  delete unit.deletedBy;
+  
+  state.units.push(unit);
+  state.trash.units.splice(idx, 1);
+  
+  saveCloud();
+  renderTrash();
+  renderUnits();
+  toast('Unit restored!');
+};
+
+window.restoreMedication = function(idx) {
+  const med = state.trash.medications[idx];
+  if (!med) return;
+  
+  // Find the patient and restore medication
+  const patient = state.patients.find(p => p.id == med.patientId);
+  if (patient) {
+    delete med.deletedAt;
+    delete med.deletedBy;
+    delete med.patientId;
+    delete med.patientName;
+    
+    if (!patient.medications) patient.medications = [];
+    patient.medications.push(med);
+    
+    state.trash.medications.splice(idx, 1);
+    saveCloud();
+    renderTrash();
+    toast('Medication restored!');
+  } else {
+    toast('Patient not found - cannot restore', true);
+  }
+};
+
+window.permanentDeletePatient = function(idx) {
+  if (!confirm('Permanently delete? This cannot be undone.')) return;
+  state.trash.patients.splice(idx, 1);
+  saveCloud();
+  renderTrash();
+  toast('Permanently deleted');
+};
+
+window.permanentDeleteUnit = function(idx) {
+  if (!confirm('Permanently delete? This cannot be undone.')) return;
+  state.trash.units.splice(idx, 1);
+  saveCloud();
+  renderTrash();
+  toast('Permanently deleted');
+};
+
+window.permanentDeleteMedication = function(idx) {
+  if (!confirm('Permanently delete? This cannot be undone.')) return;
+  state.trash.medications.splice(idx, 1);
+  saveCloud();
+  renderTrash();
+  toast('Permanently deleted');
+};
+
+window.emptyTrash = function() {
+  const total = (state.trash.patients?.length || 0) + (state.trash.units?.length || 0) + (state.trash.medications?.length || 0);
+  if (total === 0) {
+    toast('Trash is already empty');
+    return;
+  }
+  if (!confirm(`Permanently delete all ${total} items? This cannot be undone.`)) return;
+  
+  state.trash = { patients: [], units: [], medications: [] };
+  saveCloud();
+  renderTrash();
+  toast('Trash emptied');
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // UNIT REQUEST SYSTEM
