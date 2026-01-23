@@ -8,8 +8,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--primary:#0f766e;--primary-dark:#115e59;--primary-light:#ccfbf1;--danger:#dc2626;--danger-light:#fef2f2;--warning:#d97706;--warning-light:#fffbeb;--success:#059669;--success-light:#d1fae5;--bg:#f8fafc;--bg-card:#fff;--text:#0f172a;--text-secondary:#475569;--text-muted:#94a3b8;--border:#e2e8f0;--radius:16px;--gold:#f59e0b}
+body.dark-theme{--primary:#14b8a6;--primary-dark:#2dd4bf;--primary-light:#134e4a;--danger-light:#7f1d1d;--warning-light:#78350f;--success-light:#064e3b;--bg:#0f172a;--bg-card:#1e293b;--text:#f8fafc;--text-secondary:#cbd5e1;--text-muted:#64748b;--border:#334155}
+body,.card,.protocol-card,.header,input,select,textarea{transition:background-color 0.3s ease,color 0.3s ease,border-color 0.3s ease}
 [data-theme="dark"]{--primary:#2dd4bf;--primary-dark:#14b8a6;--primary-light:#134e4a;--danger:#f87171;--danger-light:#450a0a;--warning:#fbbf24;--warning-light:#451a03;--success:#4ade80;--success-light:#14532d;--bg:#0f172a;--bg-card:#1e293b;--text:#f1f5f9;--text-secondary:#cbd5e1;--text-muted:#64748b;--border:#334155;--gold:#fbbf24}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible{box-shadow:0 0 0 4px rgba(15,118,110,0.15)}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
 .app-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:100}
 .header-row{display:flex;align-items:center;justify-content:space-between;max-width:800px;margin:0 auto}
@@ -192,12 +196,17 @@ a.nav-item{color:var(--text-muted)}
 <div><div class="header-title">OnCall Assistant</div><div class="header-subtitle">Evidence-Based Decision Support</div></div>
 </div>
 <div class="header-actions">
-<button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
-<button class="icon-btn" id="backBtn" onclick="goBack()">✕</button>
+<button class="icon-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle Night Mode">🌙</button>
+<button class="icon-btn" id="backBtn" onclick="goBack()" aria-label="Go back to home">✕</button>
 </div>
 </div>
 </header>
 <div class="main-content">
+<!-- Clinical Disclaimer -->
+<div style="background:#fef3c7;border:1px solid #d97706;border-radius:8px;padding:10px 14px;margin:16px 16px 8px;text-align:left">
+<div style="font-size:0.75rem;font-weight:600;color:#92400e;margin-bottom:2px">⚕️ Decision Support Only</div>
+<div style="font-size:0.7rem;color:#92400e;line-height:1.4">Verify with local protocols. If unstable: activate emergency pathway.</div>
+</div>
 <div class="mode-switcher">
 <button id="btn-mode-tasks" class="segment-btn active" onclick="switchMode('tasks')">📞 Call Log <span id="task-badge" class="badge-count hidden">0</span></button>
 <button id="btn-mode-tools" class="segment-btn" onclick="switchMode('tools')">🧮 Calculators</button>
@@ -668,13 +677,13 @@ function deleteCall(id) {
 function saveCalls() { localStorage.setItem('ONCALL_CALLS', JSON.stringify(callLogs)); }
 function escapeHtml(text) { var div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 function toast(message) { var t = document.getElementById('toast'); t.textContent = message; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');}, 2000); }
+function initTheme(){const t=localStorage.getItem('MEDWARD_THEME');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.body.classList.add('dark-theme');document.getElementById('themeBtn').textContent='☀️';}}
 function toggleTheme(){
-  var current=document.documentElement.getAttribute('data-theme');
-  var newTheme=current==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',newTheme);
-  localStorage.setItem('oncall-theme',newTheme);
-  document.getElementById('themeBtn').textContent=newTheme==='dark'?'☀️':'🌙';
+  var isDark=document.body.classList.toggle('dark-theme');
+  localStorage.setItem('MEDWARD_THEME',isDark?'dark':'light');
+  document.getElementById('themeBtn').textContent=isDark?'☀️':'🌙';
 }
+initTheme();
 function goBack(){ window.location.href = window.location.href.split('/').slice(0, -1).join('/') + '/index.html'; }
 function filterCategory(cat,btn){
   var pills=document.querySelectorAll('.pill');
