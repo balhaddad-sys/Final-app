@@ -184,6 +184,13 @@ a.nav-item{color:var(--text-muted)}
 .consult-icon-neuro{background:linear-gradient(135deg,#ec4899,#db2777)!important;color:#fff!important;border:none!important}
 .consult-icon-gi{background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;border:none!important}
 .consult-icon-renal{background:linear-gradient(135deg,#8b5cf6,#7c3aed)!important;color:#fff!important;border:none!important}
+.consult-icon-surgery{background:linear-gradient(135deg,#059669,#047857)!important;color:#fff!important;border:none!important}
+.consult-icon-pulm{background:linear-gradient(135deg,#06b6d4,#0891b2)!important;color:#fff!important;border:none!important}
+.consult-icon-id{background:linear-gradient(135deg,#84cc16,#65a30d)!important;color:#fff!important;border:none!important}
+.consult-icon-gi{background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;border:none!important}
+.consult-surgery{border-left-color:#059669;background:linear-gradient(to right,rgba(5,150,105,0.03),var(--bg-card))}
+.consult-pulm{border-left-color:#06b6d4;background:linear-gradient(to right,rgba(6,182,212,0.03),var(--bg-card))}
+.consult-id{border-left-color:#84cc16;background:linear-gradient(to right,rgba(132,204,22,0.03),var(--bg-card))}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:500;z-index:9999;opacity:0;transition:opacity 0.3s}
 .toast.show{opacity:1}
 </style>
@@ -487,14 +494,90 @@ a.nav-item{color:var(--text-muted)}
 <div class="consult-box critical">
 <div class="consult-title">📞 Before Calling ICU</div>
 <div class="consult-grid">
-<div class="consult-item"><strong>Airway:</strong> Patent? GCS?</div>
-<div class="consult-item"><strong>Breathing:</strong> RR, SpO2, ABG</div>
-<div class="consult-item"><strong>Circulation:</strong> HR, BP, lactate</div>
-<div class="consult-item"><strong>Done:</strong> Interventions so far</div>
+<div class="consult-item"><strong>Airway:</strong> Patent? Protecting? GCS?</div>
+<div class="consult-item"><strong>Breathing:</strong> RR, SpO2, O2 requirement, ABG</div>
+<div class="consult-item"><strong>Circulation:</strong> HR, BP, MAP, lactate, access</div>
+<div class="consult-item"><strong>Interventions:</strong> What you've done so far</div>
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 ICU Admission Criteria</div>
+<div class="protocol-content">
+• Mechanical ventilation or imminent intubation<br>
+• Vasopressor requirement<br>
+• Severe sepsis/septic shock<br>
+• Active MI with hemodynamic instability<br>
+• Status epilepticus<br>
+• Acute renal failure requiring CRRT<br>
+• GCS ≤8 or rapidly declining<br>
+• Post-cardiac arrest<br>
+• DKA/HHS with pH &lt;7.1 or altered mental status
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Must-Have Information</div>
+<div class="protocol-content">
+• <strong>Recent ABG</strong> with FiO2<br>
+• <strong>Lactate</strong> (ideally serial)<br>
+• <strong>Current vitals</strong> & trend over last 2-4 hours<br>
+• <strong>Fluid balance</strong> & urine output<br>
+• <strong>Recent labs:</strong> CBC, BMP, coags, LFTs<br>
+• <strong>ECG</strong> within last hour if cardiac concern<br>
+• <strong>Code status</strong> & goals of care<br>
+• <strong>Family contact</strong> information
 </div>
 </div>
 </div>
 </div>
+
+<!-- SURGERY CONSULTATION -->
+<div class="tool-card consult-card consult-surgery" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon consult-icon-surgery">🔪</div>
+<div><div class="tool-title">Surgery</div><div class="tool-subtitle">General Surgery</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box">
+<div class="consult-title">📞 Before Calling Surgery</div>
+<div class="consult-grid">
+<div class="consult-item"><strong>Localize:</strong> Where is the problem?</div>
+<div class="consult-item"><strong>Imaging:</strong> CT/US done? Results?</div>
+<div class="consult-item"><strong>NPO status:</strong> Last oral intake?</div>
+<div class="consult-item"><strong>Anticoag:</strong> On blood thinners?</div>
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Required Information</div>
+<div class="protocol-content">
+• <strong>Chief complaint</strong> with timeline<br>
+• <strong>Physical exam:</strong> Peritonitis? Guarding? Rebound?<br>
+• <strong>Labs:</strong> CBC, BMP, lipase, LFTs, lactate, coags<br>
+• <strong>Imaging results</strong> (CT report or images available)<br>
+• <strong>Hemodynamic status</strong><br>
+• <strong>Surgical history</strong> & previous abdominal surgeries<br>
+• <strong>Comorbidities</strong> affecting surgical risk
+</div>
+</div>
+<div class="consult-box warning">
+<div class="consult-title">🚨 Urgent Surgical Conditions</div>
+<div class="protocol-content">
+• Perforated viscus / free air<br>
+• Acute appendicitis with peritonitis<br>
+• Small bowel obstruction with strangulation<br>
+• Acute mesenteric ischemia<br>
+• Necrotizing fasciitis<br>
+• Compartment syndrome<br>
+• Hemorrhage requiring operative control<br>
+• Acute cholecystitis (Tokyo Grade II-III)
+</div>
+</div>
+</div>
+</div>
+
 <div class="tool-card consult-card consult-cardio" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
@@ -506,8 +589,48 @@ a.nav-item{color:var(--text-muted)}
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="consult-box critical">
-<div class="consult-title">🚨 STEMI - Call Cath Lab FIRST</div>
-<div class="protocol-content">ECG, symptom onset time, ASA+Ticagrelor given?</div>
+<div class="consult-title">🚨 STEMI - Activate Cath Lab</div>
+<div class="protocol-content">
+• <strong>Call cath lab FIRST</strong> - don't wait for consult<br>
+• ECG with ST elevation or new LBBB<br>
+• Symptom onset time (door-to-balloon &lt;90 min)<br>
+• Aspirin 300mg + Ticagrelor 180mg given?<br>
+• Anticoagulation given?<br>
+• Contraindications to intervention?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Non-STEMI/Unstable Angina</div>
+<div class="protocol-content">
+• <strong>Serial ECGs</strong> (at least 2)<br>
+• <strong>Troponin</strong> at 0, 3, 6 hours<br>
+• <strong>GRACE/TIMI score</strong> if possible<br>
+• Current anti-ischemic therapy<br>
+• Bleeding risk assessment<br>
+• Echo findings if available
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Arrhythmia Consult</div>
+<div class="protocol-content">
+• <strong>12-lead ECG</strong> (during arrhythmia if possible)<br>
+• <strong>Rhythm strip</strong> showing onset/termination<br>
+• Hemodynamic stability during episodes<br>
+• Electrolytes: K+, Mg2+, Ca2+<br>
+• Current medications (esp. QT-prolonging)<br>
+• Previous ablations or device history
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">🫀 Heart Failure Consult</div>
+<div class="protocol-content">
+• <strong>BNP/NT-proBNP</strong> level<br>
+• <strong>Echo</strong> with EF (recent or pending)<br>
+• Volume status: JVP, edema, crackles<br>
+• Daily weights & I/O balance<br>
+• Current diuretic regimen & response<br>
+• Renal function trend
+</div>
 </div>
 </div>
 </div>
@@ -523,10 +646,78 @@ a.nav-item{color:var(--text-muted)}
 <div class="tool-divider"></div>
 <div class="consult-box critical">
 <div class="consult-title">🚨 Stroke Alert</div>
-<div class="protocol-content">Time last seen normal, NIHSS, CT done?, glucose, BP</div>
+<div class="protocol-content">
+• <strong>Time last seen normal</strong> - CRITICAL<br>
+• <strong>NIHSS score</strong> (or key deficits)<br>
+• <strong>CT head</strong> done? Hemorrhage ruled out?<br>
+• <strong>Glucose</strong> checked?<br>
+• <strong>BP</strong> - do NOT lower unless &gt;220/120<br>
+• <strong>Anticoagulant use?</strong> (INR if on warfarin)<br>
+• Contraindications to tPA?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Seizure Consult</div>
+<div class="protocol-content">
+• <strong>Witnessed description</strong> of event<br>
+• Duration & post-ictal state<br>
+• First seizure vs known epilepsy<br>
+• AED levels if applicable<br>
+• Labs: glucose, Na+, Ca2+, Mg2+<br>
+• CT/MRI done?<br>
+• EEG ordered?
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📊 Altered Mental Status</div>
+<div class="protocol-content">
+• <strong>GCS</strong> and trend<br>
+• <strong>Focal deficits?</strong> Pupils, motor exam<br>
+• <strong>Metabolic workup:</strong> glucose, Na+, ammonia, TSH<br>
+• <strong>Infectious workup:</strong> WBC, UA, CXR, blood Cx<br>
+• <strong>Toxicology</strong> screen if indicated<br>
+• CT head ± LP if meningitis suspected
 </div>
 </div>
 </div>
+</div>
+
+<!-- GI CONSULTATION -->
+<div class="tool-card consult-card consult-gi" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon consult-icon-gi">🔬</div>
+<div><div class="tool-title">Gastroenterology</div><div class="tool-subtitle">GI referral</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box critical">
+<div class="consult-title">🚨 GI Bleed - Urgent</div>
+<div class="protocol-content">
+• <strong>Hemodynamic status:</strong> HR, BP, orthostatics<br>
+• <strong>Blood products:</strong> Type & Screen, transfusion needs<br>
+• <strong>Hgb/Hct</strong> trend<br>
+• <strong>Active bleeding?</strong> Hematemesis, melena, BRBPR<br>
+• <strong>Coags:</strong> INR, platelets<br>
+• Glasgow-Blatchford score
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Liver/Pancreas Consult</div>
+<div class="protocol-content">
+• <strong>LFTs</strong> with trend<br>
+• <strong>Lipase</strong> (for pancreatitis)<br>
+• <strong>Imaging:</strong> US, CT, MRCP<br>
+• Hepatitis serologies if relevant<br>
+• INR, albumin (synthetic function)<br>
+• Ascites/encephalopathy status
+</div>
+</div>
+</div>
+</div>
+
 <div class="tool-card consult-card consult-renal" data-category="consult">
 <div class="tool-header" onclick="toggleTool(this)">
 <div class="tool-header-left">
@@ -538,11 +729,99 @@ a.nav-item{color:var(--text-muted)}
 <div class="tool-content">
 <div class="tool-divider"></div>
 <div class="consult-box critical">
-<div class="consult-title">🚨 Urgent Dialysis (AEIOU)</div>
-<div class="protocol-content"><strong>A</strong>cidosis, <strong>E</strong>lectrolytes (K+&gt;6.5), <strong>I</strong>ngestion, <strong>O</strong>verload, <strong>U</strong>remia</div>
+<div class="consult-title">🚨 Urgent Dialysis Indications (AEIOU)</div>
+<div class="protocol-content">
+• <strong>A</strong>cidosis - severe metabolic (pH &lt;7.1)<br>
+• <strong>E</strong>lectrolytes - K+ &gt;6.5 refractory to medical Rx<br>
+• <strong>I</strong>ngestion - toxic alcohols, lithium, salicylates<br>
+• <strong>O</strong>verload - pulmonary edema refractory to diuretics<br>
+• <strong>U</strong>remia - encephalopathy, pericarditis, bleeding
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 AKI Workup</div>
+<div class="protocol-content">
+• <strong>Baseline Cr</strong> & trend<br>
+• <strong>Urine output</strong> (hourly if available)<br>
+• <strong>UA with sediment</strong><br>
+• <strong>FENa</strong> or FEUrea<br>
+• <strong>Renal US</strong> - hydronephrosis?<br>
+• Nephrotoxins review<br>
+• Volume status assessment
 </div>
 </div>
 </div>
+</div>
+
+<!-- PULMONOLOGY CONSULTATION -->
+<div class="tool-card consult-card consult-pulm" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon consult-icon-pulm">🫁</div>
+<div><div class="tool-title">Pulmonology</div><div class="tool-subtitle">Respiratory referral</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box">
+<div class="consult-title">📞 Before Calling Pulm</div>
+<div class="consult-grid">
+<div class="consult-item"><strong>O2 needs:</strong> FiO2, device, SpO2</div>
+<div class="consult-item"><strong>ABG:</strong> With FiO2 at time of draw</div>
+<div class="consult-item"><strong>CXR:</strong> Recent imaging findings</div>
+<div class="consult-item"><strong>Work of breathing:</strong> RR, accessory muscles</div>
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Required Information</div>
+<div class="protocol-content">
+• <strong>Respiratory history:</strong> COPD, asthma, ILD, OSA<br>
+• <strong>Home O2?</strong> L/min, continuous vs nocturnal<br>
+• <strong>Recent PFTs</strong> if available<br>
+• <strong>CT chest</strong> findings<br>
+• <strong>Sputum culture</strong> results<br>
+• BiPAP/CPAP settings if applicable
+</div>
+</div>
+</div>
+</div>
+
+<!-- ID CONSULTATION -->
+<div class="tool-card consult-card consult-id" data-category="consult">
+<div class="tool-header" onclick="toggleTool(this)">
+<div class="tool-header-left">
+<div class="tool-icon consult-icon-id">🦠</div>
+<div><div class="tool-title">Infectious Disease</div><div class="tool-subtitle">ID referral</div></div>
+</div>
+<div class="tool-chevron">▼</div>
+</div>
+<div class="tool-content">
+<div class="tool-divider"></div>
+<div class="consult-box">
+<div class="consult-title">📞 Before Calling ID</div>
+<div class="consult-grid">
+<div class="consult-item"><strong>Source:</strong> Where is the infection?</div>
+<div class="consult-item"><strong>Cultures:</strong> Blood Cx x2 drawn?</div>
+<div class="consult-item"><strong>Current Abx:</strong> What & how long?</div>
+<div class="consult-item"><strong>Allergies:</strong> Especially PCN/cephalosporins</div>
+</div>
+</div>
+<div class="consult-box">
+<div class="consult-title">📋 Required Information</div>
+<div class="protocol-content">
+• <strong>Culture data</strong> with sensitivities<br>
+• <strong>Imaging</strong> showing source<br>
+• <strong>Fever curve</strong> & WBC trend<br>
+• <strong>Procalcitonin</strong> if available<br>
+• <strong>Renal function</strong> (for dosing)<br>
+• <strong>Immunocompromised?</strong> HIV, transplant, chemo<br>
+• Travel & exposure history
+</div>
+</div>
+</div>
+</div>
+
 <div class="section-label">🤖 AI ASSISTANT</div>
 <div class="ai-section" data-category="all,emergency">
 <div class="ai-header">
