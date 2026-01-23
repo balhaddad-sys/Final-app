@@ -5,11 +5,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="theme-color" content="#005eb8">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>MedWard Pro v16</title>
+<title>MedWard Pro v16.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEDWARD PRO v16 - CLINICAL WARD MANAGEMENT SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════
+   
+   TABLE OF CONTENTS:
+   01. Design Tokens (CSS Variables)
+   02. Dark Mode Overrides
+   03. Global Reset & Accessibility
+   04. Typography & Base Elements
+   05. Layout Components (Header, Nav, Pages)
+   06. UI Components (Cards, Buttons, Badges, Modals)
+   07. Feature-Specific Styles
+   08. Utilities & Helpers
+   
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   01. DESIGN TOKENS (CSS Variables)
+   ═══════════════════════════════════════════════════════════════════════════ */
 /* 1. CLINICAL VARIABLES (The "UpToDate" Palette) */
 /* 1. Base Variables (Day Mode / Medscape Style) */
 :root {
@@ -63,7 +82,9 @@
     --shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* 2. Night Shift Overrides (Dark Mode) */
+/* ═══════════════════════════════════════════════════════════════════════════
+   02. DARK MODE OVERRIDES (Night Shift)
+   ═══════════════════════════════════════════════════════════════════════════ */
 body.dark-theme {
     --primary: #60a5fa;      /* Lighter Blue for dark backgrounds */
     --primary-dark: #93c5fd;
@@ -2728,7 +2749,7 @@ body {
 <div class="landing-logo"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
 <h1 class="landing-title">MedWard Pro</h1>
 <p class="landing-subtitle">Ward Management & Decision Support</p>
-<p class="landing-version">Lab Analysis • Drug Reference • Clinical Scoring • v15.0</p>
+<p class="landing-version">Lab Analysis • Drug Reference • Clinical Scoring • v16.0</p>
 
 <!-- Clinical Disclaimer Banner -->
 <div class="clinical-disclaimer" style="background:var(--warning-bg);border:1px solid var(--warning);border-radius:8px;padding:10px 14px;margin:0 16px 16px;max-width:400px;text-align:left">
@@ -3622,17 +3643,68 @@ Request New Unit Access
 (function(){
 'use strict';
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEDWARD PRO - JAVASCRIPT APPLICATION
+   ═══════════════════════════════════════════════════════════════════════════
+   
+   TABLE OF CONTENTS:
+   01. Configuration & Constants
+   02. State Management
+   03. Utility Functions
+   04. API & Data Services
+   05. UI Rendering
+   06. Feature Modules
+   07. Event Handlers
+   08. Initialization
+   
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 01. CONFIGURATION & CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
 const CONFIG = {
+  // ═══════════════════════════════════════════════════════════════════
+  // APP METADATA
+  // ═══════════════════════════════════════════════════════════════════
+  VERSION: '16.1.0',
+  BUILD_DATE: '2026-01-23',
+  APP_NAME: 'MedWard Pro',
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // STORAGE KEYS
+  // ═══════════════════════════════════════════════════════════════════
   STORAGE_KEY: 'medward_pro_v12',
+  THEME_KEY: 'MEDWARD_THEME',
+  ONBOARDING_KEY: 'medward_onboarding_v16',
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // ADMIN & SECURITY
+  // ═══════════════════════════════════════════════════════════════════
   ADMIN_PASSWORD: 'admin123',
-  // Hardcoded API URL - central Google Apps Script for all users
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // API CONFIGURATION
+  // ═══════════════════════════════════════════════════════════════════
   API_URL: 'https://script.google.com/macros/s/AKfycbznXa9YNna26Srt1eZVEnSV-dIiubFLTwg3ryLdE-maGNCQhydP_8E6AK4QPXkeQrw7lA/exec',
+  FORMSUBMIT_URL: 'https://formsubmit.co/ajax/',
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // IMAGE PROCESSING
+  // ═══════════════════════════════════════════════════════════════════
   MAX_IMAGE_SIZE: 1500000,
   IMAGE_QUALITY: 0.85,
   MAX_DIM: 2000,
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // NETWORK SETTINGS
+  // ═══════════════════════════════════════════════════════════════════
   SYNC_DEBOUNCE_MS: 1500,
   FETCH_TIMEOUT_MS: 30000,
   MAX_RETRIES: 2,
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // CLINICAL SETTINGS
+  // ═══════════════════════════════════════════════════════════════════
   VALID_WARDS: ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned'],
   LAB_CATEGORIES: {
     'Cardiac Markers': { icon: '❤️', terms: ['Troponin', 'BNP', 'proBNP', 'NT-proBNP', 'CK-MB', 'Myoglobin'] },
@@ -3645,11 +3717,91 @@ const CONFIG = {
   },
   
   // ═══════════════════════════════════════════════════════════════════
-  // CLINICAL SCORING SYSTEMS
+  // REQUIRED DOM ELEMENTS (for boot diagnostics)
   // ═══════════════════════════════════════════════════════════════════
+  REQUIRED_ELEMENTS: ['landing', 'app', 'patientList', 'syncStatus']
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BOOT DIAGNOSTICS - Validates app configuration and DOM before initialization
+// ═══════════════════════════════════════════════════════════════════════════
+const Diagnostics = {
+  errors: [],
+  warnings: [],
   
-  // Patient-specific scores - appear in patient profile based on diagnosis
-  PATIENT_SCORES: {
+  run() {
+    this.errors = [];
+    this.warnings = [];
+    
+    // Check CONFIG
+    if (!CONFIG.API_URL || CONFIG.API_URL === 'YOUR_API_URL_HERE') {
+      this.warnings.push('API URL not configured - cloud sync disabled');
+    }
+    
+    // Check required DOM elements
+    CONFIG.REQUIRED_ELEMENTS.forEach(id => {
+      if (!document.getElementById(id)) {
+        this.errors.push(`Required element #${id} not found`);
+      }
+    });
+    
+    // Check localStorage availability
+    try {
+      localStorage.setItem('__test__', '1');
+      localStorage.removeItem('__test__');
+    } catch (e) {
+      this.warnings.push('localStorage unavailable - data will not persist');
+    }
+    
+    // Check network
+    if (!navigator.onLine) {
+      this.warnings.push('Offline - cloud features unavailable');
+    }
+    
+    // Log results
+    if (this.errors.length > 0) {
+      console.error('🚨 BOOT ERRORS:', this.errors);
+    }
+    if (this.warnings.length > 0) {
+      console.warn('⚠️ BOOT WARNINGS:', this.warnings);
+    }
+    if (this.errors.length === 0 && this.warnings.length === 0) {
+      console.log(`✅ ${CONFIG.APP_NAME} v${CONFIG.VERSION} booted successfully`);
+    }
+    
+    return this.errors.length === 0;
+  },
+  
+  // Developer mode panel (accessed via ?debug=1)
+  showDebugPanel() {
+    if (!new URLSearchParams(window.location.search).has('debug')) return;
+    
+    const panel = document.createElement('div');
+    panel.id = 'debugPanel';
+    panel.style.cssText = 'position:fixed;bottom:70px;right:10px;background:#1e293b;color:#f8fafc;padding:16px;border-radius:12px;font-size:12px;font-family:monospace;max-width:300px;z-index:10000;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+    panel.innerHTML = `
+      <div style="font-weight:bold;margin-bottom:8px;color:#60a5fa">🔧 Debug Panel</div>
+      <div>Version: ${CONFIG.VERSION}</div>
+      <div>Build: ${CONFIG.BUILD_DATE}</div>
+      <div>API: ${CONFIG.API_URL ? '✅ Configured' : '❌ Missing'}</div>
+      <div>Storage: ${localStorage.getItem(CONFIG.STORAGE_KEY) ? '✅ Has data' : '⚪ Empty'}</div>
+      <div>Theme: ${localStorage.getItem(CONFIG.THEME_KEY) || 'system'}</div>
+      <div>Online: ${navigator.onLine ? '✅' : '❌'}</div>
+      ${this.errors.length ? `<div style="color:#fca5a5;margin-top:8px">Errors: ${this.errors.join(', ')}</div>` : ''}
+      ${this.warnings.length ? `<div style="color:#fcd34d;margin-top:4px">Warnings: ${this.warnings.join(', ')}</div>` : ''}
+      <button onclick="this.parentElement.remove()" style="margin-top:12px;padding:6px 12px;background:#334155;border:none;color:#fff;border-radius:6px;cursor:pointer">Close</button>
+      <button onclick="navigator.clipboard.writeText(JSON.stringify(Diagnostics,null,2))" style="margin-top:12px;margin-left:8px;padding:6px 12px;background:#3b82f6;border:none;color:#fff;border-radius:6px;cursor:pointer">Copy</button>
+    `;
+    document.body.appendChild(panel);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLINICAL SCORING SYSTEMS
+// ═══════════════════════════════════════════════════════════════════════════
+  
+// Patient-specific scores - appear in patient profile based on diagnosis
+const PATIENT_SCORES = {
     // Cardiac
     'heart failure': ['NYHA', 'MAGGIC', 'H2FPEF', 'HFA-PEFF'],
     'hf': ['NYHA', 'MAGGIC', 'H2FPEF', 'HFA-PEFF'],
@@ -5752,7 +5904,7 @@ function getRelevantScoresForPatient(patient) {
   const relevantScores = new Set();
   
   // Check each diagnosis keyword
-  Object.entries(CONFIG.PATIENT_SCORES).forEach(([keyword, scores]) => {
+  Object.entries(PATIENT_SCORES).forEach(([keyword, scores]) => {
     if (dx.includes(keyword.toLowerCase())) {
       scores.forEach(s => relevantScores.add(s));
     }
@@ -11811,11 +11963,26 @@ document.addEventListener('DOMContentLoaded', function() {
   updateThemeIcon(isDark);
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// BOOT DIAGNOSTICS & DEBUG SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Old diagnostics functions removed - now using Diagnostics object in CONFIG section
+
 async function init() {
+  // Run boot diagnostics
+  if (!Diagnostics.run()) {
+    console.error('❌ Boot diagnostics failed');
+    return;
+  }
+  
+  // Show debug panel if ?debug=1 in URL
+  Diagnostics.showDebugPanel();
+  
   // Check if user has seen onboarding - show to ALL users (new version flag)
   // Change this version string to force onboarding for all users again
   const onboardingVersion = 'v4_sparklines'; // Updated to show new professional onboarding
-  if (localStorage.getItem('medward_onboarding_version') !== onboardingVersion) {
+  if (localStorage.getItem(CONFIG.ONBOARDING_KEY) !== onboardingVersion) {
     // Redirect to onboarding demo
     window.location.href = 'https://balhaddad-sys.github.io/Final-app/onboarding_demo.html';
     return;
@@ -11868,6 +12035,9 @@ async function init() {
   
   // Update requests badge if any pending
   updateRequestsBadge();
+  
+  // Initialize debug panel if enabled
+  initDebugPanel();
 
   // If we had a saved login, now complete the auto-login after data is loaded
   if (hasSavedLogin && state.currentUnit) {
