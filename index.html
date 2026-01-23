@@ -3731,7 +3731,7 @@ const CONFIG = {
   // ═══════════════════════════════════════════════════════════════════
   // REQUIRED DOM ELEMENTS (for boot diagnostics)
   // ═══════════════════════════════════════════════════════════════════
-  REQUIRED_ELEMENTS: ['landing', 'dashboard', 'patientList']
+  REQUIRED_ELEMENTS: ['landing', 'dashboard', 'patientsList']
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -10429,12 +10429,13 @@ window.deleteTask = function(taskId) {
 window.toggleCompletedTasks = function() {
   const list = $('completedTasksList');
   const icon = $('completedExpandIcon');
+  if (!list) return;
   if (list.style.display === 'none') {
     list.style.display = 'block';
-    icon.textContent = '▲';
+    if (icon) icon.textContent = '▲';
   } else {
     list.style.display = 'none';
-    icon.textContent = '▼';
+    if (icon) icon.textContent = '▼';
   }
 };
 
@@ -10789,7 +10790,8 @@ window.saveAddData = function() {
     p.planItems.unshift(newItem);
   } else if (type === 'plan') {
     if (!p.plans) p.plans = [];
-    p.plans.push({ date: now, content: $('addPlanContent').value });
+    const planContent = $('addPlanContent');
+    p.plans.push({ date: now, content: planContent?.value || '' });
   }
   
   saveCloud();
@@ -11993,6 +11995,26 @@ document.addEventListener('DOMContentLoaded', function() {
 // ═══════════════════════════════════════════════════════════════════════════
 // BOOT DIAGNOSTICS & DEBUG SYSTEM
 // ═══════════════════════════════════════════════════════════════════════════
+
+// Toggle search functionality (placeholder - can be expanded)
+function toggleSearch() {
+  // For now, focus on the patient search or show a search modal
+  const searchInput = document.querySelector('.scores-search-input') || document.querySelector('input[type="search"]');
+  if (searchInput) {
+    searchInput.focus();
+    searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    toast('Search: Use the scores tab to search clinical calculators');
+  }
+}
+
+// Initialize debug panel (placeholder for development features)
+function initDebugPanel() {
+  // Only show in development mode or with debug flag
+  if (new URLSearchParams(window.location.search).has('debug')) {
+    console.log('🔧 Debug mode enabled');
+  }
+}
 
 // Old diagnostics functions removed - now using Diagnostics object in CONFIG section
 
