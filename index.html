@@ -105,6 +105,31 @@ body, .card, .patient-row, .app-header, .bottom-nav, input, select, textarea,
 
 /* 2. GLOBAL RESET */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+/* Accessibility: Visible Focus Styles */
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 94, 184, 0.15);
+}
+/* Skip link for screen readers */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    z-index: 10000;
+    transition: top 0.3s;
+}
+.skip-link:focus {
+    top: 0;
+}
 html,body{height:100%}
 body {
     background-color: var(--bg-app);
@@ -744,7 +769,7 @@ body {
 .ai-interpretation{background:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(59,130,246,0.08));border:1px solid rgba(20,184,166,0.2);border-radius:var(--radius);padding:20px;margin-bottom:24px}
 .ai-interpretation-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .ai-interpretation-title{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--teal)}
-.ai-badge{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font-size:0.6rem;padding:4px 8px;border-radius:4px;font-weight:700}
+.ai-badge{background:var(--primary);color:#fff;font-size:0.6rem;padding:4px 8px;border-radius:4px;font-weight:700;letter-spacing:0.5px}
 .ai-interpretation-text{color:var(--text-secondary);font-size:0.9rem;line-height:1.7;margin-bottom:16px}
 .ai-details{background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px}
 .ai-details-title{font-size:0.75rem;font-weight:600;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
@@ -2693,8 +2718,14 @@ body {
 </div>
 <div class="landing-logo"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
 <h1 class="landing-title">MedWard Pro</h1>
-<p class="landing-subtitle">Neural Clinical Management System</p>
-<p class="landing-version">🧠 AI-Powered • Drug Info • Lab Override • Discharge • v15.0</p>
+<p class="landing-subtitle">Ward Management & Decision Support</p>
+<p class="landing-version">Lab Analysis • Drug Reference • Clinical Scoring • v15.0</p>
+
+<!-- Clinical Disclaimer Banner -->
+<div class="clinical-disclaimer" style="background:var(--warning-bg);border:1px solid var(--warning);border-radius:8px;padding:10px 14px;margin:0 16px 16px;max-width:400px;text-align:left">
+<div style="font-size:0.75rem;font-weight:600;color:var(--warning-text);margin-bottom:4px">⚕️ Clinical Decision Support Only</div>
+<div style="font-size:0.7rem;color:var(--warning-text);line-height:1.4">Verify all outputs with local protocols. Not a substitute for clinical judgment. If unstable: activate emergency pathway.</div>
+</div>
 
 <!-- OnCall Assistant Button -->
 <a href="https://balhaddad-sys.github.io/Final-app/oncall_assistant.html" class="oncall-landing-btn">
@@ -3588,6 +3619,8 @@ const CONFIG = {
   IMAGE_QUALITY: 0.85,
   MAX_DIM: 2000,
   SYNC_DEBOUNCE_MS: 1500,
+  FETCH_TIMEOUT_MS: 30000,
+  MAX_RETRIES: 2,
   VALID_WARDS: ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned'],
   LAB_CATEGORIES: {
     'Cardiac Markers': { icon: '❤️', terms: ['Troponin', 'BNP', 'proBNP', 'NT-proBNP', 'CK-MB', 'Myoglobin'] },
@@ -4389,6 +4422,44 @@ let syncState = {
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 const esc = t => { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
+
+// Fetch with timeout and retry for hospital Wi-Fi resilience
+async function fetchWithRetry(url, options = {}, retries = CONFIG.MAX_RETRIES) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT_MS);
+  
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeout);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response;
+  } catch (error) {
+    clearTimeout(timeout);
+    
+    // Determine error type for user feedback
+    let userMessage = 'Network error';
+    if (error.name === 'AbortError') {
+      userMessage = 'Request timed out';
+    } else if (!navigator.onLine) {
+      userMessage = 'No internet connection';
+    } else if (error.message.includes('HTTP')) {
+      userMessage = 'Server error';
+    }
+    
+    // Retry logic with exponential backoff
+    if (retries > 0 && error.name !== 'AbortError') {
+      console.log(`⏳ Retrying... (${CONFIG.MAX_RETRIES - retries + 1}/${CONFIG.MAX_RETRIES})`);
+      await new Promise(r => setTimeout(r, 1000 * (CONFIG.MAX_RETRIES - retries + 1)));
+      return fetchWithRetry(url, options, retries - 1);
+    }
+    
+    error.userMessage = userMessage;
+    throw error;
+  }
+}
 const initials = n => { if (!n) return '?'; const p = n.trim().split(/\s+/); return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : n.substring(0, 2).toUpperCase(); };
 
 function toast(msg, isError = false) {
@@ -4467,19 +4538,46 @@ function compressForAI(file) {
   return new Promise((resolve, reject) => {
     if (!file) {
       console.error('❌ compressForAI: No file provided');
-      reject(new Error('No file provided'));
+      const err = new Error('No file provided');
+      err.userMessage = 'Please select an image file';
+      reject(err);
       return;
     }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      const err = new Error('Invalid file type');
+      err.userMessage = 'Please select an image file (JPG, PNG, etc.)';
+      reject(err);
+      return;
+    }
+    
+    // Check file size (max 20MB raw)
+    if (file.size > 20 * 1024 * 1024) {
+      const err = new Error('File too large');
+      err.userMessage = 'Image too large. Please use an image under 20MB.';
+      reject(err);
+      return;
+    }
+    
     console.log('🗜️ Compressing file:', file.name, file.size, 'bytes');
-    compress(file, CONFIG.MAX_IMAGE_SIZE, (compressedData) => {
-      if (compressedData && compressedData.length > 100) {
-        console.log('✅ compressForAI success:', compressedData.substring(0, 50));
-        resolve(compressedData);
-      } else {
-        console.error('❌ compressForAI: Compression returned invalid data');
-        reject(new Error('Compression failed - invalid data'));
-      }
-    });
+    
+    // Use createImageBitmap if available for better performance
+    const processImage = (imgSrc) => {
+      compress(imgSrc, CONFIG.MAX_IMAGE_SIZE, (compressedData) => {
+        if (compressedData && compressedData.length > 100) {
+          console.log('✅ compressForAI success:', compressedData.substring(0, 50));
+          resolve(compressedData);
+        } else {
+          console.error('❌ compressForAI: Compression returned invalid data');
+          const err = new Error('Compression failed - invalid data');
+          err.userMessage = 'Image compression failed. Try a different image.';
+          reject(err);
+        }
+      });
+    };
+    
+    processImage(file);
   });
 }
 
@@ -8493,11 +8591,14 @@ function renderProfileLabs() {
   // AI Interpretation with Feedback
   if (labData.interpretation?.summary) {
     const interp = labData.interpretation;
+    const interpTime = interp.timestamp ? new Date(interp.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
     html += `
         <div class="ai-interpretation">
           <div class="ai-interpretation-header">
-            <div class="ai-interpretation-title">🤖 AI Interpretation <span class="ai-badge">NEURAL</span></div>
+            <div class="ai-interpretation-title">🤖 AI Interpretation <span class="ai-badge">DECISION SUPPORT</span></div>
+            <div style="font-size:0.7rem;color:var(--text-muted)">Generated ${interpTime}</div>
           </div>
+          <div style="font-size:0.7rem;color:var(--warning-text);background:var(--warning-bg);padding:6px 10px;border-radius:6px;margin-bottom:10px">⚕️ Requires clinical correlation. Verify with local protocols.</div>
           <div class="ai-interpretation-text">${esc(interp.summary)}</div>
           
           ${interp.clinicalCorrelation ? `
@@ -9691,15 +9792,21 @@ function initPlanEventHandlers() {
   // Completed section toggle
   const completedHeader = document.getElementById('completedHeader');
   if (completedHeader) {
+    completedHeader.setAttribute('role', 'button');
+    completedHeader.setAttribute('aria-expanded', 'false');
+    completedHeader.setAttribute('aria-controls', 'completedTasksList');
     completedHeader.onclick = function() {
       const list = document.getElementById('completedTasksList');
       const arrow = this.querySelector('.expand-arrow');
-      if (list.style.display === 'none') {
-        list.style.display = 'block';
-        arrow.textContent = '▲';
-      } else {
+      const isExpanded = list.style.display !== 'none';
+      if (isExpanded) {
         list.style.display = 'none';
         arrow.textContent = '▼';
+        this.setAttribute('aria-expanded', 'false');
+      } else {
+        list.style.display = 'block';
+        arrow.textContent = '▲';
+        this.setAttribute('aria-expanded', 'true');
       }
     };
   }
