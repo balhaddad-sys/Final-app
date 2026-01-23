@@ -3277,52 +3277,64 @@ Request New Unit Access
 <div class="modal-title">✅ Approve Unit Request</div>
 <button class="btn btn-ghost" onclick="closeModal('approveRequestModal')" aria-label="Close">✕</button>
 </div>
-<div class="modal-body">
-<div id="approveRequestDetails"></div>
-<div style="margin-top:20px;padding-top:20px;border-top:2px solid var(--primary);background:var(--bg);padding:20px;border-radius:var(--radius-sm)">
-<h4 style="margin-bottom:16px;font-size:0.95rem;color:var(--primary);display:flex;align-items:center;gap:8px">🔐 Create Unit Access</h4>
-<div class="request-form">
-<div class="request-form-row" style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
-<div class="form-group">
-<label class="form-label">Unit Name</label>
-<input type="text" id="approveUnitName" class="form-input" style="font-weight:600">
+<div class="modal-body" style="padding:20px">
+<!-- Request Details Section -->
+<div id="approveRequestDetails" style="margin-bottom:20px"></div>
+
+<!-- Create Unit Section -->
+<div style="background:var(--bg-surface);border:2px solid var(--primary);border-radius:12px;padding:20px">
+<h4 style="margin:0 0 20px 0;font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:8px">
+  <span>🔐</span> Create Unit Access
+</h4>
+
+<!-- Row 1: Unit Name + Icon -->
+<div style="display:grid;grid-template-columns:1fr auto;gap:16px;margin-bottom:16px">
+  <div class="form-group" style="margin:0">
+    <label class="form-label">Unit Name</label>
+    <input type="text" id="approveUnitName" class="form-input" style="font-weight:600">
+  </div>
+  <div class="form-group" style="margin:0;width:80px">
+    <label class="form-label">Icon</label>
+    <input type="text" id="approveUnitIcon" class="form-input" style="font-size:1.5rem;text-align:center">
+  </div>
 </div>
-<div class="form-group">
-<label class="form-label">Icon</label>
-<input type="text" id="approveUnitIcon" class="form-input" style="font-size:1.5rem;text-align:center">
+
+<!-- Row 2: Access Code + Color -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+  <div class="form-group" style="margin:0">
+    <label class="form-label" style="color:var(--danger);font-weight:700">🔑 Access Code *</label>
+    <input type="text" id="approveUnitCode" class="form-input mono" maxlength="4" placeholder="1234" style="font-size:1.5rem;text-align:center;letter-spacing:8px;font-weight:700;padding:12px">
+  </div>
+  <div class="form-group" style="margin:0">
+    <label class="form-label">Color</label>
+    <select id="approveUnitColor" class="form-input" style="padding:12px">
+      <option value="#14b8a6">🟢 Teal</option>
+      <option value="#f59e0b">🟡 Gold</option>
+      <option value="#3b82f6">🔵 Blue</option>
+      <option value="#8b5cf6">🟣 Purple</option>
+      <option value="#f43f5e">🔴 Rose</option>
+      <option value="#10b981">🟢 Emerald</option>
+    </select>
+  </div>
+</div>
+
+<!-- Row 3: Description -->
+<div class="form-group" style="margin:0 0 16px 0">
+  <label class="form-label">Description</label>
+  <input type="text" id="approveUnitDesc" class="form-input" placeholder="Brief description">
+</div>
+
+<!-- Email Notice -->
+<div style="padding:12px;background:var(--success-bg);border-radius:8px;border:1px solid var(--success)">
+  <div style="font-size:0.8rem;color:var(--success-text)">📧 <strong>The requester will receive an email</strong> with access code and confirmation.</div>
 </div>
 </div>
-<div class="request-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
-<div class="form-group">
-<label class="form-label" style="color:var(--danger);font-weight:700">🔑 4-Digit Access Code *</label>
-<input type="text" id="approveUnitCode" class="form-input mono" maxlength="4" placeholder="1234" style="font-size:1.8rem;text-align:center;letter-spacing:12px;font-weight:700;padding:16px">
 </div>
-<div class="form-group">
-<label class="form-label">Unit Color</label>
-<select id="approveUnitColor" class="form-input" style="padding:16px">
-<option value="#14b8a6">🟢 Teal</option>
-<option value="#f59e0b">🟡 Gold</option>
-<option value="#3b82f6">🔵 Blue</option>
-<option value="#8b5cf6">🟣 Purple</option>
-<option value="#f43f5e">🔴 Rose</option>
-<option value="#10b981">🟢 Emerald</option>
-</select>
-</div>
-</div>
-<div class="form-group" style="margin-top:16px">
-<label class="form-label">Unit Description</label>
-<input type="text" id="approveUnitDesc" class="form-input" placeholder="Brief description of the unit">
-</div>
-<div style="margin-top:16px;padding:12px;background:var(--success-bg);border-radius:var(--radius-sm);border:1px solid var(--success)">
-<div style="font-size:0.8rem;color:var(--success-text)">📧 <strong>The requester will receive an email</strong> with the access code and approval confirmation.</div>
-</div>
-</div>
-</div>
-</div>
-<div class="modal-footer" style="display:flex;gap:12px;justify-content:flex-end">
+
+<div class="modal-footer">
 <button class="btn btn-secondary" onclick="closeModal('approveRequestModal')">Cancel</button>
-<button class="btn btn-danger" onclick="rejectRequest()" style="display:flex;align-items:center;gap:6px">✕ Reject</button>
-<button class="btn btn-primary" onclick="approveRequest()" style="display:flex;align-items:center;gap:6px;background:var(--success)">✅ Approve & Create Unit</button>
+<button class="btn btn-danger" onclick="rejectRequest()">✕ Reject</button>
+<button class="btn btn-primary" onclick="approveRequest()" style="background:var(--success)">✅ Approve</button>
 </div>
 </div>
 </div>
@@ -3719,7 +3731,7 @@ const CONFIG = {
   // ═══════════════════════════════════════════════════════════════════
   // REQUIRED DOM ELEMENTS (for boot diagnostics)
   // ═══════════════════════════════════════════════════════════════════
-  REQUIRED_ELEMENTS: ['landing', 'app', 'patientList', 'syncStatus']
+  REQUIRED_ELEMENTS: ['landing', 'dashboard', 'patientList']
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -5206,9 +5218,12 @@ async function syncFromCloud() {
         }
       }
       
-      // Update unit requests
-      if (data.data.unitRequests) {
-        state.unitRequests = data.data.unitRequests;
+      // Update unit requests - MERGE instead of overwrite to prevent data loss
+      if (data.data.unitRequests && data.data.unitRequests.length > 0) {
+        // Merge: keep local requests that aren't in cloud, add/update cloud requests
+        const cloudIds = new Set(data.data.unitRequests.map(r => r.id));
+        const localOnly = (state.unitRequests || []).filter(r => !cloudIds.has(r.id));
+        state.unitRequests = [...data.data.unitRequests, ...localOnly];
       }
       
       // Save to local storage
