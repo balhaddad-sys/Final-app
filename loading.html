@@ -23,6 +23,7 @@
   --border: #e2e8f0;
   --success: #059669;
   --danger: #dc2626;
+  --warning: #d97706;
 }
 
 body.dark-theme {
@@ -53,7 +54,8 @@ body {
 
 .loading-container {
   text-align: center;
-  max-width: 320px;
+  max-width: 360px;
+  width: 100%;
 }
 
 .loading-logo {
@@ -92,6 +94,7 @@ body {
   color: var(--text-secondary);
   font-size: 0.95rem;
   margin-bottom: 24px;
+  min-height: 24px;
 }
 
 .loading-spinner-container {
@@ -120,6 +123,25 @@ body {
   color: var(--text-muted);
 }
 
+/* Progress Bar */
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* Error Box */
 .loading-error {
   background: #fee2e2;
   color: #dc2626;
@@ -133,34 +155,163 @@ body {
 body.dark-theme .loading-error {
   background: #7f1d1d;
   border-color: #991b1b;
+  color: #fca5a5;
 }
 
 .loading-error.show {
   display: block;
 }
 
-.retry-btn {
-  margin-top: 12px;
-  padding: 10px 20px;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+.error-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.error-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.error-message {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+/* Buttons */
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+  border: none;
 }
 
-.retry-btn:hover {
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
   background: var(--primary-dark);
 }
 
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Skip Link */
+.skip-link {
+  margin-top: 24px;
+  display: none;
+}
+
+.skip-link.show {
+  display: block;
+}
+
+.skip-link button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.skip-link button:hover {
+  color: var(--primary);
+  background: var(--bg-surface);
+}
+
+/* Timeout Warning */
+.timeout-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  display: none;
+}
+
+body.dark-theme .timeout-warning {
+  background: #78350f;
+  border-color: #92400e;
+  color: #fcd34d;
+}
+
+.timeout-warning.show {
+  display: block;
+}
+
+/* Retry Counter */
+.retry-info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* Loading Footer */
 .loading-footer {
   position: fixed;
   bottom: 20px;
   color: var(--text-muted);
   font-size: 0.75rem;
+}
+
+/* Success State */
+.loading-success {
+  display: none;
+}
+
+.loading-success.show {
+  display: block;
+}
+
+.success-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+.success-icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: #fff;
+  stroke-width: 3;
+  fill: none;
 }
 </style>
 </head>
@@ -176,21 +327,53 @@ body.dark-theme .loading-error {
 </script>
 
 <div class="loading-container">
-  <div class="loading-logo">
-    <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  <!-- Normal Loading State -->
+  <div id="loadingState">
+    <div class="loading-logo">
+      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    
+    <h1 class="loading-title">MedWard Pro</h1>
+    <p class="loading-status" id="loadingStatus">Connecting to cloud...</p>
+    
+    <div class="loading-spinner-container">
+      <div class="loading-spinner" id="spinner"></div>
+      <span class="loading-progress" id="loadingProgress">Please wait</span>
+    </div>
+    
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    
+    <div class="timeout-warning" id="timeoutWarning">
+      ⏱️ This is taking longer than expected. Check your connection.
+    </div>
+    
+    <div class="skip-link" id="skipLink">
+      <button onclick="skipToOffline()">Skip and use cached data →</button>
+    </div>
+    
+    <div class="retry-info" id="retryInfo"></div>
   </div>
   
-  <h1 class="loading-title">MedWard Pro</h1>
-  <p class="loading-status" id="loadingStatus">Connecting to cloud...</p>
-  
-  <div class="loading-spinner-container">
-    <div class="loading-spinner" id="spinner"></div>
-    <span class="loading-progress" id="loadingProgress">Please wait</span>
+  <!-- Success State -->
+  <div class="loading-success" id="successState">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 style="margin-bottom: 8px;">Ready!</h2>
+    <p style="color: var(--text-secondary);">Redirecting to your dashboard...</p>
   </div>
   
+  <!-- Error State -->
   <div class="loading-error" id="errorBox">
-    <div id="errorMessage">Failed to load data</div>
-    <button class="retry-btn" onclick="loadCloudData()">Try Again</button>
+    <div class="error-icon">⚠️</div>
+    <div class="error-title" id="errorTitle">Connection Failed</div>
+    <div class="error-message" id="errorMessage">Could not reach the server</div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="loadCloudData()">Try Again</button>
+      <button class="btn btn-secondary" onclick="skipToOffline()" id="offlineBtn">Use Offline</button>
+    </div>
   </div>
 </div>
 
@@ -199,50 +382,172 @@ body.dark-theme .loading-error {
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRlBlhcXAvyB_l6F8oj3tbBm_YY2wwyR5hJNSxPs-QBP5OI4dZ8prQLindVcoKfHA/exec';
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+const CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/AKfycbzmWYRlBlhcXAvyB_l6F8oj3tbBm_YY2wwyR5hJNSxPs-QBP5OI4dZ8prQLindVcoKfHA/exec',
+  TIMEOUT_MS: 15000,           // 15 seconds timeout
+  WARNING_MS: 8000,            // Show warning after 8 seconds
+  MAX_RETRIES: 3,              // Maximum auto-retry attempts
+  RETRY_DELAY_MS: 2000,        // 2 seconds between retries
+  SKIP_DELAY_MS: 5000          // Show skip option after 5 seconds
+};
 
-// Get credentials
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let retryCount = 0;
+let loadTimeout = null;
+let warningTimeout = null;
+let skipTimeout = null;
+let abortController = null;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTH CHECK
+// ═══════════════════════════════════════════════════════════════════════════
 const AUTH = {
   user: sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER'),
   pass: sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS')
 };
 
-// Check if logged in
 if (!AUTH.user || !AUTH.pass) {
   window.location.href = 'login.html';
 }
 
-// Update status display
+// ═══════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
 function setStatus(status, progress) {
   document.getElementById('loadingStatus').textContent = status;
   document.getElementById('loadingProgress').textContent = progress;
 }
 
-function showError(message) {
-  document.getElementById('spinner').style.display = 'none';
-  document.getElementById('errorMessage').textContent = message;
+function setProgress(percent) {
+  document.getElementById('progressBar').style.width = percent + '%';
+}
+
+function showError(title, message, showOffline = true) {
+  clearAllTimeouts();
+  
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('successState').classList.remove('show');
   document.getElementById('errorBox').classList.add('show');
+  document.getElementById('errorTitle').textContent = title;
+  document.getElementById('errorMessage').textContent = message;
+  
+  // Only show offline button if we have cached data
+  const hasCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  document.getElementById('offlineBtn').style.display = (showOffline && hasCache) ? 'block' : 'none';
 }
 
 function hideError() {
-  document.getElementById('spinner').style.display = 'block';
   document.getElementById('errorBox').classList.remove('show');
+  document.getElementById('loadingState').style.display = 'block';
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// MAIN: Fetch cloud data and warm cache
-// ═══════════════════════════════════════════════════════════════════
+function showSuccess() {
+  clearAllTimeouts();
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorBox').classList.remove('show');
+  document.getElementById('successState').classList.add('show');
+}
+
+function showTimeoutWarning() {
+  document.getElementById('timeoutWarning').classList.add('show');
+}
+
+function showSkipOption() {
+  const hasCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  if (hasCache) {
+    document.getElementById('skipLink').classList.add('show');
+  }
+}
+
+function updateRetryInfo() {
+  if (retryCount > 0) {
+    document.getElementById('retryInfo').textContent = `Retry attempt ${retryCount} of ${CONFIG.MAX_RETRIES}`;
+  } else {
+    document.getElementById('retryInfo').textContent = '';
+  }
+}
+
+function clearAllTimeouts() {
+  if (loadTimeout) clearTimeout(loadTimeout);
+  if (warningTimeout) clearTimeout(warningTimeout);
+  if (skipTimeout) clearTimeout(skipTimeout);
+  if (abortController) abortController.abort();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SKIP TO OFFLINE MODE
+// ═══════════════════════════════════════════════════════════════════════════
+function skipToOffline() {
+  clearAllTimeouts();
+  
+  const localCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  
+  if (!localCache) {
+    showError('No Cached Data', 'You need to connect at least once to use offline mode.', false);
+    return;
+  }
+  
+  setStatus('Using cached data...', 'Offline mode');
+  setProgress(100);
+  
+  // Mark as offline mode
+  localStorage.setItem('MW_CLOUD_VERIFIED', 'offline_' + Date.now().toString());
+  localStorage.setItem('MW_OFFLINE_MODE', 'true');
+  
+  console.log('⚡ Skipping to offline mode');
+  
+  setTimeout(() => {
+    showSuccess();
+    setTimeout(() => {
+      window.location.href = 'landing.html';
+    }, 500);
+  }, 300);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN: LOAD CLOUD DATA
+// ═══════════════════════════════════════════════════════════════════════════
 async function loadCloudData() {
   hideError();
+  updateRetryInfo();
+  setProgress(10);
   setStatus('Connecting to cloud...', 'Please wait');
+  
+  // Reset UI state
+  document.getElementById('timeoutWarning').classList.remove('show');
+  document.getElementById('skipLink').classList.remove('show');
+  
+  // Set up timeout warning
+  warningTimeout = setTimeout(() => {
+    showTimeoutWarning();
+  }, CONFIG.WARNING_MS);
+  
+  // Set up skip option
+  skipTimeout = setTimeout(() => {
+    showSkipOption();
+  }, CONFIG.SKIP_DELAY_MS);
+  
+  // Create abort controller for timeout
+  abortController = new AbortController();
+  
+  // Set up hard timeout
+  loadTimeout = setTimeout(() => {
+    abortController.abort();
+  }, CONFIG.TIMEOUT_MS);
   
   try {
     // ═══════════════════════════════════════════════════════════════════
     // STEP 1: Fetch data from cloud
     // ═══════════════════════════════════════════════════════════════════
     setStatus('Loading your data...', 'Fetching from server');
+    setProgress(30);
     
-    const response = await fetch(API_URL, {
+    const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
       cache: 'no-store',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -250,27 +555,33 @@ async function loadCloudData() {
         action: 'loadData',
         username: AUTH.user,
         password: AUTH.pass,
-        clientRev: 0  // Force full load - we want fresh data
-      })
+        clientRev: 0
+      }),
+      signal: abortController.signal
     });
+    
+    setProgress(50);
     
     const text = await response.text();
     
     // Check for HTML response (wrong URL or error)
     if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-      throw new Error('Server returned invalid response');
+      throw new Error('Server returned an invalid response. Please try again.');
     }
+    
+    setProgress(60);
     
     const result = JSON.parse(text);
     
     if (!result.success) {
-      throw new Error(result.error || 'Failed to load data');
+      throw new Error(result.error || 'Failed to load data from server');
     }
     
     // ═══════════════════════════════════════════════════════════════════
     // STEP 2: Process the data
     // ═══════════════════════════════════════════════════════════════════
     setStatus('Processing data...', 'Almost ready');
+    setProgress(75);
     
     let data = result.data;
     if (typeof data === 'string') {
@@ -295,9 +606,9 @@ async function loadCloudData() {
     
     // ═══════════════════════════════════════════════════════════════════
     // STEP 3: Warm the local cache
-    // This is the critical step - overwrites any stale local data
     // ═══════════════════════════════════════════════════════════════════
-    setStatus('Syncing local cache...', patientCount + ' patients, ' + unitCount + ' units');
+    setStatus('Syncing local cache...', `${patientCount} patients, ${unitCount} units`);
+    setProgress(90);
     
     const cachePayload = JSON.stringify({
       units: data.units || [],
@@ -307,70 +618,91 @@ async function loadCloudData() {
       trash: data.trash || { patients: [], units: [] },
       rev: result.rev || 1,
       lastUpdated: new Date().toISOString(),
-      _cloudVerified: true  // Mark as verified from cloud
+      _cloudVerified: true
     });
     
-    // Write to ALL cache keys to ensure consistency
+    // Write to ALL cache keys
     localStorage.setItem('medward_pro_v12', cachePayload);
     localStorage.setItem('MEDWARD_CACHE', cachePayload);
     localStorage.setItem('MW_REV', String(result.rev || 1));
-    
-    // Set verification timestamp - dashboard will check this
     localStorage.setItem('MW_CLOUD_VERIFIED', Date.now().toString());
-
-    // Clear offline mode flag since we successfully synced with cloud
     localStorage.removeItem('MW_OFFLINE_MODE');
-
+    
     console.log('✅ Cache warmed successfully');
-    console.log('   MW_CLOUD_VERIFIED:', Date.now());
-    console.log('   Dashboard will use this verified cache');
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 4: Redirect to landing page
+    // STEP 4: Success - redirect
     // ═══════════════════════════════════════════════════════════════════
-    setStatus('Ready!', 'Redirecting...');
+    setProgress(100);
+    showSuccess();
     
-    // Small delay so user sees "Ready!" message
     setTimeout(() => {
-      window.location.href = 'index.html';
-    }, 300);
+      window.location.href = 'landing.html';
+    }, 600);
     
   } catch (error) {
+    clearAllTimeouts();
     console.error('❌ Cloud load failed:', error);
-
-    // Check if we have local cache to fall back to
-    const localCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
-
-    if (localCache) {
-      // We have local data - let user continue in offline mode
-      setStatus('Offline mode', 'Using cached data');
-
-      // CRITICAL FIX: Set MW_CLOUD_VERIFIED even in offline mode to prevent redirect loop
-      // Mark it with a special value to indicate it's offline cached data
-      localStorage.setItem('MW_CLOUD_VERIFIED', 'offline_' + Date.now().toString());
-      localStorage.setItem('MW_OFFLINE_MODE', 'true');
-
-      console.log('⚠️ Using offline cached data - cloud sync failed');
-      console.log('   MW_CLOUD_VERIFIED:', localStorage.getItem('MW_CLOUD_VERIFIED'));
-      console.log('   Dashboard will use cached data in offline mode');
-
-      // Let user proceed after a moment
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 1500);
-    } else {
-      // No local cache - show error and retry automatically
-      showError('Could not connect to server. Retrying...');
-
-      // Auto-retry after 3 seconds
-      setTimeout(() => {
-        loadCloudData();
-      }, 3000);
+    
+    // Check if it was a timeout/abort
+    if (error.name === 'AbortError') {
+      handleLoadFailure('Connection Timeout', 'The server took too long to respond. Please check your internet connection.');
+      return;
     }
+    
+    // Check for network errors
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      handleLoadFailure('Network Error', 'Could not reach the server. Please check your internet connection.');
+      return;
+    }
+    
+    // Other errors
+    handleLoadFailure('Connection Failed', error.message || 'An unexpected error occurred.');
   }
 }
 
-// Start loading immediately
+// ═══════════════════════════════════════════════════════════════════════════
+// HANDLE LOAD FAILURE WITH AUTO-RETRY
+// ═══════════════════════════════════════════════════════════════════════════
+function handleLoadFailure(title, message) {
+  const hasCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  
+  // Auto-retry logic
+  if (retryCount < CONFIG.MAX_RETRIES) {
+    retryCount++;
+    setStatus('Retrying...', `Attempt ${retryCount} of ${CONFIG.MAX_RETRIES}`);
+    updateRetryInfo();
+    
+    setTimeout(() => {
+      loadCloudData();
+    }, CONFIG.RETRY_DELAY_MS);
+    return;
+  }
+  
+  // Max retries reached
+  if (hasCache) {
+    // Offer to continue in offline mode
+    showError(
+      'Unable to Connect',
+      'Could not reach the server after multiple attempts. You can continue with your cached data.',
+      true
+    );
+  } else {
+    // No cache - must retry
+    showError(
+      title,
+      message + ' Please ensure you have an internet connection and try again.',
+      false
+    );
+  }
+  
+  // Reset retry count for manual retry
+  retryCount = 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// START LOADING
+// ═══════════════════════════════════════════════════════════════════════════
 loadCloudData();
 </script>
 </body>
