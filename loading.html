@@ -235,13 +235,21 @@ function hideError() {
 async function loadCloudData() {
   hideError();
   setStatus('Connecting to cloud...', 'Please wait');
-  
+
   try {
     // ═══════════════════════════════════════════════════════════════════
     // STEP 1: Fetch data from cloud
     // ═══════════════════════════════════════════════════════════════════
     setStatus('Loading your data...', 'Fetching from server');
-    
+
+    console.log('📡 Fetching from API:', API_URL);
+    console.log('   Username:', AUTH.user);
+    console.log('   Action: loadData');
+
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     const response = await fetch(API_URL, {
       method: 'POST',
       cache: 'no-store',
@@ -251,17 +259,30 @@ async function loadCloudData() {
         username: AUTH.user,
         password: AUTH.pass,
         clientRev: 0  // Force full load - we want fresh data
-      })
+      }),
+      signal: controller.signal
     });
-    
+
+    clearTimeout(timeoutId);
+
+    console.log('📡 Response status:', response.status, response.statusText);
+    console.log('   Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
     const text = await response.text();
-    
+    console.log('📡 Response text (first 200 chars):', text.substring(0, 200));
+
     // Check for HTML response (wrong URL or error)
     if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-      throw new Error('Server returned invalid response');
+      console.error('❌ Server returned HTML instead of JSON');
+      throw new Error('Server returned invalid response (HTML instead of JSON)');
     }
-    
+
     const result = JSON.parse(text);
+    console.log('📡 Parsed result:', { success: result.success, error: result.error, dataKeys: Object.keys(result.data || {}) });
     
     if (!result.success) {
       throw new Error(result.error || 'Failed to load data');
@@ -337,6 +358,25 @@ async function loadCloudData() {
     
   } catch (error) {
     console.error('❌ Cloud load failed:', error);
+    console.error('   Error type:', error.name);
+    console.error('   Error message:', error.message);
+    console.error('   Full error:', error);
+
+    // Determine error type for better user messaging
+    let errorMessage = 'Connection failed';
+    if (error.name === 'AbortError') {
+      errorMessage = 'Request timeout - server took too long to respond';
+      console.error('   Cause: Request timeout (30 seconds)');
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMessage = 'Network error - check your internet connection';
+      console.error('   Cause: Network error or CORS issue');
+    } else if (error.message.includes('HTTP')) {
+      errorMessage = `Server error: ${error.message}`;
+      console.error('   Cause: HTTP error from server');
+    } else {
+      errorMessage = error.message;
+      console.error('   Cause:', error.message);
+    }
 
     // Check if we have local cache to fall back to
     const localCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
@@ -353,6 +393,7 @@ async function loadCloudData() {
       console.log('⚠️ Using offline cached data - cloud sync failed');
       console.log('   MW_CLOUD_VERIFIED:', localStorage.getItem('MW_CLOUD_VERIFIED'));
       console.log('   Dashboard will use cached data in offline mode');
+      console.log('   Error that triggered offline mode:', errorMessage);
 
       // Let user proceed after a moment
       setTimeout(() => {
@@ -360,7 +401,7 @@ async function loadCloudData() {
       }, 1500);
     } else {
       // No local cache - show error and retry automatically
-      showError('Could not connect to server. Retrying...');
+      showError(`${errorMessage}. Retrying...`);
 
       // Auto-retry after 3 seconds
       setTimeout(() => {

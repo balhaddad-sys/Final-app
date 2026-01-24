@@ -15740,8 +15740,23 @@ async function cloudFirstBoot() {
         const isOfflineMode = localStorage.getItem('MW_OFFLINE_MODE') === 'true';
 
         if (isOfflineMode) {
-          showSyncStatusBar('📴 Offline mode - using cached data', 'orange');
+          showSyncStatusBar('📴 Offline mode - Click here to retry cloud sync', 'orange');
           console.log('⚠️ Loaded from offline cache:', state.patients.length, 'patients');
+          console.log('   To retry cloud sync: Click the status bar or go to loading.html');
+
+          // Make the status bar clickable to retry sync
+          const statusBar = document.getElementById('syncStatusBar');
+          if (statusBar) {
+            statusBar.style.cursor = 'pointer';
+            statusBar.onclick = () => {
+              if (confirm('Retry cloud sync? This will reload the page and fetch fresh data from the server.')) {
+                console.log('🔄 User requested cloud sync retry');
+                localStorage.removeItem('MW_OFFLINE_MODE');
+                localStorage.removeItem('MW_CLOUD_VERIFIED');
+                window.location.href = 'loading.html';
+              }
+            };
+          }
         } else {
           showSyncStatusBar('☁️ Cloud connected', 'green');
           console.log('✅ Loaded from verified cache:', state.patients.length, 'patients');
