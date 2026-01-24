@@ -569,8 +569,8 @@
         {
           element: '.dose-info, .dosing-details',
           popover: {
-            title: '💊 Dosing',
-            description: 'Exact doses with renal adjustments. Tap for hepatic and weight-based modifications.',
+            title: '💊 Dosing (UpToDate)',
+            description: 'Evidence-based dosing from UpToDate. Includes renal/hepatic adjustments, weight-based calculations, and monitoring parameters.',
             side: 'right'
           }
         },
@@ -594,7 +594,7 @@
           element: '.references-btn, .evidence-link',
           popover: {
             title: '📚 References',
-            description: 'Source guidelines and evidence. IDSA, Sanford, local protocols linked here.',
+            description: 'Source guidelines and evidence. UpToDate, IDSA, Sanford, and local protocols linked here.',
             side: 'top'
           }
         }
