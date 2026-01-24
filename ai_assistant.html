@@ -425,6 +425,15 @@ body {
 </div>
 
 <script>
+// Authentication check - redirect to login if not authenticated
+(function() {
+  const user = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
+  const pass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
+  if (!user || !pass) {
+    window.location.href = 'login.html';
+  }
+})();
+
 const API_URL = 'https://script.google.com/macros/s/AKfycbyewF_EjwJeundXYupFZcAjJF7jyMrd38FPDP7DB0zmjmHqAcXHig08Ycn07oW45l4w-A/exec';
 let isLoading = false;
 
