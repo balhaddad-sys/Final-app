@@ -5015,10 +5015,17 @@ const Diagnostics = {
   // Developer mode panel (accessed via ?debug=1)
   showDebugPanel() {
     if (!new URLSearchParams(window.location.search).has('debug')) return;
-    
+
+    // Get last error from session storage if available
+    let lastError = null;
+    try {
+      const errorStr = sessionStorage.getItem('MW_LAST_ERROR');
+      if (errorStr) lastError = JSON.parse(errorStr);
+    } catch (e) {}
+
     const panel = document.createElement('div');
     panel.id = 'debugPanel';
-    panel.style.cssText = 'position:fixed;bottom:70px;right:10px;background:#1e293b;color:#f8fafc;padding:16px;border-radius:12px;font-size:12px;font-family:monospace;max-width:300px;z-index:10000;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+    panel.style.cssText = 'position:fixed;bottom:70px;right:10px;background:#1e293b;color:#f8fafc;padding:16px;border-radius:12px;font-size:12px;font-family:monospace;max-width:400px;max-height:600px;overflow-y:auto;z-index:10000;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
     panel.innerHTML = `
       <div style="font-weight:bold;margin-bottom:8px;color:#60a5fa">🔧 Debug Panel</div>
       <div>Version: ${CONFIG.VERSION}</div>
@@ -5027,12 +5034,97 @@ const Diagnostics = {
       <div>Storage: ${localStorage.getItem(CONFIG.STORAGE_KEY) ? '✅ Has data' : '⚪ Empty'}</div>
       <div>Theme: ${localStorage.getItem(CONFIG.THEME_KEY) || 'system'}</div>
       <div>Online: ${navigator.onLine ? '✅' : '❌'}</div>
+      <div>Cloud Verified: ${localStorage.getItem('MW_CLOUD_VERIFIED') ? '✅' : '❌'}</div>
+      <div>Offline Mode: ${localStorage.getItem('MW_OFFLINE_MODE') === 'true' ? '✅ Yes' : '❌ No'}</div>
+      <div>Sync Read-Only: ${typeof syncStateV2 !== 'undefined' ? (syncStateV2.isReadOnly ? '⚠️ Yes' : '✅ No') : 'N/A'}</div>
+      <div>Sync Hydrated: ${typeof syncStateV2 !== 'undefined' ? (syncStateV2.isHydrated ? '✅' : '❌') : 'N/A'}</div>
+      <div>Cloud Loaded: ${typeof syncStateV2 !== 'undefined' ? (syncStateV2.cloudLoaded ? '✅' : '❌') : 'N/A'}</div>
+      ${lastError ? `<div style="color:#fca5a5;margin-top:8px;padding:8px;background:#991b1b;border-radius:4px">
+        <div style="font-weight:bold">Last Error:</div>
+        <div>${lastError.name}: ${lastError.message}</div>
+        <div style="font-size:10px;opacity:0.8;margin-top:4px">${lastError.timestamp}</div>
+      </div>` : ''}
       ${this.errors.length ? `<div style="color:#fca5a5;margin-top:8px">Errors: ${this.errors.join(', ')}</div>` : ''}
       ${this.warnings.length ? `<div style="color:#fcd34d;margin-top:4px">Warnings: ${this.warnings.join(', ')}</div>` : ''}
-      <button onclick="this.parentElement.remove()" style="margin-top:12px;padding:6px 12px;background:#334155;border:none;color:#fff;border-radius:6px;cursor:pointer">Close</button>
-      <button onclick="navigator.clipboard.writeText(JSON.stringify(Diagnostics,null,2))" style="margin-top:12px;margin-left:8px;padding:6px 12px;background:#3b82f6;border:none;color:#fff;border-radius:6px;cursor:pointer">Copy</button>
+      <div id="debugTestResult" style="margin-top:8px;display:none;padding:8px;background:#334155;border-radius:4px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button onclick="testGoogleScript()" style="padding:6px 12px;background:#059669;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:11px">Test Script</button>
+        <button onclick="showErrorLog()" style="padding:6px 12px;background:#d97706;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:11px">Error Log</button>
+        <button onclick="navigator.clipboard.writeText(JSON.stringify(Diagnostics,null,2))" style="padding:6px 12px;background:#3b82f6;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:11px">Copy Info</button>
+        <button onclick="this.parentElement.parentElement.remove()" style="padding:6px 12px;background:#334155;border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:11px">Close</button>
+      </div>
     `;
     document.body.appendChild(panel);
+
+    // Add test function to window
+    window.testGoogleScript = async function() {
+      const resultDiv = document.getElementById('debugTestResult');
+      if (!resultDiv) return;
+
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '⏳ Testing Google Script connection...';
+
+      try {
+        const AUTH = {
+          user: sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER'),
+          pass: sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS')
+        };
+
+        const startTime = Date.now();
+        const response = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'ping',
+            username: AUTH.user,
+            password: AUTH.pass
+          })
+        });
+
+        const elapsed = Date.now() - startTime;
+        const text = await response.text();
+
+        console.log('🔍 Test Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          elapsed: elapsed + 'ms',
+          responseLength: text.length,
+          responsePreview: text.substring(0, 200)
+        });
+
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+          resultDiv.innerHTML = `<div style="color:#fca5a5">❌ Script returned HTML (not deployed correctly)</div><div style="font-size:10px;margin-top:4px;opacity:0.8">Time: ${elapsed}ms</div>`;
+          return;
+        }
+
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          resultDiv.innerHTML = `<div style="color:#fca5a5">❌ Invalid JSON response</div><div style="font-size:10px;margin-top:4px">${text.substring(0, 100)}</div>`;
+          return;
+        }
+
+        if (result.success) {
+          resultDiv.innerHTML = `<div style="color:#6ee7b7">✅ Script is working!</div><div style="font-size:10px;margin-top:4px;opacity:0.8">Time: ${elapsed}ms</div>`;
+        } else {
+          resultDiv.innerHTML = `<div style="color:#fca5a5">❌ ${result.error || 'Unknown error'}</div><div style="font-size:10px;margin-top:4px;opacity:0.8">Time: ${elapsed}ms</div>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<div style="color:#fca5a5">❌ ${error.message}</div><div style="font-size:10px;margin-top:4px">${error.name}</div>`;
+      }
+    };
+
+    window.showErrorLog = function() {
+      const lastResponse = sessionStorage.getItem('MW_LAST_RESPONSE');
+      const lastError = sessionStorage.getItem('MW_LAST_ERROR');
+      console.group('📋 Error Log');
+      console.log('Last Error:', lastError ? JSON.parse(lastError) : 'None');
+      console.log('Last Response:', lastResponse || 'None');
+      console.groupEnd();
+      alert('Error log printed to console (F12)');
+    };
   }
 };
 

@@ -370,6 +370,27 @@ body.dark-theme .timeout-warning {
     <div class="error-icon">⚠️</div>
     <div class="error-title" id="errorTitle">Connection Failed</div>
     <div class="error-message" id="errorMessage">Could not reach the server</div>
+    <div style="margin-top: 12px;">
+      <button onclick="toggleDiagnostics()" style="background:none;border:none;color:var(--primary);font-size:0.85rem;cursor:pointer;text-decoration:underline">
+        🔍 Show Diagnostics
+      </button>
+    </div>
+    <div id="diagnosticsPanel" style="display:none;margin-top:12px;padding:12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;text-align:left;font-size:0.8rem">
+      <div style="font-weight:600;margin-bottom:8px;color:var(--primary)">Diagnostic Information</div>
+      <div style="line-height:1.6">
+        <div>• Browser Online: <span id="diagOnline"></span></div>
+        <div>• Google Script URL: <span style="font-size:0.7rem;word-break:break-all" id="diagUrl"></span></div>
+        <div>• Last Error: <span id="diagError"></span></div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--text-muted);font-size:0.75rem">
+          <strong>Common Solutions:</strong><br>
+          1. Check your internet connection<br>
+          2. Verify the Google Script is deployed<br>
+          3. Script settings: Execute as "Me", Access "Anyone"<br>
+          4. Try refreshing the page<br>
+          5. Check browser console (F12) for details
+        </div>
+      </div>
+    </div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="loadCloudData()">Try Again</button>
       <button class="btn btn-secondary" onclick="skipToOffline()" id="offlineBtn">Use Offline</button>
@@ -429,16 +450,62 @@ function setProgress(percent) {
 
 function showError(title, message, showOffline = true) {
   clearAllTimeouts();
-  
+
   document.getElementById('loadingState').style.display = 'none';
   document.getElementById('successState').classList.remove('show');
   document.getElementById('errorBox').classList.add('show');
   document.getElementById('errorTitle').textContent = title;
   document.getElementById('errorMessage').textContent = message;
-  
+
+  // Populate diagnostics
+  updateDiagnostics();
+
   // Only show offline button if we have cached data
   const hasCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
   document.getElementById('offlineBtn').style.display = (showOffline && hasCache) ? 'block' : 'none';
+}
+
+function toggleDiagnostics() {
+  const panel = document.getElementById('diagnosticsPanel');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    updateDiagnostics();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function updateDiagnostics() {
+  // Update online status
+  const diagOnline = document.getElementById('diagOnline');
+  if (diagOnline) {
+    diagOnline.textContent = navigator.onLine ? '✅ Yes' : '❌ No';
+    diagOnline.style.color = navigator.onLine ? '#059669' : '#dc2626';
+  }
+
+  // Update URL
+  const diagUrl = document.getElementById('diagUrl');
+  if (diagUrl) {
+    diagUrl.textContent = CONFIG.API_URL;
+  }
+
+  // Update last error
+  const diagError = document.getElementById('diagError');
+  if (diagError) {
+    try {
+      const errorStr = sessionStorage.getItem('MW_LAST_ERROR');
+      if (errorStr) {
+        const error = JSON.parse(errorStr);
+        diagError.textContent = error.message;
+        diagError.style.color = '#dc2626';
+      } else {
+        diagError.textContent = 'No error details available';
+        diagError.style.color = 'var(--text-muted)';
+      }
+    } catch (e) {
+      diagError.textContent = 'Error reading diagnostics';
+    }
+  }
 }
 
 function hideError() {
@@ -563,17 +630,44 @@ async function loadCloudData() {
     setProgress(50);
     
     const text = await response.text();
-    
+
+    // Enhanced logging for debugging
+    console.log('📡 Response status:', response.status, response.statusText);
+    console.log('📡 Response length:', text.length, 'characters');
+    console.log('📡 Response preview:', text.substring(0, 200));
+
     // Check for HTML response (wrong URL or error)
     if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-      throw new Error('Server returned an invalid response. Please try again.');
+      console.error('❌ Received HTML instead of JSON. The Google Script might not be properly deployed.');
+      console.error('📄 Response:', text.substring(0, 500));
+
+      // Store response for debugging
+      try {
+        sessionStorage.setItem('MW_LAST_RESPONSE', text.substring(0, 1000));
+      } catch (e) {}
+
+      throw new Error('Google Script returned HTML instead of JSON. Please check:\n• Script is deployed as "Web app"\n• Execute as: "Me"\n• Who has access: "Anyone"');
     }
-    
+
     setProgress(60);
-    
-    const result = JSON.parse(text);
-    
+
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (parseError) {
+      console.error('❌ Failed to parse response as JSON:', parseError);
+      console.error('📄 Response:', text);
+
+      // Store response for debugging
+      try {
+        sessionStorage.setItem('MW_LAST_RESPONSE', text.substring(0, 1000));
+      } catch (e) {}
+
+      throw new Error('Invalid response from Google Script. Response: ' + text.substring(0, 100));
+    }
+
     if (!result.success) {
+      console.error('❌ Server returned error:', result.error);
       throw new Error(result.error || 'Failed to load data from server');
     }
     
@@ -643,19 +737,37 @@ async function loadCloudData() {
   } catch (error) {
     clearAllTimeouts();
     console.error('❌ Cloud load failed:', error);
-    
+
+    // Enhanced error logging for debugging
+    const errorDetails = {
+      name: error.name,
+      message: error.message,
+      timestamp: new Date().toISOString(),
+      apiUrl: CONFIG.API_URL,
+      navigatorOnline: navigator.onLine,
+      retryAttempt: retryCount
+    };
+    console.error('📊 Error Details:', errorDetails);
+
+    // Store error details for debug panel
+    try {
+      sessionStorage.setItem('MW_LAST_ERROR', JSON.stringify(errorDetails));
+    } catch (e) {
+      console.warn('Could not save error details');
+    }
+
     // Check if it was a timeout/abort
     if (error.name === 'AbortError') {
-      handleLoadFailure('Connection Timeout', 'The server took too long to respond. Please check your internet connection.');
+      handleLoadFailure('Connection Timeout', `The server took too long to respond (${CONFIG.TIMEOUT_MS/1000}s). Please check your internet connection or try again.`);
       return;
     }
-    
+
     // Check for network errors
     if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-      handleLoadFailure('Network Error', 'Could not reach the server. Please check your internet connection.');
+      handleLoadFailure('Network Error', 'Could not reach the Google Script. Please check:\n• Your internet connection\n• The script URL is correct\n• The script is deployed and accessible');
       return;
     }
-    
+
     // Other errors
     handleLoadFailure('Connection Failed', error.message || 'An unexpected error occurred.');
   }
@@ -703,6 +815,20 @@ function handleLoadFailure(title, message) {
 // ═══════════════════════════════════════════════════════════════════════════
 // START LOADING
 // ═══════════════════════════════════════════════════════════════════════════
+console.log('🚀 MedWard Pro - Cloud Loading');
+console.log('📡 Google Script URL:', CONFIG.API_URL);
+console.log('⏱️ Timeout:', CONFIG.TIMEOUT_MS / 1000, 'seconds');
+console.log('🔄 Max retries:', CONFIG.MAX_RETRIES);
+console.log('🌐 Browser online:', navigator.onLine);
+console.log('💾 Has cache:', !!(localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE')));
+console.log('');
+console.log('If the connection fails, check:');
+console.log('1. Google Script is deployed as Web app');
+console.log('2. Execute as: Me');
+console.log('3. Who has access: Anyone');
+console.log('4. Script URL matches the one above');
+console.log('');
+
 loadCloudData();
 </script>
 </body>
