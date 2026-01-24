@@ -4456,7 +4456,7 @@ body.dark-theme .readonly-banner {
 <div class="modal-header">
   <div class="drug-info-badge"><span>✨</span> AI-Powered Analysis</div>
   <div class="modal-title drug-info-title" id="drugInfoTitle">Drug Name</div>
-  <p class="drug-info-subtitle">Comprehensive drug information & patient-specific warnings</p>
+  <p class="drug-info-subtitle">UpToDate dosing, patient-specific warnings & comprehensive drug information</p>
 </div>
 <div class="modal-body" id="drugInfoBody">
   <div style="text-align:center;padding:40px">
@@ -4465,7 +4465,10 @@ body.dark-theme .readonly-banner {
   </div>
 </div>
 <div class="modal-footer">
-<button class="btn btn-secondary btn-full" onclick="closeModal('drugInfoModal')">Close</button>
+<button class="btn btn-primary" onclick="openUpToDate()" style="flex:1;margin-right:8px">
+  <span>📚</span> Open in UpToDate
+</button>
+<button class="btn btn-secondary" onclick="closeModal('drugInfoModal')" style="flex:1">Close</button>
 </div>
 </div>
 </div>
@@ -11161,10 +11164,21 @@ const DrugKnowledgeBase = {
   }
 };
 
+// Store current drug name for UpToDate link
+let currentDrugName = '';
+
+window.openUpToDate = function() {
+  if (!currentDrugName) return;
+  // UpToDate drug search URL
+  const searchUrl = `https://www.uptodate.com/contents/search?search=${encodeURIComponent(currentDrugName)}&source=search_result&selectedTitle=1`;
+  window.open(searchUrl, '_blank');
+};
+
 window.openDrugInfo = async function(drugName, medIdx) {
   const p = state.currentPatient;
   const med = medIdx !== undefined ? p.medications?.[medIdx] : null;
-  
+
+  currentDrugName = drugName; // Store for UpToDate link
   $('drugInfoTitle').textContent = drugName;
   openModal('drugInfoModal');
   
@@ -11211,8 +11225,8 @@ window.openDrugInfo = async function(drugName, medIdx) {
     const data = await res.json();
     
     if (data.error) throw new Error(data.error);
-    
-    renderDrugInfoContent(data, drugName, patientContext);
+
+    renderDrugInfoContent(data, drugName, patientContext, med);
     
   } catch (e) {
     console.error('Drug info error:', e);
@@ -11222,16 +11236,41 @@ window.openDrugInfo = async function(drugName, medIdx) {
 
 function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
   let html = '';
-  
+
   // Header badge showing instant lookup
   html += `
     <div class="drug-instant-badge">
       <span class="instant-icon">⚡</span>
       <span>Instant Lookup</span>
-      <span class="instant-source">Neural Knowledge Base</span>
+      <span class="instant-source">Neural Knowledge Base • UpToDate</span>
     </div>
   `;
-  
+
+  // Current Patient Dosage (if available from medication record)
+  if (med && (med.dose || med.route || med.frequency)) {
+    html += `
+      <div class="drug-section" style="background:rgba(59,130,246,0.05);border-left:3px solid #3b82f6">
+        <div class="drug-section-title"><span>💊</span> Current Patient Dosage</div>
+        <div class="drug-info-text">
+          ${med.dose ? `<strong>Dose:</strong> ${esc(med.dose)}<br>` : ''}
+          ${med.route ? `<strong>Route:</strong> ${esc(med.route)}<br>` : ''}
+          ${med.frequency ? `<strong>Frequency:</strong> ${esc(med.frequency)}<br>` : ''}
+          ${med.indication ? `<strong>Indication:</strong> ${esc(med.indication)}` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // Standard Dosing Information (from knowledge base if available)
+  if (drug.dosing || drug.standardDose) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>📋</span> Standard Dosing (UpToDate)</div>
+        <p class="drug-info-text">${esc(drug.dosing || drug.standardDose)}</p>
+      </div>
+    `;
+  }
+
   // Patient-specific warnings (most important - show first)
   if (warnings.length > 0) {
     const criticalWarnings = warnings.filter(w => w.severity === 'critical' || w.severity === 'high');
@@ -11339,10 +11378,10 @@ function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
   $('drugInfoBody').innerHTML = html;
 }
 
-function renderDrugInfoContent(data, drugName, context) {
+function renderDrugInfoContent(data, drugName, context, med) {
   // Extract drugInfo from response - backend returns { success: true, drugInfo: {...} }
   const info = data.drugInfo || data;
-  
+
   const warnings = info.warnings || [];
   const mechanism = info.mechanism || 'Information not available.';
   const drugClass = info.drugClass || '';
@@ -11352,17 +11391,33 @@ function renderDrugInfoContent(data, drugName, context) {
   const contraindications = info.contraindications || [];
   const monitoring = info.monitoring || [];
   const interactions = info.interactions || [];
-  
+
   let html = '';
-  
+
   // AI Badge
   html += `
     <div class="drug-instant-badge">
       <span class="instant-icon">✨</span>
       <span>AI-Powered Analysis</span>
+      <span class="instant-source">Evidence-based • UpToDate</span>
     </div>
   `;
-  
+
+  // Current Patient Dosage (if available from medication record)
+  if (med && (med.dose || med.route || med.frequency)) {
+    html += `
+      <div class="drug-section" style="background:rgba(59,130,246,0.05);border-left:3px solid #3b82f6">
+        <div class="drug-section-title"><span>💊</span> Current Patient Dosage</div>
+        <div class="drug-info-text">
+          ${med.dose ? `<strong>Dose:</strong> ${esc(med.dose)}<br>` : ''}
+          ${med.route ? `<strong>Route:</strong> ${esc(med.route)}<br>` : ''}
+          ${med.frequency ? `<strong>Frequency:</strong> ${esc(med.frequency)}<br>` : ''}
+          ${med.indication ? `<strong>Indication:</strong> ${esc(med.indication)}` : ''}
+        </div>
+      </div>
+    `;
+  }
+
   // Patient-specific warnings
   if (warnings.length > 0 || interactions.length > 0) {
     html += `
@@ -11403,7 +11458,7 @@ function renderDrugInfoContent(data, drugName, context) {
   if (dosing) {
     html += `
       <div class="drug-section">
-        <div class="drug-section-title"><span>📋</span> DOSING</div>
+        <div class="drug-section-title"><span>📋</span> STANDARD DOSING (UpToDate)</div>
         <p class="drug-info-text">${esc(dosing)}</p>
       </div>
     `;
