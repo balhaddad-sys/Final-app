@@ -399,7 +399,7 @@ body.dark-theme .timeout-warning {
 </div>
 
 <div class="loading-footer">
-  v17.1 • Cloud-First Edition
+  v17.2 • Cloud-First Edition
 </div>
 
 <script>
@@ -412,7 +412,13 @@ const CONFIG = {
   WARNING_MS: 8000,            // Show warning after 8 seconds
   MAX_RETRIES: 3,              // Maximum auto-retry attempts
   RETRY_DELAY_MS: 2000,        // 2 seconds between retries
-  SKIP_DELAY_MS: 5000          // Show skip option after 5 seconds
+  SKIP_DELAY_MS: 5000,         // Show skip option after 5 seconds
+  
+  // Cache configuration
+  CACHE_KEY: 'MEDWARD_CACHE',  // Primary cache key
+  LEGACY_KEYS: ['medward_pro_v12', 'medward_pro_v11', 'medward_pro_v10'],  // Legacy keys to migrate/remove
+  MAX_CACHE_SIZE_MB: 4,        // Leave 1MB buffer under 5MB limit
+  QUOTA_WARNING_MB: 3.5        // Warn when approaching limit
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -434,6 +440,257 @@ const AUTH = {
 
 if (!AUTH.user || !AUTH.pass) {
   window.location.href = 'login.html';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CACHE MANAGEMENT SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Get the size of a string in bytes (approximately)
+ */
+function getByteSize(str) {
+  return new Blob([str]).size;
+}
+
+/**
+ * Get estimated localStorage usage
+ */
+function getStorageUsage() {
+  let total = 0;
+  for (let key in localStorage) {
+    if (localStorage.hasOwnProperty(key)) {
+      total += getByteSize(localStorage[key]) + getByteSize(key);
+    }
+  }
+  return total;
+}
+
+/**
+ * Clean up legacy cache keys to free space
+ * Migrates data if needed and removes old keys
+ */
+function cleanupLegacyCache() {
+  console.log('🧹 Cleaning up legacy cache keys...');
+  
+  let freedSpace = 0;
+  
+  // Check if we have data in primary key
+  const hasMainCache = localStorage.getItem(CONFIG.CACHE_KEY);
+  
+  for (const legacyKey of CONFIG.LEGACY_KEYS) {
+    const legacyData = localStorage.getItem(legacyKey);
+    if (legacyData) {
+      const size = getByteSize(legacyData);
+      
+      // If no main cache, migrate the first legacy data found
+      if (!hasMainCache && legacyKey === CONFIG.LEGACY_KEYS[0]) {
+        console.log(`📦 Migrating data from ${legacyKey} to ${CONFIG.CACHE_KEY}`);
+        try {
+          localStorage.setItem(CONFIG.CACHE_KEY, legacyData);
+        } catch (e) {
+          console.warn('Migration failed:', e);
+        }
+      }
+      
+      // Remove the legacy key
+      localStorage.removeItem(legacyKey);
+      freedSpace += size;
+      console.log(`✅ Removed ${legacyKey} (${(size / 1024).toFixed(1)}KB freed)`);
+    }
+  }
+  
+  // Also remove the duplicate key that was causing issues
+  if (localStorage.getItem('medward_pro_v12')) {
+    const size = getByteSize(localStorage.getItem('medward_pro_v12'));
+    localStorage.removeItem('medward_pro_v12');
+    freedSpace += size;
+    console.log(`✅ Removed duplicate key medward_pro_v12 (${(size / 1024).toFixed(1)}KB freed)`);
+  }
+  
+  if (freedSpace > 0) {
+    console.log(`🎉 Total space freed: ${(freedSpace / 1024).toFixed(1)}KB`);
+  }
+  
+  return freedSpace;
+}
+
+/**
+ * Read cache data - checks primary and legacy keys
+ */
+function readCache() {
+  // Try primary key first
+  let data = localStorage.getItem(CONFIG.CACHE_KEY);
+  if (data) {
+    return data;
+  }
+  
+  // Fall back to legacy keys
+  for (const key of CONFIG.LEGACY_KEYS) {
+    data = localStorage.getItem(key);
+    if (data) {
+      console.log(`📂 Found cache in legacy key: ${key}`);
+      return data;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Safely write to cache with quota handling
+ */
+function writeCache(data) {
+  const dataStr = typeof data === 'string' ? data : JSON.stringify(data);
+  const dataSize = getByteSize(dataStr);
+  const dataSizeMB = dataSize / (1024 * 1024);
+  
+  console.log(`💾 Writing cache: ${(dataSizeMB).toFixed(2)}MB`);
+  
+  // Check if data is too large
+  if (dataSizeMB > CONFIG.MAX_CACHE_SIZE_MB) {
+    console.warn(`⚠️ Cache data too large: ${dataSizeMB.toFixed(2)}MB > ${CONFIG.MAX_CACHE_SIZE_MB}MB`);
+    // Try to compress or reduce data
+    const reducedData = reduceDataSize(data);
+    if (reducedData) {
+      return writeCache(reducedData);
+    }
+    throw new Error('Cache data too large to store');
+  }
+  
+  // Clean up legacy keys first to make space
+  cleanupLegacyCache();
+  
+  try {
+    // Write ONLY to primary key - this is the fix!
+    localStorage.setItem(CONFIG.CACHE_KEY, dataStr);
+    
+    // Update revision separately (small key)
+    const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+    if (parsed.rev) {
+      localStorage.setItem('MW_REV', String(parsed.rev));
+    }
+    
+    console.log('✅ Cache written successfully');
+    return true;
+  } catch (e) {
+    if (isQuotaError(e)) {
+      console.error('❌ Storage quota exceeded!');
+      return handleQuotaError(dataStr);
+    }
+    throw e;
+  }
+}
+
+/**
+ * Check if error is a quota exceeded error
+ */
+function isQuotaError(e) {
+  return (
+    e.name === 'QuotaExceededError' ||
+    e.code === 22 ||
+    e.code === 1014 ||
+    (e.message && e.message.toLowerCase().includes('quota'))
+  );
+}
+
+/**
+ * Handle quota exceeded error
+ */
+function handleQuotaError(dataStr) {
+  console.log('🔧 Attempting to recover from quota error...');
+  
+  // 1. Clean ALL possible MedWard keys
+  const keysToClean = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('MW_') || key.startsWith('MEDWARD') || key.startsWith('medward'))) {
+      keysToClean.push(key);
+    }
+  }
+  
+  // Keep essential keys, remove the rest
+  const essentialKeys = ['MW_USER', 'MW_PASS', 'MW_REV', 'MEDWARD_THEME', 'MW_CLOUD_VERIFIED'];
+  
+  for (const key of keysToClean) {
+    if (!essentialKeys.includes(key) && key !== CONFIG.CACHE_KEY) {
+      console.log(`🗑️ Removing ${key}`);
+      localStorage.removeItem(key);
+    }
+  }
+  
+  // 2. Try to write again
+  try {
+    localStorage.setItem(CONFIG.CACHE_KEY, dataStr);
+    console.log('✅ Recovery successful - cache written');
+    return true;
+  } catch (e2) {
+    console.error('❌ Recovery failed - storage still full');
+    
+    // 3. Last resort: try with reduced data
+    try {
+      const reduced = reduceDataSize(JSON.parse(dataStr));
+      if (reduced) {
+        localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(reduced));
+        console.log('✅ Wrote reduced data to cache');
+        return true;
+      }
+    } catch (e3) {
+      console.error('❌ Cannot write even reduced data');
+    }
+    
+    // Store error for diagnostics
+    sessionStorage.setItem('MW_LAST_ERROR', JSON.stringify({
+      name: 'QuotaExceededError',
+      message: "Setting the value of 'MEDWARD_CACHE' exceeded the quota.",
+      timestamp: new Date().toISOString()
+    }));
+    
+    return false;
+  }
+}
+
+/**
+ * Reduce data size by trimming non-essential fields
+ */
+function reduceDataSize(data) {
+  if (typeof data === 'string') {
+    data = JSON.parse(data);
+  }
+  
+  const reduced = { ...data };
+  
+  // 1. Limit trash size
+  if (reduced.trash) {
+    if (reduced.trash.patients && reduced.trash.patients.length > 10) {
+      reduced.trash.patients = reduced.trash.patients.slice(-10);
+    }
+    if (reduced.trash.units && reduced.trash.units.length > 5) {
+      reduced.trash.units = reduced.trash.units.slice(-5);
+    }
+  }
+  
+  // 2. For very large patient lists, consider trimming notes
+  if (reduced.patients && reduced.patients.length > 100) {
+    reduced.patients = reduced.patients.map(p => {
+      const trimmed = { ...p };
+      // Trim very long notes
+      if (trimmed.notes && trimmed.notes.length > 5000) {
+        trimmed.notes = trimmed.notes.substring(0, 5000) + '... [truncated for storage]';
+      }
+      // Remove history if present (it can be re-fetched)
+      delete trimmed._history;
+      return trimmed;
+    });
+  }
+  
+  // 3. Remove internal flags
+  delete reduced._cloudVerified;
+  delete reduced._syncDebug;
+  
+  console.log(`📉 Reduced data size from ${getByteSize(JSON.stringify(data))} to ${getByteSize(JSON.stringify(reduced))} bytes`);
+  
+  return reduced;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -461,7 +718,7 @@ function showError(title, message, showOffline = true) {
   updateDiagnostics();
 
   // Only show offline button if we have cached data
-  const hasCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  const hasCache = readCache();
   document.getElementById('offlineBtn').style.display = (showOffline && hasCache) ? 'block' : 'none';
 }
 
@@ -525,7 +782,7 @@ function showTimeoutWarning() {
 }
 
 function showSkipOption() {
-  const hasCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  const hasCache = readCache();
   if (hasCache) {
     document.getElementById('skipLink').classList.add('show');
   }
@@ -552,7 +809,7 @@ function clearAllTimeouts() {
 function skipToOffline() {
   clearAllTimeouts();
   
-  const localCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  const localCache = readCache();
   
   if (!localCache) {
     showError('No Cached Data', 'You need to connect at least once to use offline mode.', false);
@@ -584,6 +841,9 @@ async function loadCloudData() {
   updateRetryInfo();
   setProgress(10);
   setStatus('Connecting to cloud...', 'Please wait');
+  
+  // First, clean up any legacy cache keys
+  cleanupLegacyCache();
   
   // Reset UI state
   document.getElementById('timeoutWarning').classList.remove('show');
@@ -699,26 +959,29 @@ async function loadCloudData() {
     console.log('☁️ Cloud data received:', patientCount, 'patients,', unitCount, 'units');
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 3: Warm the local cache
+    // STEP 3: Warm the local cache (with quota handling)
     // ═══════════════════════════════════════════════════════════════════
     setStatus('Syncing local cache...', `${patientCount} patients, ${unitCount} units`);
     setProgress(90);
     
-    const cachePayload = JSON.stringify({
+    const cachePayload = {
       units: data.units || [],
       settings: data.settings || {},
       patients: data.patients || [],
       unitRequests: data.unitRequests || [],
       trash: data.trash || { patients: [], units: [] },
       rev: result.rev || 1,
-      lastUpdated: new Date().toISOString(),
-      _cloudVerified: true
-    });
+      lastUpdated: new Date().toISOString()
+    };
     
-    // Write to ALL cache keys
-    localStorage.setItem('medward_pro_v12', cachePayload);
-    localStorage.setItem('MEDWARD_CACHE', cachePayload);
-    localStorage.setItem('MW_REV', String(result.rev || 1));
+    // Use the smart cache writer - this is the key fix!
+    const cacheSuccess = writeCache(cachePayload);
+    
+    if (!cacheSuccess) {
+      console.warn('⚠️ Could not cache data locally, but continuing anyway');
+      // Still allow proceeding - data is in memory
+    }
+    
     localStorage.setItem('MW_CLOUD_VERIFIED', Date.now().toString());
     localStorage.removeItem('MW_OFFLINE_MODE');
     
@@ -745,7 +1008,8 @@ async function loadCloudData() {
       timestamp: new Date().toISOString(),
       apiUrl: CONFIG.API_URL,
       navigatorOnline: navigator.onLine,
-      retryAttempt: retryCount
+      retryAttempt: retryCount,
+      storageUsage: (getStorageUsage() / (1024 * 1024)).toFixed(2) + 'MB'
     };
     console.error('📊 Error Details:', errorDetails);
 
@@ -777,7 +1041,7 @@ async function loadCloudData() {
 // HANDLE LOAD FAILURE WITH AUTO-RETRY
 // ═══════════════════════════════════════════════════════════════════════════
 function handleLoadFailure(title, message) {
-  const hasCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+  const hasCache = readCache();
   
   // Auto-retry logic
   if (retryCount < CONFIG.MAX_RETRIES) {
@@ -815,12 +1079,13 @@ function handleLoadFailure(title, message) {
 // ═══════════════════════════════════════════════════════════════════════════
 // START LOADING
 // ═══════════════════════════════════════════════════════════════════════════
-console.log('🚀 MedWard Pro - Cloud Loading');
+console.log('🚀 MedWard Pro - Cloud Loading v17.2');
 console.log('📡 Google Script URL:', CONFIG.API_URL);
 console.log('⏱️ Timeout:', CONFIG.TIMEOUT_MS / 1000, 'seconds');
 console.log('🔄 Max retries:', CONFIG.MAX_RETRIES);
 console.log('🌐 Browser online:', navigator.onLine);
-console.log('💾 Has cache:', !!(localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE')));
+console.log('💾 Storage usage:', (getStorageUsage() / (1024 * 1024)).toFixed(2), 'MB');
+console.log('💾 Has cache:', !!readCache());
 console.log('');
 console.log('If the connection fails, check:');
 console.log('1. Google Script is deployed as Web app');
