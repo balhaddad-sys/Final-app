@@ -26,7 +26,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .header-actions{display:flex;gap:8px}
 .icon-btn{width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem}
 .main-content{max-width:800px;margin:0 auto;padding:0;padding-bottom:100px}
-.mode-switcher{padding:12px 16px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;gap:10px}
+.mode-switcher{padding:12px 16px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center}
 .segment-btn{flex:1;padding:12px;border:1px solid var(--border);background:transparent;border-radius:10px;font-size:0.9rem;font-weight:600;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
 .segment-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
 .segment-btn:hover:not(.active){background:var(--bg);border-color:var(--primary)}
@@ -199,6 +199,21 @@ a.nav-item{color:var(--text-muted)}
 .ico{width:1em;height:1em;vertical-align:-0.125em;display:inline-block}
 .tool-icon .ico,.nav-icon .ico,.header-logo .ico,.prn-icon .ico,.quick-ref-icon .ico,.consult-icon .ico,.ai-icon .ico{width:24px;height:24px}
 .pill .ico,.segment-btn .ico{width:16px;height:16px;margin-right:4px}
+
+/* Handover Button */
+.handover-btn{width:44px;height:44px;border-radius:10px;border:1px solid #10b981;background:#10b981;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+.handover-btn:hover{background:#059669;border-color:#059669;transform:scale(1.05)}
+.handover-btn:active{transform:scale(0.95)}
+
+/* Modal Styles */
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal.hidden{display:none}
+.modal-content{background:var(--bg-card);border-radius:16px;max-width:600px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 20px;border-top:1px solid var(--border);background:var(--bg)}
+.input-label{display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px}
+.handover-preview{background:var(--bg-app);padding:12px;border-radius:8px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap;border:1px solid var(--border);color:var(--text-main);line-height:1.5;border-left:4px solid var(--primary)}
 </style>
 </head>
 <body>
@@ -221,8 +236,13 @@ a.nav-item{color:var(--text-muted)}
 <div style="font-size:0.7rem;color:#92400e;line-height:1.4">Verify with local protocols. If unstable: activate emergency pathway.</div>
 </div>
 <div class="mode-switcher">
+<div style="flex:1; display:flex; gap:10px;">
 <button id="btn-mode-tasks" class="segment-btn active" onclick="switchMode('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ico"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Call Log <span id="task-badge" class="badge-count hidden">0</span></button>
 <button id="btn-mode-tools" class="segment-btn" onclick="switchMode('tools')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ico"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="12" y1="18" x2="12" y2="18.01"/><line x1="16" y1="18" x2="16" y2="18.01"/></svg> Calculators</button>
+</div>
+<button class="handover-btn" onclick="openHandoverModal()" title="Generate Handover">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8m-4-6l-4-4-4 4m4-4v13"/></svg>
+</button>
 </div>
 <div id="call-log-view" class="call-log-view">
 <div class="new-call-card">
@@ -971,6 +991,95 @@ function deleteCall(id) {
 function saveCalls() { localStorage.setItem('ONCALL_CALLS', JSON.stringify(callLogs)); }
 function escapeHtml(text) { var div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 function toast(message) { var t = document.getElementById('toast'); t.textContent = message; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');}, 2000); }
+
+// HANDOVER GENERATOR FUNCTIONS
+function closeModal(modalId) {
+  var modal = document.getElementById(modalId);
+  if (modal) modal.classList.add('hidden');
+}
+
+function openHandoverModal() {
+  var modal = document.getElementById('modal-handover');
+  modal.classList.remove('hidden');
+
+  // Generate the preview immediately
+  updateHandoverPreview();
+
+  // Listen for typing in the note
+  document.getElementById('handover-note').oninput = updateHandoverPreview;
+}
+
+function updateHandoverPreview() {
+  var note = document.getElementById('handover-note').value;
+  var now = new Date();
+  var timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+  // Header
+  var text = '🏥 *ON-CALL HANDOVER* 🏥\n';
+  text += '📅 ' + now.toLocaleDateString() + ' @ ' + timeString + '\n';
+
+  if (note.trim()) {
+    text += '\n📝 *NOTE:* ' + note + '\n';
+  }
+
+  text += '\n------------------\n';
+
+  // Get Pending Tasks (From callLogs array)
+  // We filter for !done
+  var pending = (window.callLogs || []).filter(function(c) { return !c.done; });
+
+  if (pending.length === 0) {
+    text += '✅ *No Active Tasks*\n';
+  } else {
+    text += '🚨 *PENDING TASKS (' + pending.length + '):*\n';
+
+    pending.forEach(function(task) {
+      // Emojis for Priority
+      var icon = '⚪';
+      if (task.priority === 'stat') icon = '🔴';
+      if (task.priority === 'urgent') icon = '🟡';
+      if (task.priority === 'routine') icon = '🟢';
+
+      text += '\n' + icon + ' *' + task.loc + '*';
+      if (task.mrn) text += ' (' + task.mrn + ')';
+      text += '\n└ ' + task.issue + '\n';
+    });
+  }
+
+  text += '\n------------------\n';
+  var userName = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER') || 'Internist';
+  text += 'Signed: Dr. ' + userName;
+
+  // Render to screen
+  document.getElementById('handover-preview').innerText = text;
+
+  return text;
+}
+
+function shareHandover() {
+  var text = updateHandoverPreview();
+
+  // Use Native Share (Mobile)
+  if (navigator.share) {
+    navigator.share({
+      title: 'Medical Handover',
+      text: text
+    })
+    .then(function() {
+      toast("Shared successfully");
+      closeModal('modal-handover');
+    })
+    .catch(function(err) {
+      console.log('Share canceled');
+    });
+  } else {
+    // Fallback for Desktop: Copy to Clipboard
+    navigator.clipboard.writeText(text);
+    toast("📋 Copied to Clipboard");
+    closeModal('modal-handover');
+  }
+}
+
 function initTheme(){const t=localStorage.getItem('MEDWARD_THEME');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.body.classList.add('dark-theme');document.getElementById('themeBtn').textContent='';}}
 function toggleTheme(){
   var isDark=document.body.classList.toggle('dark-theme');
@@ -1163,6 +1272,33 @@ function askAI(){
 
 document.getElementById('aiInput').onkeydown=function(e){if(e.keyCode===13)askAI();};
 </script>
+
+<!-- Handover Modal -->
+<div id="modal-handover" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h2 style="margin:0;">Shift Handover</h2>
+<button class="icon-btn" onclick="closeModal('modal-handover')">✕</button>
+</div>
+
+<div class="modal-body">
+<label class="input-label">Shift Summary / Note</label>
+<textarea id="handover-note" class="call-input" rows="3" placeholder="e.g. 2 admissions pending in ED. Ward 4 is heavy." style="min-height:80px; resize:vertical;"></textarea>
+
+<div style="margin-top:16px;">
+<label class="input-label">Preview</label>
+<div id="handover-preview" class="handover-preview"></div>
+</div>
+</div>
+
+<div class="modal-footer">
+<button class="add-call-btn" onclick="shareHandover()" style="background:#10b981;">
+📤 Share via WhatsApp / Copy
+</button>
+</div>
+</div>
+</div>
+
 <script src="medward-tour.js"></script>
 </body>
 </html>
