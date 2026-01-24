@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MedWard Pro</title>
+  <script>
+    // Redirect to appropriate page based on auth status
+    (function() {
+      const user = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
+      const pass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
+      const unit = sessionStorage.getItem('MW_UNIT');
+      
+      if (!user || !pass) {
+        window.location.replace('login.html');
+      } else if (!unit) {
+        window.location.replace('landing.html');
+      } else {
+        window.location.replace('dashboard.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>
