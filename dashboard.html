@@ -15735,10 +15735,18 @@ async function cloudFirstBoot() {
         syncState.hasEverSyncedThisSession = true;
         syncState.lastServerPatientCount = state.patients?.length || 0;
         syncState.lastServerUnitCount = state.units?.length || 0;
-        
-        showSyncStatusBar('☁️ Cloud connected', 'green');
-        console.log('✅ Loaded from verified cache:', state.patients.length, 'patients');
-        
+
+        // Check if we're in offline mode
+        const isOfflineMode = localStorage.getItem('MW_OFFLINE_MODE') === 'true';
+
+        if (isOfflineMode) {
+          showSyncStatusBar('📴 Offline mode - using cached data', 'orange');
+          console.log('⚠️ Loaded from offline cache:', state.patients.length, 'patients');
+        } else {
+          showSyncStatusBar('☁️ Cloud connected', 'green');
+          console.log('✅ Loaded from verified cache:', state.patients.length, 'patients');
+        }
+
         return true;
       } else {
         // ═══════════════════════════════════════════════════════════════════

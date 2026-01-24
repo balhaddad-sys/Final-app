@@ -317,7 +317,10 @@ async function loadCloudData() {
     
     // Set verification timestamp - dashboard will check this
     localStorage.setItem('MW_CLOUD_VERIFIED', Date.now().toString());
-    
+
+    // Clear offline mode flag since we successfully synced with cloud
+    localStorage.removeItem('MW_OFFLINE_MODE');
+
     console.log('✅ Cache warmed successfully');
     console.log('   MW_CLOUD_VERIFIED:', Date.now());
     console.log('   Dashboard will use this verified cache');
@@ -334,22 +337,35 @@ async function loadCloudData() {
     
   } catch (error) {
     console.error('❌ Cloud load failed:', error);
-    
+
     // Check if we have local cache to fall back to
     const localCache = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
-    
+
     if (localCache) {
       // We have local data - let user continue in offline mode
       setStatus('Offline mode', 'Using cached data');
-      
-      // Don't set MW_CLOUD_VERIFIED - dashboard will know it's not fresh
-      // But let user proceed after a moment
+
+      // CRITICAL FIX: Set MW_CLOUD_VERIFIED even in offline mode to prevent redirect loop
+      // Mark it with a special value to indicate it's offline cached data
+      localStorage.setItem('MW_CLOUD_VERIFIED', 'offline_' + Date.now().toString());
+      localStorage.setItem('MW_OFFLINE_MODE', 'true');
+
+      console.log('⚠️ Using offline cached data - cloud sync failed');
+      console.log('   MW_CLOUD_VERIFIED:', localStorage.getItem('MW_CLOUD_VERIFIED'));
+      console.log('   Dashboard will use cached data in offline mode');
+
+      // Let user proceed after a moment
       setTimeout(() => {
         window.location.href = 'index.html';
       }, 1500);
     } else {
-      // No local cache - show error
-      showError('Could not connect to server. Please check your internet connection.');
+      // No local cache - show error and retry automatically
+      showError('Could not connect to server. Retrying...');
+
+      // Auto-retry after 3 seconds
+      setTimeout(() => {
+        loadCloudData();
+      }, 3000);
     }
   }
 }
