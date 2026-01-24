@@ -1170,22 +1170,35 @@ async function loadData() {
       // Cache is verified - full access
       state.isHydrated = true;
       state.isReadOnly = false;
-      console.log('✅ Loaded from verified cache:', state.patients.length, 'patients,', state.units.length, 'units, rev:', state.rev);
+
+      // Check if we're in offline mode
+      const isOfflineMode = localStorage.getItem('MW_OFFLINE_MODE') === 'true';
+
+      if (isOfflineMode) {
+        console.log('⚠️ Loaded from offline cache:', state.patients.length, 'patients,', state.units.length, 'units, rev:', state.rev);
+      } else {
+        console.log('✅ Loaded from verified cache:', state.patients.length, 'patients,', state.units.length, 'units, rev:', state.rev);
+      }
     } else {
       // No cache - redirect to loading page
       console.log('❌ No cache found - redirecting to loading page');
       window.location.href = 'loading.html';
       return;
     }
-    
+
     // Restore any pending patches from localStorage
     if (syncState.patchQueue.length > 0) {
       console.log('📦 Restored', syncState.patchQueue.length, 'pending patches from localStorage');
       markDirtyV2();
     }
-    
+
     renderUnits();
     hideLoading();
+
+    // Show offline mode indicator if applicable
+    if (localStorage.getItem('MW_OFFLINE_MODE') === 'true') {
+      toast('📴 Offline mode - using cached data');
+    }
   } catch (e) {
     hideLoading();
     toast('Failed to load data');
