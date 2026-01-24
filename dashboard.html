@@ -8032,12 +8032,17 @@ async function syncCloud() {
   await syncFromCloud();
 }
 
-async function saveCloud() {
-  markDirty();
-}
+// NOTE: saveCloud() is now defined in Sync Engine v2.0 (line ~7100)
+// Removed duplicate legacy definition to prevent override
+// async function saveCloud() {
+//   markDirty();
+// }
 
+// NOTE: forceSync() is now defined in Sync Engine v2.0 (line ~7108)
+// Removed duplicate legacy definition to prevent override
+/* LEGACY forceSync - COMMENTED OUT
 // Force immediate sync - bypasses debounce for critical operations like lab saves
-async function forceSync() {
+async function forceSync_LEGACY() {
   // ═══════════════════════════════════════════════════════════════════
   // CLOUD-FIRST BOOT GUARD - Never upload until cloud boot completes
   // ═══════════════════════════════════════════════════════════════════
@@ -8227,6 +8232,7 @@ async function forceSync() {
     return false;
   }
 }
+END OF LEGACY forceSync */
 
 async function manualSync() {
   const syncFab = $('syncFab');
@@ -8245,7 +8251,10 @@ async function manualSync() {
   syncFab.classList.remove('syncing');
 }
 
-async function syncFromCloud() {
+// NOTE: syncFromCloud() is now defined in Sync Engine v2.0 (line ~7104)
+// Removed duplicate legacy definition to prevent override
+/* LEGACY syncFromCloud - COMMENTED OUT
+async function syncFromCloud_LEGACY() {
   // Show loading status
   showSyncStatusBar('🔄 Connecting to cloud...', 'orange');
   
@@ -8406,6 +8415,7 @@ async function syncFromCloud() {
     showSyncStatusBar('⚠️ Offline - View Only', 'orange');
   }
 }
+END OF LEGACY syncFromCloud */
 
 function getUnit(id) { return state.units.find(u => u.id == id); }
 function getPatient(id) { return state.patients.find(p => p.id == id); }
