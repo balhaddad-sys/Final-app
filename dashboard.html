@@ -9811,7 +9811,9 @@ window.addSelectedScannedMeds = function() {
       source: 'scan'
     });
   });
-  
+
+  // DELTA SYNC: Queue update patch for patient with scanned medications
+  enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
   saveCloud();
   renderProfileMeds();
   closeModal('medScanModal');
@@ -9900,7 +9902,9 @@ async function handleMedsUpload(file) {
         if (data.diagnoses?.length && !p.diagnosis) {
           p.diagnosis = data.diagnoses.join(', ');
         }
-        
+
+        // DELTA SYNC: Queue update patch for patient with imported medications
+        enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
         saveCloud();
         renderProfileMeds();
         toast(`✅ ${added} medication(s) imported` + (meds.length - added > 0 ? ` (${meds.length - added} duplicates skipped)` : ''));
@@ -10046,7 +10050,7 @@ window.saveMedication = function() {
   
   const p = state.currentPatient;
   if (!p.medications) p.medications = [];
-  
+
   if (state.editingMedIdx !== null) {
     // Edit existing
     p.medications[state.editingMedIdx] = { ...p.medications[state.editingMedIdx], ...med };
@@ -10056,7 +10060,9 @@ window.saveMedication = function() {
     p.medications.push(med);
     toast('Medication added');
   }
-  
+
+  // DELTA SYNC: Queue update patch for patient with modified medications
+  enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
   saveCloud();
   hideAddMedForm();
   renderProfileMeds();
@@ -10088,7 +10094,7 @@ window.saveMedicationNew = function() {
   
   const p = state.currentPatient;
   if (!p.medications) p.medications = [];
-  
+
   if (state.editingMedIdx !== null && state.editingMedIdx !== undefined) {
     p.medications[state.editingMedIdx] = { ...p.medications[state.editingMedIdx], ...med };
     toast('Medication updated');
@@ -10096,8 +10102,10 @@ window.saveMedicationNew = function() {
     p.medications.push(med);
     toast('Medication added');
   }
-  
+
   state.editingMedIdx = null;
+  // DELTA SYNC: Queue update patch for patient with modified medications
+  enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
   saveCloud();
   closeModal('addMedModal');
   renderProfileMeds();
@@ -10156,6 +10164,8 @@ window.deleteMedication = function(idx) {
     state.trash.medications.push(med);
   }
   state.currentPatient.medications.splice(idx, 1);
+  // DELTA SYNC: Queue update patch for patient with modified medications
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, medications: state.currentPatient.medications });
   saveCloud();
   renderProfileMeds();
   toast('Medication moved to trash');
