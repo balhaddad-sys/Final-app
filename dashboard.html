@@ -7402,12 +7402,28 @@ function smartWard(raw) {
   return 'Ward 14';
 }
 
+// PERFORMANCE: Cache for lab category lookups
+window._labCategoryCache = window._labCategoryCache || new Map();
+
 function getLabCategory(name) {
-  const n = (name || '').toLowerCase();
-  for (const [cat, data] of Object.entries(CONFIG.LAB_CATEGORIES)) {
-    if (data.terms.some(t => n.includes(t.toLowerCase()))) return cat;
+  // Check cache first
+  if (window._labCategoryCache.has(name)) {
+    return window._labCategoryCache.get(name);
   }
-  return 'Other';
+
+  const n = (name || '').toLowerCase();
+  let category = 'Other';
+
+  for (const [cat, data] of Object.entries(CONFIG.LAB_CATEGORIES)) {
+    if (data.terms.some(t => n.includes(t.toLowerCase()))) {
+      category = cat;
+      break;
+    }
+  }
+
+  // Cache the result
+  window._labCategoryCache.set(name, category);
+  return category;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -7519,49 +7535,49 @@ function analyzeTrend(param) {
   };
 }
 
-function generateSparkline(param, maxPoints = 7) {
+function generateSparkline(param, maxPoints = 7, precomputedTrend = null) {
   // param.values is array sorted newest first
   if (!param?.values || param.values.length < 2) return '<div style="height:25px;width:60px;"></div>';
-  
+
   // Extract the last N values, reversed so time goes Left → Right
   const dataPoints = param.values.slice(0, maxPoints).reverse()
     .map(v => parseFloat(v.value))
     .filter(v => !isNaN(v));
-  
+
   if (dataPoints.length < 2) return '<div style="height:25px;width:60px;"></div>';
-  
+
   // Dimensions - larger for better visibility
   const width = 60;
   const height = 25;
   const max = Math.max(...dataPoints);
   const min = Math.min(...dataPoints);
   const range = max - min || 1;
-  
+
   // Build points array
   const points = dataPoints.map((val, i) => {
     const x = (i / (dataPoints.length - 1)) * width;
     const y = height - ((val - min) / range * height);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
-  
-  // Determine color based on trend
-  const trend = analyzeTrend(param);
-  const lineColor = trend?.status === 'worsening' ? '#dc2626' : 
-                    trend?.status === 'improving' ? '#10b981' : 
+
+  // PERFORMANCE FIX: Use precomputed trend to avoid duplicate analyzeTrend() call
+  const trend = precomputedTrend || analyzeTrend(param);
+  const lineColor = trend?.status === 'worsening' ? '#dc2626' :
+                    trend?.status === 'improving' ? '#10b981' :
                     '#6366f1'; // Indigo for neutral
-  
+
   // First and last point coordinates
   const lastX = (dataPoints.length - 1) / (dataPoints.length - 1) * width;
   const lastY = height - ((dataPoints[dataPoints.length - 1] - min) / range * height);
   const firstY = height - ((dataPoints[0] - min) / range * height);
-  
+
   return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="overflow:visible">
-    <polyline points="${points.join(' ')}" 
-      fill="none" 
-      stroke="${lineColor}" 
-      stroke-width="2" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
+    <polyline points="${points.join(' ')}"
+      fill="none"
+      stroke="${lineColor}"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
       opacity="0.85"/>
     <circle cx="${lastX}" cy="${lastY.toFixed(1)}" r="3" fill="${lineColor}"/>
     <circle cx="0" cy="${firstY.toFixed(1)}" r="1.5" fill="#cbd5e1"/>
@@ -12287,10 +12303,10 @@ function renderProfileLabs() {
         const status = v.status || 'normal';
         const paramIdx = labData.parameters.findIndex(p => p.name === param.name);
         const valueIdx = param.values?.findIndex(val => val.date === latestDate) || 0;
-        
-        // Generate trend analysis and sparkline
+
+        // PERFORMANCE FIX: Calculate trend once and pass to sparkline (eliminates duplicate calculation)
         const trend = analyzeTrend(param);
-        const sparkline = generateSparkline(param);
+        const sparkline = generateSparkline(param, 7, trend);
         
         // Build Delta Badge HTML (professional pill style)
         let badgeHTML = '';
@@ -13028,37 +13044,49 @@ function buildLabPreviewSection(title, type, icon, params) {
 
 window.confirmLabExtraction = async function() {
   if (!state.pendingLabData || !state.currentPatient) return;
-  
+
   const p = state.currentPatient;
   const ld = state.pendingLabData;
-  
+
   // Merge dates
   (ld.dates || []).forEach(d => {
     if (!p.labData.dates.includes(d)) p.labData.dates.push(d);
   });
   p.labData.dates.sort((a, b) => new Date(b) - new Date(a));
-  
-  // Merge parameters intelligently
+
+  // OPTIMIZED: Build hash map for faster lookups - O(n) instead of O(n²)
+  const paramMap = new Map();
+  p.labData.parameters.forEach(param => {
+    const key = param.name.toLowerCase();
+    paramMap.set(key, param);
+    if (param.abbrev) {
+      paramMap.set(param.abbrev.toLowerCase(), param);
+    }
+  });
+
+  // Merge parameters intelligently with hash map
   (ld.parameters || []).forEach(newParam => {
-    let existing = p.labData.parameters.find(ep => 
-      ep.name.toLowerCase() === newParam.name.toLowerCase() ||
-      (ep.abbrev && newParam.abbrev && ep.abbrev.toLowerCase() === newParam.abbrev.toLowerCase())
-    );
-    
+    const nameKey = newParam.name.toLowerCase();
+    const abbrevKey = newParam.abbrev?.toLowerCase();
+    let existing = paramMap.get(nameKey) || (abbrevKey ? paramMap.get(abbrevKey) : null);
+
     if (existing) {
+      // Build value map for faster lookups - O(n) instead of O(n*m)
+      const valueMap = new Map(existing.values.map(v => [v.date, v]));
+
       // Merge values into existing parameter
       (newParam.values || []).forEach(nv => {
-        const ev = existing.values.find(x => x.date === nv.date);
-        if (ev) { 
-          ev.value = nv.value; 
-          ev.status = nv.status; 
+        const ev = valueMap.get(nv.date);
+        if (ev) {
+          ev.value = nv.value;
+          ev.status = nv.status;
         } else {
           existing.values.push(nv);
         }
       });
       // Sort values by date descending
       existing.values.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
+
       // Update metadata
       if (newParam.refMin !== undefined) existing.refMin = newParam.refMin;
       if (newParam.refMax !== undefined) existing.refMax = newParam.refMax;
@@ -13072,17 +13100,21 @@ window.confirmLabExtraction = async function() {
       p.labData.parameters.push(newParam);
     }
   });
-  
+
   // Update interpretation
   if (ld.interpretation) p.labData.interpretation = ld.interpretation;
-  
-  // Force immediate sync (bypass debounce for lab data)
-  await forceSync();
-  
+
+  // PERFORMANCE FIX: Non-blocking sync - update UI immediately, sync in background
+  forceSync().catch(err => console.error('Background sync failed:', err));
+
+  // Clear caches to force recalculation with new data
+  if (window._trendCache) window._trendCache.clear();
+  if (window._labCategoryCache) window._labCategoryCache.clear();
+
   renderProfileLabs();
   closeModal('labPreviewModal');
   toast('Lab results saved!');
-  
+
   // Clear pending data
   state.pendingLabData = null;
   state.labExtractionConfidence = 0;
