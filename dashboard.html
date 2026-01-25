@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16836,12 +16837,19 @@ function parseWardHeader(v) {
 // Index columns from header row
 function indexColumns(headerRow) {
   const headers = (headerRow || []).map(normalizeHeader);
-  const find = (...needles) => headers.findIndex(h => needles.some(n => h.includes(n)));
+  console.log('Headers found:', headers);
+  
+  const find = (...needles) => {
+    const idx = headers.findIndex(h => needles.some(n => h.includes(n)));
+    console.log('Looking for', needles, '-> found at index', idx);
+    return idx;
+  };
+  
   return {
-    roomWard: find('room / ward', 'room/ward', 'room ward', 'room', 'ward', 'bed'),
-    name: find('patient name', 'patient', 'name'),
-    diagnosis: find('diagnosis', 'dx', 'diagnoses'),
-    doctor: find('assigned doctor', 'doctor', 'physician', 'attending'),
+    roomWard: find('room', 'ward', 'bed'),
+    name: find('patient', 'name'),
+    diagnosis: find('diagnosis', 'dx'),
+    doctor: find('doctor', 'assigned', 'physician'),
     status: find('status', 'type')
   };
 }
@@ -16881,21 +16889,33 @@ function smartBedCompare(a, b) {
 
 // Parse sheet rows into normalized patient objects
 function parseWardSheetToPatients(values) {
-  if (!Array.isArray(values) || values.length < 2) return [];
+  if (!Array.isArray(values) || values.length < 2) {
+    console.log('Invalid values array');
+    return [];
+  }
   
-  // Find header row (contains "patient" and "diagnosis")
+  console.log('Total rows:', values.length);
+  console.log('First 5 rows:', values.slice(0, 5));
+  
+  // Find header row - look for row with "Patient" AND "Diagnosis" 
   let headerRowIndex = -1;
   for (let i = 0; i < Math.min(values.length, 30); i++) {
-    const row = values[i].map(normalizeHeader);
-    if (row.some(c => c.includes('patient')) && row.some(c => c.includes('diagnos'))) {
+    const rowText = values[i].join(' ').toLowerCase();
+    if (rowText.includes('patient') && rowText.includes('diagnosis')) {
       headerRowIndex = i;
+      console.log('Found header at row', i, ':', values[i]);
       break;
     }
   }
-  if (headerRowIndex === -1) headerRowIndex = 0;
+  
+  if (headerRowIndex === -1) {
+    console.log('No header found, using row 0');
+    headerRowIndex = 0;
+  }
   
   const header = values[headerRowIndex];
   const colMap = indexColumns(header);
+  console.log('Column map:', colMap);
   
   let currentWard = '';
   let currentListType = 'active';
@@ -16905,86 +16925,103 @@ function parseWardSheetToPatients(values) {
   
   for (let r = headerRowIndex + 1; r < values.length; r++) {
     const row = values[r];
+    if (!row || row.length === 0) continue;
+    
+    const joined = row.join(' ').trim().toLowerCase();
+    
+    // Skip empty rows
+    if (!joined) continue;
+    
+    // Detect section markers
+    if (joined.includes('chronic list') || joined.includes('(chronic')) {
+      console.log('Row', r, ': Chronic section marker');
+      inChronicSection = true;
+      currentListType = 'chronic';
+      currentWard = ''; // Reset ward for chronic section
+      continue;
+    }
+    
+    if (joined.includes('er/unassigned')) {
+      console.log('Row', r, ': ER/Unassigned section');
+      currentWard = 'ER';
+      currentListType = 'er';
+      continue;
+    }
+    
+    // Check if this is a ward header row (e.g., "Ward 10", "ward 19")
+    // Ward headers typically have the ward name in first non-empty cell and nothing else meaningful
+    const firstCell = String(row[0] || '').trim().toLowerCase();
+    const secondCell = String(row[1] || '').trim().toLowerCase();
+    const wardMatch = (firstCell.match(/^ward\s*(\d+)/i) || secondCell.match(/^ward\s*(\d+)/i));
+    
+    // Count how many cells have content
+    const filledCells = row.filter(c => String(c || '').trim()).length;
+    
+    if (wardMatch && filledCells <= 2) {
+      currentWard = 'Ward ' + wardMatch[1];
+      console.log('Row', r, ': Ward header ->', currentWard);
+      continue;
+    }
+    
+    // Get cell values
     const roomWardCell = getCell(row, colMap.roomWard);
     const name = getCell(row, colMap.name);
     const diagnosis = getCell(row, colMap.diagnosis);
     const doctor = getCell(row, colMap.doctor);
     const status = getCell(row, colMap.status);
     
-    const joined = row.join(' ').trim().toLowerCase();
-    
-    // Detect chronic section markers
-    if (joined.includes('chronic list') || joined.includes('(chronic')) {
-      inChronicSection = true;
-      currentListType = 'chronic';
-      continue;
-    }
-    
-    // Detect "ER/Unassigned" section
-    if (joined.includes('er/unassigned') || joined.includes('unassigned')) {
-      currentWard = 'ER';
-      currentListType = 'er';
-      continue;
-    }
-    
-    // Detect ward header rows
-    const wardHeader = parseWardHeader(roomWardCell || row[0]);
-    if (wardHeader && !name && !diagnosis) {
-      currentWard = wardHeader;
-      continue;
-    }
-    
-    // Detect ER rows
-    const isER = String(roomWardCell).trim().toLowerCase() === 'er' || 
-                 joined.startsWith('er ') || 
-                 roomWardCell?.toLowerCase() === 'er';
-    if (isER) {
+    // Check for ER in room/ward column
+    if (roomWardCell.toLowerCase() === 'er') {
       currentListType = 'er';
       currentWard = 'ER';
-    } else if (inChronicSection) {
-      currentListType = 'chronic';
-    } else {
-      currentListType = 'active';
-      if (!currentWard && roomWardCell) {
-        const maybeWard = parseWardHeader(roomWardCell);
-        if (maybeWard) currentWard = maybeWard;
+    }
+    
+    // Skip if no patient name and no diagnosis (likely a header/separator row)
+    if (!name && !diagnosis) {
+      console.log('Row', r, ': Skipping - no name/diagnosis');
+      continue;
+    }
+    
+    // Extract bed number (room/ward cell when it's not a ward name)
+    let bed = '';
+    if (roomWardCell && !roomWardCell.toLowerCase().startsWith('ward') && roomWardCell.toLowerCase() !== 'er') {
+      bed = roomWardCell;
+    }
+    
+    // Determine final values
+    const finalWard = currentWard || (currentListType === 'er' ? 'ER' : 'Unassigned');
+    const finalListType = inChronicSection ? 'chronic' : (roomWardCell.toLowerCase() === 'er' ? 'er' : currentListType);
+    
+    let finalStatus = status;
+    if (!finalStatus) {
+      if (finalListType === 'chronic' || status?.toLowerCase() === 'chronic') {
+        finalStatus = 'Chronic';
+      } else {
+        finalStatus = 'Non-Chronic';
       }
     }
     
-    // Skip empty lines
-    if (!name && !diagnosis && !doctor && !status) continue;
-    
-    // Extract bed number
-    let bed = '';
-    const roomWard = String(roomWardCell || '').trim();
-    if (roomWard && !parseWardHeader(roomWard) && roomWard.toLowerCase() !== 'er') {
-      bed = roomWard;
-    }
-    
-    // Determine ward
-    const ward = currentWard || (currentListType === 'er' ? 'ER' : 'Unassigned');
-    
-    // Set status based on section
-    let finalStatus = status;
-    if (!finalStatus && currentListType === 'chronic') finalStatus = 'Chronic';
-    if (!finalStatus && currentListType === 'active') finalStatus = 'Non-Chronic';
-    
-    patients.push({
-      listType: currentListType,
-      ward,
-      bed,
-      name: String(name || '').trim(),
-      diagnosis: String(diagnosis || '').trim(),
-      doctor: String(doctor || '').trim(),
-      status: String(finalStatus || '').trim(),
+    const patient = {
+      listType: finalListType,
+      ward: finalWard,
+      bed: bed,
+      name: name,
+      diagnosis: diagnosis,
+      doctor: doctor,
+      status: finalStatus,
       sourceRow: r + 1
-    });
+    };
+    
+    console.log('Row', r, ': Patient ->', patient.name, '| Ward:', patient.ward, '| Bed:', patient.bed);
+    patients.push(patient);
   }
+  
+  console.log('Total patients parsed:', patients.length);
   
   // Remove duplicates
   const seen = new Set();
   return patients.filter(p => {
-    const key = [p.listType, p.ward, p.bed, p.name.toLowerCase(), p.diagnosis.toLowerCase()].join('|');
+    const key = [p.name.toLowerCase(), p.ward.toLowerCase(), p.bed].join('|');
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
