@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4666,7 +4665,7 @@ body.dark-theme .readonly-banner {
       <button class="btn btn-secondary" onclick="previewImport()" style="padding:10px 16px;font-size:0.85rem;" id="btnPreviewImport">Preview</button>
     </div>
     
-    <div id="importStatus" style="display:none;padding:10px;border-radius:8px;font-size:0.8rem;margin-top:10px;"></div>
+    <div id="userImportStatus" style="display:none;padding:10px;border-radius:8px;font-size:0.8rem;margin-top:10px;"></div>
     
     <div id="lastImportInfo" style="display:none;font-size:0.7rem;color:var(--text-muted);margin-top:8px;padding:6px 8px;background:var(--bg-elevated);border-radius:6px;">
       <span style="color:var(--success)">✓</span> <span id="lastImportText">Last import: —</span>
@@ -16779,20 +16778,24 @@ function loadImportConfig() {
 
 // Show import status message
 function showImportStatus(message, type = 'info') {
-  const el = $('importStatus');
-  if (!el) return;
+  // Update both possible status elements
+  const elements = [$('importStatus'), $('userImportStatus')];
   
-  el.style.display = 'block';
-  el.style.background = type === 'error' ? 'rgba(239,68,68,0.1)' : 
-                        type === 'success' ? 'rgba(16,185,129,0.1)' : 
-                        'rgba(59,130,246,0.1)';
-  el.style.color = type === 'error' ? '#dc2626' : 
-                   type === 'success' ? '#059669' : 
-                   '#3b82f6';
-  el.style.border = `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 
-                                  type === 'success' ? 'rgba(16,185,129,0.3)' : 
-                                  'rgba(59,130,246,0.3)'}`;
-  el.innerHTML = message;
+  elements.forEach(el => {
+    if (!el) return;
+    
+    el.style.display = 'block';
+    el.style.background = type === 'error' ? 'rgba(239,68,68,0.1)' : 
+                          type === 'success' ? 'rgba(16,185,129,0.1)' : 
+                          'rgba(59,130,246,0.1)';
+    el.style.color = type === 'error' ? '#dc2626' : 
+                     type === 'success' ? '#059669' : 
+                     '#3b82f6';
+    el.style.border = `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 
+                                    type === 'success' ? 'rgba(16,185,129,0.3)' : 
+                                    'rgba(59,130,246,0.3)'}`;
+    el.innerHTML = message;
+  });
 }
 
 // Fetch sheet data via Apps Script backend
@@ -17129,16 +17132,28 @@ window.importWardList = async function() {
     const clearExisting = $('import_clearExisting')?.checked || false;
     const sheetId = extractSheetId(sheetUrl);
     
+    console.log('Import started - sheetUrl:', sheetUrl, 'tabName:', tabName, 'sheetId:', sheetId);
+    
     if (!sheetId) {
       showImportStatus('⚠️ Please enter a valid Google Sheet URL or ID', 'error');
       return;
     }
     
-    showImportStatus('🔄 Importing patients...', 'info');
+    if (!state.settings?.apiUrl) {
+      showImportStatus('⚠️ API not configured. Contact admin.', 'error');
+      return;
+    }
+    
+    showImportStatus('🔄 Fetching sheet data...', 'info');
     
     // Fetch and parse
+    console.log('Calling fetchSheetData...');
     const values = await fetchSheetData(sheetId, tabName);
+    console.log('Got values:', values?.length, 'rows');
+    
+    showImportStatus('🔄 Parsing patients...', 'info');
     const parsed = parseWardSheetToPatients(values);
+    console.log('Parsed patients:', parsed?.length);
     
     if (parsed.length === 0) {
       showImportStatus('⚠️ No patients found in sheet. Check the format.', 'error');
