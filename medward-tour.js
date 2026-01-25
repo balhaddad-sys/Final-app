@@ -226,7 +226,7 @@
           }
         },
         {
-          element: '.tab[data-tab="patients"], button:contains("Patients")',
+          element: '.tab[data-tab="patients"]',
           popover: {
             title: '👥 Patients Tab',
             description: 'Your patient list. Filter by status (New, Active, Critical, Chronic) and manage admissions.',
@@ -266,7 +266,7 @@
           }
         },
         {
-          element: 'button[onclick*="openAddPatient"], .btn-primary:contains("Add")',
+          element: 'button[onclick*="openAddPatient"], .btn-primary',
           popover: {
             title: '➕ Add New Patient',
             description: 'Admit a new patient. Scan stickers, enter manually, or use voice input.',
@@ -274,7 +274,7 @@
           }
         },
         {
-          element: 'a[href*="handover"], .btn-secondary:contains("Handover")',
+          element: 'a[href*="handover"], .btn-secondary',
           popover: {
             title: '📋 Handover Sheet',
             description: 'Generate a professional handover document for shift changes. Print or share digitally.',
@@ -429,7 +429,7 @@
           }
         },
         {
-          element: '.calc-card:contains("Potassium"), [data-calc="potassium"]',
+          element: '[data-calc="potassium"], .calc-card',
           popover: {
             title: '🍌 Potassium Correction',
             description: 'Calculate potassium replacement based on level, weight, and route preference.',
@@ -437,7 +437,7 @@
           }
         },
         {
-          element: '.calc-card:contains("Sodium"), [data-calc="sodium"]',
+          element: '[data-calc="sodium"], .calc-card',
           popover: {
             title: '🧂 Sodium Correction',
             description: 'Safe sodium correction calculator with rate limits to prevent osmotic demyelination.',
@@ -445,7 +445,7 @@
           }
         },
         {
-          element: '.calc-card:contains("Insulin"), [data-calc="insulin"]',
+          element: '[data-calc="insulin"], .calc-card',
           popover: {
             title: '💉 Insulin Protocols',
             description: 'DKA, HHS, and sliding scale insulin calculators with monitoring reminders.',
@@ -879,8 +879,15 @@
   function filterStepsForPage(steps) {
     return steps.filter(step => {
       if (!step.element) return true; // Non-element steps always show
-      const el = document.querySelector(step.element);
-      return el && el.offsetParent !== null; // Element exists and is visible
+
+      try {
+        const el = document.querySelector(step.element);
+        return el && el.offsetParent !== null; // Element exists and is visible
+      } catch (error) {
+        // If querySelector fails (invalid selector), log the error and exclude this step
+        console.warn(`⚠️ Invalid selector or querySelector error for step:`, step.element, error.message);
+        return false;
+      }
     });
   }
 
@@ -889,10 +896,17 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   function startTour(forcePage = null, force = false) {
-    // Check if driver.js is loaded - handle both function and object cases
+    // Check if driver.js is loaded and is a function
     if (typeof window.driver === 'undefined') {
       console.error('❌ Driver.js not loaded. Make sure to include the library.');
       alert('Tour system not available. Please refresh the page.');
+      return;
+    }
+
+    // Verify driver is actually a function
+    if (typeof window.driver !== 'function') {
+      console.error('❌ window.driver exists but is not a function. Type:', typeof window.driver);
+      alert('Tour system error. window.driver is not properly initialized.');
       return;
     }
 
@@ -939,11 +953,21 @@
         }
       });
 
+      // Verify the driver object was created successfully
+      if (!driverObj || typeof driverObj.drive !== 'function') {
+        throw new Error('Driver object was not created properly or does not have a drive method');
+      }
+
       // Start the tour
       console.log(`🚀 Starting tour: ${tourConfig.name}`);
       driverObj.drive();
     } catch (error) {
       console.error('❌ Error starting tour:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        driverType: typeof window.driver
+      });
       alert('Failed to start tour. Please check the console for details.');
     }
   }
@@ -1197,6 +1221,11 @@
         alert('Tour system is loading... Please try again in a moment.');
         return;
       }
+      if (typeof window.driver !== 'function') {
+        alert('Tour system error. Please refresh the page and try again.');
+        console.error('window.driver is not a function:', typeof window.driver);
+        return;
+      }
       startTour(null, true);
     };
 
@@ -1207,13 +1236,21 @@
   // INITIALIZATION
   // ═══════════════════════════════════════════════════════════════════════════
 
-  function waitForDriver(callback, maxAttempts = 10, attempt = 0) {
-    if (typeof window.driver !== 'undefined') {
+  function waitForDriver(callback, maxAttempts = 20, attempt = 0) {
+    // Check if driver exists and is a function
+    if (typeof window.driver !== 'undefined' && typeof window.driver === 'function') {
+      console.log('✅ Driver.js loaded successfully');
       callback();
     } else if (attempt < maxAttempts) {
-      setTimeout(() => waitForDriver(callback, maxAttempts, attempt + 1), 100);
+      // Log progress every 5 attempts
+      if (attempt % 5 === 0 && attempt > 0) {
+        console.log(`⏳ Waiting for driver.js... (attempt ${attempt}/${maxAttempts})`);
+      }
+      setTimeout(() => waitForDriver(callback, maxAttempts, attempt + 1), 200);
     } else {
       console.error('❌ Driver.js failed to load after multiple attempts');
+      console.error('window.driver type:', typeof window.driver);
+      console.error('window.driver value:', window.driver);
     }
   }
 
