@@ -1629,7 +1629,7 @@ body.dark-theme .profile-tab.active{background:rgba(96,165,250,0.15)}
 .med-card{
   background:var(--bg-card);
   border:1px solid var(--border);
-  border-radius:14px;margin-bottom:12px;overflow:hidden;
+  border-radius:16px;margin-bottom:12px;overflow:hidden;
   transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
   box-shadow:0 1px 3px rgba(0,0,0,0.05)
 }
@@ -1640,37 +1640,49 @@ body.dark-theme .profile-tab.active{background:rgba(96,165,250,0.15)}
 }
 .med-card-main{flex:1;min-width:0}
 .med-card-name{
-  font-size:1rem;font-weight:700;color:var(--text);
+  font-size:1.05rem;font-weight:700;color:var(--text);
   margin-bottom:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap
 }
 .med-card-generic{font-size:0.75rem;color:var(--text-muted);font-style:italic;margin-top:2px}
-.med-card-actions{display:flex;gap:6px}
-.med-card-action{
-  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
-  background:var(--bg);color:var(--text-muted);
-  font-size:0.85rem;cursor:pointer;display:grid;place-items:center;transition:all 0.2s
-}
-.med-card-action:hover{background:var(--bg-card);border-color:var(--primary);color:var(--primary)}
-.med-card-action.info{background:rgba(0,94,184,0.08);border-color:rgba(0,94,184,0.2);color:var(--primary)}
-.med-card-action.info:hover{background:rgba(0,94,184,0.15);border-color:var(--primary)}
-.med-card-action.delete:hover{background:rgba(220,38,38,0.08);border-color:rgba(220,38,38,0.3);color:#dc2626}
 
-/* Dose & Schedule Pills */
+/* Simplified Actions - Icon Row */
+.med-card-actions{
+  display:flex;
+  gap:4px;
+  opacity:0.6;
+  transition:opacity 0.2s
+}
+.med-card:hover .med-card-actions{opacity:1}
+.med-card-action{
+  width:28px;height:28px;border-radius:6px;border:none;
+  background:transparent;color:var(--text-muted);
+  font-size:0.75rem;cursor:pointer;display:grid;place-items:center;transition:all 0.15s
+}
+.med-card-action:hover{background:var(--bg-elevated);color:var(--primary)}
+.med-card-action.delete:hover{background:rgba(220,38,38,0.1);color:#dc2626}
+
+/* Simplified Dose Display - Single Line */
 .med-card-dose{
-  display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 14px;
-  border-bottom:1px solid var(--border)
+  display:flex;align-items:center;gap:16px;padding:10px 18px;
+  background:var(--bg);font-size:0.85rem;color:var(--text-secondary)
 }
+.med-dose-item{display:flex;align-items:center;gap:6px}
+.med-dose-item .label{font-weight:600;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase}
+.med-dose-item .value{font-weight:600;color:var(--text)}
+
+/* Legacy pill styles (for compatibility) */
 .med-dose-pill{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:6px 12px;border-radius:100px;font-size:0.78rem;font-weight:500
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600;
+  background:var(--bg-elevated);color:var(--text-secondary)
 }
-.med-dose-pill.amount{background:rgba(139,92,246,0.1);color:#8b5cf6}
-.med-dose-pill.route{background:rgba(59,130,246,0.1);color:#3b82f6}
-.med-dose-pill.frequency{background:rgba(16,185,129,0.1);color:#10b981}
+.med-dose-pill.amount{color:var(--primary)}
+.med-dose-pill.route{color:var(--text)}
+.med-dose-pill.frequency{color:var(--teal)}
 
 /* Indication */
 .med-card-indication{
-  padding:14px 18px;background:var(--bg);border-bottom:1px solid var(--border)
+  padding:12px 18px;background:var(--bg);border-top:1px solid var(--border)
 }
 .med-indication-label{
   font-size:0.65rem;font-weight:700;color:var(--text-muted);
@@ -1680,90 +1692,79 @@ body.dark-theme .profile-tab.active{background:rgba(96,165,250,0.15)}
 
 /* Status Badge */
 .med-status{
-  font-size:0.65rem;font-weight:700;padding:3px 10px;
-  border-radius:100px;text-transform:uppercase;letter-spacing:0.03em
+  font-size:0.6rem;font-weight:700;padding:3px 8px;
+  border-radius:4px;text-transform:uppercase;letter-spacing:0.03em
 }
-.med-status.active{background:rgba(52,211,153,0.12);color:#34d399}
-.med-status.prn{background:rgba(251,191,36,0.12);color:#fbbf24}
-.med-status.discontinued{background:rgba(107,114,128,0.12);color:#9ca3af}
-.med-status.new{background:rgba(167,139,250,0.12);color:#a78bfa}
+.med-status.active{background:rgba(52,211,153,0.15);color:#34d399}
+.med-status.prn{background:rgba(251,191,36,0.15);color:#fbbf24}
+.med-status.discontinued{background:rgba(107,114,128,0.15);color:#9ca3af}
+.med-status.new{background:rgba(167,139,250,0.15);color:#a78bfa}
 
-/* Learn More Button */
+/* Learn More Button - Simplified */
 .med-learn-more{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  margin:0 18px 16px;padding:12px 16px;
-  background:var(--bg);
-  border:1px solid var(--border);border-radius:10px;
+  padding:10px 18px;
+  background:transparent;
+  border:none;border-top:1px solid var(--border);
   font-family:inherit;font-size:0.8rem;font-weight:600;color:var(--primary);
-  cursor:pointer;transition:all 0.2s;text-decoration:none
+  cursor:pointer;transition:all 0.2s;text-decoration:none;width:100%
 }
-.med-learn-more:hover{
-  background:rgba(0,94,184,0.05);
-  border-color:var(--primary);box-shadow:0 2px 8px rgba(0,94,184,0.1)
-}
-.med-learn-more .sparkle{font-size:1rem}
+.med-learn-more:hover{background:rgba(0,94,184,0.05)}
+.med-learn-more .sparkle{font-size:0.9rem}
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   NEURAL MEDICATION SUGGESTIONS - AI Learning System
+   MEDICATION SUGGESTIONS - Clean Professional Design
 ═══════════════════════════════════════════════════════════════════════════ */
 
 .med-ai-suggestions{
-  background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(59,130,246,0.05));
-  border:1px solid rgba(139,92,246,0.2);
-  border-radius:14px;padding:16px;margin-bottom:20px;
-  position:relative;overflow:hidden
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:12px;padding:14px;margin-bottom:16px
 }
-.med-ai-suggestions::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,#8b5cf6,#3b82f6,#14b8a6);
-  animation:aiGradient 3s ease infinite
+.med-ai-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  padding-bottom:10px;border-bottom:1px solid var(--border)
 }
-@keyframes aiGradient{
-  0%,100%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-}
-.med-ai-header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
 .med-ai-icon{
-  width:36px;height:36px;border-radius:10px;
-  background:linear-gradient(135deg,#8b5cf6,#6366f1);
-  display:grid;place-items:center;font-size:1.1rem;
-  box-shadow:0 4px 12px rgba(139,92,246,0.3)
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--primary),#0077cc);
+  display:grid;place-items:center;font-size:0.95rem;color:white
 }
-.med-ai-title{display:flex;align-items:center;gap:8px;flex:1}
-.med-ai-title span:first-child{font-size:0.9rem;font-weight:700;color:#e0e7ff}
+.med-ai-title{display:flex;flex-direction:column;flex:1}
+.med-ai-title span:first-child{font-size:0.85rem;font-weight:700;color:var(--text)}
 .med-ai-badge{
-  padding:3px 8px;background:rgba(139,92,246,0.2);
-  border:1px solid rgba(139,92,246,0.3);border-radius:100px;
-  font-size:0.6rem;font-weight:700;color:#a78bfa;
-  text-transform:uppercase;letter-spacing:0.05em
+  font-size:0.65rem;color:var(--text-muted);font-weight:500;margin-top:2px
 }
-.med-ai-hint{
-  width:100%;font-size:0.75rem;color:#8b949e;
-  padding-left:46px;margin-top:-4px
-}
-.med-ai-chips{display:flex;flex-wrap:wrap;gap:8px}
+.med-ai-hint{display:none}
+
+/* Suggestion Chips - Clean Card Style */
+.med-ai-chips{display:flex;flex-direction:column;gap:6px}
 .med-ai-chip{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 14px;background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
-  font-family:inherit;font-size:0.8rem;font-weight:600;color:#c9d1d9;
-  cursor:pointer;transition:all 0.2s;position:relative
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:10px;
+  font-family:inherit;cursor:pointer;transition:all 0.15s;position:relative;
+  text-align:left;width:100%
 }
 .med-ai-chip:hover{
-  background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3);
-  transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)
+  background:var(--bg-hover);border-color:var(--primary);
+  transform:translateX(4px)
 }
-.med-ai-chip-icon{font-size:1rem}
-.med-ai-chip-info{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
-.med-ai-chip-name{font-weight:700;color:#f0f6fc}
-.med-ai-chip-detail{font-size:0.7rem;color:#8b949e;font-weight:500}
+.med-ai-chip-icon{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--bg-surface);border:1px solid var(--border);
+  display:grid;place-items:center;font-size:1rem;flex-shrink:0
+}
+.med-ai-chip-info{display:flex;flex-direction:column;flex:1;min-width:0}
+.med-ai-chip-name{font-size:0.9rem;font-weight:600;color:var(--text)}
+.med-ai-chip-detail{font-size:0.75rem;color:var(--text-muted);margin-top:2px}
 .med-ai-chip-match{
-  position:absolute;top:-6px;right:-6px;
-  padding:2px 6px;background:linear-gradient(135deg,#10b981,#14b8a6);
-  border-radius:100px;font-size:0.6rem;font-weight:700;color:#000
+  padding:4px 8px;background:var(--success);
+  border-radius:4px;font-size:0.6rem;font-weight:700;color:white;
+  text-transform:uppercase;letter-spacing:0.02em
 }
-.med-ai-chip.high-match{border-color:rgba(16,185,129,0.4)}
-.med-ai-chip.high-match .med-ai-chip-name{color:#34d399}
+.med-ai-chip.high-match{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.05)}
+.med-ai-chip.high-match .med-ai-chip-name{color:var(--success)}
 
 /* Loading State */
 .med-ai-loading{
@@ -2286,6 +2287,96 @@ body.dark-theme .profile-tab.active{background:rgba(96,165,250,0.15)}
 .med-form-actions .btn-secondary{
   background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1)
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADD MEDICATION MODAL - Clean Professional Design
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Modal Header */
+.med-modal-icon{font-size:1.5rem;margin-bottom:4px}
+.med-modal-title{font-size:1.15rem;font-weight:700;color:var(--text)}
+.med-modal-subtitle{font-size:0.8rem;color:var(--text-muted);margin-top:4px}
+
+/* Input Groups */
+.med-input-group{margin-bottom:16px}
+.med-input-group:last-child{margin-bottom:0}
+.med-input-label{
+  display:block;font-size:0.75rem;font-weight:600;
+  color:var(--text-muted);margin-bottom:6px
+}
+.med-input-label .required{color:#ef4444}
+
+/* Clean Input Field */
+.med-input{
+  width:100%;padding:14px 16px;
+  background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-size:0.95rem;font-family:inherit;
+  transition:all 0.2s
+}
+.med-input:focus{
+  outline:none;border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(0,94,184,0.1)
+}
+.med-input::placeholder{color:var(--text-muted)}
+
+/* Route Pills - Clean Horizontal Layout */
+.med-pill-group{
+  display:flex;flex-wrap:wrap;gap:8px
+}
+.med-pill{
+  padding:10px 16px;
+  background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--text-secondary);font-size:0.85rem;font-weight:600;
+  font-family:inherit;cursor:pointer;transition:all 0.15s
+}
+.med-pill:hover{border-color:var(--primary);color:var(--primary)}
+.med-pill.selected{
+  background:var(--primary);border-color:var(--primary);color:white
+}
+
+/* Frequency Grid - Clean Cards */
+.med-freq-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px
+}
+@media (max-width:500px){
+  .med-freq-grid{grid-template-columns:repeat(2,1fr)}
+}
+.med-freq-pill{
+  padding:12px 8px;
+  background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:10px;
+  font-family:inherit;cursor:pointer;transition:all 0.15s;
+  text-align:center
+}
+.med-freq-pill:hover{border-color:var(--primary)}
+.med-freq-pill.selected{
+  background:rgba(0,94,184,0.1);border-color:var(--primary)
+}
+.med-freq-label{font-size:0.9rem;font-weight:700;color:var(--text)}
+.med-freq-desc{font-size:0.7rem;color:var(--text-muted);margin-top:2px}
+.med-freq-pill.selected .med-freq-label{color:var(--primary)}
+
+/* Status Pills - Clean Minimal */
+.med-status-group{display:flex;flex-wrap:wrap;gap:8px}
+.med-status-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 14px;
+  background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:8px;
+  font-size:0.82rem;font-weight:600;color:var(--text-secondary);
+  font-family:inherit;cursor:pointer;transition:all 0.15s
+}
+.med-status-pill:hover{border-color:var(--text-muted)}
+.med-status-pill.selected{
+  background:rgba(255,255,255,0.05);border-color:var(--text-muted);color:var(--text)
+}
+.med-status-dot{width:8px;height:8px;border-radius:50%}
+.med-status-pill.active .med-status-dot{background:#34d399}
+.med-status-pill.new .med-status-dot{background:#a78bfa}
+.med-status-pill.prn .med-status-dot{background:#fbbf24}
+.med-status-pill.discontinued .med-status-dot{background:#6b7280}
 
 /* Empty State */
 .meds-empty{text-align:center;padding:48px 24px;color:#6b7280}
@@ -10009,16 +10100,14 @@ function renderMedCard(med, idx) {
           ${med.generic ? `<div class="med-card-generic">${esc(med.generic)}</div>` : ''}
         </div>
         <div class="med-card-actions">
-          <button class="med-card-action info" onclick="openDrugLearn('${drugNameEsc}')" title="AI Monograph">🧠</button>
-          <button class="med-card-action info" onclick="openDrugInfo('${drugNameEsc}', ${idx})" title="Drug Info">📚</button>
           <button class="med-card-action" onclick="editMedication(${idx})" title="Edit">✏️</button>
           <button class="med-card-action delete" onclick="deleteMedication(${idx})" title="Delete">🗑️</button>
         </div>
       </div>
       <div class="med-card-dose">
-        <span class="med-dose-pill amount">💊 ${esc(med.dose || '—')}</span>
-        <span class="med-dose-pill route">📍 ${esc(med.route || 'PO')}</span>
-        <span class="med-dose-pill frequency">🕐 ${esc(med.frequency || 'OD')}</span>
+        <div class="med-dose-item"><span class="value">${esc(med.dose || '—')}</span></div>
+        <div class="med-dose-item"><span class="label">Route</span><span class="value">${esc(med.route || 'PO')}</span></div>
+        <div class="med-dose-item"><span class="label">Freq</span><span class="value">${esc(med.frequency || 'OD')}</span></div>
       </div>
       ${med.indication ? `
         <div class="med-card-indication">
@@ -10028,7 +10117,7 @@ function renderMedCard(med, idx) {
       ` : ''}
       <button class="med-learn-more" onclick="openDrugLearn('${drugNameEsc}')">
         <span class="sparkle">✨</span>
-        Smart Monograph – Patient-Specific Analysis
+        View Drug Info
       </button>
     </div>
   `;
