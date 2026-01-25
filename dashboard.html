@@ -2635,6 +2635,9 @@ body.dark-theme .profile-tab.active{background:rgba(96,165,250,0.15)}
 .drug-info-list.interactions li::before{color:var(--gold)}
 .drug-info-list li strong{color:var(--text);font-weight:600}
 
+/* Drug Monograph Section Title */
+.mono-section-title{font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+
 /* Renal Dosing Grid */
 .renal-dosing-grid{
   display:grid;grid-template-columns:repeat(3,1fr);gap:10px
@@ -4607,6 +4610,67 @@ body.dark-theme .readonly-banner {
 <div class="modal-footer">
 <button class="btn btn-secondary btn-full" onclick="closeModal('drugInfoModal')">Close</button>
 </div>
+</div>
+</div>
+
+<!-- Dynamic Drug Monograph Modal - Patient-Specific Safety Profile -->
+<div class="modal" id="drugMonographModal">
+<div class="modal-box wide" style="max-height: 90vh; display:flex; flex-direction:column; background:var(--bg-card);">
+
+  <div id="monograph-header" style="padding:20px; border-bottom:1px solid var(--border); background:var(--bg-card);">
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+      <div>
+        <h2 id="mono-title" style="margin:0; font-size:1.4rem; color:var(--text);">Loading...</h2>
+        <div id="mono-class" style="font-size:0.9rem; color:var(--text-muted); margin-top:4px;">Checking Formulary...</div>
+      </div>
+      <button class="btn-icon" onclick="closeModal('drugMonographModal')" style="color:var(--text-secondary);">&times;</button>
+    </div>
+
+    <div id="mono-safety-banner" style="margin-top:16px; display:none;"></div>
+  </div>
+
+  <div id="mono-body" style="flex:1; overflow-y:auto; padding:16px;">
+
+    <div id="mono-loading" style="text-align:center; padding:40px;">
+      <div class="spinner"></div>
+      <p style="color:var(--text-muted); margin-top:12px;">Calculating Renal Adjustments...</p>
+    </div>
+
+    <div id="mono-content" class="hidden">
+
+      <div class="card" style="margin:0 0 16px 0;">
+        <div class="mono-section-title">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+          Optimized Dosing
+        </div>
+        <div id="mono-dose" style="font-size:1.1rem; font-weight:600; color:var(--text); margin-top:8px;"></div>
+        <div id="mono-renal" style="font-size:0.9rem; color:var(--text-secondary); margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);"></div>
+      </div>
+
+      <div class="card" style="margin:0 0 16px 0;">
+        <div class="mono-section-title" style="color:#ef4444;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          Interactions (Current Meds)
+        </div>
+        <div id="mono-interactions" style="font-size:0.9rem; line-height:1.5;"></div>
+      </div>
+
+      <div class="card" style="margin:0;">
+        <div class="mono-section-title" style="color:var(--primary);">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Clinical Pearls
+        </div>
+        <div id="mono-pearls" style="font-size:0.9rem; line-height:1.6; color:var(--text-secondary);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer" style="padding:12px 16px; border-top:1px solid var(--border);">
+    <button class="btn btn-secondary" onclick="closeModal('drugMonographModal')">Close</button>
+    <button class="btn btn-primary" id="mono-prescribe-btn" onclick="confirmPrescribeFromMonograph()">
+      Confirm & Prescribe
+    </button>
+  </div>
 </div>
 </div>
 
@@ -9688,6 +9752,7 @@ function renderMedCard(med, idx) {
         </div>
         <div class="med-card-actions">
           <button class="med-card-action info" onclick="openDrugInfo('${drugNameEsc}', ${idx})" title="Drug Info">📚</button>
+          <button class="med-card-action" onclick="openDrugLearn('${drugNameEsc}')" title="Safety Check" style="background:var(--success-bg);">🛡️</button>
           <button class="med-card-action" onclick="editMedication(${idx})" title="Edit">✏️</button>
           <button class="med-card-action delete" onclick="deleteMedication(${idx})" title="Delete">🗑️</button>
         </div>
@@ -9867,10 +9932,11 @@ function renderMedScanResult(data, imageUrl) {
             ${med.brandName ? `<div class="med-scan-item-details" style="font-style:italic">${esc(med.brandName)}</div>` : ''}
           </div>
           <button class="med-scan-item-btn" onclick="openDrugInfo('${drugNameEsc}')">Info</button>
+          <button class="med-scan-item-btn" onclick="openDrugLearn('${drugNameEsc}')" style="background:var(--success-bg);color:var(--success-text);" title="Safety Check">🛡️</button>
         </div>
       `;
     });
-    
+
     html += `</div>`;
     
     // Action buttons for multiple meds
@@ -9940,9 +10006,12 @@ function renderSingleMedResult(med, drugInfo) {
       <button class="btn btn-info" onclick="openDrugInfo('${drugNameEsc}')">
         📚 Drug Info
       </button>
+      <button class="btn btn-secondary" onclick="openDrugLearn('${drugNameEsc}')" title="Patient-Specific Safety Check">
+        🛡️ Safety
+      </button>
     </div>
   `;
-  
+
   // Show drug info preview if available
   if (drugInfo) {
     html += `
@@ -12561,6 +12630,188 @@ function toggleDrugSection(sectionId) {
   });
   */
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// DYNAMIC DRUG MONOGRAPH - Patient-Specific Safety Profile
+// ═══════════════════════════════════════════════════════════════════
+
+// Cockcroft-Gault Creatinine Clearance Calculator
+function calculateCrCl(age, gender, cr) {
+  if (!age || !cr) return null;
+  let creatinine = parseFloat(cr);
+  // Convert mmol/L to mg/dL if needed (SI unit > 20 suggests mmol/L)
+  if (creatinine > 20) creatinine = creatinine / 88.4;
+
+  // Cockcroft-Gault formula (assuming 70kg standard weight)
+  let crcl = ((140 - age) * 70) / (72 * creatinine);
+  if (gender === 'F' || gender === 'Female' || gender === 'female') crcl = crcl * 0.85;
+
+  return Math.round(crcl);
+}
+
+// State to track current monograph drug for prescribing
+let currentMonographDrug = null;
+
+// Open the Dynamic Drug Monograph Modal
+window.openDrugLearn = async function(drugName) {
+  const p = state.currentPatient;
+  if (!p) {
+    toast('Select a patient first', true);
+    return;
+  }
+
+  // Store drug name for prescribing
+  currentMonographDrug = drugName;
+
+  // Show Modal
+  openModal('drugMonographModal');
+  $('mono-content').classList.add('hidden');
+  $('mono-loading').classList.remove('hidden');
+  $('mono-safety-banner').style.display = 'none';
+
+  $('mono-title').innerText = drugName;
+  $('mono-class').innerText = 'Checking interactions with ' + (p.name || 'patient') + '...';
+
+  // Calculate CrCl locally for speed
+  const crVal = p.currentLabs?.Creatinine || p.labData?.parameters?.find(lp => lp.name?.toLowerCase().includes('creat'))?.values?.[0]?.value;
+  const crcl = calculateCrCl(p.age, p.gender, crVal);
+
+  // Extract ALT/AST from labs
+  const altVal = p.currentLabs?.ALT || p.labData?.parameters?.find(lp => lp.name?.toLowerCase().includes('alt'))?.values?.[0]?.value;
+  const astVal = p.currentLabs?.AST || p.labData?.parameters?.find(lp => lp.name?.toLowerCase().includes('ast'))?.values?.[0]?.value;
+
+  // Prepare patient context for AI
+  const context = {
+    age: p.age || 'Unknown',
+    gender: p.gender || 'Unknown',
+    cr: crVal || 'Unknown',
+    crcl: crcl || 'Unknown',
+    alt: altVal || '-',
+    ast: astVal || '-',
+    allergies: p.allergies || 'NKDA',
+    meds: (p.medications || []).filter(m => m.status !== 'discontinued').map(m => m.name).slice(0, 15)
+  };
+
+  // Check if API is configured
+  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+    renderMonographFallback(drugName, context);
+    return;
+  }
+
+  try {
+    // Call the AI backend
+    const res = await callCloud('getDrugMonograph', {
+      drugName: drugName,
+      patientContext: context
+    });
+
+    if (res.success && res.data) {
+      renderMonograph(res.data, drugName);
+    } else {
+      // Fallback to basic info
+      console.warn('Monograph API failed:', res.error);
+      renderMonographFallback(drugName, context);
+    }
+  } catch (e) {
+    console.error('Drug monograph error:', e);
+    renderMonographFallback(drugName, context);
+  }
+};
+
+// Render the AI-generated monograph
+function renderMonograph(data, drugName) {
+  $('mono-loading').classList.add('hidden');
+  $('mono-content').classList.remove('hidden');
+  $('mono-class').innerText = 'Personalized Safety Profile';
+
+  // Safety Banner Logic
+  const banner = $('mono-safety-banner');
+  banner.style.display = 'block';
+
+  if (data.safety_status === 'safe') {
+    banner.style.background = 'var(--success-bg)';
+    banner.style.color = 'var(--success-text)';
+    banner.style.padding = '12px';
+    banner.style.borderRadius = '8px';
+    banner.innerHTML = '<strong>Likely Safe:</strong> ' + esc(data.safety_reason || 'No major concerns identified');
+  } else if (data.safety_status === 'caution') {
+    banner.style.background = 'var(--warning-bg)';
+    banner.style.color = 'var(--warning-text)';
+    banner.style.padding = '12px';
+    banner.style.borderRadius = '8px';
+    banner.innerHTML = '<strong>Caution:</strong> ' + esc(data.safety_reason || 'Review before prescribing');
+  } else {
+    banner.style.background = 'var(--danger-bg)';
+    banner.style.color = 'var(--danger-text)';
+    banner.style.padding = '12px';
+    banner.style.borderRadius = '8px';
+    banner.innerHTML = '<strong>CONTRAINDICATED:</strong> ' + esc(data.safety_reason || 'Do not prescribe');
+  }
+
+  // Fill Content
+  $('mono-dose').innerText = data.dosing_rec || 'Standard dosing - consult formulary';
+  $('mono-renal').innerText = 'Adjustments: ' + (data.renal_hepatic || 'None required');
+  $('mono-interactions').innerText = data.interactions || 'No major interactions detected with current medications.';
+  $('mono-pearls').innerText = data.pearls || 'Monitor for therapeutic response and adverse effects.';
+}
+
+// Fallback when API is not available
+function renderMonographFallback(drugName, context) {
+  $('mono-loading').classList.add('hidden');
+  $('mono-content').classList.remove('hidden');
+  $('mono-class').innerText = 'Basic Safety Check';
+
+  const banner = $('mono-safety-banner');
+  banner.style.display = 'block';
+  banner.style.background = 'var(--warning-bg)';
+  banner.style.color = 'var(--warning-text)';
+  banner.style.padding = '12px';
+  banner.style.borderRadius = '8px';
+  banner.innerHTML = '<strong>API Not Configured:</strong> Configure your API URL in Admin Settings for AI-powered safety analysis.';
+
+  // Basic info
+  $('mono-dose').innerText = 'Standard dosing - consult formulary for ' + drugName;
+
+  // Show calculated CrCl if available
+  let renalInfo = 'Unable to calculate - creatinine value not available';
+  if (context.crcl && context.crcl !== 'Unknown') {
+    let category = 'Normal renal function';
+    if (context.crcl < 15) category = 'End-stage renal disease (ESRD)';
+    else if (context.crcl < 30) category = 'Severe renal impairment';
+    else if (context.crcl < 60) category = 'Moderate renal impairment';
+    renalInfo = 'CrCl: ' + context.crcl + ' mL/min (' + category + ') - Check if dose adjustment needed';
+  }
+  $('mono-renal').innerText = 'Renal: ' + renalInfo;
+
+  // List current meds for manual interaction check
+  const medsText = context.meds?.length > 0
+    ? 'Current meds: ' + context.meds.join(', ') + ' - Manually verify interactions'
+    : 'No current medications recorded.';
+  $('mono-interactions').innerText = medsText;
+
+  $('mono-pearls').innerText = 'Enable AI-powered analysis for detailed clinical pearls, patient-specific warnings, and optimized dosing recommendations.';
+}
+
+// Confirm & Prescribe action
+window.confirmPrescribeFromMonograph = function() {
+  if (!currentMonographDrug) {
+    toast('No drug selected', true);
+    return;
+  }
+
+  closeModal('drugMonographModal');
+
+  // Open the add medication form and pre-fill the drug name
+  showAddMedForm();
+
+  setTimeout(() => {
+    const nameInput = $('medNameNew');
+    if (nameInput) {
+      nameInput.value = currentMonographDrug;
+      toast('Drug added to form - complete the details');
+    }
+  }, 100);
+};
 
 function renderProfileHistory() {
   const p = state.currentPatient;
