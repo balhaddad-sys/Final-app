@@ -748,8 +748,8 @@
     }
 
     // Initialize driver.js
-    const driver = window.driver.js.driver;
-    
+    const driver = window.driver;
+
     const tour = driver({
       showProgress: TOUR_CONFIG.showProgress,
       animate: TOUR_CONFIG.animate,
