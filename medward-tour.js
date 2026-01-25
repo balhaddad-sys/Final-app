@@ -889,9 +889,10 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   function startTour(forcePage = null, force = false) {
-    // Check if driver.js is loaded
-    if (typeof window.driver !== 'function') {
+    // Check if driver.js is loaded - handle both function and object cases
+    if (typeof window.driver === 'undefined') {
       console.error('❌ Driver.js not loaded. Make sure to include the library.');
+      alert('Tour system not available. Please refresh the page.');
       return;
     }
 
@@ -917,31 +918,34 @@
       return;
     }
 
-    // Initialize driver.js
-    const driver = window.driver;
+    try {
+      // Initialize driver.js - call it as a function
+      const driverObj = window.driver({
+        showProgress: TOUR_CONFIG.showProgress,
+        animate: TOUR_CONFIG.animate,
+        allowClose: TOUR_CONFIG.allowClose,
+        overlayColor: TOUR_CONFIG.overlayColor,
+        stagePadding: TOUR_CONFIG.stagePadding,
+        stageRadius: TOUR_CONFIG.stageRadius,
+        popoverClass: TOUR_CONFIG.popoverClass,
+        doneBtnText: TOUR_CONFIG.doneBtnText,
+        nextBtnText: TOUR_CONFIG.nextBtnText,
+        prevBtnText: TOUR_CONFIG.prevBtnText,
+        closeBtnText: TOUR_CONFIG.closeBtnText,
+        steps: filteredSteps,
+        onDestroyStarted: () => {
+          markTourSeen(page);
+          console.log(`✅ Tour completed for: ${page}`);
+        }
+      });
 
-    const tour = driver({
-      showProgress: TOUR_CONFIG.showProgress,
-      animate: TOUR_CONFIG.animate,
-      allowClose: TOUR_CONFIG.allowClose,
-      overlayColor: TOUR_CONFIG.overlayColor,
-      stagePadding: TOUR_CONFIG.stagePadding,
-      stageRadius: TOUR_CONFIG.stageRadius,
-      popoverClass: TOUR_CONFIG.popoverClass,
-      doneBtnText: TOUR_CONFIG.doneBtnText,
-      nextBtnText: TOUR_CONFIG.nextBtnText,
-      prevBtnText: TOUR_CONFIG.prevBtnText,
-      closeBtnText: TOUR_CONFIG.closeBtnText,
-      steps: filteredSteps,
-      onDestroyStarted: () => {
-        markTourSeen(page);
-        console.log(`✅ Tour completed for: ${page}`);
-      }
-    });
-
-    // Start the tour
-    console.log(`🚀 Starting tour: ${tourConfig.name}`);
-    tour.drive();
+      // Start the tour
+      console.log(`🚀 Starting tour: ${tourConfig.name}`);
+      driverObj.drive();
+    } catch (error) {
+      console.error('❌ Error starting tour:', error);
+      alert('Failed to start tour. Please check the console for details.');
+    }
   }
 
   function startFullTour(force = false) {
@@ -1186,10 +1190,16 @@
     const btn = document.createElement('button');
     btn.className = 'medward-help-btn';
     btn.innerHTML = '?';
-    btn.title = 'App Tour';
+    btn.title = 'App Tour - Click to start';
     btn.setAttribute('aria-label', 'Start guided tour');
-    btn.onclick = () => startTour(null, true);
-    
+    btn.onclick = () => {
+      if (typeof window.driver === 'undefined') {
+        alert('Tour system is loading... Please try again in a moment.');
+        return;
+      }
+      startTour(null, true);
+    };
+
     document.body.appendChild(btn);
   }
 
@@ -1197,17 +1207,30 @@
   // INITIALIZATION
   // ═══════════════════════════════════════════════════════════════════════════
 
+  function waitForDriver(callback, maxAttempts = 10, attempt = 0) {
+    if (typeof window.driver !== 'undefined') {
+      callback();
+    } else if (attempt < maxAttempts) {
+      setTimeout(() => waitForDriver(callback, maxAttempts, attempt + 1), 100);
+    } else {
+      console.error('❌ Driver.js failed to load after multiple attempts');
+    }
+  }
+
   function init() {
-    // Inject styles
-    injectTourStyles();
-    
-    // Create floating help button
-    createHelpButton();
-    
-    // Auto-launch for first-time users
-    autoLaunchTour();
-    
-    console.log('✅ MedWard Tour Guide initialized');
+    // Wait for driver.js to be available
+    waitForDriver(() => {
+      // Inject styles
+      injectTourStyles();
+
+      // Create floating help button
+      createHelpButton();
+
+      // Auto-launch for first-time users
+      autoLaunchTour();
+
+      console.log('✅ MedWard Tour Guide initialized');
+    });
   }
 
   // Run initialization when DOM is ready
