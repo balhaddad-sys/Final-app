@@ -844,7 +844,12 @@
     const path = window.location.pathname.toLowerCase();
     const html = document.documentElement.innerHTML.toLowerCase();
 
-    if (path.includes('login') || document.querySelector('.login-container')) return 'login';
+    // SAFETY VALVE: Detect login/auth screens and return null to prevent tour
+    if (path.includes('login') || document.querySelector('.login-container') || document.getElementById('auth-overlay')) {
+      console.log('🚫 Tour disabled on Login/Auth Screen');
+      return null;
+    }
+
     if (path.includes('landing') || document.querySelector('.units-grid')) return 'landing';
     if (path.includes('dashboard') || document.querySelector('.dash-content')) return 'dashboard';
     if (path.includes('oncall') || document.querySelector('.oncall-content')) return 'oncall';
@@ -911,6 +916,13 @@
     }
 
     const page = forcePage || detectCurrentPage();
+
+    // SAFETY CHECK: Don't run tour on login/auth screens
+    if (page === null) {
+      console.log('🚫 Tour skipped: Login/Auth screen detected');
+      return;
+    }
+
     const tourConfig = TOURS[page];
 
     if (!tourConfig) {
@@ -984,7 +996,12 @@
 
   function autoLaunchTour() {
     const page = detectCurrentPage();
-    
+
+    // Don't auto-launch on login/auth screens
+    if (page === null) {
+      return;
+    }
+
     // Only auto-launch if never seen any tour
     if (!localStorage.getItem(TOUR_CONFIG.storageKey)) {
       setTimeout(() => {
@@ -1236,21 +1253,41 @@
   // INITIALIZATION
   // ═══════════════════════════════════════════════════════════════════════════
 
-  function waitForDriver(callback, maxAttempts = 20, attempt = 0) {
-    // Check if driver exists and is a function
-    if (typeof window.driver !== 'undefined' && typeof window.driver === 'function') {
+  function waitForDriver(callback, maxAttempts = 50, attempt = 0) {
+    // Check for driver in multiple possible structures (handles different CDN versions)
+    let driverFunction = null;
+
+    // Method 1: Direct window.driver (most common)
+    if (typeof window.driver === 'function') {
+      driverFunction = window.driver;
+    }
+    // Method 2: Nested structure (some versions use window.driver.js.driver)
+    else if (window.driver && window.driver.js && typeof window.driver.js.driver === 'function') {
+      driverFunction = window.driver.js.driver;
+    }
+    // Method 3: Check for Driver class (alternative naming)
+    else if (typeof window.Driver === 'function') {
+      driverFunction = window.Driver;
+    }
+
+    if (driverFunction) {
       console.log('✅ Driver.js loaded successfully');
+      // Store the function globally for consistency
+      if (!window.driver || typeof window.driver !== 'function') {
+        window.driver = driverFunction;
+      }
       callback();
     } else if (attempt < maxAttempts) {
-      // Log progress every 5 attempts
-      if (attempt % 5 === 0 && attempt > 0) {
+      // Log progress every 10 attempts (every 2 seconds)
+      if (attempt % 10 === 0 && attempt > 0) {
         console.log(`⏳ Waiting for driver.js... (attempt ${attempt}/${maxAttempts})`);
       }
       setTimeout(() => waitForDriver(callback, maxAttempts, attempt + 1), 200);
     } else {
-      console.error('❌ Driver.js failed to load after multiple attempts');
+      console.error('❌ Driver.js failed to load after multiple attempts (10 seconds timeout)');
       console.error('window.driver type:', typeof window.driver);
       console.error('window.driver value:', window.driver);
+      console.error('⚠️ Please ensure driver.js is loaded with defer attribute in HTML');
     }
   }
 
