@@ -11554,10 +11554,63 @@ const DrugKnowledgeBase = {
         'ondansetron': 'Reduced tramadol efficacy'
       },
       renalDosing: { mild: 'No adjustment', moderate: 'Extend interval to q12h', severe: 'Max 50mg q12h' }
+    },
+    'allopurinol': {
+      generic: 'Allopurinol',
+      brandNames: ['Zyloric', 'Zyloprim', 'Lopurin'],
+      class: 'Xanthine Oxidase Inhibitor',
+      mechanism: 'Inhibits xanthine oxidase, reducing conversion of hypoxanthine to xanthine and xanthine to uric acid, thereby lowering serum and urine uric acid concentrations.',
+      commonDoses: 'Start 100mg daily, titrate by 100mg every 2-4 weeks to target uric acid <6mg/dL. Usual maintenance 300-600mg daily.',
+      sideEffects: ['Rash (2%)', 'GI upset', 'Elevated LFTs', 'Hypersensitivity syndrome (rare but severe)', 'Gout flare on initiation', 'Stevens-Johnson syndrome (rare)'],
+      contraindications: ['Hypersensitivity to allopurinol', 'Do NOT start during acute gout attack', 'HLA-B*5801 positive patients (high risk of severe cutaneous reactions)'],
+      monitoring: ['Serum uric acid (target <6mg/dL)', 'Renal function', 'LFTs at baseline and periodically', 'Signs of hypersensitivity reaction', 'CBC'],
+      interactions: {
+        'azathioprine': 'MAJOR: Reduce azathioprine dose by 75% - increased toxicity',
+        '6-mercaptopurine': 'MAJOR: Reduce dose by 75% - increased myelosuppression',
+        'warfarin': 'May increase INR - monitor closely',
+        'amoxicillin': 'Increased rash risk',
+        'ampicillin': 'Increased rash risk',
+        'thiazides': 'Increased risk of hypersensitivity reactions',
+        'ace inhibitors': 'Increased hypersensitivity risk'
+      },
+      labAlerts: { uric_acid: 'high' },
+      renalDosing: { mild: 'Max 200mg/day if CrCl 40-60', moderate: 'Max 100mg/day if CrCl 20-40', severe: '100mg every 2-3 days if CrCl <20' }
     }
   },
   
-  // Get drug info (case-insensitive lookup)
+  // Brand name to generic mapping for common drugs
+  brandToGeneric: {
+    'zyloric': 'allopurinol',
+    'zyloprim': 'allopurinol',
+    'lopurin': 'allopurinol',
+    'glucophage': 'metformin',
+    'lipitor': 'atorvastatin',
+    'norvasc': 'amlodipine',
+    'zestril': 'lisinopril',
+    'prinivil': 'lisinopril',
+    'lasix': 'furosemide',
+    'plavix': 'clopidogrel',
+    'coumadin': 'warfarin',
+    'zosyn': 'piperacillin/tazobactam',
+    'augmentin': 'amoxicillin/clavulanate',
+    'flagyl': 'metronidazole',
+    'diflucan': 'fluconazole',
+    'zithromax': 'azithromycin',
+    'cipro': 'ciprofloxacin',
+    'levaquin': 'levofloxacin',
+    'ultram': 'tramadol',
+    'nexium': 'esomeprazole',
+    'prilosec': 'omeprazole',
+    'protonix': 'pantoprazole',
+    'lovenox': 'enoxaparin',
+    'eliquis': 'apixaban',
+    'xarelto': 'rivaroxaban',
+    'lantus': 'insulin glargine',
+    'novolog': 'insulin aspart',
+    'humalog': 'insulin lispro'
+  },
+  
+  // Get drug info (case-insensitive lookup with brand name support)
   getDrug: function(name) {
     if (!name) return null;
     const key = name.toLowerCase().trim();
@@ -11565,7 +11618,13 @@ const DrugKnowledgeBase = {
     // Direct match
     if (this.drugs[key]) return this.drugs[key];
     
-    // Partial match
+    // Check brand name mapping
+    if (this.brandToGeneric[key]) {
+      const genericKey = this.brandToGeneric[key];
+      if (this.drugs[genericKey]) return this.drugs[genericKey];
+    }
+    
+    // Partial match on drug keys
     for (const [drugKey, data] of Object.entries(this.drugs)) {
       if (key.includes(drugKey) || drugKey.includes(key)) {
         return data;
@@ -11573,6 +11632,17 @@ const DrugKnowledgeBase = {
       // Check generic name
       if (data.generic && data.generic.toLowerCase().includes(key)) {
         return data;
+      }
+      // Check brand names array
+      if (data.brandNames && data.brandNames.some(b => b.toLowerCase() === key || b.toLowerCase().includes(key))) {
+        return data;
+      }
+    }
+    
+    // Partial match on brand names in mapping
+    for (const [brand, generic] of Object.entries(this.brandToGeneric)) {
+      if (key.includes(brand) || brand.includes(key)) {
+        if (this.drugs[generic]) return this.drugs[generic];
       }
     }
     
@@ -12949,7 +13019,7 @@ function addDrugToOrders() {
 // DYNAMIC DRUG MONOGRAPH - AI-Powered Patient-Specific Analysis
 // ═══════════════════════════════════════════════════════════════════
 
-// 1. OPEN FUNCTION - "Silent Partner" Logic (Epocrates Style)
+// 1. OPEN FUNCTION - Works with backend API + local KB fallback
 window.openDrugLearn = async function(drugName) {
   const p = state.currentPatient;
   if (!p) {
@@ -12972,94 +13042,228 @@ window.openDrugLearn = async function(drugName) {
   const gender = p.gender;
 
   let crcl = null;
-  let renalStatus = "Unknown";
+  let renalStatus = "Normal";
 
   if (age && cr) {
-    // Cockcroft-Gault (The Gold Standard for Drug Dosing)
     crcl = calculateCrClForMonograph(age, gender, cr);
     if (crcl < 30) {
       renalStatus = "Severe Renal Impairment";
     } else if (crcl < 60) {
       renalStatus = "Moderate Renal Impairment";
-    } else {
-      renalStatus = "Normal";
     }
   }
 
-  // SEND TO AI (Context Aware)
+  // Check local knowledge base first
+  const localDrug = DrugKnowledgeBase.getDrug(drugName);
+  const patientWarnings = DrugKnowledgeBase.getPatientWarnings(drugName, p);
+
+  // Build patient context
   const context = {
     age: p.age,
     gender: p.gender,
-    cr: cr || "Not listed",
-    crcl_est: crcl,
-    renal_status: renalStatus,
+    crcl: crcl,
+    renalStatus: renalStatus,
     allergies: p.allergies || 'None',
-    meds: (p.medications || []).map(m => m.name),
-    alt: p.currentLabs?.ALT,
-    ast: p.currentLabs?.AST
+    currentMeds: (p.medications || []).map(m => m.name)
   };
 
-  // CALL AI
+  // Try cloud API first, fallback to local KB
   try {
-    const res = await callCloud('getDrugInfo', {
-      drugName: drugName,
-      patientContext: context
-    });
+    if (state.settings?.apiUrl) {
+      const res = await callCloud('getDrugInfo', {
+        drugName: drugName,
+        patientContext: context
+      });
 
-    if (res.success) {
-      renderProMonograph(res.data);
-    } else {
-      toast('Failed to load drug info: ' + (res.error || 'Unknown error'), 'error');
-      closeModal('modal-drug-monograph');
+      if (res.success && res.drugInfo) {
+        // Transform backend response to our display format
+        renderProMonographFromAPI(drugName, res.drugInfo, context, crcl, renalStatus, patientWarnings);
+        return;
+      }
     }
+    
+    // Fallback to local knowledge base
+    if (localDrug) {
+      renderProMonographFromLocal(drugName, localDrug, context, crcl, renalStatus, patientWarnings);
+    } else {
+      renderProMonographBasic(drugName, context);
+    }
+    
   } catch (error) {
     console.error('Drug monograph error:', error);
-    toast('Failed to load drug info', 'error');
-    closeModal('modal-drug-monograph');
+    
+    // Fallback to local knowledge base on error
+    if (localDrug) {
+      renderProMonographFromLocal(drugName, localDrug, context, crcl, renalStatus, patientWarnings);
+    } else {
+      renderProMonographBasic(drugName, context);
+    }
   }
 };
 
-// 2. RENDER THE DATA - Epocrates Style
-function renderProMonograph(data) {
+// Render from API response (backend returns drugInfo object)
+function renderProMonographFromAPI(drugName, drugInfo, context, crcl, renalStatus, warnings) {
   $('mono-loading').classList.add('hidden');
   $('mono-content').classList.remove('hidden');
 
-  // 1. THE SAFETY BADGE (Theme-Compatible Color-Coding)
+  // Safety badge based on warnings
   const badge = $('mono-badge');
   badge.classList.remove('hidden', 'safe', 'caution', 'warning');
-  badge.style = ''; // Clear any inline styles
-
-  if (data.safety_status === 'safe') {
-    badge.classList.add('safe');
-    badge.innerText = '✓ LIKELY SAFE';
-  } else if (data.safety_status === 'caution') {
+  badge.style = '';
+  
+  const hasCritical = warnings.some(w => w.severity === 'critical');
+  const hasCaution = warnings.some(w => w.severity === 'high' || w.severity === 'moderate');
+  
+  if (hasCritical) {
+    badge.classList.add('warning');
+    badge.innerText = '⛔ REVIEW REQUIRED';
+  } else if (hasCaution || renalStatus !== 'Normal') {
     badge.classList.add('caution');
     badge.innerText = '⚠ USE CAUTION';
   } else {
-    badge.classList.add('warning');
-    badge.innerText = '⛔ CONTRAINDICATED';
+    badge.classList.add('safe');
+    badge.innerText = '✓ LIKELY SAFE';
   }
 
-  // 2. FILL DATA
-  $('mono-text-dose').innerText = data.dosing_rec || 'No specific dosing recommendation available';
+  // Dosing - from API
+  let dosingText = drugInfo.dosing?.adult || drugInfo.dosing || 'Refer to prescribing information';
+  if (typeof dosingText === 'object') {
+    dosingText = Object.entries(dosingText).map(([k, v]) => `${k}: ${v}`).join('\n');
+  }
+  $('mono-text-dose').innerText = dosingText;
 
-  // Only show Renal box if the AI mentions it (Silent Partner Approach)
-  if (data.renal_hepatic && data.renal_hepatic.length > 5) {
+  // Renal alert
+  if (crcl && crcl < 60 && drugInfo.dosing?.renal) {
     $('mono-alert-renal').classList.remove('hidden');
-    $('mono-text-renal').innerText = data.renal_hepatic;
+    $('mono-text-renal').innerText = drugInfo.dosing.renal;
+  } else if (renalStatus !== 'Normal') {
+    $('mono-alert-renal').classList.remove('hidden');
+    $('mono-text-renal').innerText = `CrCl ~${Math.round(crcl || 0)} mL/min - check prescribing info for renal dosing`;
   } else {
     $('mono-alert-renal').classList.add('hidden');
   }
 
-  $('mono-text-ix').innerText = data.interactions || 'None detected with current medication list.';
+  // Interactions
+  const interactions = drugInfo.interactions || [];
+  const interactionsText = interactions.length > 0 
+    ? interactions.slice(0, 5).join('\n• ')
+    : 'No major interactions listed. Always verify with current medication list.';
+  $('mono-text-ix').innerText = interactions.length > 0 ? '• ' + interactionsText : interactionsText;
 
-  // Format Pearls as list items
-  const pearlsText = data.pearls || 'No clinical pearls available';
-  const pearlsHtml = pearlsText.split('. ')
-    .filter(p => p.trim().length > 0)
-    .map(p => `<li>${esc(p.trim())}${p.trim().endsWith('.') ? '' : '.'}</li>`)
-    .join('');
-  $('mono-list-pearls').innerHTML = pearlsHtml || '<li>No clinical pearls available</li>';
+  // Clinical pearls
+  const pearls = drugInfo.clinicalPearls || [];
+  const sideEffects = drugInfo.sideEffects?.common || drugInfo.sideEffects || [];
+  const allPearls = [...pearls];
+  
+  if (sideEffects.length > 0) {
+    allPearls.push(`Common side effects: ${(Array.isArray(sideEffects) ? sideEffects : [sideEffects]).slice(0, 3).join(', ')}`);
+  }
+  if (drugInfo.contraindications?.length > 0) {
+    allPearls.push(`Contraindicated in: ${drugInfo.contraindications.slice(0, 2).join(', ')}`);
+  }
+  
+  const pearlsHtml = allPearls.length > 0 
+    ? allPearls.map(p => `<li>${esc(p)}</li>`).join('')
+    : '<li>No specific clinical pearls available</li>';
+  $('mono-list-pearls').innerHTML = pearlsHtml;
+}
+
+// Render from local DrugKnowledgeBase
+function renderProMonographFromLocal(drugName, drug, context, crcl, renalStatus, warnings) {
+  $('mono-loading').classList.add('hidden');
+  $('mono-content').classList.remove('hidden');
+
+  // Safety badge
+  const badge = $('mono-badge');
+  badge.classList.remove('hidden', 'safe', 'caution', 'warning');
+  badge.style = '';
+  
+  const hasCritical = warnings.some(w => w.severity === 'critical');
+  const hasCaution = warnings.some(w => w.severity === 'high' || w.severity === 'moderate');
+  
+  if (hasCritical) {
+    badge.classList.add('warning');
+    badge.innerText = '⛔ REVIEW REQUIRED';
+  } else if (hasCaution || renalStatus !== 'Normal') {
+    badge.classList.add('caution');
+    badge.innerText = '⚠ USE CAUTION';
+  } else {
+    badge.classList.add('safe');
+    badge.innerText = '✓ LIKELY SAFE';
+  }
+
+  // Dosing
+  let dosingText = drug.commonDoses || 'Refer to prescribing information';
+  if (drug.renalDosing && renalStatus !== 'Normal') {
+    const adj = renalStatus.includes('Severe') ? drug.renalDosing.severe : drug.renalDosing.moderate;
+    if (adj) dosingText += `\n\n⚠️ Renal: ${adj}`;
+  }
+  $('mono-text-dose').innerText = dosingText;
+
+  // Renal alert
+  if (crcl && crcl < 60 && drug.renalDosing) {
+    $('mono-alert-renal').classList.remove('hidden');
+    const adj = crcl < 30 ? drug.renalDosing.severe : drug.renalDosing.moderate;
+    $('mono-text-renal').innerText = adj || `CrCl ${Math.round(crcl)} mL/min - verify dosing`;
+  } else {
+    $('mono-alert-renal').classList.add('hidden');
+  }
+
+  // Interactions
+  let interactionsText = 'No major interactions in database.';
+  if (drug.interactions && Object.keys(drug.interactions).length > 0) {
+    const currentMeds = context.currentMeds.map(m => m.toLowerCase());
+    const found = [];
+    
+    for (const [trigger, desc] of Object.entries(drug.interactions)) {
+      if (currentMeds.some(med => med.includes(trigger.toLowerCase()))) {
+        found.push(`⚠️ ${trigger}: ${desc}`);
+      }
+    }
+    
+    if (found.length > 0) {
+      interactionsText = found.join('\n\n');
+    } else {
+      interactionsText = `No interactions with current meds.\n\nMonitor for: ${Object.keys(drug.interactions).slice(0, 3).join(', ')}`;
+    }
+  }
+  $('mono-text-ix').innerText = interactionsText;
+
+  // Clinical pearls
+  const pearls = [];
+  if (drug.monitoring?.length > 0) pearls.push(...drug.monitoring.slice(0, 2));
+  if (drug.sideEffects?.length > 0) pearls.push(`Side effects: ${drug.sideEffects.slice(0, 3).join(', ')}`);
+  if (drug.contraindications?.length > 0) pearls.push(`Avoid in: ${drug.contraindications.slice(0, 2).join(', ')}`);
+  if (warnings.length > 0) pearls.push(`⚠️ ${warnings[0].text}`);
+  
+  const pearlsHtml = pearls.length > 0 
+    ? pearls.map(p => `<li>${esc(p)}</li>`).join('')
+    : '<li>No specific pearls available</li>';
+  $('mono-list-pearls').innerHTML = pearlsHtml;
+}
+
+// Basic monograph when no data available
+function renderProMonographBasic(drugName, context) {
+  $('mono-loading').classList.add('hidden');
+  $('mono-content').classList.remove('hidden');
+
+  const badge = $('mono-badge');
+  badge.classList.remove('hidden', 'safe', 'caution', 'warning');
+  badge.style = '';
+  badge.classList.add('caution');
+  badge.innerText = 'ℹ️ LIMITED DATA';
+
+  $('mono-text-dose').innerText = 'Dosing information not available in local database.\n\nRefer to prescribing information or clinical resources.';
+  
+  $('mono-alert-renal').classList.add('hidden');
+  
+  $('mono-text-ix').innerText = 'Interaction data not available.\n\nPlease verify with pharmacy or drug interaction checker.';
+  
+  $('mono-list-pearls').innerHTML = `
+    <li>Limited information available for ${esc(drugName)}</li>
+    <li>Consult UpToDate, Lexicomp, or Micromedex for complete information</li>
+    <li>Verify with clinical pharmacist if needed</li>
+  `;
 }
 
 // 3. HELPER: COCKCROFT-GAULT CALC
@@ -13077,8 +13281,17 @@ function calculateCrClForMonograph(age, gender, cr) {
 
 // 4. CONFIRM PRESCRIBE FROM MONOGRAPH
 window.confirmPrescribeFromMonograph = function() {
+  const drugName = $('mono-title')?.innerText;
   closeModal('modal-drug-monograph');
-  toast('Prescription confirmed', 'success');
+  
+  if (drugName && drugName !== 'Loading...') {
+    // Pre-fill medication modal
+    $('medNameNew').value = drugName;
+    openModal('addMedModal');
+    toast(`Adding ${drugName} - fill in dosage details`, 'success');
+  } else {
+    toast('Medication added to orders', 'success');
+  }
 };
 
 function renderProfileHistory() {
