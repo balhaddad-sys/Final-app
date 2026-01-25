@@ -16732,13 +16732,38 @@ function extractSheetId(input) {
   if (!input) return null;
   input = input.trim();
   
-  // Full URL pattern: https://docs.google.com/spreadsheets/d/SHEET_ID/edit...
-  const urlMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-  if (urlMatch) return urlMatch[1];
+  console.log('extractSheetId input:', input);
   
-  // Already a Sheet ID (alphanumeric with dashes/underscores, typically 44 chars)
-  if (/^[a-zA-Z0-9_-]{20,}$/.test(input)) return input;
+  // Full URL pattern: https://docs.google.com/spreadsheets/d/SHEET_ID/...
+  // Handle various URL formats
+  const urlPatterns = [
+    /\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/,  // Standard URL
+    /\/d\/([a-zA-Z0-9_-]+)/,                 // Short form
+    /spreadsheets.*\/([a-zA-Z0-9_-]{20,})/   // Any spreadsheets URL with ID
+  ];
   
+  for (const pattern of urlPatterns) {
+    const match = input.match(pattern);
+    if (match) {
+      console.log('Extracted sheet ID:', match[1]);
+      return match[1];
+    }
+  }
+  
+  // Already a Sheet ID (alphanumeric with dashes/underscores, 20+ chars)
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(input)) {
+    console.log('Input is already a sheet ID:', input);
+    return input;
+  }
+  
+  // Try to find any long alphanumeric string that could be an ID
+  const idMatch = input.match(/([a-zA-Z0-9_-]{25,50})/);
+  if (idMatch) {
+    console.log('Found potential ID in input:', idMatch[1]);
+    return idMatch[1];
+  }
+  
+  console.log('Could not extract sheet ID from:', input);
   return null;
 }
 
