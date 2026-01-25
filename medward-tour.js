@@ -896,17 +896,24 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   function startTour(forcePage = null, force = false) {
-    // Check if driver.js is loaded and is a function
+    // Check if driver.js is loaded (can be either a function or an object)
     if (typeof window.driver === 'undefined') {
       console.error('❌ Driver.js not loaded. Make sure to include the library.');
       alert('Tour system not available. Please refresh the page.');
       return;
     }
 
-    // Verify driver is actually a function
-    if (typeof window.driver !== 'function') {
-      console.error('❌ window.driver exists but is not a function. Type:', typeof window.driver);
-      alert('Tour system error. window.driver is not properly initialized.');
+    // Get the driver function (handle both old and new versions)
+    let driverFunction;
+    if (typeof window.driver === 'function') {
+      // Old version: window.driver is directly a function
+      driverFunction = window.driver;
+    } else if (typeof window.driver === 'object' && window.driver !== null && typeof window.driver.driver === 'function') {
+      // New version: window.driver is an object with a driver method
+      driverFunction = window.driver.driver;
+    } else {
+      console.error('❌ window.driver exists but is not usable. Type:', typeof window.driver, 'Value:', window.driver);
+      alert('Tour system error. Driver.js is not properly initialized.');
       return;
     }
 
@@ -933,8 +940,8 @@
     }
 
     try {
-      // Initialize driver.js - call it as a function
-      const driverObj = window.driver({
+      // Initialize driver.js - call the driver function
+      const driverObj = driverFunction({
         showProgress: TOUR_CONFIG.showProgress,
         animate: TOUR_CONFIG.animate,
         allowClose: TOUR_CONFIG.allowClose,
@@ -1221,9 +1228,14 @@
         alert('Tour system is loading... Please try again in a moment.');
         return;
       }
-      if (typeof window.driver !== 'function') {
+      // Check if driver is available (either as function or object with driver method)
+      const isDriverAvailable =
+        (typeof window.driver === 'function') ||
+        (typeof window.driver === 'object' && window.driver !== null && typeof window.driver.driver === 'function');
+
+      if (!isDriverAvailable) {
         alert('Tour system error. Please refresh the page and try again.');
-        console.error('window.driver is not a function:', typeof window.driver);
+        console.error('window.driver is not usable. Type:', typeof window.driver);
         return;
       }
       startTour(null, true);
@@ -1237,9 +1249,13 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   function waitForDriver(callback, maxAttempts = 20, attempt = 0) {
-    // Check if driver exists and is a function
-    if (typeof window.driver !== 'undefined' && typeof window.driver === 'function') {
-      console.log('✅ Driver.js loaded successfully');
+    // Check if driver exists (can be either a function or an object with driver property)
+    const isDriverAvailable =
+      (typeof window.driver === 'function') ||
+      (typeof window.driver === 'object' && window.driver !== null && typeof window.driver.driver === 'function');
+
+    if (isDriverAvailable) {
+      console.log('✅ Driver.js loaded successfully (type:', typeof window.driver + ')');
       callback();
     } else if (attempt < maxAttempts) {
       // Log progress every 5 attempts
