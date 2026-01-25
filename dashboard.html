@@ -2649,6 +2649,146 @@ body.dark-theme .profile-tab.active{background:rgba(96,165,250,0.15)}
 }
 .renal-value{font-size:0.8rem;color:var(--text-secondary);line-height:1.4}
 
+/* Collapsible Sections */
+.drug-collapsible-section{
+  margin-bottom:16px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+  background:var(--bg-elevated)
+}
+.drug-collapsible-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  cursor:pointer;
+  background:rgba(255,255,255,0.02);
+  transition:all 0.2s ease;
+  user-select:none
+}
+.drug-collapsible-header:hover{
+  background:rgba(255,255,255,0.04)
+}
+.drug-collapsible-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:0.85rem;
+  font-weight:700;
+  color:var(--text);
+  text-transform:uppercase;
+  letter-spacing:0.03em
+}
+.drug-collapsible-title span{
+  font-size:1.1rem
+}
+.drug-collapsible-toggle{
+  font-size:1.2rem;
+  color:var(--text-muted);
+  transition:transform 0.3s ease;
+  line-height:1
+}
+.drug-collapsible-section.active .drug-collapsible-toggle{
+  transform:rotate(180deg)
+}
+.drug-collapsible-content{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height 0.3s ease;
+  padding:0 18px
+}
+.drug-collapsible-section.active .drug-collapsible-content{
+  max-height:2000px;
+  padding:0 18px 18px
+}
+.drug-collapsible-body{
+  padding-top:8px
+}
+
+/* Enhanced Section Styling */
+.drug-section-highlight{
+  background:linear-gradient(135deg,rgba(96,165,250,0.05),rgba(167,139,250,0.03));
+  border:2px solid var(--primary);
+  border-radius:10px;
+  padding:18px;
+  margin-bottom:20px
+}
+.drug-section-critical{
+  background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(251,113,133,0.05));
+  border:2px solid rgba(239,68,68,0.4);
+  border-radius:10px;
+  padding:18px;
+  margin-bottom:20px
+}
+
+/* Data Sources Footer */
+.drug-data-sources{
+  margin-top:24px;
+  padding:16px;
+  background:var(--bg-elevated);
+  border-radius:10px;
+  border:1px solid var(--border)
+}
+.drug-data-sources-title{
+  font-size:0.75rem;
+  font-weight:700;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px
+}
+.drug-data-source-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 0;
+  font-size:0.8rem;
+  color:var(--text-secondary)
+}
+.drug-data-source-badge{
+  padding:2px 8px;
+  background:rgba(96,165,250,0.1);
+  border-radius:4px;
+  font-size:0.7rem;
+  font-weight:600;
+  color:#60a5fa
+}
+
+/* Responsive Design */
+@media only screen and (max-width: 600px) {
+  #drugInfoModal .modal-box{
+    max-width:95%;
+    margin:10px;
+    border-radius:16px
+  }
+  .drug-info-title{
+    font-size:1.15rem
+  }
+  .drug-section-title{
+    font-size:0.7rem
+  }
+  .drug-collapsible-title{
+    font-size:0.75rem
+  }
+  .renal-dosing-grid{
+    grid-template-columns:1fr;
+    gap:8px
+  }
+  .drug-collapsible-header{
+    padding:12px 14px
+  }
+  .drug-collapsible-content{
+    padding:0 14px
+  }
+  .drug-collapsible-section.active .drug-collapsible-content{
+    padding:0 14px 14px
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    PLAN SECTION - Professional Interactive Design
    ═══════════════════════════════════════════════════════════════════ */
@@ -11566,7 +11706,7 @@ window.openDrugInfo = async function(drugName, medIdx) {
 
 function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
   let html = '';
-  
+
   // Header badge showing instant lookup
   html += `
     <div class="drug-instant-badge">
@@ -11575,12 +11715,12 @@ function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
       <span class="instant-source">Neural Knowledge Base</span>
     </div>
   `;
-  
-  // Patient-specific warnings (most important - show first)
+
+  // Patient-specific warnings (most important - show first, always expanded)
   if (warnings.length > 0) {
     const criticalWarnings = warnings.filter(w => w.severity === 'critical' || w.severity === 'high');
     const otherWarnings = warnings.filter(w => w.severity !== 'critical' && w.severity !== 'high');
-    
+
     html += `
       <div class="patient-context-alert ${criticalWarnings.length > 0 ? 'critical' : ''}">
         <div class="context-alert-header">
@@ -11598,88 +11738,138 @@ function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
       </div>
     `;
   }
-  
-  // Drug class & mechanism
+
+  // Drug class & mechanism (always expanded)
   html += `
     <div class="drug-section">
       <div class="drug-section-title"><span>🧬</span> ${esc(drug.class || 'Drug Class')}</div>
       <p class="drug-info-text">${esc(drug.mechanism)}</p>
     </div>
   `;
-  
-  // Side Effects
+
+  // Side Effects - collapsible
   if (drug.sideEffects?.length > 0) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>⚡</span> Side Effects</div>
-        <ul class="drug-info-list">
-          ${drug.sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}
-        </ul>
-      </div>
-    `;
-  }
-  
-  // Contraindications
-  if (drug.contraindications?.length > 0) {
-    html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>🚫</span> Contraindications</div>
-        <ul class="drug-info-list contraindications">
-          ${drug.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}
-        </ul>
-      </div>
-    `;
-  }
-  
-  // Monitoring
-  if (drug.monitoring?.length > 0) {
-    html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>📊</span> Monitoring Parameters</div>
-        <ul class="drug-info-list monitoring">
-          ${drug.monitoring.map(m => `<li>${esc(m)}</li>`).join('')}
-        </ul>
-      </div>
-    `;
-  }
-  
-  // Key Interactions
-  if (drug.interactions && Object.keys(drug.interactions).length > 0) {
-    html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>💊</span> Key Drug Interactions</div>
-        <ul class="drug-info-list interactions">
-          ${Object.entries(drug.interactions).map(([trigger, desc]) => `
-            <li><strong>${esc(trigger)}:</strong> ${esc(desc)}</li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  }
-  
-  // Renal Dosing
-  if (drug.renalDosing) {
-    html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>🫘</span> Renal Dosing</div>
-        <div class="renal-dosing-grid">
-          <div class="renal-dose-item">
-            <span class="renal-label">Mild</span>
-            <span class="renal-value">${esc(drug.renalDosing.mild)}</span>
+      <div class="drug-collapsible-section active" data-section="side-effects-kb">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('side-effects-kb')">
+          <div class="drug-collapsible-title">
+            <span>⚡</span>
+            <span>Side Effects</span>
           </div>
-          <div class="renal-dose-item">
-            <span class="renal-label">Moderate</span>
-            <span class="renal-value">${esc(drug.renalDosing.moderate)}</span>
-          </div>
-          <div class="renal-dose-item">
-            <span class="renal-label">Severe</span>
-            <span class="renal-value">${esc(drug.renalDosing.severe)}</span>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list">
+              ${drug.sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}
+            </ul>
           </div>
         </div>
       </div>
     `;
   }
-  
+
+  // Contraindications - collapsible
+  if (drug.contraindications?.length > 0) {
+    html += `
+      <div class="drug-collapsible-section" data-section="contraindications-kb">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('contraindications-kb')">
+          <div class="drug-collapsible-title">
+            <span>🚫</span>
+            <span>Contraindications</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list contraindications">
+              ${drug.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Monitoring - collapsible
+  if (drug.monitoring?.length > 0) {
+    html += `
+      <div class="drug-collapsible-section" data-section="monitoring-kb">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('monitoring-kb')">
+          <div class="drug-collapsible-title">
+            <span>📊</span>
+            <span>Monitoring Parameters</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list monitoring">
+              ${drug.monitoring.map(m => `<li>${esc(m)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Key Interactions - collapsible
+  if (drug.interactions && Object.keys(drug.interactions).length > 0) {
+    html += `
+      <div class="drug-collapsible-section" data-section="interactions-kb">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('interactions-kb')">
+          <div class="drug-collapsible-title">
+            <span>💊</span>
+            <span>Key Drug Interactions</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list interactions">
+              ${Object.entries(drug.interactions).map(([trigger, desc]) => `
+                <li><strong>${esc(trigger)}:</strong> ${esc(desc)}</li>
+              `).join('')}
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Renal Dosing - collapsible
+  if (drug.renalDosing) {
+    html += `
+      <div class="drug-collapsible-section" data-section="renal-kb">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('renal-kb')">
+          <div class="drug-collapsible-title">
+            <span>🫘</span>
+            <span>Renal Dosing</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <div class="renal-dosing-grid">
+              <div class="renal-dose-item">
+                <span class="renal-label">Mild</span>
+                <span class="renal-value">${esc(drug.renalDosing.mild)}</span>
+              </div>
+              <div class="renal-dose-item">
+                <span class="renal-label">Moderate</span>
+                <span class="renal-value">${esc(drug.renalDosing.moderate)}</span>
+              </div>
+              <div class="renal-dose-item">
+                <span class="renal-label">Severe</span>
+                <span class="renal-value">${esc(drug.renalDosing.severe)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   $('drugInfoBody').innerHTML = html;
 }
 
@@ -11696,7 +11886,7 @@ function renderDrugInfoFromKnowledgeEnhanced(drug, drugName, warnings, med, medi
     </div>
   `;
 
-  // Patient-specific warnings (most important - show first)
+  // Patient-specific warnings (most important - show first, always expanded)
   if (warnings.length > 0) {
     const criticalWarnings = warnings.filter(w => w.severity === 'critical' || w.severity === 'high');
     const otherWarnings = warnings.filter(w => w.severity !== 'critical' && w.severity !== 'high');
@@ -11719,37 +11909,42 @@ function renderDrugInfoFromKnowledgeEnhanced(drug, drugName, warnings, med, medi
     `;
   }
 
-  // FDA Black Box Warning (if available from OpenFDA)
+  // FDA Black Box Warning (if available from OpenFDA, always expanded)
   if (medicalData.combinedData.blackBoxWarning) {
     html += `
-      <div class="drug-section" style="border-left: 4px solid #d32f2f;">
-        <div class="drug-section-title" style="color: #d32f2f;"><span>⚠️</span> FDA BLACK BOX WARNING</div>
-        <p class="drug-info-text" style="color: #d32f2f; font-weight: 500;">${esc(medicalData.combinedData.blackBoxWarning.substring(0, 300))}...</p>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+      <div class="drug-section-critical">
+        <div class="context-alert-header">
+          <div class="context-alert-icon">🚨</div>
+          <div class="context-alert-title">FDA BLACK BOX WARNING</div>
+        </div>
+        <div style="padding: 12px; background: var(--bg-elevated); border-radius: 6px; margin-top: 8px;">
+          <p style="color: #d32f2f; font-weight: 500; margin: 0; line-height: 1.6;">${esc(medicalData.combinedData.blackBoxWarning.substring(0, 500))}${medicalData.combinedData.blackBoxWarning.length > 500 ? '...' : ''}</p>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+        </div>
       </div>
     `;
   }
 
-  // DOSAGE INFORMATION (from verified medical sources)
+  // DOSAGE INFORMATION (from verified medical sources, always expanded)
   if (medicalData.combinedData.dosage) {
     html += `
-      <div class="drug-section" style="background: var(--bg-elevated); border: 2px solid var(--primary); border-radius: 8px; padding: 16px;">
+      <div class="drug-section-highlight">
         <div class="drug-section-title"><span>💊</span> DOSAGE & ADMINISTRATION</div>
         <p class="drug-info-text">${esc(medicalData.combinedData.dosage)}</p>
-        <div style="margin-top: 12px; padding: 8px 12px; background: var(--bg-primary); border-radius: 4px; display: flex; align-items: center; gap: 8px;">
+        <div style="margin-top: 12px; padding: 8px 12px; background: var(--bg-primary); border-radius: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <span style="font-size: 16px;">✓</span>
           <span style="font-size: 12px; color: var(--text-muted);">
             Verified source: <strong>${esc(medicalData.combinedData.dosageSource)}</strong>
           </span>
           ${medicalData.combinedData.dosageUrl ? `
-            <a href="${esc(medicalData.combinedData.dosageUrl)}" target="_blank" style="margin-left: auto; font-size: 12px; color: var(--primary);">View Source →</a>
+            <a href="${esc(medicalData.combinedData.dosageUrl)}" target="_blank" style="margin-left: auto; font-size: 12px; color: var(--primary); text-decoration: none;">View Source →</a>
           ` : ''}
         </div>
       </div>
     `;
   }
 
-  // Patient-specific dosing recommendations
+  // Patient-specific dosing recommendations (always expanded)
   const dosingRecs = DosageCalculator.getPatientSpecificDosing(drugName, patient, medicalData.combinedData.dosage);
   if (dosingRecs.length > 0) {
     html += `
@@ -11768,7 +11963,7 @@ function renderDrugInfoFromKnowledgeEnhanced(drug, drugName, warnings, med, medi
     `;
   }
 
-  // Drug class & mechanism
+  // Drug class & mechanism (always expanded)
   html += `
     <div class="drug-section">
       <div class="drug-section-title"><span>🧬</span> ${esc(drug.class || 'Drug Class')}</div>
@@ -11776,84 +11971,144 @@ function renderDrugInfoFromKnowledgeEnhanced(drug, drugName, warnings, med, medi
     </div>
   `;
 
-  // Indications (from DailyMed if available, otherwise from local KB)
+  // Indications - collapsible
   if (medicalData.combinedData.dailymed?.indications) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>📋</span> Indications & Usage</div>
-        <p class="drug-info-text">${esc(medicalData.combinedData.dailymed.indications)}</p>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+      <div class="drug-collapsible-section active" data-section="indications-enh">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('indications-enh')">
+          <div class="drug-collapsible-title">
+            <span>📋</span>
+            <span>Indications & Usage</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <p class="drug-info-text">${esc(medicalData.combinedData.dailymed.indications)}</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  // Side Effects
+  // Side Effects - collapsible
   if (drug.sideEffects?.length > 0) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>⚡</span> Side Effects</div>
-        <ul class="drug-info-list">
-          ${drug.sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}
-        </ul>
+      <div class="drug-collapsible-section" data-section="side-effects">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('side-effects')">
+          <div class="drug-collapsible-title">
+            <span>⚡</span>
+            <span>Side Effects</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list">
+              ${drug.sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  // Contraindications
+  // Contraindications - collapsible
   if (drug.contraindications?.length > 0) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>🚫</span> Contraindications</div>
-        <ul class="drug-info-list contraindications">
-          ${drug.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}
-        </ul>
+      <div class="drug-collapsible-section" data-section="contraindications-enh">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('contraindications-enh')">
+          <div class="drug-collapsible-title">
+            <span>🚫</span>
+            <span>Contraindications</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list contraindications">
+              ${drug.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  // Monitoring
+  // Monitoring - collapsible
   if (drug.monitoring?.length > 0) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>📊</span> Monitoring Parameters</div>
-        <ul class="drug-info-list monitoring">
-          ${drug.monitoring.map(m => `<li>${esc(m)}</li>`).join('')}
-        </ul>
+      <div class="drug-collapsible-section" data-section="monitoring">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('monitoring')">
+          <div class="drug-collapsible-title">
+            <span>📊</span>
+            <span>Monitoring Parameters</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list monitoring">
+              ${drug.monitoring.map(m => `<li>${esc(m)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  // Key Interactions
+  // Key Interactions - collapsible
   if (drug.interactions && Object.keys(drug.interactions).length > 0) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>💊</span> Key Drug Interactions</div>
-        <ul class="drug-info-list interactions">
-          ${Object.entries(drug.interactions).map(([trigger, desc]) => `
-            <li><strong>${esc(trigger)}:</strong> ${esc(desc)}</li>
-          `).join('')}
-        </ul>
+      <div class="drug-collapsible-section" data-section="interactions">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('interactions')">
+          <div class="drug-collapsible-title">
+            <span>💊</span>
+            <span>Key Drug Interactions</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <ul class="drug-info-list interactions">
+              ${Object.entries(drug.interactions).map(([trigger, desc]) => `
+                <li><strong>${esc(trigger)}:</strong> ${esc(desc)}</li>
+              `).join('')}
+            </ul>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  // Renal Dosing
+  // Renal Dosing - collapsible
   if (drug.renalDosing) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>🫘</span> Renal Dosing</div>
-        <div class="renal-dosing-grid">
-          <div class="renal-dose-item">
-            <span class="renal-label">Mild</span>
-            <span class="renal-value">${esc(drug.renalDosing.mild)}</span>
+      <div class="drug-collapsible-section" data-section="renal">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('renal')">
+          <div class="drug-collapsible-title">
+            <span>🫘</span>
+            <span>Renal Dosing</span>
           </div>
-          <div class="renal-dose-item">
-            <span class="renal-label">Moderate</span>
-            <span class="renal-value">${esc(drug.renalDosing.moderate)}</span>
-          </div>
-          <div class="renal-dose-item">
-            <span class="renal-label">Severe</span>
-            <span class="renal-value">${esc(drug.renalDosing.severe)}</span>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <div class="renal-dosing-grid">
+              <div class="renal-dose-item">
+                <span class="renal-label">Mild</span>
+                <span class="renal-value">${esc(drug.renalDosing.mild)}</span>
+              </div>
+              <div class="renal-dose-item">
+                <span class="renal-label">Moderate</span>
+                <span class="renal-value">${esc(drug.renalDosing.moderate)}</span>
+              </div>
+              <div class="renal-dose-item">
+                <span class="renal-label">Severe</span>
+                <span class="renal-value">${esc(drug.renalDosing.severe)}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -11862,9 +12117,20 @@ function renderDrugInfoFromKnowledgeEnhanced(drug, drugName, warnings, med, medi
 
   // Medical sources footer
   html += `
-    <div style="margin-top: 20px; padding: 12px; background: var(--bg-elevated); border-radius: 6px; font-size: 11px; color: var(--text-muted);">
-      <strong>Data Sources:</strong> ${esc(medicalData.sources.join(', '))}
-      <br>Information verified from official medical databases and FDA resources.
+    <div class="drug-data-sources">
+      <div class="drug-data-sources-title">
+        <span>📚</span>
+        <span>Data Sources</span>
+      </div>
+      ${medicalData.sources.map(source => `
+        <div class="drug-data-source-item">
+          <span class="drug-data-source-badge">${esc(source)}</span>
+          <span>${source.includes('RxNorm') ? 'NIH/NLM' : source.includes('DailyMed') ? 'FDA Official Labels' : 'FDA Database'}</span>
+        </div>
+      `).join('')}
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.4;">
+        Information verified from official medical databases and FDA resources.
+      </p>
     </div>
   `;
 
@@ -11884,41 +12150,41 @@ function renderDrugInfoFromMedicalSources(drugName, medicalData, patient, med) {
     </div>
   `;
 
-  // FDA Black Box Warning (critical - show first)
+  // FDA Black Box Warning (critical - show first, always expanded)
   if (medicalData.combinedData.blackBoxWarning) {
     html += `
-      <div class="patient-context-alert critical">
+      <div class="drug-section-critical">
         <div class="context-alert-header">
           <div class="context-alert-icon">🚨</div>
           <div class="context-alert-title">FDA BLACK BOX WARNING</div>
         </div>
         <div style="padding: 12px; background: var(--bg-elevated); border-radius: 6px; margin-top: 8px;">
-          <p style="color: #d32f2f; font-weight: 500; margin: 0;">${esc(medicalData.combinedData.blackBoxWarning.substring(0, 400))}...</p>
+          <p style="color: #d32f2f; font-weight: 500; margin: 0; line-height: 1.6;">${esc(medicalData.combinedData.blackBoxWarning.substring(0, 500))}${medicalData.combinedData.blackBoxWarning.length > 500 ? '...' : ''}</p>
         </div>
       </div>
     `;
   }
 
-  // DOSAGE INFORMATION (primary focus)
+  // DOSAGE INFORMATION (primary focus - always expanded)
   if (medicalData.combinedData.dosage) {
     html += `
-      <div class="drug-section" style="background: var(--bg-elevated); border: 2px solid var(--primary); border-radius: 8px; padding: 16px;">
+      <div class="drug-section-highlight">
         <div class="drug-section-title"><span>💊</span> DOSAGE & ADMINISTRATION</div>
         <p class="drug-info-text">${esc(medicalData.combinedData.dosage)}</p>
-        <div style="margin-top: 12px; padding: 8px 12px; background: var(--bg-primary); border-radius: 4px; display: flex; align-items: center; gap: 8px;">
+        <div style="margin-top: 12px; padding: 8px 12px; background: var(--bg-primary); border-radius: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <span style="font-size: 16px;">✓</span>
           <span style="font-size: 12px; color: var(--text-muted);">
             Verified source: <strong>${esc(medicalData.combinedData.dosageSource)}</strong>
           </span>
           ${medicalData.combinedData.dosageUrl ? `
-            <a href="${esc(medicalData.combinedData.dosageUrl)}" target="_blank" style="margin-left: auto; font-size: 12px; color: var(--primary);">View Full Label →</a>
+            <a href="${esc(medicalData.combinedData.dosageUrl)}" target="_blank" style="margin-left: auto; font-size: 12px; color: var(--primary); text-decoration: none;">View Full Label →</a>
           ` : ''}
         </div>
       </div>
     `;
   }
 
-  // Patient-specific dosing recommendations
+  // Patient-specific dosing recommendations (always expanded)
   const dosingRecs = DosageCalculator.getPatientSpecificDosing(drugName, patient, medicalData.combinedData.dosage);
   if (dosingRecs.length > 0) {
     html += `
@@ -11937,13 +12203,23 @@ function renderDrugInfoFromMedicalSources(drugName, medicalData, patient, med) {
     `;
   }
 
-  // Indications (from DailyMed)
+  // Indications (from DailyMed) - collapsible
   if (medicalData.combinedData.dailymed?.indications) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>📋</span> Indications & Usage</div>
-        <p class="drug-info-text">${esc(medicalData.combinedData.dailymed.indications)}</p>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+      <div class="drug-collapsible-section active" data-section="indications">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('indications')">
+          <div class="drug-collapsible-title">
+            <span>📋</span>
+            <span>Indications & Usage</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <p class="drug-info-text">${esc(medicalData.combinedData.dailymed.indications)}</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -11957,44 +12233,74 @@ function renderDrugInfoFromMedicalSources(drugName, medicalData, patient, med) {
       html += `
         <div class="drug-section">
           <div class="drug-section-title"><span>🏷️</span> Drug Names</div>
-          ${brandName ? `<p><strong>Brand Name:</strong> ${esc(brandName)}</p>` : ''}
-          ${genericName ? `<p><strong>Generic Name:</strong> ${esc(genericName)}</p>` : ''}
+          ${brandName ? `<p class="drug-info-text"><strong>Brand Name:</strong> ${esc(brandName)}</p>` : ''}
+          ${genericName ? `<p class="drug-info-text"><strong>Generic Name:</strong> ${esc(genericName)}</p>` : ''}
         </div>
       `;
     }
   }
 
-  // Warnings (from DailyMed)
+  // Warnings (from DailyMed) - collapsible
   if (medicalData.combinedData.dailymed?.warnings?.length > 0) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>⚠️</span> Warnings & Precautions</div>
-        ${medicalData.combinedData.dailymed.warnings.map(w => `
-          <p class="drug-info-text" style="margin-bottom: 8px;">${esc(w)}</p>
-        `).join('')}
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+      <div class="drug-collapsible-section" data-section="warnings">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('warnings')">
+          <div class="drug-collapsible-title">
+            <span>⚠️</span>
+            <span>Warnings & Precautions</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            ${medicalData.combinedData.dailymed.warnings.map(w => `
+              <p class="drug-info-text" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">${esc(w)}</p>
+            `).join('')}
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  // Contraindications (from OpenFDA)
+  // Contraindications (from OpenFDA) - collapsible
   if (medicalData.combinedData.openfda?.contraindications) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>🚫</span> Contraindications</div>
-        <p class="drug-info-text">${esc(medicalData.combinedData.openfda.contraindications.substring(0, 400))}</p>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+      <div class="drug-collapsible-section" data-section="contraindications">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('contraindications')">
+          <div class="drug-collapsible-title">
+            <span>🚫</span>
+            <span>Contraindications</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <p class="drug-info-text">${esc(medicalData.combinedData.openfda.contraindications.substring(0, 600))}</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  // Adverse Reactions (from OpenFDA)
+  // Adverse Reactions (from OpenFDA) - collapsible
   if (medicalData.combinedData.openfda?.adverseReactions) {
     html += `
-      <div class="drug-section">
-        <div class="drug-section-title"><span>⚡</span> Adverse Reactions</div>
-        <p class="drug-info-text">${esc(medicalData.combinedData.openfda.adverseReactions.substring(0, 400))}</p>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+      <div class="drug-collapsible-section" data-section="adverse">
+        <div class="drug-collapsible-header" onclick="toggleDrugSection('adverse')">
+          <div class="drug-collapsible-title">
+            <span>⚡</span>
+            <span>Adverse Reactions</span>
+          </div>
+          <div class="drug-collapsible-toggle">▼</div>
+        </div>
+        <div class="drug-collapsible-content">
+          <div class="drug-collapsible-body">
+            <p class="drug-info-text">${esc(medicalData.combinedData.openfda.adverseReactions.substring(0, 600))}</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -12004,20 +12310,47 @@ function renderDrugInfoFromMedicalSources(drugName, medicalData, patient, med) {
     html += `
       <div class="drug-section">
         <div class="drug-section-title"><span>📝</span> Current Order</div>
-        <p><strong>Dose:</strong> ${esc(med.dose || 'Not specified')}</p>
-        <p><strong>Route:</strong> ${esc(med.route || 'Not specified')}</p>
-        <p><strong>Frequency:</strong> ${esc(med.frequency || 'Not specified')}</p>
-        ${med.indication ? `<p><strong>Indication:</strong> ${esc(med.indication)}</p>` : ''}
+        <div style="display: grid; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+            <span style="font-weight: 600; color: var(--text);">Dose:</span>
+            <span style="color: var(--text-secondary);">${esc(med.dose || 'Not specified')}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+            <span style="font-weight: 600; color: var(--text);">Route:</span>
+            <span style="color: var(--text-secondary);">${esc(med.route || 'Not specified')}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+            <span style="font-weight: 600; color: var(--text);">Frequency:</span>
+            <span style="color: var(--text-secondary);">${esc(med.frequency || 'Not specified')}</span>
+          </div>
+          ${med.indication ? `
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+              <span style="font-weight: 600; color: var(--text);">Indication:</span>
+              <span style="color: var(--text-secondary);">${esc(med.indication)}</span>
+            </div>
+          ` : ''}
+        </div>
       </div>
     `;
   }
 
   // Medical sources footer
   html += `
-    <div style="margin-top: 20px; padding: 12px; background: var(--bg-elevated); border-radius: 6px; font-size: 11px; color: var(--text-muted);">
-      <strong>📚 Data Sources:</strong> ${esc(medicalData.sources.join(', '))}
-      <br>All information retrieved from official FDA databases and NIH medical resources.
-      <br><strong>Note:</strong> This is for informational purposes. Always consult current clinical guidelines and patient-specific factors.
+    <div class="drug-data-sources">
+      <div class="drug-data-sources-title">
+        <span>📚</span>
+        <span>Data Sources</span>
+      </div>
+      ${medicalData.sources.map(source => `
+        <div class="drug-data-source-item">
+          <span class="drug-data-source-badge">${esc(source)}</span>
+          <span>${source.includes('RxNorm') ? 'NIH/NLM' : source.includes('DailyMed') ? 'FDA Official Labels' : 'FDA Database'}</span>
+        </div>
+      `).join('')}
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.4;">
+        All information retrieved from official FDA databases and NIH medical resources.
+        <br><strong>Note:</strong> This is for informational purposes. Always consult current clinical guidelines and patient-specific factors.
+      </p>
     </div>
   `;
 
@@ -12148,6 +12481,26 @@ function renderBasicDrugInfo(drugName, med) {
       </p>
     </div>
   `;
+}
+
+// Toggle collapsible drug information sections
+function toggleDrugSection(sectionId) {
+  const section = document.querySelector(`.drug-collapsible-section[data-section="${sectionId}"]`);
+  if (!section) return;
+
+  // Toggle active class
+  section.classList.toggle('active');
+
+  // Optional: Close other sections for accordion behavior (disabled by default)
+  // Uncomment below to enable accordion mode (only one section open at a time)
+  /*
+  const allSections = document.querySelectorAll('.drug-collapsible-section');
+  allSections.forEach(s => {
+    if (s !== section) {
+      s.classList.remove('active');
+    }
+  });
+  */
 }
 
 function renderProfileHistory() {
