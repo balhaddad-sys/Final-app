@@ -664,6 +664,175 @@
           }
         }
       ]
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MONITOR PAGE TOUR
+    // ═══════════════════════════════════════════════════════════════════════════
+    monitor: {
+      name: 'System Monitor Tour',
+      steps: [
+        {
+          popover: {
+            title: '⚡ MedWard System Monitor',
+            description: 'God Mode activated! Monitor system health, track API performance, and review audit logs in real-time.',
+            side: 'center',
+            align: 'center'
+          }
+        },
+        {
+          element: '.topbar',
+          popover: {
+            title: '📊 Monitor Header',
+            description: 'System status, server time, and quick controls at a glance.',
+            side: 'bottom'
+          }
+        },
+        {
+          element: '.status-badge',
+          popover: {
+            title: '🟢 System Status',
+            description: 'Real-time connection indicator. Green = online, Red = connection lost.',
+            side: 'bottom'
+          }
+        },
+        {
+          element: '#serverTime',
+          popover: {
+            title: '🕒 Server Time',
+            description: 'Current server timestamp for log correlation and debugging.',
+            side: 'bottom'
+          }
+        },
+        {
+          element: '.sidebar',
+          popover: {
+            title: '📈 System Metrics',
+            description: 'Key performance indicators: total users, error rates, latency, and storage usage.',
+            side: 'right'
+          }
+        },
+        {
+          element: '#statUsers',
+          popover: {
+            title: '👥 Total Users',
+            description: 'Number of registered accounts in the system.',
+            side: 'right'
+          }
+        },
+        {
+          element: '#statErrors',
+          popover: {
+            title: '⚠️ Error Rate',
+            description: 'Percentage of failed operations. Card changes color based on severity (Green < 5%, Amber < 10%, Red > 10%).',
+            side: 'right'
+          }
+        },
+        {
+          element: '#statLatency',
+          popover: {
+            title: '⚡ Average Latency',
+            description: 'API response time averaged over recent pings. Lower is better!',
+            side: 'right'
+          }
+        },
+        {
+          element: '#statStorage',
+          popover: {
+            title: '💾 Storage Used',
+            description: 'Current Google Drive storage quota consumption.',
+            side: 'right'
+          }
+        },
+        {
+          element: '.graph-section',
+          popover: {
+            title: '📊 Latency Graph',
+            description: 'Real-time visualization of API response times. Bars update every 2 seconds.',
+            side: 'top'
+          }
+        },
+        {
+          element: '#currentLatency',
+          popover: {
+            title: '⏱️ Current Latency',
+            description: 'Latest ping result. Green = fast, Amber = slow (>1s), Red = critical (>2s).',
+            side: 'left'
+          }
+        },
+        {
+          element: '#latencyGraph',
+          popover: {
+            title: '📈 Heartbeat Monitor',
+            description: 'Visual timeline of API health. Spike detection helps identify performance issues.',
+            side: 'top'
+          }
+        },
+        {
+          element: '.terminal-section',
+          popover: {
+            title: '📝 Event Log Terminal',
+            description: 'Live audit log of all system events: logins, data operations, errors, and more.',
+            side: 'top'
+          }
+        },
+        {
+          element: '.terminal-tabs',
+          popover: {
+            title: '🔍 Log Filters',
+            description: 'Filter events by type: All Events, Errors only, Logins, or Data Operations.',
+            side: 'bottom'
+          }
+        },
+        {
+          element: '#terminal',
+          popover: {
+            title: '🖥️ Live Terminal',
+            description: 'Scrollable log view with timestamps, event types, users, and details. Auto-updates every 10 seconds.',
+            side: 'top'
+          }
+        },
+        {
+          element: '.quick-actions',
+          popover: {
+            title: '⚙️ Quick Actions',
+            description: 'Administrative controls: Force sync stats, export logs, or purge old data.',
+            side: 'top'
+          }
+        },
+        {
+          element: '.action-btn[onclick*="fetchStats"]',
+          popover: {
+            title: '🔄 Force Sync',
+            description: 'Manually refresh all statistics and logs from the server.',
+            side: 'top'
+          }
+        },
+        {
+          element: '.action-btn[onclick*="exportLogs"]',
+          popover: {
+            title: '📥 Export Logs',
+            description: 'Download current logs as JSON for external analysis or archiving.',
+            side: 'top'
+          }
+        },
+        {
+          element: '.action-btn.danger',
+          popover: {
+            title: '🗑️ Purge Logs',
+            description: 'Permanently delete all system logs. Use with caution - requires confirmation.',
+            side: 'top'
+          }
+        },
+        {
+          element: '.btn[onclick*="exitMonitor"]',
+          popover: {
+            title: '✕ Exit Monitor',
+            description: 'Leave God Mode and return to login. Your admin session will be cleared.',
+            side: 'left'
+          }
+        }
+      ]
     }
   };
 
@@ -674,7 +843,7 @@
   function detectCurrentPage() {
     const path = window.location.pathname.toLowerCase();
     const html = document.documentElement.innerHTML.toLowerCase();
-    
+
     if (path.includes('login') || document.querySelector('.login-container')) return 'login';
     if (path.includes('landing') || document.querySelector('.units-grid')) return 'landing';
     if (path.includes('dashboard') || document.querySelector('.dash-content')) return 'dashboard';
@@ -682,11 +851,12 @@
     if (path.includes('ai_assistant') || document.querySelector('.chat-container')) return 'aiAssistant';
     if (path.includes('antibiotic') || document.querySelector('.antibiotic-guide')) return 'antibiotic';
     if (path.includes('handover') || document.querySelector('.handover-content')) return 'handover';
-    
+    if (path.includes('monitor') || document.querySelector('.main-grid') && document.getElementById('latencyGraph')) return 'monitor';
+
     // Fallback: check for specific elements
     if (document.getElementById('patientProfile')?.classList.contains('active')) return 'patientProfile';
     if (document.getElementById('mainTabs')) return 'dashboard';
-    
+
     return 'dashboard'; // Default
   }
 
