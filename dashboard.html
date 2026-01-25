@@ -6469,20 +6469,26 @@ function savePatchQueueV2() {
 function enqueuePatchV2(operation, payload) {
   if (syncStateV2.isReadOnly) {
     console.warn('⛔ enqueuePatch blocked: Read-only mode');
+    if (typeof toast === 'function') {
+      toast('Cannot save: Read-only mode', 'error');
+    }
     return false;
   }
   if (!syncStateV2.isHydrated) {
     console.warn('⛔ enqueuePatch blocked: Not hydrated');
+    if (typeof toast === 'function') {
+      toast('Cannot save: System not ready', 'error');
+    }
     return false;
   }
-  
+
   syncStateV2.patchQueue.push({
     operation,
     payload,
     ts: Date.now(),
     id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)
   });
-  
+
   console.log('📝 Patch queued:', operation, payload?.id || '');
   compressPatchQueueV2();
   savePatchQueueV2();
@@ -6836,7 +6842,11 @@ async function flushPatchesV2() {
 
 async function saveSnapshotV2(options = {}) {
   if (!canWriteV2() && !options.force) {
-    console.warn('⛔ saveSnapshot blocked:', getWriteBlockReasonV2());
+    const reason = getWriteBlockReasonV2();
+    console.warn('⛔ saveSnapshot blocked:', reason);
+    if (typeof toast === 'function' && options.showToast !== false) {
+      toast('Cannot save: ' + reason, 'error');
+    }
     return { success: false, blocked: true };
   }
   
@@ -7119,8 +7129,15 @@ async function attemptAutoMergeV2(conflict) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function markDirtyV2() {
-  if (!canWriteV2()) return;
-  
+  if (!canWriteV2()) {
+    const reason = getWriteBlockReasonV2();
+    console.error('⛔ Save blocked:', reason);
+    if (typeof toast === 'function') {
+      toast('Cannot save: ' + reason, 'error');
+    }
+    return;
+  }
+
   syncStateV2.pendingChanges = true;
   updateSyncStatusV2('pending');
   scheduleSyncDebouncedV2();
@@ -7294,6 +7311,47 @@ function initSyncEngineV2() {
   console.log('✅ Sync Engine v2.0 initialized');
 }
 
+// Diagnostic function for debugging sync state
+function diagnoseSyncStateV2() {
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('SYNC STATE V2 DIAGNOSTICS');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('Can Write:', canWriteV2());
+  if (!canWriteV2()) {
+    console.log('❌ Write Blocked:', getWriteBlockReasonV2());
+  } else {
+    console.log('✅ Writes Enabled');
+  }
+  console.log('───────────────────────────────────────────────────────');
+  console.log('isReadOnly:', syncStateV2.isReadOnly);
+  console.log('isHydrated:', syncStateV2.isHydrated);
+  console.log('cloudLoaded:', syncStateV2.cloudLoaded);
+  console.log('isSyncing:', syncStateV2.isSyncing);
+  console.log('pendingChanges:', syncStateV2.pendingChanges);
+  console.log('───────────────────────────────────────────────────────');
+  console.log('Patch Queue Length:', syncStateV2.patchQueue.length);
+  console.log('Client Rev:', syncStateV2.clientRev);
+  console.log('Server Rev:', syncStateV2.serverRev);
+  console.log('Error Count:', syncStateV2.errorCount);
+  console.log('Last Sync:', syncStateV2.lastSyncTime ? new Date(syncStateV2.lastSyncTime).toISOString() : 'Never');
+  console.log('═══════════════════════════════════════════════════════');
+
+  return {
+    canWrite: canWriteV2(),
+    blockReason: getWriteBlockReasonV2(),
+    state: {
+      isReadOnly: syncStateV2.isReadOnly,
+      isHydrated: syncStateV2.isHydrated,
+      cloudLoaded: syncStateV2.cloudLoaded,
+      isSyncing: syncStateV2.isSyncing,
+      pendingChanges: syncStateV2.pendingChanges,
+      queueLength: syncStateV2.patchQueue.length,
+      clientRev: syncStateV2.clientRev,
+      serverRev: syncStateV2.serverRev
+    }
+  };
+}
+
 // Expose globally
 window.initSyncEngineV2 = initSyncEngineV2;
 window.loadFromCloudV2 = loadFromCloudV2;
@@ -7304,6 +7362,7 @@ window.enqueuePatch = enqueuePatch;
 window.resolveConflict = resolveConflict;
 window.retryCloudConnection = retryCloudConnection;
 window.toggleSessionsTooltip = toggleSessionsTooltip;
+window.diagnoseSyncStateV2 = diagnoseSyncStateV2;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // END SYNC ENGINE v2.0
@@ -16992,7 +17051,30 @@ async function init() {
   // CACHE-FIRST BOOT: Read from warmed cache (loading.html fetched cloud)
   // ═══════════════════════════════════════════════════════════════════
   await cloudFirstBoot();
-  
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SAFETY CHECK: Ensure syncStateV2 is unlocked after boot
+  // This prevents silent save failures if boot completed but unlock didn't happen
+  // ═══════════════════════════════════════════════════════════════════
+  if (!canWriteV2()) {
+    console.warn('⚠️ syncStateV2 not unlocked after boot - forcing unlock');
+    const cached = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        syncStateV2.isHydrated = true;
+        syncStateV2.isReadOnly = false;
+        syncStateV2.cloudLoaded = true;
+        if (data.rev) {
+          syncStateV2.clientRev = data.rev;
+        }
+        console.log('✅ syncStateV2 force-unlocked with cached data');
+      } catch (e) {
+        console.error('❌ Failed to force-unlock syncStateV2:', e);
+      }
+    }
+  }
+
   // Ensure default unit exists
   ensureDefaultUnit();
   
