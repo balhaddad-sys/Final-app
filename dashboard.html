@@ -4635,7 +4635,7 @@ body.dark-theme .readonly-banner {
 </div>
 
 <!-- Drug Monograph Modal - Dynamic Clinical Analysis -->
-<div id="modal-drug-monograph" class="modal hidden">
+<div id="modal-drug-monograph" class="modal">
     <div class="modal-content" style="max-height: 90vh; display:flex; flex-direction:column; background:var(--bg-body);">
 
         <div id="monograph-header" style="padding:20px; border-bottom:1px solid var(--border); background:var(--bg-card);">
@@ -12659,14 +12659,16 @@ window.openDrugLearn = async function(drugName) {
     return;
   }
 
-  // Show Modal
-  document.getElementById('modal-drug-monograph').classList.remove('hidden');
-  document.getElementById('mono-content').classList.add('hidden');
-  document.getElementById('mono-loading').classList.remove('hidden');
-  document.getElementById('mono-safety-banner').style.display = 'none';
+  // Show Modal using standard function
+  openModal('modal-drug-monograph');
 
-  document.getElementById('mono-title').innerText = drugName;
-  document.getElementById('mono-class').innerText = `Checking interactions with ${p.name}...`;
+  // Reset modal state
+  $('mono-content').classList.add('hidden');
+  $('mono-loading').classList.remove('hidden');
+  $('mono-safety-banner').style.display = 'none';
+
+  $('mono-title').innerText = drugName;
+  $('mono-class').innerText = `Checking interactions with ${p.name}...`;
 
   // 2. CALCULATE CrCl LOCALLY (Faster than AI)
   const crcl = calculateCrClForMonograph(p.age, p.gender, p.currentLabs?.Creatinine);
@@ -12705,11 +12707,11 @@ window.openDrugLearn = async function(drugName) {
 
 // 2. RENDER THE DATA
 function renderMonograph(data) {
-  document.getElementById('mono-loading').classList.add('hidden');
-  document.getElementById('mono-content').classList.remove('hidden');
+  $('mono-loading').classList.add('hidden');
+  $('mono-content').classList.remove('hidden');
 
   // Safety Banner Logic
-  const banner = document.getElementById('mono-safety-banner');
+  const banner = $('mono-safety-banner');
   banner.style.display = 'block';
 
   if (data.safety_status === 'safe') {
@@ -12735,10 +12737,10 @@ function renderMonograph(data) {
   }
 
   // Fill Content
-  document.getElementById('mono-dose').innerText = data.dosing_rec || 'No specific dosing recommendation available';
-  document.getElementById('mono-renal').innerText = 'Adjustments: ' + (data.renal_hepatic || 'None specified');
-  document.getElementById('mono-interactions').innerText = data.interactions || 'No major interactions detected.';
-  document.getElementById('mono-pearls').innerText = data.pearls || 'No clinical pearls available';
+  $('mono-dose').innerText = data.dosing_rec || 'No specific dosing recommendation available';
+  $('mono-renal').innerText = 'Adjustments: ' + (data.renal_hepatic || 'None specified');
+  $('mono-interactions').innerText = data.interactions || 'No major interactions detected.';
+  $('mono-pearls').innerText = data.pearls || 'No clinical pearls available';
 }
 
 // 3. HELPER: COCKCROFT-GAULT CALC
