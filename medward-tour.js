@@ -720,7 +720,7 @@
 
   function startTour(forcePage = null, force = false) {
     // Check if driver.js is loaded
-    if (!window.driver || !window.driver.js) {
+    if (typeof window.driver !== 'function') {
       console.error('❌ Driver.js not loaded. Make sure to include the library.');
       return;
     }
