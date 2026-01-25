@@ -224,7 +224,7 @@ a.nav-item{color:var(--text-muted)}
 <div><div class="header-title">OnCall Assistant</div><div class="header-subtitle">Evidence-Based Decision Support</div></div>
 </div>
 <div class="header-actions">
-<button class="icon-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle Night Mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ico"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+<button class="icon-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle Night Mode">🌙</button>
 <button class="icon-btn" id="backBtn" onclick="goBack()" aria-label="Go back to home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ico"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 </div>
 </div>
@@ -1080,11 +1080,20 @@ function shareHandover() {
   }
 }
 
-function initTheme(){const t=localStorage.getItem('MEDWARD_THEME');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.body.classList.add('dark-theme');document.getElementById('themeBtn').textContent='';}}
+function initTheme(){
+  const t=localStorage.getItem('MEDWARD_THEME');
+  if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
+    document.body.classList.add('dark-theme');
+  }
+  updateThemeIcon();
+}
 function toggleTheme(){
-  var isDark=document.body.classList.toggle('dark-theme');
-  localStorage.setItem('MEDWARD_THEME',isDark?'dark':'light');
-  document.getElementById('themeBtn').textContent=isDark?'':'';
+  document.body.classList.toggle('dark-theme');
+  localStorage.setItem('MEDWARD_THEME',document.body.classList.contains('dark-theme')?'dark':'light');
+  updateThemeIcon();
+}
+function updateThemeIcon(){
+  document.getElementById('themeBtn').textContent=document.body.classList.contains('dark-theme')?'☀️':'🌙';
 }
 initTheme();
 function goBack(){ window.location.href = window.location.href.split('/').slice(0, -1).join('/') + '/landing.html'; }
