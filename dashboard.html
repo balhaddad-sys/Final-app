@@ -16920,6 +16920,14 @@ async function cloudFirstBoot() {
         syncState.lastServerPatientCount = state.patients?.length || 0;
         syncState.lastServerUnitCount = state.units?.length || 0;
 
+        // ✅ UNLOCK syncStateV2 (new sync engine)
+        syncStateV2.isHydrated = true;
+        syncStateV2.isReadOnly = false;
+        syncStateV2.cloudLoaded = true;
+        if (data.rev) {
+          syncStateV2.clientRev = data.rev;
+        }
+
         // Check if we're in offline mode
         const isOfflineMode = localStorage.getItem('MW_OFFLINE_MODE') === 'true';
 
