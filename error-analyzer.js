@@ -160,29 +160,33 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   function wrapTourFunctions() {
-    // Wait for MedWardTour to be available
+    // Wait for both MedWardTour and driver to be available
     if (typeof window.MedWardTour === 'undefined') {
       setTimeout(wrapTourFunctions, 100);
       return;
     }
 
-    // Wrap the start function
-    const originalStart = window.MedWardTour.start;
-    window.MedWardTour.start = function(...args) {
-      try {
-        return originalStart.apply(this, args);
-      } catch (error) {
-        captureError(error, {
-          type: 'tourStart',
-          function: 'MedWardTour.start',
-          arguments: args
-        });
-        throw error;
-      }
-    };
+    // Wrap the start function if not already wrapped
+    if (window.MedWardTour.start && !window.MedWardTour.start.__wrapped) {
+      const originalStart = window.MedWardTour.start;
+      window.MedWardTour.start = function(...args) {
+        try {
+          return originalStart.apply(this, args);
+        } catch (error) {
+          captureError(error, {
+            type: 'tourStart',
+            function: 'MedWardTour.start',
+            arguments: args
+          });
+          throw error;
+        }
+      };
+      window.MedWardTour.start.__wrapped = true;
+    }
 
-    // Wrap driver.js if available
-    if (typeof window.driver !== 'undefined') {
+    // Wrap driver.js if available - only wrap if it's a function
+    // Check if driver is loaded and is a function, and hasn't been wrapped yet
+    if (typeof window.driver === 'function' && !window.driver.__wrapped) {
       const originalDriver = window.driver;
       window.driver = function(...args) {
         try {
@@ -215,6 +219,7 @@
           throw error;
         }
       };
+      window.driver.__wrapped = true;
     }
   }
 
