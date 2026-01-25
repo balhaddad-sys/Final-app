@@ -4404,7 +4404,7 @@ body.dark-theme .readonly-banner {
 <div class="modal-box wide">
 <div class="modal-header">
 <div class="modal-title">📩 Request New Unit Access</div>
-<button class="btn btn-ghost" onclick="closeModal('requestUnitModal')"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<button class="btn btn-ghost" onclick="closeModal('requestUnitModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 </div>
 <div class="modal-body" id="requestUnitBody">
 <div id="requestFormSection">
@@ -4559,14 +4559,14 @@ body.dark-theme .readonly-banner {
   <div class="modal-box wide">
     <div class="modal-header">
       <div class="modal-title">🧪 Lab Extraction Preview</div>
-      <button class="btn btn-ghost" onclick="closeModal('labPreviewModal'); resetLabExtraction()"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="btn btn-ghost" onclick="closeModal('labPreviewModal'); resetLabExtraction()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body" id="labPreviewBody">
       <!-- Dynamic content inserted by showLabExtractionPreview() -->
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('labPreviewModal'); resetLabExtraction()">Cancel</button>
-      <button class="btn btn-primary" id="confirmLabBtn" onclick="confirmLabExtraction()"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>Confirm & Save</button>
+      <button class="btn btn-primary" id="confirmLabBtn" onclick="confirmLabExtraction()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>Confirm & Save</button>
     </div>
   </div>
 </div>
@@ -4622,7 +4622,7 @@ body.dark-theme .readonly-banner {
             <div class="score-calc-title" id="scoreCalcTitle">Score Name</div>
             <div class="score-calc-purpose" id="scoreCalcPurpose">Purpose description</div>
           </div>
-          <button onclick="closeModal('scoreCalcModal')" style="background:rgba(148,163,184,0.1);border:none;width:32px;height:32px;border-radius:8px;color:#94a3b8;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button onclick="closeModal('scoreCalcModal')" style="background:rgba(148,163,184,0.1);border:none;width:32px;height:32px;border-radius:8px;color:#94a3b8;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="score-calc-category" id="scoreCalcCategory">Category</div>
       </div>
@@ -4662,7 +4662,8 @@ body.dark-theme .readonly-banner {
   </div>
 </div>
 <div class="modal-footer">
-<button class="btn btn-secondary btn-full" onclick="closeModal('drugInfoModal')">Close</button>
+<button class="btn btn-secondary" onclick="closeModal('drugInfoModal')">Close</button>
+<button class="btn btn-primary" id="drugAddToOrdersBtn" onclick="addDrugToOrders()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="vertical-align:-2px;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add to Orders</button>
 </div>
 </div>
 </div>
@@ -4902,7 +4903,7 @@ body.dark-theme .readonly-banner {
 <div class="modal-box" style="max-width:400px">
 <div class="modal-header">
   <div class="modal-title" id="labHistoryTitle">📊 Lab History</div>
-  <button class="btn-ghost" onclick="closeModal('labHistoryModal')" style="font-size:1.2rem"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <button class="btn-ghost" onclick="closeModal('labHistoryModal')" style="font-size:1.2rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 </div>
 <div class="modal-body" style="padding:0;max-height:60vh;overflow-y:auto">
   <div id="labHistoryContent"></div>
@@ -4930,7 +4931,7 @@ body.dark-theme .readonly-banner {
 </div>
 <div class="modal-footer">
 <button class="btn btn-secondary" onclick="closeModal('dischargeModal')">Cancel</button>
-<button class="btn btn-success" onclick="confirmDischarge()"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>Confirm Discharge</button>
+<button class="btn btn-success" onclick="confirmDischarge()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>Confirm Discharge</button>
 </div>
 </div>
 </div>
@@ -12058,6 +12059,25 @@ function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
     `;
   }
 
+  // Data Sources Footer
+  html += `
+    <div class="drug-data-sources">
+      <div class="drug-data-sources-title"><span>📚</span> References & Sources</div>
+      <div class="drug-data-source-item">
+        <span class="drug-data-source-badge">UpToDate</span>
+        <a href="https://www.uptodate.com/contents/search?search=${encodeURIComponent(drugName)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-size:0.8rem">Search ${esc(drugName)} →</a>
+      </div>
+      <div class="drug-data-source-item">
+        <span class="drug-data-source-badge">PubMed</span>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(drugName)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-size:0.8rem">Research Articles →</a>
+      </div>
+      <div class="drug-data-source-item">
+        <span class="drug-data-source-badge">DailyMed</span>
+        <a href="https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=${encodeURIComponent(drugName)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-size:0.8rem">FDA Label →</a>
+      </div>
+    </div>
+  `;
+
   $('drugInfoBody').innerHTML = html;
 }
 
@@ -12668,6 +12688,21 @@ function renderBasicDrugInfo(drugName, med) {
         ⚠️ For detailed AI-powered drug information, ensure your API is configured in Admin Settings.
       </p>
     </div>
+    <div class="drug-data-sources">
+      <div class="drug-data-sources-title"><span>📚</span> Look Up Information</div>
+      <div class="drug-data-source-item">
+        <span class="drug-data-source-badge">UpToDate</span>
+        <a href="https://www.uptodate.com/contents/search?search=${encodeURIComponent(drugName)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-size:0.8rem">Search ${esc(drugName)} →</a>
+      </div>
+      <div class="drug-data-source-item">
+        <span class="drug-data-source-badge">PubMed</span>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(drugName)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-size:0.8rem">Research Articles →</a>
+      </div>
+      <div class="drug-data-source-item">
+        <span class="drug-data-source-badge">DailyMed</span>
+        <a href="https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=${encodeURIComponent(drugName)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-size:0.8rem">FDA Label →</a>
+      </div>
+    </div>
   `;
 }
 
@@ -12689,6 +12724,32 @@ function toggleDrugSection(sectionId) {
     }
   });
   */
+}
+
+// Add drug from info modal to patient's orders/medications
+function addDrugToOrders() {
+  const drugName = $('drugInfoTitle')?.textContent;
+  if (!drugName || drugName === 'Drug Name') {
+    toast('No drug selected', 'warning');
+    return;
+  }
+  
+  const p = state.currentPatient;
+  if (!p) {
+    toast('Select a patient first', 'warning');
+    return;
+  }
+  
+  // Close the drug info modal
+  closeModal('drugInfoModal');
+  
+  // Pre-fill the add medication modal with the drug name
+  $('medNameNew').value = drugName;
+  
+  // Open the add medication modal
+  openModal('addMedModal');
+  
+  toast(`Ready to add ${drugName} - fill in dosage details`, 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -15207,7 +15268,7 @@ window.openTaskModal = function(existingTask = null) {
             <h3 class="modal-title">${existingTask ? 'Edit Task' : 'Add Clinical Task'}</h3>
             <p class="modal-subtitle">For ${esc(state.currentPatient.name)}</p>
           </div>
-          <button class="modal-close" onclick="closeModal('taskModal')"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button class="modal-close" onclick="closeModal('taskModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -16057,7 +16118,7 @@ function renderTrash() {
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-success btn-xs" onclick="restorePatient(${idx})">↩️ Restore</button>
-            <button class="btn btn-danger btn-xs" onclick="permanentDeletePatient(${idx})"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="btn btn-danger btn-xs" onclick="permanentDeletePatient(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
         </div>
       `;
@@ -16078,7 +16139,7 @@ function renderTrash() {
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-success btn-xs" onclick="restoreUnit(${idx})">↩️ Restore</button>
-            <button class="btn btn-danger btn-xs" onclick="permanentDeleteUnit(${idx})"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="btn btn-danger btn-xs" onclick="permanentDeleteUnit(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
         </div>
       `;
@@ -16099,7 +16160,7 @@ function renderTrash() {
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-success btn-xs" onclick="restoreMedication(${idx})">↩️ Restore</button>
-            <button class="btn btn-danger btn-xs" onclick="permanentDeleteMedication(${idx})"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="btn btn-danger btn-xs" onclick="permanentDeleteMedication(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
         </div>
       `;
