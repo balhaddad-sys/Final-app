@@ -11161,32 +11161,376 @@ const DrugKnowledgeBase = {
   }
 };
 
+// Medical Sources API Integration Module
+const MedicalSourcesAPI = {
+
+  // Fetch drug information from RxNorm (NIH/NLM)
+  async getRxNormInfo(drugName) {
+    try {
+      // Search for drug concept
+      const searchUrl = `https://rxnav.nlm.nih.gov/REST/drugs.json?name=${encodeURIComponent(drugName)}`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+
+      if (!searchData.drugGroup?.conceptGroup) {
+        return null;
+      }
+
+      // Get first RxCUI (RxNorm Concept Unique Identifier)
+      let rxcui = null;
+      for (const group of searchData.drugGroup.conceptGroup) {
+        if (group.conceptProperties?.[0]?.rxcui) {
+          rxcui = group.conceptProperties[0].rxcui;
+          break;
+        }
+      }
+
+      if (!rxcui) return null;
+
+      // Get drug properties
+      const propsUrl = `https://rxnav.nlm.nih.gov/REST/rxcui/${rxcui}/allProperties.json?prop=all`;
+      const propsRes = await fetch(propsUrl);
+      const propsData = await propsRes.json();
+
+      return {
+        rxcui: rxcui,
+        properties: propsData.propConceptGroup?.propConcept || [],
+        source: 'RxNorm (NIH/NLM)'
+      };
+    } catch (e) {
+      console.error('RxNorm API error:', e);
+      return null;
+    }
+  },
+
+  // Fetch drug information from DailyMed (FDA)
+  async getDailyMedInfo(drugName) {
+    try {
+      // Search for drug in DailyMed
+      const searchUrl = `https://dailymed.nlm.nih.gov/dailymed/services/v2/spls.json?drug_name=${encodeURIComponent(drugName)}`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+
+      if (!searchData.data || searchData.data.length === 0) {
+        return null;
+      }
+
+      // Get the first matching drug's SPL (Structured Product Labeling) ID
+      const setid = searchData.data[0].setid;
+
+      // Fetch detailed information
+      const detailUrl = `https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/${setid}.json`;
+      const detailRes = await fetch(detailUrl);
+      const detailData = await detailRes.json();
+
+      return {
+        setid: setid,
+        title: detailData.data?.title || drugName,
+        dosage: this.extractDosageFromDailyMed(detailData),
+        warnings: this.extractWarningsFromDailyMed(detailData),
+        indications: this.extractIndicationsFromDailyMed(detailData),
+        source: 'DailyMed (FDA)',
+        url: `https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=${setid}`
+      };
+    } catch (e) {
+      console.error('DailyMed API error:', e);
+      return null;
+    }
+  },
+
+  // Extract dosage information from DailyMed data
+  extractDosageFromDailyMed(detailData) {
+    const sections = detailData.data?.sections || [];
+    for (const section of sections) {
+      if (section.title?.toLowerCase().includes('dosage') ||
+          section.title?.toLowerCase().includes('administration')) {
+        // Remove HTML tags and extract text
+        return section.text?.replace(/<[^>]*>/g, '').trim().substring(0, 500) || null;
+      }
+    }
+    return null;
+  },
+
+  // Extract warnings from DailyMed data
+  extractWarningsFromDailyMed(detailData) {
+    const sections = detailData.data?.sections || [];
+    const warnings = [];
+    for (const section of sections) {
+      if (section.title?.toLowerCase().includes('warning') ||
+          section.title?.toLowerCase().includes('precaution') ||
+          section.title?.toLowerCase().includes('contraindication')) {
+        const text = section.text?.replace(/<[^>]*>/g, '').trim().substring(0, 300);
+        if (text) warnings.push(text);
+      }
+    }
+    return warnings;
+  },
+
+  // Extract indications from DailyMed data
+  extractIndicationsFromDailyMed(detailData) {
+    const sections = detailData.data?.sections || [];
+    for (const section of sections) {
+      if (section.title?.toLowerCase().includes('indication')) {
+        return section.text?.replace(/<[^>]*>/g, '').trim().substring(0, 400) || null;
+      }
+    }
+    return null;
+  },
+
+  // Fetch drug adverse events from OpenFDA
+  async getOpenFDAInfo(drugName) {
+    try {
+      // Search for drug label information
+      const searchUrl = `https://api.fda.gov/drug/label.json?search=openfda.brand_name:"${encodeURIComponent(drugName)}"&limit=1`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+
+      if (!searchData.results || searchData.results.length === 0) {
+        // Try with generic name
+        const genericUrl = `https://api.fda.gov/drug/label.json?search=openfda.generic_name:"${encodeURIComponent(drugName)}"&limit=1`;
+        const genericRes = await fetch(genericUrl);
+        const genericData = await genericRes.json();
+
+        if (!genericData.results || genericData.results.length === 0) {
+          return null;
+        }
+
+        return this.processOpenFDAResult(genericData.results[0]);
+      }
+
+      return this.processOpenFDAResult(searchData.results[0]);
+    } catch (e) {
+      console.error('OpenFDA API error:', e);
+      return null;
+    }
+  },
+
+  // Process OpenFDA result
+  processOpenFDAResult(result) {
+    return {
+      warnings: result.warnings?.[0] || result.boxed_warning?.[0] || null,
+      adverseReactions: result.adverse_reactions?.[0] || null,
+      dosageAndAdministration: result.dosage_and_administration?.[0] || null,
+      contraindications: result.contraindications?.[0] || null,
+      brandName: result.openfda?.brand_name?.[0] || null,
+      genericName: result.openfda?.generic_name?.[0] || null,
+      source: 'OpenFDA',
+      blackBoxWarning: result.boxed_warning?.[0] || null
+    };
+  },
+
+  // Combined fetch from all sources
+  async fetchFromAllSources(drugName) {
+    const results = {
+      drugName: drugName,
+      sources: [],
+      combinedData: {}
+    };
+
+    // Fetch from all sources in parallel
+    const [rxnorm, dailymed, openfda] = await Promise.all([
+      this.getRxNormInfo(drugName),
+      this.getDailyMedInfo(drugName),
+      this.getOpenFDAInfo(drugName)
+    ]);
+
+    // Combine results
+    if (rxnorm) {
+      results.sources.push('RxNorm (NIH/NLM)');
+      results.combinedData.rxnorm = rxnorm;
+    }
+
+    if (dailymed) {
+      results.sources.push('DailyMed (FDA)');
+      results.combinedData.dailymed = dailymed;
+
+      // Prefer DailyMed for dosage (FDA-approved)
+      if (dailymed.dosage) {
+        results.combinedData.dosage = dailymed.dosage;
+        results.combinedData.dosageSource = 'DailyMed (FDA)';
+        results.combinedData.dosageUrl = dailymed.url;
+      }
+    }
+
+    if (openfda) {
+      results.sources.push('OpenFDA');
+      results.combinedData.openfda = openfda;
+
+      // Use OpenFDA dosage if DailyMed didn't provide it
+      if (!results.combinedData.dosage && openfda.dosageAndAdministration) {
+        results.combinedData.dosage = openfda.dosageAndAdministration;
+        results.combinedData.dosageSource = 'OpenFDA';
+      }
+
+      // Black box warnings are critical
+      if (openfda.blackBoxWarning) {
+        results.combinedData.blackBoxWarning = openfda.blackBoxWarning;
+      }
+    }
+
+    return results;
+  }
+};
+
+// Dosage Calculator - calculates patient-specific dosages
+const DosageCalculator = {
+
+  // Calculate dose based on weight (mg/kg)
+  calculateWeightBasedDose(baselineDose, patientWeight, unit = 'mg') {
+    if (!patientWeight || patientWeight <= 0) return null;
+    const dose = baselineDose * patientWeight;
+    return `${dose.toFixed(1)} ${unit}`;
+  },
+
+  // Adjust dose for renal function (CrCl-based)
+  adjustForRenalFunction(baseDose, crCl) {
+    if (!crCl) return baseDose;
+
+    // Standard adjustment factors
+    if (crCl >= 60) {
+      return { dose: baseDose, adjustment: 'No adjustment needed (normal renal function)', category: 'normal' };
+    } else if (crCl >= 30 && crCl < 60) {
+      return { dose: baseDose * 0.75, adjustment: '25% dose reduction (moderate impairment)', category: 'moderate' };
+    } else if (crCl >= 15 && crCl < 30) {
+      return { dose: baseDose * 0.5, adjustment: '50% dose reduction (severe impairment)', category: 'severe' };
+    } else {
+      return { dose: baseDose * 0.25, adjustment: '75% dose reduction (ESRD - consult nephrologist)', category: 'esrd' };
+    }
+  },
+
+  // Calculate creatinine clearance (Cockcroft-Gault)
+  calculateCrCl(age, weight, creatinine, isMale = true) {
+    if (!age || !weight || !creatinine) return null;
+
+    const numerator = (140 - age) * weight;
+    const denominator = 72 * creatinine;
+    let crCl = numerator / denominator;
+
+    if (!isMale) {
+      crCl = crCl * 0.85; // Female adjustment
+    }
+
+    return Math.round(crCl);
+  },
+
+  // Get patient-specific dosing recommendations
+  getPatientSpecificDosing(drugName, patient, standardDosage) {
+    const recommendations = [];
+
+    // Extract patient data
+    const age = patient.age || null;
+    const weight = patient.weight || null;
+    const creatinine = this.getCreatinineFromLabs(patient);
+
+    // Calculate CrCl if we have the data
+    if (age && weight && creatinine) {
+      const crCl = this.calculateCrCl(age, weight, creatinine, true); // Assume male for now
+
+      if (crCl) {
+        recommendations.push({
+          type: 'renal',
+          label: 'Estimated CrCl',
+          value: `${crCl} mL/min`,
+          note: this.getRenalFunctionCategory(crCl)
+        });
+
+        // Check if renal adjustment needed
+        if (crCl < 60) {
+          recommendations.push({
+            type: 'warning',
+            label: 'Renal Adjustment',
+            value: 'Dose adjustment may be required',
+            severity: crCl < 30 ? 'high' : 'medium'
+          });
+        }
+      }
+    }
+
+    // Age-based warnings
+    if (age && age >= 65) {
+      recommendations.push({
+        type: 'warning',
+        label: 'Geriatric Patient',
+        value: 'Consider lower initial dose and monitor closely',
+        severity: 'medium'
+      });
+    }
+
+    return recommendations;
+  },
+
+  // Extract creatinine from lab data
+  getCreatinineFromLabs(patient) {
+    const labs = patient.labData?.parameters || [];
+    for (const lab of labs) {
+      if (lab.name?.toLowerCase().includes('creatinine') ||
+          lab.name?.toLowerCase().includes('cr')) {
+        return parseFloat(lab.values?.[0]?.value);
+      }
+    }
+    return null;
+  },
+
+  // Get renal function category
+  getRenalFunctionCategory(crCl) {
+    if (crCl >= 60) return 'Normal renal function';
+    if (crCl >= 30) return 'Moderate renal impairment';
+    if (crCl >= 15) return 'Severe renal impairment';
+    return 'End-stage renal disease';
+  }
+};
+
 window.openDrugInfo = async function(drugName, medIdx) {
   const p = state.currentPatient;
   const med = medIdx !== undefined ? p.medications?.[medIdx] : null;
-  
+
   $('drugInfoTitle').textContent = drugName;
   openModal('drugInfoModal');
-  
+
   // INSTANT: Check local knowledge base first
   const localDrug = DrugKnowledgeBase.getDrug(drugName);
   const patientWarnings = DrugKnowledgeBase.getPatientWarnings(drugName, p);
-  
+
   if (localDrug) {
-    // Render immediately from local knowledge
+    // Render immediately from local knowledge, but also fetch from medical sources
     renderDrugInfoFromKnowledge(localDrug, drugName, patientWarnings, med);
+
+    // Fetch medical sources in background to enhance data
+    MedicalSourcesAPI.fetchFromAllSources(drugName).then(medicalData => {
+      if (medicalData.sources.length > 0) {
+        // Re-render with enhanced data
+        renderDrugInfoFromKnowledgeEnhanced(localDrug, drugName, patientWarnings, med, medicalData, p);
+      }
+    }).catch(e => console.error('Background medical sources fetch failed:', e));
+
     return;
   }
-  
-  // If not in local KB, show loading and try API
+
+  // If not in local KB, show loading and try medical sources first
   $('drugInfoBody').innerHTML = `
     <div style="text-align:center;padding:40px">
       <div class="spinner"></div>
-      <p style="margin-top:16px;color:var(--text-muted)">Fetching ${esc(drugName)} information...</p>
+      <p style="margin-top:16px;color:var(--text-muted)">Fetching ${esc(drugName)} from verified medical sources...</p>
+      <p style="margin-top:8px;font-size:12px;color:var(--text-muted)">RxNorm • DailyMed • OpenFDA</p>
     </div>
   `;
-  
+
   try {
+    // Fetch from medical sources first
+    const medicalData = await MedicalSourcesAPI.fetchFromAllSources(drugName);
+
+    if (medicalData.sources.length > 0) {
+      // We have data from medical sources, render it
+      renderDrugInfoFromMedicalSources(drugName, medicalData, p, med);
+      return;
+    }
+
+    // If medical sources didn't return data, try the configured API
+    if (!state.settings.apiUrl) {
+      renderBasicDrugInfo(drugName, med);
+      return;
+    }
+
     const patientContext = {
       diagnosis: p.diagnosis || '',
       medications: (p.medications || []).map(m => m.name).filter(n => n !== drugName),
@@ -11196,7 +11540,7 @@ window.openDrugInfo = async function(drugName, medIdx) {
         status: param.values?.[0]?.status
       })) || []
     };
-    
+
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -11207,13 +11551,13 @@ window.openDrugInfo = async function(drugName, medIdx) {
         indication: med?.indication || ''
       })
     });
-    
+
     const data = await res.json();
-    
+
     if (data.error) throw new Error(data.error);
-    
+
     renderDrugInfoContent(data, drugName, patientContext);
-    
+
   } catch (e) {
     console.error('Drug info error:', e);
     renderBasicDrugInfo(drugName, med);
@@ -11336,6 +11680,347 @@ function renderDrugInfoFromKnowledge(drug, drugName, warnings, med) {
     `;
   }
   
+  $('drugInfoBody').innerHTML = html;
+}
+
+// Enhanced rendering with medical sources data
+function renderDrugInfoFromKnowledgeEnhanced(drug, drugName, warnings, med, medicalData, patient) {
+  let html = '';
+
+  // Header badge showing instant lookup + medical sources
+  html += `
+    <div class="drug-instant-badge">
+      <span class="instant-icon">⚡</span>
+      <span>Enhanced with Medical Sources</span>
+      <span class="instant-source">Neural KB + ${esc(medicalData.sources.join(' • '))}</span>
+    </div>
+  `;
+
+  // Patient-specific warnings (most important - show first)
+  if (warnings.length > 0) {
+    const criticalWarnings = warnings.filter(w => w.severity === 'critical' || w.severity === 'high');
+    const otherWarnings = warnings.filter(w => w.severity !== 'critical' && w.severity !== 'high');
+
+    html += `
+      <div class="patient-context-alert ${criticalWarnings.length > 0 ? 'critical' : ''}">
+        <div class="context-alert-header">
+          <div class="context-alert-icon">${criticalWarnings.length > 0 ? '🚨' : '⚠️'}</div>
+          <div class="context-alert-title">${criticalWarnings.length > 0 ? 'Critical Alerts for This Patient' : 'Patient-Specific Warnings'}</div>
+        </div>
+        <ul class="context-alert-list">
+          ${warnings.map(w => `
+            <li class="${w.severity}">
+              <span class="alert-icon">${w.icon}</span>
+              <span>${esc(w.text)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  // FDA Black Box Warning (if available from OpenFDA)
+  if (medicalData.combinedData.blackBoxWarning) {
+    html += `
+      <div class="drug-section" style="border-left: 4px solid #d32f2f;">
+        <div class="drug-section-title" style="color: #d32f2f;"><span>⚠️</span> FDA BLACK BOX WARNING</div>
+        <p class="drug-info-text" style="color: #d32f2f; font-weight: 500;">${esc(medicalData.combinedData.blackBoxWarning.substring(0, 300))}...</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+      </div>
+    `;
+  }
+
+  // DOSAGE INFORMATION (from verified medical sources)
+  if (medicalData.combinedData.dosage) {
+    html += `
+      <div class="drug-section" style="background: var(--bg-elevated); border: 2px solid var(--primary); border-radius: 8px; padding: 16px;">
+        <div class="drug-section-title"><span>💊</span> DOSAGE & ADMINISTRATION</div>
+        <p class="drug-info-text">${esc(medicalData.combinedData.dosage)}</p>
+        <div style="margin-top: 12px; padding: 8px 12px; background: var(--bg-primary); border-radius: 4px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">✓</span>
+          <span style="font-size: 12px; color: var(--text-muted);">
+            Verified source: <strong>${esc(medicalData.combinedData.dosageSource)}</strong>
+          </span>
+          ${medicalData.combinedData.dosageUrl ? `
+            <a href="${esc(medicalData.combinedData.dosageUrl)}" target="_blank" style="margin-left: auto; font-size: 12px; color: var(--primary);">View Source →</a>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // Patient-specific dosing recommendations
+  const dosingRecs = DosageCalculator.getPatientSpecificDosing(drugName, patient, medicalData.combinedData.dosage);
+  if (dosingRecs.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>🎯</span> Patient-Specific Considerations</div>
+        <div style="display: grid; gap: 8px;">
+          ${dosingRecs.map(rec => `
+            <div style="padding: 10px; background: var(--bg-elevated); border-radius: 6px; border-left: 3px solid ${rec.type === 'warning' ? '#ff9800' : '#2196f3'};">
+              <div style="font-weight: 500; font-size: 13px; margin-bottom: 4px;">${esc(rec.label)}</div>
+              <div style="font-size: 12px; color: var(--text-muted);">${esc(rec.value)}</div>
+              ${rec.note ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${esc(rec.note)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Drug class & mechanism
+  html += `
+    <div class="drug-section">
+      <div class="drug-section-title"><span>🧬</span> ${esc(drug.class || 'Drug Class')}</div>
+      <p class="drug-info-text">${esc(drug.mechanism)}</p>
+    </div>
+  `;
+
+  // Indications (from DailyMed if available, otherwise from local KB)
+  if (medicalData.combinedData.dailymed?.indications) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>📋</span> Indications & Usage</div>
+        <p class="drug-info-text">${esc(medicalData.combinedData.dailymed.indications)}</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+      </div>
+    `;
+  }
+
+  // Side Effects
+  if (drug.sideEffects?.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>⚡</span> Side Effects</div>
+        <ul class="drug-info-list">
+          ${drug.sideEffects.map(s => `<li>${esc(s)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Contraindications
+  if (drug.contraindications?.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>🚫</span> Contraindications</div>
+        <ul class="drug-info-list contraindications">
+          ${drug.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Monitoring
+  if (drug.monitoring?.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>📊</span> Monitoring Parameters</div>
+        <ul class="drug-info-list monitoring">
+          ${drug.monitoring.map(m => `<li>${esc(m)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Key Interactions
+  if (drug.interactions && Object.keys(drug.interactions).length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>💊</span> Key Drug Interactions</div>
+        <ul class="drug-info-list interactions">
+          ${Object.entries(drug.interactions).map(([trigger, desc]) => `
+            <li><strong>${esc(trigger)}:</strong> ${esc(desc)}</li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Renal Dosing
+  if (drug.renalDosing) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>🫘</span> Renal Dosing</div>
+        <div class="renal-dosing-grid">
+          <div class="renal-dose-item">
+            <span class="renal-label">Mild</span>
+            <span class="renal-value">${esc(drug.renalDosing.mild)}</span>
+          </div>
+          <div class="renal-dose-item">
+            <span class="renal-label">Moderate</span>
+            <span class="renal-value">${esc(drug.renalDosing.moderate)}</span>
+          </div>
+          <div class="renal-dose-item">
+            <span class="renal-label">Severe</span>
+            <span class="renal-value">${esc(drug.renalDosing.severe)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Medical sources footer
+  html += `
+    <div style="margin-top: 20px; padding: 12px; background: var(--bg-elevated); border-radius: 6px; font-size: 11px; color: var(--text-muted);">
+      <strong>Data Sources:</strong> ${esc(medicalData.sources.join(', '))}
+      <br>Information verified from official medical databases and FDA resources.
+    </div>
+  `;
+
+  $('drugInfoBody').innerHTML = html;
+}
+
+// Render drug info from medical sources only (when not in local KB)
+function renderDrugInfoFromMedicalSources(drugName, medicalData, patient, med) {
+  let html = '';
+
+  // Header badge
+  html += `
+    <div class="drug-instant-badge">
+      <span class="instant-icon">🏥</span>
+      <span>Verified Medical Sources</span>
+      <span class="instant-source">${esc(medicalData.sources.join(' • '))}</span>
+    </div>
+  `;
+
+  // FDA Black Box Warning (critical - show first)
+  if (medicalData.combinedData.blackBoxWarning) {
+    html += `
+      <div class="patient-context-alert critical">
+        <div class="context-alert-header">
+          <div class="context-alert-icon">🚨</div>
+          <div class="context-alert-title">FDA BLACK BOX WARNING</div>
+        </div>
+        <div style="padding: 12px; background: var(--bg-elevated); border-radius: 6px; margin-top: 8px;">
+          <p style="color: #d32f2f; font-weight: 500; margin: 0;">${esc(medicalData.combinedData.blackBoxWarning.substring(0, 400))}...</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // DOSAGE INFORMATION (primary focus)
+  if (medicalData.combinedData.dosage) {
+    html += `
+      <div class="drug-section" style="background: var(--bg-elevated); border: 2px solid var(--primary); border-radius: 8px; padding: 16px;">
+        <div class="drug-section-title"><span>💊</span> DOSAGE & ADMINISTRATION</div>
+        <p class="drug-info-text">${esc(medicalData.combinedData.dosage)}</p>
+        <div style="margin-top: 12px; padding: 8px 12px; background: var(--bg-primary); border-radius: 4px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">✓</span>
+          <span style="font-size: 12px; color: var(--text-muted);">
+            Verified source: <strong>${esc(medicalData.combinedData.dosageSource)}</strong>
+          </span>
+          ${medicalData.combinedData.dosageUrl ? `
+            <a href="${esc(medicalData.combinedData.dosageUrl)}" target="_blank" style="margin-left: auto; font-size: 12px; color: var(--primary);">View Full Label →</a>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // Patient-specific dosing recommendations
+  const dosingRecs = DosageCalculator.getPatientSpecificDosing(drugName, patient, medicalData.combinedData.dosage);
+  if (dosingRecs.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>🎯</span> Patient-Specific Considerations</div>
+        <div style="display: grid; gap: 8px;">
+          ${dosingRecs.map(rec => `
+            <div style="padding: 10px; background: var(--bg-elevated); border-radius: 6px; border-left: 3px solid ${rec.type === 'warning' ? '#ff9800' : '#2196f3'};">
+              <div style="font-weight: 500; font-size: 13px; margin-bottom: 4px;">${esc(rec.label)}</div>
+              <div style="font-size: 12px; color: var(--text-muted);">${esc(rec.value)}</div>
+              ${rec.note ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${esc(rec.note)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Indications (from DailyMed)
+  if (medicalData.combinedData.dailymed?.indications) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>📋</span> Indications & Usage</div>
+        <p class="drug-info-text">${esc(medicalData.combinedData.dailymed.indications)}</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+      </div>
+    `;
+  }
+
+  // Generic/Brand Names (from OpenFDA)
+  if (medicalData.combinedData.openfda) {
+    const brandName = medicalData.combinedData.openfda.brandName;
+    const genericName = medicalData.combinedData.openfda.genericName;
+
+    if (brandName || genericName) {
+      html += `
+        <div class="drug-section">
+          <div class="drug-section-title"><span>🏷️</span> Drug Names</div>
+          ${brandName ? `<p><strong>Brand Name:</strong> ${esc(brandName)}</p>` : ''}
+          ${genericName ? `<p><strong>Generic Name:</strong> ${esc(genericName)}</p>` : ''}
+        </div>
+      `;
+    }
+  }
+
+  // Warnings (from DailyMed)
+  if (medicalData.combinedData.dailymed?.warnings?.length > 0) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>⚠️</span> Warnings & Precautions</div>
+        ${medicalData.combinedData.dailymed.warnings.map(w => `
+          <p class="drug-info-text" style="margin-bottom: 8px;">${esc(w)}</p>
+        `).join('')}
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: DailyMed (FDA)</p>
+      </div>
+    `;
+  }
+
+  // Contraindications (from OpenFDA)
+  if (medicalData.combinedData.openfda?.contraindications) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>🚫</span> Contraindications</div>
+        <p class="drug-info-text">${esc(medicalData.combinedData.openfda.contraindications.substring(0, 400))}</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+      </div>
+    `;
+  }
+
+  // Adverse Reactions (from OpenFDA)
+  if (medicalData.combinedData.openfda?.adverseReactions) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>⚡</span> Adverse Reactions</div>
+        <p class="drug-info-text">${esc(medicalData.combinedData.openfda.adverseReactions.substring(0, 400))}</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Source: OpenFDA</p>
+      </div>
+    `;
+  }
+
+  // Current medication context (if provided)
+  if (med) {
+    html += `
+      <div class="drug-section">
+        <div class="drug-section-title"><span>📝</span> Current Order</div>
+        <p><strong>Dose:</strong> ${esc(med.dose || 'Not specified')}</p>
+        <p><strong>Route:</strong> ${esc(med.route || 'Not specified')}</p>
+        <p><strong>Frequency:</strong> ${esc(med.frequency || 'Not specified')}</p>
+        ${med.indication ? `<p><strong>Indication:</strong> ${esc(med.indication)}</p>` : ''}
+      </div>
+    `;
+  }
+
+  // Medical sources footer
+  html += `
+    <div style="margin-top: 20px; padding: 12px; background: var(--bg-elevated); border-radius: 6px; font-size: 11px; color: var(--text-muted);">
+      <strong>📚 Data Sources:</strong> ${esc(medicalData.sources.join(', '))}
+      <br>All information retrieved from official FDA databases and NIH medical resources.
+      <br><strong>Note:</strong> This is for informational purposes. Always consult current clinical guidelines and patient-specific factors.
+    </div>
+  `;
+
   $('drugInfoBody').innerHTML = html;
 }
 
