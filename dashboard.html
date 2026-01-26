@@ -6753,11 +6753,14 @@ function doLogout() {
 async function callCloud(action, payload = {}) {
   // Inject credentials for non-auth actions
   if (action !== 'login' && action !== 'register') {
-    if (AUTH.user && AUTH.pass) {
+    if (AUTH.user) {
       payload.username = AUTH.user;
+    }
+    // Only send password if it's real (not Firebase marker)
+    if (AUTH.pass && AUTH.pass !== 'FIREBASE_AUTH') {
       payload.password = AUTH.pass;
     }
-    // Also include Firebase ID token for authenticated requests
+    // Include Firebase ID token for authenticated requests
     const firebaseToken = await window.getFirebaseToken();
     if (firebaseToken) {
       payload.idToken = firebaseToken;
@@ -16813,22 +16816,28 @@ window.userImportWardList = async function() {
     // Get Firebase ID token for authentication
     const firebaseToken = await window.getFirebaseToken();
 
+    // Build payload - only include real password, not FIREBASE_AUTH marker
+    const importPayload = {
+      action: 'startWardImport',
+      username: AUTH.user,
+      sheetId: sheetId,
+      sheetName: tabName || '',
+      clearExisting: clearExisting,
+      targetUnitId: state.currentUnit.id,
+      targetUnitName: state.currentUnit.name
+    };
+    if (AUTH.pass && AUTH.pass !== 'FIREBASE_AUTH') {
+      importPayload.password = AUTH.pass;
+    }
+    if (firebaseToken) {
+      importPayload.idToken = firebaseToken;
+    }
+
     // 🚀 FIRE-AND-FORGET: Don't wait for full import
-    // CRITICAL: Pass targetUnitId so server knows where to assign patients
     fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'startWardImport',
-        username: AUTH.user,
-        password: AUTH.pass,
-        idToken: firebaseToken,
-        sheetId: sheetId,
-        sheetName: tabName || '',
-        clearExisting: clearExisting,
-        targetUnitId: state.currentUnit.id,      // CRITICAL: Target unit for patients
-        targetUnitName: state.currentUnit.name   // For logging
-      })
+      body: JSON.stringify(importPayload)
     }).then(res => res.json()).then(data => {
       console.log('Import response:', data);
       if (data.success) {
@@ -17187,18 +17196,25 @@ async function fetchSheetData(sheetId, tabName, preview = false) {
   // Get Firebase ID token for authentication
   const firebaseToken = await window.getFirebaseToken();
 
+  // Build payload - only include real password, not FIREBASE_AUTH marker
+  const fetchPayload = {
+    action: 'importWardList',
+    username: AUTH.user,
+    sheetId: sheetId,
+    sheetName: tabName || '',
+    preview: preview
+  };
+  if (AUTH.pass && AUTH.pass !== 'FIREBASE_AUTH') {
+    fetchPayload.password = AUTH.pass;
+  }
+  if (firebaseToken) {
+    fetchPayload.idToken = firebaseToken;
+  }
+
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({
-      action: 'importWardList',
-      username: AUTH.user,
-      password: AUTH.pass,
-      idToken: firebaseToken,
-      sheetId: sheetId,
-      sheetName: tabName || '',
-      preview: preview // Enable caching for preview
-    })
+    body: JSON.stringify(fetchPayload)
   });
   
   const data = await response.json();
@@ -18537,16 +18553,25 @@ window.extractPatients = async function() {
     const firebaseToken = await window.getFirebaseToken();
     console.log('🔑 Firebase token:', firebaseToken ? 'obtained' : 'not available');
 
+    // Build request - only include real password, not FIREBASE_AUTH marker
+    const payload = {
+      action: 'extractPatients',
+      image: state.importImage,
+      username: AUTH.user
+    };
+    // Only send password if it's real (not Firebase marker)
+    if (AUTH.pass && AUTH.pass !== 'FIREBASE_AUTH') {
+      payload.password = AUTH.pass;
+    }
+    // Include Firebase token for authentication
+    if (firebaseToken) {
+      payload.idToken = firebaseToken;
+    }
+
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'extractPatients',
-        image: state.importImage,
-        username: AUTH.user,
-        password: AUTH.pass,
-        idToken: firebaseToken
-      })
+      body: JSON.stringify(payload)
     });
     
     console.log('📥 Response status:', res.status);
