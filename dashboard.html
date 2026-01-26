@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,7 +11,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MedWard Pro v17.3</title>
+<title>MedWard Pro v17.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css"/>
 <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
@@ -4708,23 +4708,12 @@ body.dark-theme .readonly-banner {
       </div>
     </div>
     
-    <!-- Export Options -->
-    <div style="margin-bottom:12px;">
-      <label class="form-label" style="margin-bottom:8px;display:block;">Export Options</label>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
-          <input type="checkbox" id="export_groupByWard" checked style="width:16px;height:16px;accent-color:var(--primary);">
-          Group patients by ward
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
-          <input type="checkbox" id="export_includeStatus" checked style="width:16px;height:16px;accent-color:var(--primary);">
-          Include status column
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
-          <input type="checkbox" id="export_colorCode" checked style="width:16px;height:16px;accent-color:var(--primary);">
-          Color-code critical patients
-        </label>
-      </div>
+    <!-- Export Info -->
+    <div style="background:var(--bg-elevated);padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:0.8rem;color:var(--text-secondary);">
+      <div style="margin-bottom:6px;font-weight:600;color:var(--text);">📋 PDF will include:</div>
+      <div>• <strong style="color:#4CAF50">Active List</strong> - grouped by ward (top)</div>
+      <div>• <strong style="color:#FF9800">Chronic List</strong> - grouped by ward (bottom)</div>
+      <div>• <strong style="color:#FF9800">New patients</strong> highlighted in orange</div>
     </div>
     
     <!-- Export Button -->
@@ -17319,6 +17308,53 @@ function smartBedCompare(a, b) {
   return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// SANITIZE BED NUMBER - Reject dates and invalid formats
+// Valid: "1", "15", "1-1", "2-2", "10.1", "A1", "ICU-3"
+// Invalid: Dates like "Sun Jan 11 2026", timestamps, long text
+// ═══════════════════════════════════════════════════════════════════
+function sanitizeBedNumber(value) {
+  if (!value) return '';
+  
+  const str = String(value).trim();
+  
+  // If empty or too long, reject
+  if (!str || str.length > 15) return '';
+  
+  // REJECT: Date patterns
+  // Matches: "Sun Jan 11 2026", "Jan 11, 2026", "2026-01-11", etc.
+  if (/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(str)) return '';
+  if (/\b(sun|mon|tue|wed|thu|fri|sat)\b/i.test(str)) return '';
+  if (/\d{4}-\d{2}-\d{2}/.test(str)) return ''; // ISO date
+  if (/\d{2}\/\d{2}\/\d{4}/.test(str)) return ''; // MM/DD/YYYY
+  if (/\d{2}-\d{2}-\d{4}/.test(str)) return ''; // DD-MM-YYYY
+  if (/GMT|UTC|Arabian|Standard|Time/i.test(str)) return ''; // Timezone strings
+  
+  // REJECT: Timestamps or very long numbers
+  if (/^\d{10,}$/.test(str)) return ''; // Unix timestamps
+  if (/\d{2}:\d{2}/.test(str)) return ''; // Time patterns HH:MM
+  
+  // ACCEPT: Valid bed number patterns
+  // Pattern 1: Simple number "1", "15", "99"
+  if (/^\d{1,3}$/.test(str)) return str;
+  
+  // Pattern 2: Number with dash "1-1", "10-2", "1-15"
+  if (/^\d{1,3}-\d{1,2}$/.test(str)) return str;
+  
+  // Pattern 3: Number with dot "1.1", "10.2"
+  if (/^\d{1,3}\.\d{1,2}$/.test(str)) return str;
+  
+  // Pattern 4: Letter prefix "A1", "B-2", "ICU-3"
+  if (/^[A-Z]{1,4}[-]?\d{1,3}$/i.test(str)) return str;
+  
+  // Pattern 5: ER designation
+  if (/^ER$/i.test(str)) return 'ER';
+  
+  // If nothing matches, return empty (safer than showing garbage)
+  console.log('Rejected invalid bed number:', str);
+  return '';
+}
+
 // Parse sheet rows into normalized patient objects
 function parseWardSheetToPatients(values) {
   if (!Array.isArray(values) || values.length < 2) {
@@ -17415,9 +17451,10 @@ function parseWardSheetToPatients(values) {
     }
     
     // Extract bed number (room/ward cell when it's not a ward name)
+    // CRITICAL: Validate that bed is a valid room number, NOT a date
     let bed = '';
     if (roomWardCell && !roomWardCell.toLowerCase().startsWith('ward') && roomWardCell.toLowerCase() !== 'er') {
-      bed = roomWardCell;
+      bed = sanitizeBedNumber(roomWardCell);
     }
     
     // Determine final values
@@ -18572,7 +18609,9 @@ window.exportPDF = function() {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// 📄 EXPORT UNIT TO PDF - CLINICAL HANDOVER SHEET
+// 📄 EXPORT UNIT TO PDF - MATCHES GOOGLE SHEET EXACTLY
+// Structure: Active List (top, grouped by ward) → Chronic List (bottom)
+// Only NEW patients get orange highlight
 // ═══════════════════════════════════════════════════════════════════
 
 window.exportUnitToPDF = function() {
@@ -18584,18 +18623,13 @@ window.exportUnitToPDF = function() {
   }
   
   // Get patients for current unit
-  const patients = state.patients.filter(p => p.unitId === state.currentUnit.id);
+  const allPatients = state.patients.filter(p => p.unitId === state.currentUnit.id);
   
-  if (!patients.length) {
+  if (!allPatients.length) {
     showExportStatus('⚠️ No patients in this unit to export', 'error');
     toast('No patients to export', true);
     return;
   }
-  
-  // Get export options
-  const groupByWard = $('export_groupByWard')?.checked !== false;
-  const includeStatus = $('export_includeStatus')?.checked !== false;
-  const colorCode = $('export_colorCode')?.checked !== false;
   
   try {
     const { jsPDF } = window.jspdf;
@@ -18604,213 +18638,297 @@ window.exportUnitToPDF = function() {
     const unitName = state.currentUnit.name;
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-GB', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    const timeStr = today.toLocaleTimeString('en-GB', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short', 
+      year: 'numeric' 
     });
     
     // ═══════════════════════════════════════════════════════════════════
-    // HEADER
+    // SEPARATE ACTIVE vs CHRONIC (matching your sheet structure)
     // ═══════════════════════════════════════════════════════════════════
     
-    // Header background
-    doc.setFillColor(0, 94, 184); // NHS Blue
-    doc.rect(0, 0, 210, 28, 'F');
+    // Active = new, active, critical (NOT chronic)
+    const activePatients = allPatients.filter(p => 
+      p.status !== 'chronic' && p.listType !== 'chronic'
+    );
     
-    // Unit name
+    // Chronic = chronic status or listType
+    const chronicPatients = allPatients.filter(p => 
+      p.status === 'chronic' || p.listType === 'chronic'
+    );
+    
+    // Ward sort order (matching your sheet)
+    const wardOrder = ['Ward 10', 'Ward 19', 'Ward 20', 'Ward 21', 'Ward 22', 'Ward 27', 'Ward 5', 'ER', 'ER/Unassigned', 'Unassigned'];
+    
+    const sortByWardThenBed = (a, b) => {
+      const wardA = a.ward || 'Unassigned';
+      const wardB = b.ward || 'Unassigned';
+      const idxA = wardOrder.indexOf(wardA) === -1 ? 99 : wardOrder.indexOf(wardA);
+      const idxB = wardOrder.indexOf(wardB) === -1 ? 99 : wardOrder.indexOf(wardB);
+      if (idxA !== idxB) return idxA - idxB;
+      return smartBedSort(a.bed || a.room || '', b.bed || b.room || '');
+    };
+    
+    activePatients.sort(sortByWardThenBed);
+    chronicPatients.sort(sortByWardThenBed);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // PDF HEADER (green bar like your sheet)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    let y = 10;
+    
+    // Title bar - green like your active list header
+    doc.setFillColor(198, 224, 180); // Light green
+    doc.rect(10, y, 190, 8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(255, 255, 255);
-    doc.text(unitName, 14, 12);
-    
-    // Subtitle
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text('Ward List / Handover Sheet', 14, 19);
-    
-    // Date & Time (right aligned)
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(unitName + ' - Active List', 14, y + 5.5);
     doc.setFontSize(9);
-    doc.text(dateStr, 196, 12, { align: 'right' });
-    doc.text(timeStr, 196, 18, { align: 'right' });
+    doc.text(dateStr, 196, y + 5.5, { align: 'right' });
     
-    // Patient count badge
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(14, 22, 30, 5, 1, 1, 'F');
-    doc.setTextColor(0, 94, 184);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.text(patients.length + ' Patients', 29, 25.5, { align: 'center' });
+    y += 10;
     
     // ═══════════════════════════════════════════════════════════════════
-    // BUILD TABLE DATA
+    // ACTIVE LIST TABLE
     // ═══════════════════════════════════════════════════════════════════
     
-    // Define columns
-    const columns = [
-      { header: 'Bed', dataKey: 'bed' },
-      { header: 'Patient Name', dataKey: 'name' },
-      { header: 'Ward', dataKey: 'ward' },
-      { header: 'Doctor', dataKey: 'doctor' }
-    ];
-    
-    if (includeStatus) {
-      columns.push({ header: 'Status', dataKey: 'status' });
+    if (activePatients.length > 0) {
+      // Build active rows grouped by ward
+      const activeRows = [];
+      let currentWard = null;
+      
+      activePatients.forEach(p => {
+        const ward = p.ward || 'Unassigned';
+        
+        // Add ward header row when ward changes
+        if (ward !== currentWard) {
+          activeRows.push({
+            _isWardHeader: true,
+            _wardName: ward,
+            bed: ward,
+            name: '',
+            diagnosis: '',
+            doctor: '',
+            status: ''
+          });
+          currentWard = ward;
+        }
+        
+        // Add patient row
+        activeRows.push({
+          _isWardHeader: false,
+          _status: p.status,
+          bed: p.bed || p.room || '',
+          name: p.name || '',
+          diagnosis: (p.diagnosis || '').substring(0, 60),
+          doctor: p.doctor || p.assignedDoctor || '',
+          status: p.status === 'new' ? 'New' : (p.status === 'critical' ? 'Critical' : 'Non-Chronic')
+        });
+      });
+      
+      doc.autoTable({
+        startY: y,
+        head: [[
+          { content: 'Room/Ward', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Patient Name', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Diagnosis', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Assigned Doctor', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Status', styles: { fillColor: [198, 224, 180] } }
+        ]],
+        body: activeRows.map(r => [r.bed, r.name, r.diagnosis, r.doctor, r.status]),
+        
+        theme: 'grid',
+        
+        styles: {
+          font: 'helvetica',
+          fontSize: 8,
+          cellPadding: 2,
+          valign: 'middle',
+          lineColor: [180, 180, 180],
+          lineWidth: 0.2
+        },
+        
+        headStyles: {
+          fillColor: [198, 224, 180], // Green header
+          textColor: [0, 100, 0],
+          fontStyle: 'bold',
+          fontSize: 9
+        },
+        
+        columnStyles: {
+          0: { cellWidth: 22 },  // Room/Ward
+          1: { cellWidth: 35 },  // Name
+          2: { cellWidth: 65 },  // Diagnosis
+          3: { cellWidth: 30 },  // Doctor
+          4: { cellWidth: 25 }   // Status
+        },
+        
+        // Row styling - ward headers and NEW patient highlighting
+        didParseCell: function(data) {
+          if (data.section === 'body') {
+            const rowData = activeRows[data.row.index];
+            
+            // Ward header rows - blue background
+            if (rowData._isWardHeader) {
+              data.cell.styles.fillColor = [68, 114, 196]; // Blue
+              data.cell.styles.textColor = [255, 255, 255];
+              data.cell.styles.fontStyle = 'bold';
+            }
+            // NEW patients - ORANGE highlight (only NEW, not critical or others)
+            else if (rowData._status === 'new') {
+              data.cell.styles.fillColor = [255, 192, 0]; // Orange
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        },
+        
+        // Merge ward header cells
+        didDrawCell: function(data) {
+          if (data.section === 'body') {
+            const rowData = activeRows[data.row.index];
+            if (rowData._isWardHeader && data.column.index === 0) {
+              // Ward headers span all columns visually
+            }
+          }
+        },
+        
+        margin: { left: 10, right: 10 }
+      });
+      
+      y = doc.lastAutoTable.finalY + 8;
     }
     
-    columns.push({ header: 'Diagnosis', dataKey: 'diagnosis' });
+    // ═══════════════════════════════════════════════════════════════════
+    // CHRONIC LIST SECTION
+    // ═══════════════════════════════════════════════════════════════════
     
-    // Sort and group patients
-    let sortedPatients = [...patients];
-    
-    if (groupByWard) {
-      // Sort by ward, then by bed
-      sortedPatients.sort((a, b) => {
-        const wardA = (a.ward || 'ZZZ').toLowerCase();
-        const wardB = (b.ward || 'ZZZ').toLowerCase();
-        if (wardA !== wardB) return wardA.localeCompare(wardB);
+    if (chronicPatients.length > 0) {
+      // Check if we need a new page
+      if (y > 240) {
+        doc.addPage();
+        y = 10;
+      }
+      
+      // Chronic section header - orange like your sheet
+      doc.setFillColor(255, 192, 0); // Orange
+      doc.rect(10, y, 190, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Chronic List', 14, y + 5.5);
+      doc.text(chronicPatients.length + ' patients', 196, y + 5.5, { align: 'right' });
+      
+      y += 10;
+      
+      // Build chronic rows
+      const chronicRows = [];
+      let currentWard = null;
+      
+      chronicPatients.forEach(p => {
+        const ward = p.ward || 'Unassigned';
         
-        // Smart bed sorting (handles "10-1", "9", "22-3" etc.)
-        const bedA = a.bed || a.room || '';
-        const bedB = b.bed || b.room || '';
-        return smartBedSort(bedA, bedB);
+        // Add ward header when ward changes
+        if (ward !== currentWard) {
+          chronicRows.push({
+            _isWardHeader: true,
+            _wardName: ward,
+            bed: ward,
+            name: '',
+            diagnosis: '',
+            doctor: '',
+            status: ''
+          });
+          currentWard = ward;
+        }
+        
+        chronicRows.push({
+          _isWardHeader: false,
+          bed: p.bed || p.room || '',
+          name: p.name || '',
+          diagnosis: (p.diagnosis || '').substring(0, 60),
+          doctor: p.doctor || p.assignedDoctor || '',
+          status: 'Chronic'
+        });
+      });
+      
+      doc.autoTable({
+        startY: y,
+        head: [[
+          { content: 'Room/Ward', styles: { fillColor: [255, 192, 0] } },
+          { content: 'Patient Name', styles: { fillColor: [255, 192, 0] } },
+          { content: 'Diagnosis', styles: { fillColor: [255, 192, 0] } },
+          { content: 'Assigned Doctor', styles: { fillColor: [255, 192, 0] } },
+          { content: 'Status', styles: { fillColor: [255, 192, 0] } }
+        ]],
+        body: chronicRows.map(r => [r.bed, r.name, r.diagnosis, r.doctor, r.status]),
+        
+        theme: 'grid',
+        
+        styles: {
+          font: 'helvetica',
+          fontSize: 8,
+          cellPadding: 2,
+          valign: 'middle',
+          lineColor: [180, 180, 180],
+          lineWidth: 0.2
+        },
+        
+        headStyles: {
+          fillColor: [255, 192, 0], // Orange header
+          textColor: [0, 0, 0],
+          fontStyle: 'bold',
+          fontSize: 9
+        },
+        
+        columnStyles: {
+          0: { cellWidth: 22 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 65 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 25 }
+        },
+        
+        // Ward header styling
+        didParseCell: function(data) {
+          if (data.section === 'body') {
+            const rowData = chronicRows[data.row.index];
+            if (rowData._isWardHeader) {
+              data.cell.styles.fillColor = [255, 192, 0]; // Orange for chronic ward headers
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        },
+        
+        margin: { left: 10, right: 10 }
       });
     }
     
-    // Build rows
-    const rows = sortedPatients.map(p => {
-      const row = {
-        bed: p.bed || p.room || '—',
-        name: p.name || '—',
-        ward: p.ward || 'Unassigned',
-        doctor: p.doctor || p.assignedDoctor || '—',
-        status: formatStatus(p.status),
-        diagnosis: (p.diagnosis || '—').substring(0, 80)
-      };
-      
-      // Store original status for color coding
-      row._status = p.status;
-      row._ward = p.ward;
-      
-      return row;
-    });
-    
     // ═══════════════════════════════════════════════════════════════════
-    // RENDER TABLE WITH AUTOTABLE
+    // FOOTER ON ALL PAGES
     // ═══════════════════════════════════════════════════════════════════
     
-    let currentWard = null;
-    
-    doc.autoTable({
-      startY: 32,
-      columns: columns,
-      body: rows,
-      
-      theme: 'grid',
-      
-      styles: {
-        font: 'helvetica',
-        fontSize: 8,
-        cellPadding: 3,
-        valign: 'middle',
-        lineColor: [200, 200, 200],
-        lineWidth: 0.1
-      },
-      
-      headStyles: {
-        fillColor: [240, 248, 240], // Light green (like your sheet)
-        textColor: [30, 30, 30],
-        fontStyle: 'bold',
-        fontSize: 8
-      },
-      
-      alternateRowStyles: {
-        fillColor: [250, 251, 252]
-      },
-      
-      columnStyles: {
-        bed: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
-        name: { cellWidth: 38, fontStyle: 'bold' },
-        ward: { cellWidth: 24 },
-        doctor: { cellWidth: 28 },
-        status: { cellWidth: 20, halign: 'center' },
-        diagnosis: { cellWidth: 'auto' }
-      },
-      
-      // Color coding for special rows
-      didParseCell: function(data) {
-        if (data.section === 'body' && colorCode) {
-          const row = data.row.raw;
-          const status = row._status;
-          const diagnosis = row.diagnosis || '';
-          
-          // Critical patients - red tint
-          if (status === 'critical') {
-            data.cell.styles.fillColor = [255, 235, 235];
-          }
-          // Chronic patients - purple tint
-          else if (status === 'chronic') {
-            data.cell.styles.fillColor = [245, 240, 255];
-          }
-          // CVA/Stroke - orange tint
-          else if (/cva|stroke|tia/i.test(diagnosis)) {
-            data.cell.styles.fillColor = [255, 245, 230];
-          }
-          // ICU/ER patients - yellow tint
-          else if (/icu|ER/i.test(row._ward)) {
-            data.cell.styles.fillColor = [255, 250, 230];
-          }
-        }
-      },
-      
-      // Ward section headers (if grouping)
-      didDrawCell: function(data) {
-        // Add ward dividers when ward changes
-        if (groupByWard && data.section === 'body' && data.column.index === 0) {
-          const row = data.row.raw;
-          if (row._ward !== currentWard) {
-            currentWard = row._ward;
-          }
-        }
-      },
-      
-      margin: { top: 32, left: 10, right: 10, bottom: 20 },
-      
-      // Footer on each page
-      didDrawPage: function(data) {
-        // Footer line
-        doc.setDrawColor(200, 200, 200);
-        doc.line(10, 285, 200, 285);
-        
-        // Footer text
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7);
-        doc.setTextColor(128, 128, 128);
-        
-        // Left: App name
-        doc.text('Generated by MedWard Pro', 10, 290);
-        
-        // Center: Page number
-        const pageCount = doc.internal.getNumberOfPages();
-        doc.text('Page ' + data.pageNumber + ' of ' + pageCount, 105, 290, { align: 'center' });
-        
-        // Right: Timestamp
-        doc.text('Exported: ' + timeStr, 200, 290, { align: 'right' });
-      }
-    });
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(128, 128, 128);
+      doc.text('Generated by MedWard Pro', 10, 290);
+      doc.text('Page ' + i + ' of ' + pageCount, 105, 290, { align: 'center' });
+      doc.text(dateStr, 200, 290, { align: 'right' });
+    }
     
     // ═══════════════════════════════════════════════════════════════════
-    // SAVE PDF
+    // SAVE
     // ═══════════════════════════════════════════════════════════════════
     
     const filename = unitName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + today.toISOString().slice(0, 10) + '.pdf';
     doc.save(filename);
     
-    showExportStatus(`✅ Exported ${patients.length} patients to PDF`, 'success');
+    showExportStatus(`✅ Exported ${allPatients.length} patients (${activePatients.length} active, ${chronicPatients.length} chronic)`, 'success');
     toast(`📄 PDF exported: ${filename}`);
     
   } catch (e) {
@@ -19328,7 +19446,7 @@ async function init() {
     initSyncEngineV2();
   }
 
-  console.log('🚀 MedWard Pro v17.3 - Build:', CONFIG.BUILD_ID);
+  console.log('🚀 MedWard Pro v17.4 - Build:', CONFIG.BUILD_ID);
   console.log('📦 CACHE-FIRST BOOT: Using cache warmed by loading.html');
   
   // Run boot diagnostics
