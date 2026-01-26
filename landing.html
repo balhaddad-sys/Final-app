@@ -877,7 +877,7 @@ body {
 
 <h1 class="title">MedWard Pro</h1>
 <p class="subtitle">Ward Management & Decision Support</p>
-<p class="version">Lab Analysis • Drug Reference • Clinical Scoring • v17.1</p>
+<p class="version">Lab Analysis • Drug Reference • Clinical Scoring • v17.5</p>
 
 <!-- Disclaimer -->
 <div class="disclaimer">
@@ -1005,129 +1005,58 @@ body {
   </div>
 </div>
 
-<script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyVRA0E6by1lud8waH0Vu7HWuWKlwlOcnq3Qn2cNK3OaVZNrADyNczv0OuYdSq1SJBpZg/exec';
-const BUILD_ID = '2026-01-26.1';  // ★ MUST MATCH dashboard.html - bump on every deploy
+<script type="module">
+import { getCurrentUser, onAuthChange, logout, waitForAuth } from './firebase.auth.js';
+import { getUnitsForUser, createUnit, updateUnit, deleteUnit as firebaseDeleteUnit, getAllUnits } from './firebase.store.js';
+import { subscribeToUnits, onSyncStatusChange } from './firebase.sync.js';
+
+const BUILD_ID = '2026-01-26.2';  // Firebase Edition
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🚨 BOOT MIGRATION - Purges stale cache on new builds
-// ═══════════════════════════════════════════════════════════════════════════
-(async function bootMigration() {
-  const prevBuild = localStorage.getItem('MW_BUILD_ID');
-  const url = new URL(location.href);
-  
-  // Handle ?fresh=1 - User-triggered cache purge
-  if (url.searchParams.get('fresh') === '1') {
-    console.log('🔄 Fresh start requested - purging all caches...');
-    await purgeServiceWorkerAndCaches();
-    localStorage.removeItem('MW_REV');
-    localStorage.removeItem('MW_BUILD_ID');
-    localStorage.removeItem('MW_DIRTY');
-    localStorage.removeItem('MW_PATCH_QUEUE');
-    url.searchParams.delete('fresh');
-    location.replace(url.toString());
-    return;
-  }
-  
-  // Build mismatch - purge and reload
-  if (prevBuild && prevBuild !== BUILD_ID) {
-    console.log('🔄 Build mismatch:', prevBuild, '→', BUILD_ID);
-    await purgeServiceWorkerAndCaches();
-    localStorage.removeItem('MW_REV');
-    localStorage.removeItem('MW_DIRTY');
-    localStorage.removeItem('MW_PATCH_QUEUE');
-    localStorage.setItem('MW_CACHE_STALE', '1');
-    localStorage.setItem('MW_BUILD_ID', BUILD_ID);
-    url.searchParams.set('v', BUILD_ID);
-    location.replace(url.toString());
-    return;
-  }
-  
-  if (!prevBuild) {
-    localStorage.setItem('MW_BUILD_ID', BUILD_ID);
-  }
-})();
-
-async function purgeServiceWorkerAndCaches() {
-  if ('serviceWorker' in navigator) {
-    try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const r of regs) await r.unregister();
-    } catch (e) {}
-  }
-  if (window.caches?.keys) {
-    try {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
-    } catch (e) {}
-  }
-}
-
-// Auth state
-const AUTH = {
-  user: sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER'),
-  pass: sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS')
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SYNC ENGINE V2 - Consistent with dashboard-integrated.html
+// APP STATE
 // ═══════════════════════════════════════════════════════════════════════════
 
-// App state with revision tracking
 let state = {
-  rev: parseInt(localStorage.getItem('MW_REV') || '0', 10),
   units: [],
-  patients: [],
-  trash: { units: [], patients: [] },
-  settings: {},
-  unitRequests: [],
-  // Hydration gate
-  isHydrated: false,
-  isReadOnly: true,
-  lastServerTimestamp: null
+  currentUser: null
 };
-
-// Device identification (consistent with dashboard)
-const DEVICE_ID = localStorage.getItem('MW_DEVICE_ID') || (() => {
-  const id = 'dev_' + Math.random().toString(36).slice(2, 10);
-  localStorage.setItem('MW_DEVICE_ID', id);
-  return id;
-})();
-const SESSION_ID = 'ses_' + Math.random().toString(36).slice(2, 10);
-
-// Sync state
-let syncState = {
-  clientRev: parseInt(localStorage.getItem('MW_REV') || '0', 10),
-  patchQueue: JSON.parse(localStorage.getItem('MW_PATCH_QUEUE') || '[]'),
-  isSyncing: false,
-  lastSyncTime: null,
-  pendingChanges: false
-};
-
-// Debounce timer
-let syncDebounceTimer = null;
-const DEBOUNCE_MS = 800;
 
 let editingUnitId = null;
-let selectedUnitId = null;
-let selectedIcon = '🏥';
+let unsubscribeUnits = null;
 
-// Check auth on load
-(function() {
-  if (!AUTH.user || !AUTH.pass) {
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTH CHECK - Redirect if not logged in
+// ═══════════════════════════════════════════════════════════════════════════
+
+waitForAuth().then(user => {
+  if (!user) {
+    console.log('[Landing] No user - redirecting to login');
     window.location.href = 'login.html';
     return;
   }
-})();
 
-// Initialize
-document.addEventListener('DOMContentLoaded', async () => {
+  state.currentUser = user;
+  initApp();
+});
+
+// Also listen for auth changes (logout from another tab)
+onAuthChange(user => {
+  if (!user && state.currentUser) {
+    window.location.href = 'login.html';
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIALIZE APP
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function initApp() {
+  console.log('[Landing] Initializing app for user:', state.currentUser?.email);
+
   updateThemeIcon();
   updateUserDisplay();
-  
-  // Load data from cache (verified by loading.html)
-  await loadData();
-  
+  showLoading('Loading your units...');
+
   // Setup color picker handlers
   document.querySelectorAll('.color-option').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1135,317 +1064,44 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.classList.add('selected');
     });
   });
-});
+
+  // Subscribe to realtime unit updates
+  unsubscribeUnits = subscribeToUnits(
+    (units) => {
+      console.log('[Landing] Units updated:', units.length);
+      state.units = units;
+      renderUnits();
+      hideLoading();
+    },
+    (error) => {
+      console.error('[Landing] Units subscription error:', error);
+      hideLoading();
+      toast('Failed to load units');
+    }
+  );
+
+  // Subscribe to sync status
+  onSyncStatusChange(status => {
+    updateSyncStatus(status);
+  });
+}
 
 function updateUserDisplay() {
-  const avatar = AUTH.user ? AUTH.user.substring(0, 2).toUpperCase() : 'DR';
+  const user = state.currentUser;
+  if (!user) return;
+
+  const displayName = user.displayName || user.email?.split('@')[0] || 'Doctor';
+  const avatar = displayName.substring(0, 2).toUpperCase();
+
   document.getElementById('userAvatar').textContent = avatar;
-  document.getElementById('userName').textContent = AUTH.user || 'Doctor';
+  document.getElementById('userName').textContent = displayName;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LOAD DATA - Uses verified cache from loading.html
+// FIREBASE SYNC - Realtime updates handled by subscriptions
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function loadData() {
-  showLoading('Loading your data...');
-  
-  const cloudVerified = localStorage.getItem('MW_CLOUD_VERIFIED');
-  
-  // If not verified, redirect to loading page first
-  if (!cloudVerified) {
-    console.log('⚠️ Cache not verified - redirecting to loading page');
-    window.location.href = 'loading.html';
-    return;
-  }
-  
-  try {
-    const cached = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
-    
-    if (cached) {
-      const data = JSON.parse(cached);
-      state.units = data.units || [];
-      state.patients = data.patients || [];
-      state.trash = data.trash || { units: [], patients: [] };
-      state.settings = data.settings || {};
-      state.unitRequests = data.unitRequests || [];
-      state.rev = data.rev || parseInt(localStorage.getItem('MW_REV') || '1', 10);
-      syncState.clientRev = state.rev;
-      
-      // ═══════════════════════════════════════════════════════════════════
-      // ENSURE DEFAULT UNIT EXISTS - For new users with empty units array
-      // ═══════════════════════════════════════════════════════════════════
-      if (state.units.length === 0) {
-        console.log('📋 No units found - creating default unit');
-        state.units = [{ 
-          id: 'med-e', 
-          name: 'Medicine Unit E', 
-          icon: '🏥', 
-          desc: 'Internal Medicine', 
-          code: '1234', 
-          color: '#14b8a6',
-          createdAt: new Date().toISOString()
-        }];
-        updateLocalCache();
-      }
-      
-      // Cache is verified - full access
-      state.isHydrated = true;
-      state.isReadOnly = false;
-
-      // Check if we're in offline mode
-      const isOfflineMode = localStorage.getItem('MW_OFFLINE_MODE') === 'true';
-
-      if (isOfflineMode) {
-        console.log('⚠️ Loaded from offline cache:', state.patients.length, 'patients,', state.units.length, 'units, rev:', state.rev);
-      } else {
-        console.log('✅ Loaded from verified cache:', state.patients.length, 'patients,', state.units.length, 'units, rev:', state.rev);
-      }
-    } else {
-      // No cache - redirect to loading page
-      console.log('❌ No cache found - redirecting to loading page');
-      window.location.href = 'loading.html';
-      return;
-    }
-
-    // Restore any pending patches from localStorage
-    if (syncState.patchQueue.length > 0) {
-      console.log('📦 Restored', syncState.patchQueue.length, 'pending patches from localStorage');
-      markDirtyV2();
-    }
-
-    renderUnits();
-    hideLoading();
-
-    // Show offline mode indicator if applicable
-    if (localStorage.getItem('MW_OFFLINE_MODE') === 'true') {
-      toast('📴 Offline mode - using cached data');
-    }
-  } catch (e) {
-    hideLoading();
-    toast('Failed to load data');
-    console.error(e);
-    window.location.href = 'loading.html';
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SYNC ENGINE V2 FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Enqueue a patch for delta sync (v2)
- */
-function enqueuePatchV2(operation, payload) {
-  const patch = {
-    id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-    operation,
-    payload,
-    timestamp: new Date().toISOString(),
-    deviceId: DEVICE_ID
-  };
-  
-  syncState.patchQueue.push(patch);
-  
-  // Persist to localStorage for crash recovery
-  localStorage.setItem('MW_PATCH_QUEUE', JSON.stringify(syncState.patchQueue));
-  
-  console.log('📝 Patch queued:', operation, payload?.id || '');
-  return patch;
-}
-
-/**
- * Mark state as dirty and trigger debounced sync
- */
-function markDirtyV2() {
-  syncState.pendingChanges = true;
-  updateSyncStatus('pending');
-  
-  // Debounce - batch changes within 800ms window
-  clearTimeout(syncDebounceTimer);
-  syncDebounceTimer = setTimeout(() => {
-    flushPatchesV2();
-  }, DEBOUNCE_MS);
-}
-
-/**
- * Flush pending patches to server with optimistic concurrency
- */
-async function flushPatchesV2() {
-  if (syncState.isSyncing) {
-    console.log('⏳ Sync already in progress, will retry...');
-    return;
-  }
-  
-  if (syncState.patchQueue.length === 0 && !syncState.pendingChanges) {
-    updateSyncStatus('synced');
-    return;
-  }
-  
-  syncState.isSyncing = true;
-  updateSyncStatus('syncing');
-  
-  try {
-    // Try delta sync first if we have patches
-    if (syncState.patchQueue.length > 0) {
-      console.log('⚡ Delta sync:', syncState.patchQueue.length, 'patches, baseRev:', syncState.clientRev);
-      
-      const res = await callAPI('patches', {
-        patches: syncState.patchQueue,
-        baseRev: syncState.clientRev,
-        deviceId: DEVICE_ID,
-        sessionId: SESSION_ID
-      });
-      
-      if (res.success) {
-        // Success - clear queue and update rev
-        syncState.patchQueue = [];
-        localStorage.removeItem('MW_PATCH_QUEUE');
-        syncState.clientRev = res.rev;
-        state.rev = res.rev;
-        localStorage.setItem('MW_REV', String(res.rev));
-        syncState.pendingChanges = false;
-        syncState.lastSyncTime = Date.now();
-        updateSyncStatus('synced');
-        updateLocalCache();
-        console.log('✅ Patches applied, new rev:', res.rev);
-        return;
-      }
-      
-      // Check for conflict
-      if (res.conflict) {
-        console.warn('⚠️ Conflict detected! Server rev:', res.serverRev, 'Client rev:', syncState.clientRev);
-        await handleConflict(res);
-        return;
-      }
-      
-      // Other error - fall back to snapshot
-      console.warn('⚠️ Patch failed:', res.error, '- falling back to snapshot');
-    }
-    
-    // Snapshot fallback
-    await saveSnapshotV2();
-    
-  } catch (e) {
-    console.error('❌ Sync failed:', e);
-    updateSyncStatus('error');
-    toast('Sync failed - will retry');
-  } finally {
-    syncState.isSyncing = false;
-  }
-}
-
-/**
- * Save full snapshot to server
- */
-async function saveSnapshotV2(options = {}) {
-  if (state.isReadOnly && !options.force) {
-    console.warn('⛔ Save blocked: App is in read-only mode');
-    return;
-  }
-  
-  updateSyncStatus('syncing');
-  
-  try {
-    const res = await callAPI('saveData', {
-      payload: {
-        units: state.units,
-        patients: state.patients,
-        trash: state.trash,
-        settings: state.settings,
-        unitRequests: state.unitRequests
-      },
-      baseRev: options.force ? null : syncState.clientRev,
-      deviceId: DEVICE_ID,
-      sessionId: SESSION_ID,
-      allowEmpty: options.allowEmpty || false
-    });
-    
-    if (res.success) {
-      syncState.patchQueue = [];
-      localStorage.removeItem('MW_PATCH_QUEUE');
-      syncState.clientRev = res.rev;
-      state.rev = res.rev;
-      localStorage.setItem('MW_REV', String(res.rev));
-      syncState.pendingChanges = false;
-      updateSyncStatus('synced');
-      updateLocalCache();
-      console.log('✅ Snapshot saved, rev:', res.rev);
-    } else if (res.conflict) {
-      await handleConflict(res);
-    } else {
-      throw new Error(res.error || 'Save failed');
-    }
-  } catch (e) {
-    console.error('❌ Snapshot save failed:', e);
-    updateSyncStatus('error');
-  }
-}
-
-/**
- * Handle sync conflict
- */
-async function handleConflict(res) {
-  console.log('🔀 Handling conflict...');
-  
-  // For landing page, auto-resolve by accepting server version
-  // (Unit changes are less frequent and this is safer)
-  toast('Syncing latest changes...');
-  
-  // Apply server data
-  if (res.serverData) {
-    const serverData = typeof res.serverData === 'string' ? JSON.parse(res.serverData) : res.serverData;
-    state.units = serverData.units || [];
-    state.patients = serverData.patients || [];
-    state.trash = serverData.trash || { units: [], patients: [] };
-    state.settings = serverData.settings || {};
-    state.unitRequests = serverData.unitRequests || [];
-  }
-  
-  syncState.clientRev = res.serverRev;
-  state.rev = res.serverRev;
-  localStorage.setItem('MW_REV', String(res.serverRev));
-  
-  // Clear patch queue since we're accepting server state
-  syncState.patchQueue = [];
-  localStorage.removeItem('MW_PATCH_QUEUE');
-  
-  updateLocalCache();
-  renderUnits();
-  updateSyncStatus('synced');
-  toast('Synced with latest changes');
-}
-
-/**
- * Update local cache (consistent with dashboard)
- */
-function updateLocalCache() {
-  const cachePayload = JSON.stringify({
-    units: state.units,
-    settings: state.settings,
-    patients: state.patients,
-    unitRequests: state.unitRequests,
-    trash: state.trash,
-    rev: state.rev,
-    lastUpdated: new Date().toISOString()
-  });
-  
-  localStorage.setItem('medward_pro_v12', cachePayload);
-  localStorage.setItem('MEDWARD_CACHE', cachePayload);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// LEGACY WRAPPERS - For backward compatibility
-// ═══════════════════════════════════════════════════════════════════════════
-
-function enqueuePatch(operation, payload) {
-  enqueuePatchV2(operation, payload);
-  markDirtyV2();
-}
-
-async function saveData() {
-  await flushPatchesV2();
-}
+// No manual sync needed - Firebase handles it automatically!
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIT MANAGEMENT FUNCTIONS
@@ -1529,28 +1185,28 @@ function openAddUnitModal() {
   document.getElementById('unitModalTitle').textContent = 'Add Unit';
   document.getElementById('unitName').value = '';
   document.getElementById('unitDesc').value = '';
-  
+
   // Reset color picker
   document.querySelectorAll('.color-option').forEach(b => b.classList.remove('selected'));
   document.querySelector('.color-option[data-color="#005eb8"]')?.classList.add('selected');
-  
+
   openModal('unitModal');
 }
 
 function editUnit(unitId) {
   const unit = state.units.find(u => u.id === unitId);
   if (!unit) return;
-  
+
   editingUnitId = unitId;
   document.getElementById('unitModalTitle').textContent = 'Edit Unit';
   document.getElementById('unitName').value = unit.name;
   document.getElementById('unitDesc').value = unit.desc || '';
-  
+
   // Set color picker
   document.querySelectorAll('.color-option').forEach(b => {
     b.classList.toggle('selected', b.dataset.color === unit.color);
   });
-  
+
   openModal('unitModal');
 }
 
@@ -1559,58 +1215,59 @@ async function saveUnit() {
   const desc = document.getElementById('unitDesc').value.trim();
   const selectedColorEl = document.querySelector('.color-option.selected');
   const color = selectedColorEl ? selectedColorEl.dataset.color : '#005eb8';
-  
+
   if (!name) {
     toast('Please enter a unit name');
     return;
   }
-  
-  if (editingUnitId) {
-    const idx = state.units.findIndex(u => u.id === editingUnitId);
-    if (idx !== -1) {
-      const updatedUnit = { 
-        ...state.units[idx], 
-        name, 
-        desc, 
-        color,
-        updatedAt: new Date().toISOString()
-      };
-      state.units[idx] = updatedUnit;
-      enqueuePatch('updateUnit', updatedUnit);
+
+  showLoading('Saving...');
+
+  try {
+    if (editingUnitId) {
+      // Update existing unit in Firebase
+      const result = await updateUnit(editingUnitId, { name, desc, color });
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      toast('Unit updated');
+    } else {
+      // Create new unit in Firebase
+      const result = await createUnit({ name, desc, color });
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      toast('Unit created');
     }
-  } else {
-    const newUnit = {
-      id: 'u' + Date.now(),
-      name,
-      desc,
-      color,
-      createdAt: new Date().toISOString()
-    };
-    state.units.push(newUnit);
-    enqueuePatch('addUnit', newUnit);
+
+    closeModal('unitModal');
+    // Realtime listener will update the UI automatically
+  } catch (e) {
+    console.error('Save unit error:', e);
+    toast('Failed to save unit');
+  } finally {
+    hideLoading();
   }
-  
-  closeModal('unitModal');
-  renderUnits();
-  updateLocalCache();
-  toast(editingUnitId ? 'Unit updated' : 'Unit added');
 }
 
 async function deleteUnit(unitId) {
-  if (!confirm('Move this unit to trash?')) return;
-  
-  const idx = state.units.findIndex(u => u.id === unitId);
-  if (idx === -1) return;
-  
-  const unit = state.units.splice(idx, 1)[0];
-  state.trash.units = state.trash.units || [];
-  state.trash.units.push({ ...unit, deletedAt: new Date().toISOString() });
-  
-  enqueuePatch('deleteUnit', { id: unitId });
-  
-  renderUnits();
-  updateLocalCache();
-  toast('Unit moved to trash');
+  if (!confirm('Delete this unit?')) return;
+
+  showLoading('Deleting...');
+
+  try {
+    const result = await firebaseDeleteUnit(unitId);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+    toast('Unit deleted');
+    // Realtime listener will update the UI automatically
+  } catch (e) {
+    console.error('Delete unit error:', e);
+    toast('Failed to delete unit');
+  } finally {
+    hideLoading();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1618,92 +1275,17 @@ async function deleteUnit(unitId) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function openSettingsModal() {
-  updateTrashCount();
   openModal('settingsModal');
 }
 
-function updateTrashCount() {
-  const items = [...(state.trash.units || []), ...(state.trash.patients || [])];
-  const badge = document.getElementById('trashCountBadge');
-  if (badge) {
-    badge.textContent = items.length === 0 ? 'Empty' : `${items.length} item${items.length > 1 ? 's' : ''}`;
-  }
-}
-
 async function forceCloudSync() {
-  toast('Syncing with cloud...');
-  try {
-    await saveSnapshotV2({ force: true });
-    toast('Sync complete');
-  } catch (e) {
-    toast('Sync failed');
-  }
+  // Firebase syncs automatically - just show confirmation
+  toast('Firebase syncs automatically!');
 }
 
 function openTrashModal() {
-  renderTrash();
-  openModal('trashModal');
-}
-
-function renderTrash() {
-  const list = document.getElementById('trashList');
-  if (!list) return;
-  
-  const items = [...(state.trash.units || []), ...(state.trash.patients || [])];
-  
-  if (items.length === 0) {
-    list.innerHTML = `
-      <div class="trash-empty">
-        <div class="trash-empty-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        </div>
-        <div>Trash is empty</div>
-      </div>
-    `;
-    return;
-  }
-  
-  list.innerHTML = items.map(item => {
-    const isUnit = !item.mrn; // Units don't have MRN
-    return `
-      <div class="trash-item">
-        <div class="trash-item-icon">${isUnit ? '🏥' : '👤'}</div>
-        <div class="trash-item-info">
-          <div class="trash-item-name">${escapeHtml(item.name)}</div>
-          <div class="trash-item-meta">${isUnit ? 'Unit' : 'Patient'}</div>
-        </div>
-        <button class="trash-item-action" onclick="restoreItem('${item.id}', ${isUnit})">Restore</button>
-      </div>
-    `;
-  }).join('');
-  
-  updateTrashCount();
-}
-
-async function restoreItem(id, isUnit) {
-  if (isUnit) {
-    const idx = state.trash.units.findIndex(u => u.id === id);
-    if (idx !== -1) {
-      const unit = state.trash.units.splice(idx, 1)[0];
-      delete unit.deletedAt;
-      state.units.push(unit);
-      enqueuePatch('restoreUnit', { id });
-    }
-  } else {
-    const idx = state.trash.patients.findIndex(p => p.id === id);
-    if (idx !== -1) {
-      const patient = state.trash.patients.splice(idx, 1)[0];
-      delete patient.deletedAt;
-      state.patients.push(patient);
-      enqueuePatch('restorePatient', { id });
-    }
-  }
-  
-  renderUnits();
-  renderTrash();
-  updateTrashCount();
-  updateLocalCache();
-  toast('Item restored');
+  // Trash functionality can be added later with Firestore queries
+  toast('Trash feature coming soon');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1718,14 +1300,7 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('active');
 }
 
-async function callAPI(action, extra = {}) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, username: AUTH.user, password: AUTH.pass, ...extra })
-  });
-  return res.json();
-}
+// API calls now handled by Firebase - no manual API needed
 
 function showLoading(text = 'Loading...') {
   document.getElementById('loadingText').textContent = text;
@@ -1773,23 +1348,23 @@ function updateThemeIcon() {
   document.getElementById('themeMoon').style.display = isDark ? 'none' : 'block';
 }
 
-function doLogout() {
+async function doLogout() {
   if (!confirm('Log out of MedWard Pro?')) return;
-  
-  // Flush any pending changes first
-  if (syncState.patchQueue.length > 0) {
-    flushPatchesV2();
+
+  // Unsubscribe from realtime listeners
+  if (unsubscribeUnits) {
+    unsubscribeUnits();
   }
-  
-  localStorage.removeItem('MW_USER');
-  localStorage.removeItem('MW_PASS');
+
+  // Firebase logout
+  await logout();
+
+  // Clear any local storage
   localStorage.removeItem('MW_SELECTED_UNIT');
   localStorage.removeItem('MW_SELECTED_UNIT_NAME');
-  sessionStorage.removeItem('MW_USER');
-  sessionStorage.removeItem('MW_PASS');
   sessionStorage.removeItem('MW_UNIT');
   sessionStorage.removeItem('MW_UNIT_NAME');
-  
+
   window.location.href = 'login.html';
 }
 
@@ -1808,6 +1383,23 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     }
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPOSE FUNCTIONS TO WINDOW (for onclick handlers)
+// ═══════════════════════════════════════════════════════════════════════════
+
+window.toggleTheme = toggleTheme;
+window.openSettingsModal = openSettingsModal;
+window.doLogout = doLogout;
+window.openAddUnitModal = openAddUnitModal;
+window.editUnit = editUnit;
+window.deleteUnit = deleteUnit;
+window.saveUnit = saveUnit;
+window.openAccessModal = openAccessModal;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.forceCloudSync = forceCloudSync;
+window.openTrashModal = openTrashModal;
 </script>
 <script src="medward-tour.js"></script>
 </body>
