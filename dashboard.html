@@ -11,11 +11,12 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MedWard Pro v17.2</title>
+<title>MedWard Pro v17.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css"/>
 <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -4684,6 +4685,55 @@ body.dark-theme .readonly-banner {
     <div id="userLastImportInfo" style="display:none;font-size:0.7rem;color:var(--text-muted);margin-top:8px;padding:6px 8px;background:var(--bg-elevated);border-radius:6px;">
       <span style="color:var(--success)">✓</span> <span id="userLastImportText">Last import: —</span>
     </div>
+  </div>
+  
+  <!-- EXPORT PDF SECTION -->
+  <div style="padding:16px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#dc2626,#f59e0b);display:grid;place-items:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:700;color:var(--text);font-size:0.95rem;">Export Ward List</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">Download PDF for handover/rounds</div>
+      </div>
+    </div>
+    
+    <!-- Current Unit Indicator -->
+    <div id="exportUnitIndicator" style="padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:1.1rem">🏥</span>
+      <div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Exporting from</div>
+        <div id="exportUnitName" style="font-weight:600;color:var(--text)">Select a unit first</div>
+      </div>
+    </div>
+    
+    <!-- Export Options -->
+    <div style="margin-bottom:12px;">
+      <label class="form-label" style="margin-bottom:8px;display:block;">Export Options</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
+          <input type="checkbox" id="export_groupByWard" checked style="width:16px;height:16px;accent-color:var(--primary);">
+          Group patients by ward
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
+          <input type="checkbox" id="export_includeStatus" checked style="width:16px;height:16px;accent-color:var(--primary);">
+          Include status column
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
+          <input type="checkbox" id="export_colorCode" checked style="width:16px;height:16px;accent-color:var(--primary);">
+          Color-code critical patients
+        </label>
+      </div>
+    </div>
+    
+    <!-- Export Button -->
+    <button class="btn btn-primary" onclick="exportUnitToPDF()" style="width:100%;padding:12px;font-size:0.9rem;" id="btnExportPDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="margin-right:8px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Export to PDF
+    </button>
+    
+    <div id="exportStatus" style="display:none;padding:10px;border-radius:8px;font-size:0.8rem;margin-top:10px;"></div>
   </div>
   
   <!-- USER INFO SECTION -->
@@ -16607,6 +16657,9 @@ window.openUserSettings = function() {
   // Load saved import config
   loadImportConfig();
   
+  // Update export unit indicator
+  updateExportUnitIndicator();
+  
   // Show last import info if available
   const snapshot = localStorage.getItem(IMPORT_SNAPSHOT_KEY);
   if (snapshot) {
@@ -18519,6 +18572,314 @@ window.exportPDF = function() {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// 📄 EXPORT UNIT TO PDF - CLINICAL HANDOVER SHEET
+// ═══════════════════════════════════════════════════════════════════
+
+window.exportUnitToPDF = function() {
+  // Validate unit selection
+  if (!state.currentUnit || !state.currentUnit.id) {
+    showExportStatus('⚠️ Please select a unit first', 'error');
+    toast('Select a unit before exporting', true);
+    return;
+  }
+  
+  // Get patients for current unit
+  const patients = state.patients.filter(p => p.unitId === state.currentUnit.id);
+  
+  if (!patients.length) {
+    showExportStatus('⚠️ No patients in this unit to export', 'error');
+    toast('No patients to export', true);
+    return;
+  }
+  
+  // Get export options
+  const groupByWard = $('export_groupByWard')?.checked !== false;
+  const includeStatus = $('export_includeStatus')?.checked !== false;
+  const colorCode = $('export_colorCode')?.checked !== false;
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4'); // Portrait A4
+    
+    const unitName = state.currentUnit.name;
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-GB', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const timeStr = today.toLocaleTimeString('en-GB', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // HEADER
+    // ═══════════════════════════════════════════════════════════════════
+    
+    // Header background
+    doc.setFillColor(0, 94, 184); // NHS Blue
+    doc.rect(0, 0, 210, 28, 'F');
+    
+    // Unit name
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text(unitName, 14, 12);
+    
+    // Subtitle
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Ward List / Handover Sheet', 14, 19);
+    
+    // Date & Time (right aligned)
+    doc.setFontSize(9);
+    doc.text(dateStr, 196, 12, { align: 'right' });
+    doc.text(timeStr, 196, 18, { align: 'right' });
+    
+    // Patient count badge
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(14, 22, 30, 5, 1, 1, 'F');
+    doc.setTextColor(0, 94, 184);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text(patients.length + ' Patients', 29, 25.5, { align: 'center' });
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // BUILD TABLE DATA
+    // ═══════════════════════════════════════════════════════════════════
+    
+    // Define columns
+    const columns = [
+      { header: 'Bed', dataKey: 'bed' },
+      { header: 'Patient Name', dataKey: 'name' },
+      { header: 'Ward', dataKey: 'ward' },
+      { header: 'Doctor', dataKey: 'doctor' }
+    ];
+    
+    if (includeStatus) {
+      columns.push({ header: 'Status', dataKey: 'status' });
+    }
+    
+    columns.push({ header: 'Diagnosis', dataKey: 'diagnosis' });
+    
+    // Sort and group patients
+    let sortedPatients = [...patients];
+    
+    if (groupByWard) {
+      // Sort by ward, then by bed
+      sortedPatients.sort((a, b) => {
+        const wardA = (a.ward || 'ZZZ').toLowerCase();
+        const wardB = (b.ward || 'ZZZ').toLowerCase();
+        if (wardA !== wardB) return wardA.localeCompare(wardB);
+        
+        // Smart bed sorting (handles "10-1", "9", "22-3" etc.)
+        const bedA = a.bed || a.room || '';
+        const bedB = b.bed || b.room || '';
+        return smartBedSort(bedA, bedB);
+      });
+    }
+    
+    // Build rows
+    const rows = sortedPatients.map(p => {
+      const row = {
+        bed: p.bed || p.room || '—',
+        name: p.name || '—',
+        ward: p.ward || 'Unassigned',
+        doctor: p.doctor || p.assignedDoctor || '—',
+        status: formatStatus(p.status),
+        diagnosis: (p.diagnosis || '—').substring(0, 80)
+      };
+      
+      // Store original status for color coding
+      row._status = p.status;
+      row._ward = p.ward;
+      
+      return row;
+    });
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // RENDER TABLE WITH AUTOTABLE
+    // ═══════════════════════════════════════════════════════════════════
+    
+    let currentWard = null;
+    
+    doc.autoTable({
+      startY: 32,
+      columns: columns,
+      body: rows,
+      
+      theme: 'grid',
+      
+      styles: {
+        font: 'helvetica',
+        fontSize: 8,
+        cellPadding: 3,
+        valign: 'middle',
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
+      },
+      
+      headStyles: {
+        fillColor: [240, 248, 240], // Light green (like your sheet)
+        textColor: [30, 30, 30],
+        fontStyle: 'bold',
+        fontSize: 8
+      },
+      
+      alternateRowStyles: {
+        fillColor: [250, 251, 252]
+      },
+      
+      columnStyles: {
+        bed: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
+        name: { cellWidth: 38, fontStyle: 'bold' },
+        ward: { cellWidth: 24 },
+        doctor: { cellWidth: 28 },
+        status: { cellWidth: 20, halign: 'center' },
+        diagnosis: { cellWidth: 'auto' }
+      },
+      
+      // Color coding for special rows
+      didParseCell: function(data) {
+        if (data.section === 'body' && colorCode) {
+          const row = data.row.raw;
+          const status = row._status;
+          const diagnosis = row.diagnosis || '';
+          
+          // Critical patients - red tint
+          if (status === 'critical') {
+            data.cell.styles.fillColor = [255, 235, 235];
+          }
+          // Chronic patients - purple tint
+          else if (status === 'chronic') {
+            data.cell.styles.fillColor = [245, 240, 255];
+          }
+          // CVA/Stroke - orange tint
+          else if (/cva|stroke|tia/i.test(diagnosis)) {
+            data.cell.styles.fillColor = [255, 245, 230];
+          }
+          // ICU/ER patients - yellow tint
+          else if (/icu|ER/i.test(row._ward)) {
+            data.cell.styles.fillColor = [255, 250, 230];
+          }
+        }
+      },
+      
+      // Ward section headers (if grouping)
+      didDrawCell: function(data) {
+        // Add ward dividers when ward changes
+        if (groupByWard && data.section === 'body' && data.column.index === 0) {
+          const row = data.row.raw;
+          if (row._ward !== currentWard) {
+            currentWard = row._ward;
+          }
+        }
+      },
+      
+      margin: { top: 32, left: 10, right: 10, bottom: 20 },
+      
+      // Footer on each page
+      didDrawPage: function(data) {
+        // Footer line
+        doc.setDrawColor(200, 200, 200);
+        doc.line(10, 285, 200, 285);
+        
+        // Footer text
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(128, 128, 128);
+        
+        // Left: App name
+        doc.text('Generated by MedWard Pro', 10, 290);
+        
+        // Center: Page number
+        const pageCount = doc.internal.getNumberOfPages();
+        doc.text('Page ' + data.pageNumber + ' of ' + pageCount, 105, 290, { align: 'center' });
+        
+        // Right: Timestamp
+        doc.text('Exported: ' + timeStr, 200, 290, { align: 'right' });
+      }
+    });
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // SAVE PDF
+    // ═══════════════════════════════════════════════════════════════════
+    
+    const filename = unitName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + today.toISOString().slice(0, 10) + '.pdf';
+    doc.save(filename);
+    
+    showExportStatus(`✅ Exported ${patients.length} patients to PDF`, 'success');
+    toast(`📄 PDF exported: ${filename}`);
+    
+  } catch (e) {
+    console.error('PDF Export error:', e);
+    showExportStatus(`❌ Export failed: ${e.message}`, 'error');
+    toast('Export failed', true);
+  }
+};
+
+// Helper: Format status for display
+function formatStatus(status) {
+  const statusMap = {
+    'new': '🆕 New',
+    'active': '✅ Active',
+    'critical': '🚨 Critical',
+    'chronic': '💜 Chronic',
+    'discharged': '🏠 Discharged'
+  };
+  return statusMap[status] || status || '—';
+}
+
+// Helper: Smart bed sorting (handles "10-1", "9", "22-3" format)
+function smartBedSort(a, b) {
+  const parseB = (s) => {
+    const match = String(s || '').match(/^(\d+)(?:[-.](\d+))?/);
+    if (!match) return { major: 999, minor: 0 };
+    return { 
+      major: parseInt(match[1]) || 999, 
+      minor: parseInt(match[2]) || 0 
+    };
+  };
+  
+  const pa = parseB(a);
+  const pb = parseB(b);
+  
+  if (pa.major !== pb.major) return pa.major - pb.major;
+  return pa.minor - pb.minor;
+}
+
+// Helper: Show export status
+function showExportStatus(message, type) {
+  const el = $('exportStatus');
+  if (!el) return;
+  
+  el.style.display = 'block';
+  el.style.background = type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)';
+  el.style.color = type === 'error' ? '#dc2626' : '#059669';
+  el.style.border = `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`;
+  el.innerHTML = message;
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// Update export unit indicator when settings modal opens
+function updateExportUnitIndicator() {
+  const indicator = $('exportUnitName');
+  if (indicator) {
+    if (state.currentUnit && state.currentUnit.name) {
+      indicator.textContent = state.currentUnit.name;
+      indicator.style.color = 'var(--text)';
+    } else {
+      indicator.textContent = '⚠️ No unit selected';
+      indicator.style.color = 'var(--danger)';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // WARD SUGGESTIONS (MANUAL INPUT)
 // ═══════════════════════════════════════════════════════════════════
 
@@ -18967,7 +19328,7 @@ async function init() {
     initSyncEngineV2();
   }
 
-  console.log('🚀 MedWard Pro v17.2 - Build:', CONFIG.BUILD_ID);
+  console.log('🚀 MedWard Pro v17.3 - Build:', CONFIG.BUILD_ID);
   console.log('📦 CACHE-FIRST BOOT: Using cache warmed by loading.html');
   
   // Run boot diagnostics
