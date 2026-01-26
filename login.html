@@ -698,43 +698,54 @@ function debugLog(msg) {
 
 (async function() {
   debugLog('1. Page loaded');
-  debugLog('2. Calling getRedirectResult...');
-  
+
+  // CRITICAL FIX: Set auth persistence BEFORE calling getRedirectResult
+  // This is essential for mobile browsers with strict privacy settings
+  debugLog('2. Configuring auth persistence...');
+  try {
+    await configureAuthPersistence(true); // Always use local persistence for redirects
+    debugLog('3. Auth persistence configured');
+  } catch (error) {
+    debugLog('WARNING: Failed to set persistence: ' + error.message);
+  }
+
+  debugLog('4. Calling getRedirectResult...');
+
   try {
     const result = await getRedirectResult(auth);
-    
-    debugLog('3. getRedirectResult done: ' + (result ? 'HAS RESULT' : 'null'));
-    
+
+    debugLog('5. getRedirectResult done: ' + (result ? 'HAS RESULT' : 'null'));
+
     if (result && result.user) {
-      debugLog('4. SUCCESS! User: ' + result.user.email);
-      debugLog('5. Redirecting to landing.html in 2 sec...');
-      
+      debugLog('6. SUCCESS! User: ' + result.user.email);
+      debugLog('7. Redirecting to landing.html in 2 sec...');
+
       setLegacyCredentials(result.user);
-      
+
       // Delay so you can see the debug messages
       setTimeout(() => {
         window.location.href = 'landing.html';
       }, 2000);
       return;
     }
-    
-    debugLog('4. No redirect result, checking auth.currentUser...');
-    debugLog('5. auth.currentUser = ' + (auth.currentUser ? auth.currentUser.email : 'null'));
-    
+
+    debugLog('6. No redirect result, checking auth.currentUser...');
+    debugLog('7. auth.currentUser = ' + (auth.currentUser ? auth.currentUser.email : 'null'));
+
   } catch (error) {
     debugLog('ERROR: ' + error.code + ' - ' + error.message);
   }
-  
-  debugLog('6. Running requireAuth...');
-  
+
+  debugLog('8. Running requireAuth...');
+
   requireAuth({
     onAuthed: (user) => {
-      debugLog('7. requireAuth: AUTHED as ' + user.email);
+      debugLog('9. requireAuth: AUTHED as ' + user.email);
       setLegacyCredentials(user);
       setTimeout(() => safeRedirect('landing.html'), 2000);
     },
     onUnauthed: () => {
-      debugLog('7. requireAuth: NOT AUTHED - staying on login');
+      debugLog('9. requireAuth: NOT AUTHED - staying on login');
     }
   });
 })();
