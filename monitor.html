@@ -322,6 +322,111 @@ and instrumenting functions to call window.monitor.emit(...).
   const build = new URLSearchParams(location.search).get("v") || "dev";
   document.getElementById("build").textContent = build;
   if (window.monitor) window.monitor.emit("APP","INFO","Monitor loaded", { build });
+
+  // Expose MedWard.syncNow for standalone monitor testing
+  window.MedWard = window.MedWard || {};
+
+  // Lightweight sync function for diagnostic testing only
+  window.MedWard.syncNow = async function ({ correlationId, source } = {}) {
+    const id = correlationId || (crypto.randomUUID?.() || Math.random().toString(16).slice(2));
+
+    // Try to get auth from localStorage (if user has logged in via dashboard)
+    const username = localStorage.getItem('medwardUsername') || sessionStorage.getItem('medwardUsername');
+    const password = localStorage.getItem('medwardPassword') || sessionStorage.getItem('medwardPassword');
+
+    if (!username || !password) {
+      const msg = "Auth not found - please log in via dashboard.html first, or run monitor from within the app";
+      if (window.monitor) window.monitor.emit("SYNC", "WARN", msg, { id, source });
+      throw new Error(msg);
+    }
+
+    // Get or create device/session IDs
+    let deviceId = localStorage.getItem('medward_deviceId');
+    if (!deviceId) {
+      deviceId = 'monitor-' + (crypto.randomUUID?.() || Math.random().toString(16).slice(2));
+      localStorage.setItem('medward_deviceId', deviceId);
+    }
+
+    const sessionId = 'monitor-session-' + Math.random().toString(16).slice(2);
+
+    // Simple sync API call for testing
+    const API_URL = 'https://medward-api-production.up.railway.app/';
+    const TIMEOUT_MS = 15000;
+
+    if (window.monitor) window.monitor.emit("SYNC", "INFO", "syncNow:start (monitor test)", {
+      id, source, deviceId, sessionId
+    });
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    const t0 = performance.now();
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'loadData',
+          username: username,
+          password: password,
+          deviceId: deviceId,
+          sessionId: sessionId,
+          clientRev: 0, // Always do full load for testing
+          clientChecksum: null
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+      const ms = Math.round(performance.now() - t0);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const text = await response.text();
+      if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+        throw new Error('Server returned HTML instead of JSON');
+      }
+
+      const data = JSON.parse(text);
+
+      if (!data.success) {
+        throw new Error(data.error || 'Sync failed');
+      }
+
+      if (window.monitor) window.monitor.emit("SYNC", "SUCCESS", "syncNow:done (monitor test)", {
+        id, ms, source,
+        rev: data.rev,
+        checksum: data.checksum,
+        patientCount: data.data?.patients?.length || 0,
+        unitCount: data.data?.units?.length || 0
+      });
+
+      return {
+        success: true,
+        ms,
+        rev: data.rev,
+        patientCount: data.data?.patients?.length || 0,
+        unitCount: data.data?.units?.length || 0
+      };
+
+    } catch (error) {
+      clearTimeout(timeout);
+      const ms = Math.round(performance.now() - t0);
+
+      if (window.monitor) window.monitor.emit("SYNC", "ERROR", "syncNow:fail (monitor test)", {
+        id, ms, source,
+        message: error?.message || String(error),
+        stack: error?.stack || null
+      });
+
+      throw error;
+    }
+  };
+
+  if (window.monitor) window.monitor.emit("APP","INFO","MedWard.syncNow exposed for testing", {});
 </script>
 </body>
 </html>
