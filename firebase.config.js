@@ -33,7 +33,9 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     signInWithRedirect,
-    getRedirectResult
+    getRedirectResult,
+    setPersistence,
+    browserLocalPersistence
 } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
 
 // Firebase configuration
@@ -95,5 +97,7 @@ export {
     GoogleAuthProvider,
     signInWithPopup,
     signInWithRedirect,
-    getRedirectResult
+    getRedirectResult,
+    setPersistence,
+    browserLocalPersistence
 };

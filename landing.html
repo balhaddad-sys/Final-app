@@ -1006,11 +1006,12 @@ body {
 </div>
 
 <script type="module">
-import { getCurrentUser, onAuthChange, logout, waitForAuth } from './firebase.auth.js';
+import { logout } from './firebase.auth.js';
 import { getUnitsForUser, createUnit, updateUnit, deleteUnit as firebaseDeleteUnit, getAllUnits } from './firebase.store.js';
 import { subscribeToUnits, onSyncStatusChange } from './firebase.sync.js';
+import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js';
 
-const BUILD_ID = '2026-01-26.2';  // Firebase Edition
+const BUILD_ID = '2026-01-26.3';  // Firebase Edition with Auth Guard
 
 // ═══════════════════════════════════════════════════════════════════════════
 // APP STATE
@@ -1025,63 +1026,21 @@ let editingUnitId = null;
 let unsubscribeUnits = null;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// AUTH CHECK - Redirect if not logged in (with retry for race condition)
+// AUTH GUARD - Redirect to login if not authenticated
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function checkAuthWithRetry(maxAttempts = 5) {
-  console.log('[Landing] Checking authentication...');
-  
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const user = await waitForAuth();
-    
-    if (user) {
-      console.log('[Landing] User authenticated on attempt', attempt, ':', user.email);
-      state.currentUser = user;
-      ensureLegacyCredentials(user);
-      initApp();
-      return;
-    }
-    
-    // Wait before retry (increasing delay)
-    if (attempt < maxAttempts) {
-      console.log(`[Landing] No user on attempt ${attempt}, retrying in ${attempt * 300}ms...`);
-      await new Promise(resolve => setTimeout(resolve, attempt * 300));
-    }
-  }
-  
-  // No user after all retries
-  console.log('[Landing] No user after', maxAttempts, 'attempts - redirecting to login');
-  window.location.href = 'login.html';
-}
-
-// Start auth check
-checkAuthWithRetry();
-
-// Helper function to ensure legacy credentials are set
-function ensureLegacyCredentials(user) {
-  if (!user) return;
-
-  const userEmail = user.email || user.uid;
-  const userToken = 'FIREBASE_AUTH';
-
-  // Check if credentials already exist
-  const existingUser = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
-  const existingPass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
-
-  // If credentials are missing, set them
-  if (!existingUser || !existingPass) {
-    console.log('[Landing] Setting missing credentials for:', userEmail);
-    sessionStorage.setItem('MW_USER', userEmail);
-    sessionStorage.setItem('MW_PASS', userToken);
-    localStorage.setItem('MW_USER', userEmail);
-    localStorage.setItem('MW_PASS', userToken);
-  }
-}
-
-// Also listen for auth changes (logout from another tab)
-onAuthChange(user => {
-  if (!user && state.currentUser) {
-    window.location.href = 'login.html';
+requireAuth({
+  onAuthed: (user) => {
+    // User is authenticated - initialize app
+    console.log('[Landing] User authenticated:', user.email);
+    state.currentUser = user;
+    setLegacyCredentials(user);
+    initApp();
+  },
+  onUnauthed: () => {
+    // User is not authenticated - redirect to login
+    console.log('[Landing] Not authenticated, redirecting to login');
+    safeRedirect('login.html');
   }
 });
 
