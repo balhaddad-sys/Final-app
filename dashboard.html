@@ -19415,7 +19415,7 @@ async function init() {
   // SAFETY CHECK: Ensure sync is unlocked after boot
   // This prevents silent save failures if boot completed but unlock didn't happen
   // ═══════════════════════════════════════════════════════════════════
-  if (!canWriteV2()) {
+  if (!canWrite()) {
     console.warn('⚠️ sync not unlocked after boot - forcing unlock');
     const cached = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
     if (cached) {
