@@ -675,6 +675,7 @@ body.dark-theme .admin-warning {
 <script type="module">
 import { login, register, signInWithGoogle, handleGoogleRedirect } from './firebase.auth.js';
 import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js';
+import { configureAuthPersistence } from './firebase.config.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // AUTH GUARD - Single source of truth for redirect logic
@@ -823,6 +824,7 @@ async function handleLogin(e) {
 
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
+  const rememberMe = document.getElementById('remember').checked;
 
   if (!email || !password) {
     showMessage('Please enter email and password');
@@ -835,6 +837,10 @@ async function handleLogin(e) {
   document.getElementById('loginBtn').disabled = true;
 
   try {
+    // CRITICAL: Set auth persistence BEFORE attempting login
+    // This ensures Firebase stores the session correctly (especially on mobile)
+    await configureAuthPersistence(rememberMe);
+
     const result = await login(email, password);
 
     if (result.success && result.user) {
@@ -863,12 +869,16 @@ window.handleLogin = handleLogin;
 async function handleGoogleSignIn() {
   const btn = document.getElementById('googleSignInBtn');
   const originalContent = btn.innerHTML;
+  const rememberMe = document.getElementById('remember').checked;
 
   // Show loading state
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div><span>Signing in...</span>';
 
   try {
+    // CRITICAL: Set auth persistence BEFORE attempting Google sign-in
+    await configureAuthPersistence(rememberMe);
+
     console.log('[Login] Starting Google sign-in...');
     const result = await signInWithGoogle();
     console.log('[Login] Google sign-in result:', result);

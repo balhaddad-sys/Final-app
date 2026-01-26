@@ -1,432 +1,755 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
-  <title>MedWard Pro • System Monitor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#dc2626">
+<title>System Monitor | MedWard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-app: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-elevated: #334155;
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --border: #334155;
+  --danger: #dc2626;
+  --warning: #f59e0b;
+  --success: #10b981;
+  --info: #3b82f6;
+  --radius: 12px;
+}
 
-  <style>
-    :root{
-      --bg:#0b1220; --panel:#0f1a2e; --panel2:#0c1628;
-      --text:#e7eefc; --muted:#9fb0d0; --muted2:#7e92bb;
-      --line:rgba(255,255,255,.08);
-      --good:#35d07f; --warn:#ffcc66; --bad:#ff5c7a; --info:#7aa7ff;
-      --chip:rgba(122,167,255,.14);
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius:16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans";
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background:radial-gradient(1200px 700px at 20% -10%, rgba(122,167,255,.22), transparent 60%),
-               radial-gradient(900px 600px at 100% 0%, rgba(53,208,127,.12), transparent 55%),
-               var(--bg);
-      color:var(--text); font-family:var(--sans);
-    }
-    a{color:inherit}
-    .wrap{max-width:1280px; margin:0 auto; padding:18px 14px 42px}
-    header{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      padding:14px 14px; border:1px solid var(--line); border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
-      position:sticky; top:10px; z-index:50; backdrop-filter: blur(10px);
-    }
-    .brand{display:flex; flex-direction:column; gap:2px}
-    .title{font-weight:800; letter-spacing:.2px; font-size:16px}
-    .subtitle{color:var(--muted); font-size:12px}
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end}
-    .pill{
-      display:inline-flex; gap:8px; align-items:center; padding:8px 10px;
-      border:1px solid var(--line); border-radius:999px;
-      background:rgba(255,255,255,.03);
-      color:var(--muted); font-size:12px;
-    }
-    .dot{width:8px;height:8px;border-radius:99px; background:var(--info); box-shadow:0 0 0 4px rgba(122,167,255,.12)}
-    .dot.good{background:var(--good); box-shadow:0 0 0 4px rgba(53,208,127,.12)}
-    .dot.warn{background:var(--warn); box-shadow:0 0 0 4px rgba(255,204,102,.12)}
-    .dot.bad{background:var(--bad); box-shadow:0 0 0 4px rgba(255,92,122,.12)}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .grid{
-      margin-top:14px;
-      display:grid; gap:12px;
-      grid-template-columns: 1.1fr .9fr;
-    }
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
-      header{top:0; border-radius:0; margin:-18px -14px 0; padding:16px 14px}
-    }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding: 16px;
+}
 
-    .card{
-      border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .card-h{
-      display:flex; justify-content:space-between; align-items:center;
-      padding:12px 12px; border-bottom:1px solid var(--line);
-      background:rgba(0,0,0,.10);
-    }
-    .card-h b{font-size:13px; letter-spacing:.2px}
-    .card-h span{color:var(--muted); font-size:12px}
-    .card-b{padding:12px}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
 
-    .stats{display:grid; gap:10px; grid-template-columns:repeat(4,1fr)}
-    @media (max-width: 980px){ .stats{grid-template-columns:repeat(2,1fr)} }
-    .stat{
-      padding:10px 10px; border:1px solid var(--line); border-radius:14px;
-      background:rgba(255,255,255,.03);
-    }
-    .stat .k{color:var(--muted); font-size:12px}
-    .stat .v{font-weight:800; margin-top:4px; font-size:16px}
-    .stat .s{margin-top:4px; font-size:12px; color:var(--muted2); font-family:var(--mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-    .controls{display:flex; gap:10px; flex-wrap:wrap}
-    button, select, input{
-      font:inherit; color:inherit;
-      border:1px solid var(--line); background:rgba(255,255,255,.03);
-      border-radius:12px; padding:10px 10px;
-      outline:none;
-    }
-    button{cursor:pointer}
-    button:hover{background:rgba(255,255,255,.06)}
-    .btn{
-      display:inline-flex; gap:8px; align-items:center; white-space:nowrap;
-    }
-    .btn.good{border-color:rgba(53,208,127,.35)}
-    .btn.warn{border-color:rgba(255,204,102,.35)}
-    .btn.bad{border-color:rgba(255,92,122,.35)}
-    .btn.mono{font-family:var(--mono); font-size:12px}
+.header-icon {
+  font-size: 1.5rem;
+}
 
-    .two{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-    @media (max-width: 980px){ .two{grid-template-columns:1fr} }
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
 
-    .log{
-      height:520px; overflow:auto; border:1px solid var(--line);
-      border-radius:14px; background:rgba(0,0,0,.18);
-      font-family:var(--mono); font-size:12px;
-    }
-    .log .item{
-      padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.06);
-      display:grid; gap:6px;
-    }
-    .log .top{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    .tag{
-      padding:3px 8px; border-radius:999px;
-      background:var(--chip);
-      border:1px solid rgba(122,167,255,.25);
-      color:#cfe0ff;
-      font-size:11px;
-    }
-    .tag.good{background:rgba(53,208,127,.12); border-color:rgba(53,208,127,.28); color:#bdf6d7}
-    .tag.warn{background:rgba(255,204,102,.14); border-color:rgba(255,204,102,.30); color:#ffe6b0}
-    .tag.bad{background:rgba(255,92,122,.14); border-color:rgba(255,92,122,.30); color:#ffc1cc}
-    .t{color:var(--muted2)}
-    .msg{white-space:pre-wrap; word-break:break-word}
-    .kv{display:flex; gap:8px; flex-wrap:wrap; color:var(--muted)}
-    .kv code{background:rgba(255,255,255,.06); padding:2px 6px; border-radius:8px}
+.header-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
 
-    .mini{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      border-radius:14px;
-      padding:10px;
-      font-family:var(--mono);
-      font-size:12px;
-      overflow:auto;
-      max-height:240px;
-    }
-    .footer{
-      margin-top:12px; color:var(--muted);
-      font-size:12px; line-height:1.5;
-    }
-  </style>
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--info);
+  color: white;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-main);
+}
+
+.btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.stat-value.error { color: var(--danger); }
+.stat-value.warn { color: var(--warning); }
+.stat-value.info { color: var(--info); }
+.stat-value.success { color: var(--success); }
+
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background: var(--info);
+  color: white;
+  border-color: var(--info);
+}
+
+.filter-btn:hover {
+  border-color: var(--info);
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: var(--info);
+}
+
+.log-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 140px 80px 80px 120px 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  transition: background 0.1s;
+}
+
+.log-entry:hover {
+  background: var(--bg-elevated);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-time {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.log-level {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.log-level.error {
+  background: rgba(220, 38, 38, 0.2);
+  color: var(--danger);
+}
+
+.log-level.warn {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.log-level.info {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--info);
+}
+
+.log-type {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.log-msg {
+  color: var(--text-main);
+}
+
+.log-data {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.log-data:hover {
+  color: var(--info);
+}
+
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+}
+
+.test-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.test-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.test-card-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.test-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.modal-content {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-app);
+  padding: 16px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow: auto;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s;
+  z-index: 2000;
+  max-width: 300px;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success { border-color: var(--success); color: var(--success); }
+.toast.error { border-color: var(--danger); color: var(--danger); }
+.toast.info { border-color: var(--info); color: var(--info); }
+</style>
 </head>
 <body>
-<div class="wrap">
 
-  <header>
-    <div class="brand">
-      <div class="title">MedWard Pro • System Monitor</div>
-      <div class="subtitle" id="subtitle">Instrumentation active • Real-time diagnostics</div>
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-icon">🔐</div>
+    <div>
+      <div class="header-title">System Monitor</div>
+      <div class="header-subtitle">Real-time diagnostics & logging</div>
     </div>
-    <div class="row">
-      <div class="pill" title="Sync health (heartbeat + last error)">
-        <span class="dot" id="healthDot"></span>
-        <span id="healthText">Booting…</span>
-      </div>
-      <div class="pill" title="Session correlation ID">
-        <span>Session</span>
-        <span style="font-family:var(--mono)" id="sessionId">—</span>
-      </div>
-      <button class="btn mono" id="btnCopySession">Copy</button>
-    </div>
-  </header>
-
-  <div class="grid">
-
-    <!-- LEFT: logs + filters -->
-    <section class="card">
-      <div class="card-h">
-        <b>Event Stream</b>
-        <span id="logMeta">0 events</span>
-      </div>
-      <div class="card-b">
-
-        <div class="controls" style="margin-bottom:10px">
-          <select id="filterLevel">
-            <option value="ALL">All levels</option>
-            <option value="INFO">Info</option>
-            <option value="WARN">Warn</option>
-            <option value="ERROR">Error</option>
-            <option value="SUCCESS">Success</option>
-          </select>
-
-          <select id="filterType">
-            <option value="ALL">All types</option>
-            <option value="APP">APP</option>
-            <option value="NET">NET</option>
-            <option value="SYNC">SYNC</option>
-            <option value="STORE">STORE</option>
-            <option value="PERF">PERF</option>
-            <option value="TEST">TEST</option>
-            <option value="SEC">SEC</option>
-          </select>
-
-          <input id="search" placeholder="Search message / tags / meta…" style="min-width:240px; flex:1" />
-          <button class="btn" id="btnPause">Pause</button>
-          <button class="btn warn" id="btnClear">Clear</button>
-          <button class="btn good" id="btnExport">Export JSON</button>
-          <button class="btn" id="btnCopy">Copy Logs</button>
-        </div>
-
-        <div class="log" id="log"></div>
-
-        <div class="footer">
-          Tip: Instrument your app to emit <code>monitor.emit("SYNC", "INFO", "...")</code> for every save/sync/delete path.
-          Use correlation IDs to track a single operation across multiple calls.
-        </div>
-      </div>
-    </section>
-
-    <!-- RIGHT: stats + actions -->
-    <aside style="display:grid; gap:12px">
-
-      <section class="card">
-        <div class="card-h">
-          <b>Vitals</b>
-          <span id="vitalsMeta">Live</span>
-        </div>
-        <div class="card-b">
-          <div class="stats">
-            <div class="stat">
-              <div class="k">Network avg</div>
-              <div class="v" id="netAvg">—</div>
-              <div class="s" id="netAvgS">ms</div>
-            </div>
-            <div class="stat">
-              <div class="k">Slow calls</div>
-              <div class="v" id="netSlow">—</div>
-              <div class="s" id="netSlowS">&gt; 1500ms</div>
-            </div>
-            <div class="stat">
-              <div class="k">Errors</div>
-              <div class="v" id="errCount">—</div>
-              <div class="s" id="errLast">last: —</div>
-            </div>
-            <div class="stat">
-              <div class="k">Long tasks</div>
-              <div class="v" id="longTasks">—</div>
-              <div class="s" id="longTaskS">&gt; 200ms</div>
-            </div>
-          </div>
-
-          <div class="two" style="margin-top:10px">
-            <div>
-              <div class="pill" style="width:100%; justify-content:space-between">
-                <span>Online</span>
-                <span style="font-family:var(--mono)" id="online">—</span>
-              </div>
-              <div class="pill" style="width:100%; justify-content:space-between; margin-top:8px">
-                <span>Effective type</span>
-                <span style="font-family:var(--mono)" id="netType">—</span>
-              </div>
-              <div class="pill" style="width:100%; justify-content:space-between; margin-top:8px">
-                <span>RTT / Downlink</span>
-                <span style="font-family:var(--mono)" id="rtt">—</span>
-              </div>
-            </div>
-            <div>
-              <div class="pill" style="width:100%; justify-content:space-between">
-                <span>Memory</span>
-                <span style="font-family:var(--mono)" id="mem">—</span>
-              </div>
-              <div class="pill" style="width:100%; justify-content:space-between; margin-top:8px">
-                <span>LocalStorage</span>
-                <span style="font-family:var(--mono)" id="ls">—</span>
-              </div>
-              <div class="pill" style="width:100%; justify-content:space-between; margin-top:8px">
-                <span>Build</span>
-                <span style="font-family:var(--mono)" id="build">—</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="card-h">
-          <b>Actions • Tests</b>
-          <span>Run targeted diagnostics</span>
-        </div>
-        <div class="card-b">
-          <div class="controls">
-            <button class="btn good" id="btnHeartbeat">Heartbeat</button>
-            <button class="btn" id="btnFetchTest">Fetch test</button>
-            <button class="btn" id="btnSyncTest">Sync test</button>
-            <button class="btn warn" id="btnSaveTest">Save test</button>
-            <button class="btn bad" id="btnDeleteTest">Delete test</button>
-            <button class="btn" id="btnThrow">Simulate error</button>
-          </div>
-
-          <div style="margin-top:12px" class="mini" id="mini">
-Ready. Link this monitor to your app by opening the app in another tab
-and instrumenting functions to call window.monitor.emit(...).
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="card-h">
-          <b>Live Snapshot</b>
-          <span>Last event meta</span>
-        </div>
-        <div class="card-b">
-          <pre class="mini" id="snapshot">{}</pre>
-        </div>
-      </section>
-
-    </aside>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="toggleAutoScroll()">
+      <span id="autoScrollText">Auto-scroll: ON</span>
+    </button>
+    <button class="btn btn-danger" onclick="clearLogs()">Clear Logs</button>
+    <button class="btn btn-primary" onclick="goBack()">← Back</button>
   </div>
 </div>
 
-<script src="./monitor.js"></script>
-<script>
-  // Optional: mark build/version from query param or global.
-  const build = new URLSearchParams(location.search).get("v") || "dev";
-  document.getElementById("build").textContent = build;
-  if (window.monitor) window.monitor.emit("APP","INFO","Monitor loaded", { build });
+<!-- Statistics -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Events</div>
+    <div class="stat-value" id="statTotal">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Errors</div>
+    <div class="stat-value error" id="statError">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Warnings</div>
+    <div class="stat-value warn" id="statWarn">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Info</div>
+    <div class="stat-value info" id="statInfo">0</div>
+  </div>
+</div>
 
-  // Expose MedWard.syncNow for standalone monitor testing
-  window.MedWard = window.MedWard || {};
+<!-- Controls -->
+<div class="controls">
+  <div class="filter-group">
+    <span style="color: var(--text-muted); font-size: 0.85rem;">Level:</span>
+    <button class="filter-btn active" data-level="all" onclick="setLevelFilter('all')">All</button>
+    <button class="filter-btn" data-level="error" onclick="setLevelFilter('error')">Errors</button>
+    <button class="filter-btn" data-level="warn" onclick="setLevelFilter('warn')">Warnings</button>
+    <button class="filter-btn" data-level="info" onclick="setLevelFilter('info')">Info</button>
+  </div>
+  <div class="filter-group">
+    <span style="color: var(--text-muted); font-size: 0.85rem;">Type:</span>
+    <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">All</button>
+    <button class="filter-btn" data-type="AUTH" onclick="setTypeFilter('AUTH')">Auth</button>
+    <button class="filter-btn" data-type="STORE" onclick="setTypeFilter('STORE')">Store</button>
+    <button class="filter-btn" data-type="NET" onclick="setTypeFilter('NET')">Network</button>
+    <button class="filter-btn" data-type="RUNTIME" onclick="setTypeFilter('RUNTIME')">Runtime</button>
+  </div>
+  <input type="text" class="search-box" id="searchBox" placeholder="Search logs..." oninput="filterLogs()">
+</div>
 
-  // Lightweight sync function for diagnostic testing only
-  window.MedWard.syncNow = async function ({ correlationId, source } = {}) {
-    const id = correlationId || (crypto.randomUUID?.() || Math.random().toString(16).slice(2));
+<!-- Log Stream -->
+<div class="section">
+  <div class="section-title">Live Log Stream</div>
+  <div class="log-container" id="logContainer">
+    <div class="empty-state">
+      <div class="empty-icon">📊</div>
+      <div>No logs yet. System monitoring is active.</div>
+    </div>
+  </div>
+</div>
 
-    // Try to get auth from localStorage (if user has logged in via dashboard)
-    const username = localStorage.getItem('medwardUsername') || sessionStorage.getItem('medwardUsername');
-    const password = localStorage.getItem('medwardPassword') || sessionStorage.getItem('medwardPassword');
+<!-- Test Section -->
+<div class="section">
+  <div class="section-title">Diagnostic Tests</div>
+  <div class="test-grid">
+    <div class="test-card">
+      <div class="test-card-title">🧪 Synthetic Tests</div>
+      <div class="test-card-desc">Run synthetic log events at all levels</div>
+      <button class="btn btn-primary" onclick="runTests()">Run Tests</button>
+    </div>
+    <div class="test-card">
+      <div class="test-card-title">💾 Storage Health</div>
+      <div class="test-card-desc">Check localStorage, sessionStorage, and quota</div>
+      <button class="btn btn-primary" onclick="checkStorage()">Check Storage</button>
+    </div>
+    <div class="test-card">
+      <div class="test-card-title">📥 Export Logs</div>
+      <div class="test-card-desc">Download all logs as JSON file</div>
+      <button class="btn btn-secondary" onclick="exportLogs()">Export JSON</button>
+    </div>
+    <div class="test-card">
+      <div class="test-card-title">🌐 Network Test</div>
+      <div class="test-card-desc">Test fetch instrumentation with a real request</div>
+      <button class="btn btn-primary" onclick="testNetwork()">Test Network</button>
+    </div>
+  </div>
+</div>
 
-    if (!username || !password) {
-      const msg = "Auth not found - please log in via dashboard.html first, or run monitor from within the app";
-      if (window.monitor) window.monitor.emit("SYNC", "WARN", msg, { id, source });
-      throw new Error(msg);
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalTitle">Log Details</div>
+    <div class="modal-content" id="modalContent"></div>
+    <button class="btn btn-secondary" onclick="closeModal()" style="margin-top: 16px; width: 100%;">Close</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { MW_MONITOR, instrumentAll, runSyntheticTests, checkStorageHealth } from './monitor.core.js';
+
+// ═══════════════════════════════════════════════════════════════════
+// ACCESS CONTROL
+// ═══════════════════════════════════════════════════════════════════
+
+// Check admin access
+const adminKey = sessionStorage.getItem('MW_ADMIN_KEY');
+if (!adminKey || adminKey !== '66778380') {
+  alert('⛔ Access Denied\n\nYou must be logged in through the admin panel to access this page.');
+  window.location.href = 'login.html';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+
+let state = {
+  filters: {
+    level: 'all',
+    type: 'all',
+    search: ''
+  },
+  autoScroll: true
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// INITIALIZE
+// ═══════════════════════════════════════════════════════════════════
+
+console.log('[Monitor] Initializing system monitor...');
+
+// Initialize monitoring
+instrumentAll();
+
+// Subscribe to events
+MW_MONITOR.subscribe((entry) => {
+  renderLogEntry(entry);
+  updateStats();
+
+  if (state.autoScroll) {
+    const container = document.getElementById('logContainer');
+    container.scrollTop = container.scrollHeight;
+  }
+});
+
+// Initial render
+renderAllLogs();
+updateStats();
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════
+
+function renderAllLogs() {
+  const logs = MW_MONITOR.getAll();
+  const container = document.getElementById('logContainer');
+
+  if (logs.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div>No logs yet. System monitoring is active.</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+  logs.forEach(entry => renderLogEntry(entry, false));
+}
+
+function renderLogEntry(entry, append = true) {
+  // Apply filters
+  if (!matchesFilters(entry)) return;
+
+  const container = document.getElementById('logContainer');
+
+  // Remove empty state if present
+  const emptyState = container.querySelector('.empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+
+  const time = new Date(entry.ts).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dataStr = entry.data ? JSON.stringify(entry.data) : '';
+  const dataPreview = dataStr.length > 50 ? dataStr.substring(0, 50) + '...' : dataStr;
+
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = `
+    <div class="log-time">${time}</div>
+    <div class="log-level ${entry.level}">${entry.level}</div>
+    <div class="log-type">${entry.type}</div>
+    <div class="log-msg">${escapeHtml(entry.msg)}</div>
+    <div class="log-data" onclick='showDetail(${JSON.stringify(entry).replace(/'/g, "\\'")})'>${dataPreview || '-'}</div>
+  `;
+
+  if (append) {
+    container.appendChild(el);
+  } else {
+    container.appendChild(el);
+  }
+}
+
+function matchesFilters(entry) {
+  // Level filter
+  if (state.filters.level !== 'all' && entry.level !== state.filters.level) {
+    return false;
+  }
+
+  // Type filter
+  if (state.filters.type !== 'all' && entry.type !== state.filters.type) {
+    return false;
+  }
+
+  // Search filter
+  if (state.filters.search) {
+    const search = state.filters.search.toLowerCase();
+    const msg = entry.msg.toLowerCase();
+    const data = JSON.stringify(entry.data || {}).toLowerCase();
+    if (!msg.includes(search) && !data.includes(search)) {
+      return false;
     }
+  }
 
-    // Get or create device/session IDs
-    let deviceId = localStorage.getItem('medward_deviceId');
-    if (!deviceId) {
-      deviceId = 'monitor-' + (crypto.randomUUID?.() || Math.random().toString(16).slice(2));
-      localStorage.setItem('medward_deviceId', deviceId);
-    }
+  return true;
+}
 
-    const sessionId = 'monitor-session-' + Math.random().toString(16).slice(2);
+function updateStats() {
+  const stats = MW_MONITOR.getStats();
+  document.getElementById('statTotal').textContent = stats.total;
+  document.getElementById('statError').textContent = stats.byLevel.error || 0;
+  document.getElementById('statWarn').textContent = stats.byLevel.warn || 0;
+  document.getElementById('statInfo').textContent = stats.byLevel.info || 0;
+}
 
-    // Simple sync API call for testing
-    const API_URL = 'https://medward-api-production.up.railway.app/';
-    const TIMEOUT_MS = 15000;
+// ═══════════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════════
 
-    if (window.monitor) window.monitor.emit("SYNC", "INFO", "syncNow:start (monitor test)", {
-      id, source, deviceId, sessionId
-    });
+function setLevelFilter(level) {
+  state.filters.level = level;
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  // Update button states
+  document.querySelectorAll('[data-level]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.level === level);
+  });
 
-    const t0 = performance.now();
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        cache: 'no-store',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'loadData',
-          username: username,
-          password: password,
-          deviceId: deviceId,
-          sessionId: sessionId,
-          clientRev: 0, // Always do full load for testing
-          clientChecksum: null
-        }),
-        signal: controller.signal
-      });
+  filterLogs();
+}
 
-      clearTimeout(timeout);
-      const ms = Math.round(performance.now() - t0);
+function setTypeFilter(type) {
+  state.filters.type = type;
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+  // Update button states
+  document.querySelectorAll('[data-type]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === type);
+  });
 
-      const text = await response.text();
-      if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
-        throw new Error('Server returned HTML instead of JSON');
-      }
+  filterLogs();
+}
 
-      const data = JSON.parse(text);
+function filterLogs() {
+  state.filters.search = document.getElementById('searchBox').value;
+  renderAllLogs();
+}
 
-      if (!data.success) {
-        throw new Error(data.error || 'Sync failed');
-      }
+function clearLogs() {
+  if (!confirm('Clear all logs?')) return;
+  MW_MONITOR.clear();
+  renderAllLogs();
+  updateStats();
+  toast('Logs cleared', 'info');
+}
 
-      if (window.monitor) window.monitor.emit("SYNC", "SUCCESS", "syncNow:done (monitor test)", {
-        id, ms, source,
-        rev: data.rev,
-        checksum: data.checksum,
-        patientCount: data.data?.patients?.length || 0,
-        unitCount: data.data?.units?.length || 0
-      });
+function toggleAutoScroll() {
+  state.autoScroll = !state.autoScroll;
+  document.getElementById('autoScrollText').textContent = `Auto-scroll: ${state.autoScroll ? 'ON' : 'OFF'}`;
+  toast(`Auto-scroll ${state.autoScroll ? 'enabled' : 'disabled'}`, 'info');
+}
 
-      return {
-        success: true,
-        ms,
-        rev: data.rev,
-        patientCount: data.data?.patients?.length || 0,
-        unitCount: data.data?.units?.length || 0
-      };
+async function runTests() {
+  toast('Running synthetic tests...', 'info');
+  await runSyntheticTests();
+  toast('Tests complete!', 'success');
+}
 
-    } catch (error) {
-      clearTimeout(timeout);
-      const ms = Math.round(performance.now() - t0);
+async function checkStorage() {
+  toast('Checking storage health...', 'info');
+  const health = await checkStorageHealth();
+  toast('Storage check complete', 'success');
+}
 
-      if (window.monitor) window.monitor.emit("SYNC", "ERROR", "syncNow:fail (monitor test)", {
-        id, ms, source,
-        message: error?.message || String(error),
-        stack: error?.stack || null
-      });
+async function testNetwork() {
+  toast('Testing network instrumentation...', 'info');
+  try {
+    await fetch('https://httpbin.org/status/200');
+    toast('Network test successful', 'success');
+  } catch (err) {
+    toast('Network test failed', 'error');
+  }
+}
 
-      throw error;
-    }
-  };
+function exportLogs() {
+  const logs = MW_MONITOR.getAll();
+  const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `medward-logs-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Logs exported', 'success');
+}
 
-  if (window.monitor) window.monitor.emit("APP","INFO","MedWard.syncNow exposed for testing", {});
+function showDetail(entry) {
+  document.getElementById('modalTitle').textContent = `${entry.type} - ${entry.msg}`;
+  document.getElementById('modalContent').textContent = JSON.stringify(entry, null, 2);
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('detailModal').classList.remove('active');
+}
+
+function goBack() {
+  // Clear admin key on exit
+  sessionStorage.removeItem('MW_ADMIN_KEY');
+  window.location.href = 'login.html';
+}
+
+function toast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Expose functions globally
+window.setLevelFilter = setLevelFilter;
+window.setTypeFilter = setTypeFilter;
+window.filterLogs = filterLogs;
+window.clearLogs = clearLogs;
+window.toggleAutoScroll = toggleAutoScroll;
+window.runTests = runTests;
+window.checkStorage = checkStorage;
+window.testNetwork = testNetwork;
+window.exportLogs = exportLogs;
+window.showDetail = showDetail;
+window.closeModal = closeModal;
+window.goBack = goBack;
+
+console.log('[Monitor] Ready');
 </script>
 </body>
 </html>

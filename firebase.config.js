@@ -35,7 +35,8 @@ import {
     signInWithRedirect,
     getRedirectResult,
     setPersistence,
-    browserLocalPersistence
+    browserLocalPersistence,
+    browserSessionPersistence
 } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
 
 // Firebase configuration
@@ -65,6 +66,23 @@ enableIndexedDbPersistence(db).catch((err) => {
 });
 
 console.log('[Firebase] Initialized successfully');
+
+/**
+ * Configure Firebase auth persistence explicitly
+ * CRITICAL for mobile browsers with aggressive privacy settings
+ * @param {boolean} rememberMe - If true, use browserLocalPersistence; if false, use browserSessionPersistence
+ * @returns {Promise<void>}
+ */
+export async function configureAuthPersistence(rememberMe = true) {
+    try {
+        const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+        console.log('[Firebase] Auth persistence set to:', rememberMe ? 'LOCAL' : 'SESSION');
+    } catch (error) {
+        console.error('[Firebase] Failed to set auth persistence:', error);
+        // Non-fatal - continue with default persistence
+    }
+}
 
 // Export everything needed by other modules
 export {
@@ -99,5 +117,6 @@ export {
     signInWithRedirect,
     getRedirectResult,
     setPersistence,
-    browserLocalPersistence
+    browserLocalPersistence,
+    browserSessionPersistence
 };

@@ -340,6 +340,42 @@ export function waitForAuth() {
 }
 
 /**
+ * Hydration-safe auth guard with fallback timeout
+ * Prevents false negatives on mobile devices with slow auth hydration
+ * @param {Object} options - Configuration options
+ * @param {number} options.timeoutMs - Max time to wait for auth hydration (default: 2500ms)
+ * @returns {Promise<object|null>} Current user or null after hydration window
+ */
+export async function requireAuth({ timeoutMs = 2500 } = {}) {
+    // First quick check
+    const user = await waitForAuth();
+    if (user) {
+        console.log('[Auth] User authenticated immediately:', user.email);
+        return user;
+    }
+
+    // Hydration-safe fallback: wait for auth state to appear
+    // This prevents "false negative" where Firebase hasn't finished loading session yet
+    console.log('[Auth] No immediate user, waiting for hydration window...');
+
+    return await new Promise((resolve) => {
+        const timeoutId = setTimeout(() => {
+            console.log('[Auth] Hydration timeout - no user found');
+            resolve(null);
+        }, timeoutMs);
+
+        const unsubscribe = onAuthChange((u) => {
+            if (u) {
+                clearTimeout(timeoutId);
+                unsubscribe();
+                console.log('[Auth] User appeared during hydration window:', u.email);
+                resolve(u);
+            }
+        });
+    });
+}
+
+/**
  * Convert Firebase auth error codes to user-friendly messages
  * @param {string} errorCode - Firebase error code
  * @returns {string} User-friendly message
