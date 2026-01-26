@@ -18,6 +18,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Firebase SDK for authentication -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script>
+  // Initialize Firebase for dashboard authentication
+  const firebaseConfig = {
+    apiKey: "AIzaSyDuug0BTqO6DsSuyS2RkVcrcXCIB7E0oB4",
+    authDomain: "medward-pro.firebaseapp.com",
+    projectId: "medward-pro",
+    storageBucket: "medward-pro.firebasestorage.app",
+    messagingSenderId: "1033128540980",
+    appId: "1:1033128540980:web:07bba197713232b0b54361"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  // Helper to get Firebase ID token for API calls
+  window.getFirebaseToken = async function() {
+    try {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        return await user.getIdToken(true);
+      }
+    } catch (e) {
+      console.warn('Could not get Firebase token:', e);
+    }
+    return null;
+  };
+</script>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    MEDWARD PRO v16 - CLINICAL WARD MANAGEMENT SYSTEM
@@ -6727,18 +6757,23 @@ async function callCloud(action, payload = {}) {
       payload.username = AUTH.user;
       payload.password = AUTH.pass;
     }
+    // Also include Firebase ID token for authenticated requests
+    const firebaseToken = await window.getFirebaseToken();
+    if (firebaseToken) {
+      payload.idToken = firebaseToken;
+    }
   }
-  
+
   payload.action = action;
-  
+
   const apiUrl = state.settings?.apiUrl || CONFIG.API_URL;
-  
+
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
   });
-  
+
   return await response.json();
 }
 
@@ -16774,7 +16809,10 @@ window.userImportWardList = async function() {
     }
     
     showUserImportStatus(`⚡ Importing to ${state.currentUnit.name}...`, 'info');
-    
+
+    // Get Firebase ID token for authentication
+    const firebaseToken = await window.getFirebaseToken();
+
     // 🚀 FIRE-AND-FORGET: Don't wait for full import
     // CRITICAL: Pass targetUnitId so server knows where to assign patients
     fetch(CONFIG.API_URL, {
@@ -16784,6 +16822,7 @@ window.userImportWardList = async function() {
         action: 'startWardImport',
         username: AUTH.user,
         password: AUTH.pass,
+        idToken: firebaseToken,
         sheetId: sheetId,
         sheetName: tabName || '',
         clearExisting: clearExisting,
@@ -17138,18 +17177,24 @@ function showImportStatus(message, type = 'info') {
 async function fetchSheetData(sheetId, tabName, preview = false) {
   // Use CONFIG.API_URL directly since it's hardcoded
   const apiUrl = CONFIG.API_URL;
-  
+
   if (!apiUrl) {
     throw new Error('API endpoint not configured.');
   }
-  
+
   console.log('fetchSheetData - sheetId:', sheetId, 'preview:', preview);
-  
+
+  // Get Firebase ID token for authentication
+  const firebaseToken = await window.getFirebaseToken();
+
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
       action: 'importWardList',
+      username: AUTH.user,
+      password: AUTH.pass,
+      idToken: firebaseToken,
       sheetId: sheetId,
       sheetName: tabName || '',
       preview: preview // Enable caching for preview
@@ -18478,20 +18523,30 @@ window.resetImport = function() { state.importImage = null; state.importPatients
 window.extractPatients = async function() {
   if (!state.importImage) { toast('No image selected', true); return; }
   if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') { toast('API URL not configured. Go to Admin settings.', true); return; }
-  
+
   $('importPreview').style.display = 'none';
   $('importLoading').style.display = 'block';
   $('importError').style.display = 'none';
-  
+
   console.log('🔄 Extracting patients from image...');
   console.log('📡 API:', state.settings.apiUrl.substring(0, 50) + '...');
   console.log('🖼️ Image size:', Math.round(state.importImage.length / 1024), 'KB');
-  
+
   try {
+    // Get Firebase ID token for authentication
+    const firebaseToken = await window.getFirebaseToken();
+    console.log('🔑 Firebase token:', firebaseToken ? 'obtained' : 'not available');
+
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'extractPatients', image: state.importImage, username: AUTH.user, password: AUTH.pass })
+      body: JSON.stringify({
+        action: 'extractPatients',
+        image: state.importImage,
+        username: AUTH.user,
+        password: AUTH.pass,
+        idToken: firebaseToken
+      })
     });
     
     console.log('📥 Response status:', res.status);
