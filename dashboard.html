@@ -17700,10 +17700,12 @@ window.importWardList = async function() {
     console.log('Sample patient:', newPatients[0]);
     
     // Apply to state
+    let addedPatients = [];
     if (clearExisting) {
       // Only clear patients from the current unit, not all patients
       state.patients = state.patients.filter(p => p.unitId !== state.currentUnit.id);
       state.patients = [...state.patients, ...newPatients];
+      addedPatients = newPatients;
       console.log('Cleared existing patients for unit:', state.currentUnit.name);
     } else {
       // Merge: add new, skip existing by name+ward within the same unit
@@ -17711,24 +17713,31 @@ window.importWardList = async function() {
         .filter(p => p.unitId === state.currentUnit.id)
         .map(p => `${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`)
       );
-      
-      const toAdd = newPatients.filter(p => 
+
+      const toAdd = newPatients.filter(p =>
         !existingKeys.has(`${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`)
       );
-      
+
       state.patients = [...state.patients, ...toAdd];
+      addedPatients = toAdd;
       console.log('Merged:', toAdd.length, 'new patients,', (newPatients.length - toAdd.length), 'duplicates skipped');
     }
-    
+
+    // CRITICAL: Enqueue patches for each imported patient so they sync to cloud
+    console.log('Enqueueing', addedPatients.length, 'patient patches for sync');
+    addedPatients.forEach(patient => {
+      enqueuePatch('addPatient', patient);
+    });
+
     // Save snapshot for recovery
     localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
       importedAt: new Date().toISOString(),
-      patientCount: newPatients.length,
+      patientCount: addedPatients.length,
       sheetId: sheetId,
       unitId: state.currentUnit.id,
       unitName: state.currentUnit.name
     }));
-    
+
     // Sync to cloud
     await forceSync();
     
@@ -18669,29 +18678,36 @@ window.extractPatients = async function() {
     $('importErrorMsg').textContent = e.message || 'Connection failed';
   }
 };
-window.confirmImport = function() { 
-  if (!state.importPatients.length) return; 
+window.confirmImport = function() {
+  if (!state.importPatients.length) return;
   if (!state.currentUnit) { toast('No unit selected', true); return; }
-  
-  let added = 0; 
-  state.importPatients.forEach(p => { 
+
+  let added = 0;
+  const addedPatients = [];
+  state.importPatients.forEach(p => {
     // Check for duplicates within the same unit only
-    const isDuplicate = state.patients.some(ep => 
-      ep.unitId === state.currentUnit.id && 
+    const isDuplicate = state.patients.some(ep =>
+      ep.unitId === state.currentUnit.id &&
       ep.name.toLowerCase() === p.name.toLowerCase()
     );
-    
-    if (!isDuplicate) { 
+
+    if (!isDuplicate) {
       // Add unitId to imported patient
       p.unitId = state.currentUnit.id;
-      state.patients.push(p); 
-      added++; 
-    } 
-  }); 
-  saveCloud(); 
-  renderPatients(); 
-  closeModal('importModal'); 
-  toast(`Imported ${added} patients to ${state.currentUnit.name}!`); 
+      state.patients.push(p);
+      addedPatients.push(p);
+      added++;
+    }
+  });
+  // CRITICAL: Enqueue patches for each imported patient so they sync to cloud
+  console.log('Enqueueing', addedPatients.length, 'patient patches for sync');
+  addedPatients.forEach(patient => {
+    enqueuePatch('addPatient', patient);
+  });
+  saveCloud();
+  renderPatients();
+  closeModal('importModal');
+  toast(`Imported ${added} patients to ${state.currentUnit.name}!`);
 };
 window.exportPDF = function() { 
   const { jsPDF } = window.jspdf; 
