@@ -31,7 +31,9 @@ import {
     onAuthStateChanged,
     updateProfile,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult
 } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
 
 // Firebase configuration
@@ -91,5 +93,7 @@ export {
     onAuthStateChanged,
     updateProfile,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult
 };

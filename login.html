@@ -673,7 +673,19 @@ body.dark-theme .admin-warning {
 </div>
 
 <script type="module">
-import { login, register, signInWithGoogle, waitForAuth, onAuthChange } from './firebase.auth.js';
+import { login, register, signInWithGoogle, handleGoogleRedirect, waitForAuth, onAuthChange } from './firebase.auth.js';
+
+// Handle Google redirect result (for mobile sign-in)
+handleGoogleRedirect().then(result => {
+  if (result.success && result.user) {
+    console.log('[Login] Google redirect successful');
+    showMessage('Successfully signed in with Google!', false);
+    // Redirect handled by onAuthChange listener
+  } else if (!result.success) {
+    console.error('[Login] Google redirect failed:', result.error);
+    showMessage(result.error || 'Google sign-in failed');
+  }
+});
 
 // Check if already logged in (Firebase)
 waitForAuth().then(user => {
@@ -854,7 +866,12 @@ async function handleGoogleSignIn() {
     const result = await signInWithGoogle();
     console.log('[Login] Google sign-in result:', result);
 
-    if (result.success) {
+    if (result.success && result.pending) {
+      // Mobile redirect - page will navigate away
+      console.log('[Login] Redirecting to Google...');
+      // Keep loading state, page will redirect
+    } else if (result.success) {
+      // Desktop popup success
       showMessage('Successfully signed in with Google!', false);
       // Redirect handled by onAuthChange listener
     } else {

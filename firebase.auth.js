@@ -14,6 +14,8 @@ import {
     updateProfile,
     GoogleAuthProvider,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     doc,
     setDoc,
     getDoc,
@@ -84,38 +86,38 @@ export async function login(email, password) {
 }
 
 /**
+ * Detect if user is on mobile device
+ * @returns {boolean}
+ */
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+/**
  * Sign in with Google
  * @returns {Promise<object>} Result object
  */
 export async function signInWithGoogle() {
     try {
         const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
 
-        // Check if user document exists, create if not
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
+        // Use redirect on mobile, popup on desktop
+        if (isMobileDevice()) {
+            console.log('[Auth] Mobile detected, using redirect flow');
+            await signInWithRedirect(auth, provider);
+            // Return pending - actual result will be handled by handleGoogleRedirect
+            return { success: true, pending: true };
+        } else {
+            console.log('[Auth] Desktop detected, using popup flow');
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
 
-        if (!userDoc.exists()) {
-            // Create user document for new Google users
-            await setDoc(userDocRef, {
-                email: user.email,
-                displayName: user.displayName || user.email.split('@')[0],
-                photoURL: user.photoURL || null,
-                role: 'user',
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                settings: {
-                    theme: 'light',
-                    defaultUnit: null
-                }
-            });
-            console.log('[Auth] New Google user created:', user.email);
+            // Check if user document exists, create if not
+            await createUserProfileIfNeeded(user);
+
+            console.log('[Auth] User logged in with Google:', user.email);
+            return { success: true, user };
         }
-
-        console.log('[Auth] User logged in with Google:', user.email);
-        return { success: true, user };
 
     } catch (error) {
         console.error('[Auth] Google sign-in error:', error.code, error.message);
@@ -126,6 +128,60 @@ export async function signInWithGoogle() {
         }
 
         return { success: false, error: getAuthErrorMessage(error.code) };
+    }
+}
+
+/**
+ * Handle Google redirect result (for mobile)
+ * Call this on page load
+ * @returns {Promise<object>} Result object
+ */
+export async function handleGoogleRedirect() {
+    try {
+        const result = await getRedirectResult(auth);
+
+        if (result && result.user) {
+            console.log('[Auth] Google redirect successful');
+            const user = result.user;
+
+            // Check if user document exists, create if not
+            await createUserProfileIfNeeded(user);
+
+            console.log('[Auth] User logged in with Google:', user.email);
+            return { success: true, user };
+        }
+
+        return { success: true, noResult: true };
+
+    } catch (error) {
+        console.error('[Auth] Google redirect error:', error.code, error.message);
+        return { success: false, error: getAuthErrorMessage(error.code) };
+    }
+}
+
+/**
+ * Create user profile if it doesn't exist
+ * @param {object} user - Firebase user object
+ */
+async function createUserProfileIfNeeded(user) {
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+        // Create user document for new Google users
+        await setDoc(userDocRef, {
+            email: user.email,
+            displayName: user.displayName || user.email.split('@')[0],
+            photoURL: user.photoURL || null,
+            role: 'user',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            settings: {
+                theme: 'light',
+                defaultUnit: null
+            }
+        });
+        console.log('[Auth] New Google user created:', user.email);
     }
 }
 
