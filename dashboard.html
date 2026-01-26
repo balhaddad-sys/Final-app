@@ -16729,40 +16729,37 @@ const IMPORT_SNAPSHOT_KEY = 'medward_import_snapshot_v1';
 
 // Extract Sheet ID from URL or return as-is if already an ID
 function extractSheetId(input) {
-  if (!input) return null;
-  input = input.trim();
-  
-  console.log('extractSheetId input:', input, 'length:', input.length);
-  
-  // Full URL pattern: https://docs.google.com/spreadsheets/d/SHEET_ID/...
-  const urlPatterns = [
-    /\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/,
-    /\/d\/([a-zA-Z0-9_-]+)/,
-    /spreadsheets.*\/([a-zA-Z0-9_-]{10,})/
-  ];
-  
-  for (const pattern of urlPatterns) {
-    const match = input.match(pattern);
-    if (match) {
-      console.log('Extracted sheet ID from URL:', match[1]);
-      return match[1];
-    }
+  if (!input) {
+    console.log('extractSheetId: input is empty');
+    return null;
   }
   
-  // Already a Sheet ID (alphanumeric with dashes/underscores, 10+ chars)
+  input = String(input).trim();
+  console.log('extractSheetId input:', input);
+  console.log('extractSheetId input length:', input.length);
+  console.log('extractSheetId input chars:', JSON.stringify(input));
+  
+  // Case 1: Full Google Sheets URL - extract ID from URL
+  const urlMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (urlMatch) {
+    console.log('extractSheetId: extracted from URL:', urlMatch[1]);
+    return urlMatch[1];
+  }
+  
+  // Case 2: Bare Sheet ID (alphanumeric, dashes, underscores - typically 44 chars but accept 10+)
   if (/^[a-zA-Z0-9_-]{10,}$/.test(input)) {
-    console.log('Input is a sheet ID:', input);
+    console.log('extractSheetId: valid bare ID:', input);
     return input;
   }
   
-  // Try to find any alphanumeric string that could be an ID (10+ chars)
-  const idMatch = input.match(/([a-zA-Z0-9_-]{10,})/);
+  // Case 3: Try to extract any ID-like string from input
+  const idMatch = input.match(/([a-zA-Z0-9_-]{15,})/);
   if (idMatch) {
-    console.log('Found potential ID:', idMatch[1]);
+    console.log('extractSheetId: found ID in input:', idMatch[1]);
     return idMatch[1];
   }
   
-  console.log('Could not extract sheet ID from:', input);
+  console.log('extractSheetId: could not extract ID');
   return null;
 }
 
@@ -17162,11 +17159,18 @@ window.importWardList = async function() {
     const sheetUrl = $('import_sheetUrl')?.value || '';
     const tabName = $('import_tabName')?.value || '';
     const clearExisting = $('import_clearExisting')?.checked || false;
+    
+    // DEBUG: Show what we're working with
+    console.log('=== IMPORT DEBUG ===');
+    console.log('Raw input value:', sheetUrl);
+    console.log('Input length:', sheetUrl.length);
+    
     const sheetId = extractSheetId(sheetUrl);
     
-    console.log('Import started - sheetUrl:', sheetUrl, 'tabName:', tabName, 'sheetId:', sheetId);
+    console.log('Extracted sheetId:', sheetId);
     
     if (!sheetId) {
+      alert('DEBUG: sheetId is null.\nInput was: ' + sheetUrl + '\nLength: ' + sheetUrl.length);
       showImportStatus('⚠️ Please enter a valid Google Sheet URL or ID', 'error');
       return;
     }
