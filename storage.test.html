@@ -80,6 +80,10 @@ h1 {
   background: #004a93;
 }
 
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
 .btn-success {
   background: #059669;
   color: white;
@@ -123,19 +127,6 @@ h1 {
   color: #1e40af;
   border: 1px solid #3b82f6;
 }
-
-.status {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status.pending { background: #fef3c7; color: #92400e; }
-.status.running { background: #dbeafe; color: #1e40af; }
-.status.pass { background: #d1fae5; color: #065f46; }
-.status.fail { background: #fee2e2; color: #991b1b; }
 
 .stats-grid {
   display: grid;
@@ -228,9 +219,47 @@ h1 {
   height: 20px;
   text-align: center;
 }
+
+.loading {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.95);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 9999;
+  text-align: center;
+}
+
+.loading.show {
+  display: block;
+}
+
+.spinner {
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #005eb8;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div>Loading test modules...</div>
+</div>
 
 <div class="container">
   <h1>🧪 IndexedDB Storage - Test Suite</h1>
@@ -266,84 +295,84 @@ h1 {
 
   <!-- Action Bar -->
   <div class="action-bar">
-    <button class="btn btn-primary" onclick="runAllTests()">▶ Run All Tests</button>
-    <button class="btn btn-success" onclick="runQuickTests()">⚡ Quick Tests</button>
-    <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh Stats</button>
-    <button class="btn btn-secondary" onclick="openDevTools()">🔍 Open DevTools</button>
-    <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+    <button class="btn btn-primary" id="btnRunAll">▶ Run All Tests</button>
+    <button class="btn btn-success" id="btnQuick">⚡ Quick Tests</button>
+    <button class="btn btn-secondary" id="btnRefresh">🔄 Refresh Stats</button>
+    <button class="btn btn-secondary" id="btnDevTools">🔍 Open DevTools</button>
+    <button class="btn btn-danger" id="btnClear">🗑️ Clear All Data</button>
   </div>
 
   <!-- Test Cards -->
   <div class="test-grid">
-    <!-- Test 1: Initialize -->
+    <!-- Test 1 -->
     <div class="test-card">
       <h2><span class="icon">🚀</span> Test 1: Initialize Storage</h2>
       <p>Tests IndexedDB initialization and migration from localStorage</p>
-      <button class="btn btn-primary" onclick="test1_init()">Run Test</button>
+      <button class="btn btn-primary" id="btn1">Run Test</button>
       <div id="result1"></div>
     </div>
 
-    <!-- Test 2: Add Patient -->
+    <!-- Test 2 -->
     <div class="test-card">
       <h2><span class="icon">➕</span> Test 2: Add Patient</h2>
       <p>Tests upsertPatient with WAL and transaction commit</p>
-      <button class="btn btn-primary" onclick="test2_addPatient()">Run Test</button>
+      <button class="btn btn-primary" id="btn2">Run Test</button>
       <div id="result2"></div>
     </div>
 
-    <!-- Test 3: Query Patients -->
+    <!-- Test 3 -->
     <div class="test-card">
       <h2><span class="icon">🔍</span> Test 3: Query by Unit</h2>
       <p>Tests indexed query performance (should be <5ms)</p>
-      <button class="btn btn-primary" onclick="test3_query()">Run Test</button>
+      <button class="btn btn-primary" id="btn3">Run Test</button>
       <div id="result3"></div>
     </div>
 
-    <!-- Test 4: Soft Delete -->
+    <!-- Test 4 -->
     <div class="test-card">
       <h2><span class="icon">🗑️</span> Test 4: Soft Delete</h2>
       <p>Tests soft delete with tombstone and trash</p>
-      <button class="btn btn-primary" onclick="test4_softDelete()">Run Test</button>
+      <button class="btn btn-primary" id="btn4">Run Test</button>
       <div id="result4"></div>
     </div>
 
-    <!-- Test 5: Patch Queue -->
+    <!-- Test 5 -->
     <div class="test-card">
       <h2><span class="icon">📝</span> Test 5: Patch Queue</h2>
       <p>Tests patch enqueueing and acknowledgment</p>
-      <button class="btn btn-primary" onclick="test5_patches()">Run Test</button>
+      <button class="btn btn-primary" id="btn5">Run Test</button>
       <div id="result5"></div>
     </div>
 
-    <!-- Test 6: Crash Recovery -->
+    <!-- Test 6 -->
     <div class="test-card">
       <h2><span class="icon">💥</span> Test 6: Crash Recovery</h2>
       <p>Tests WAL replay and data persistence</p>
-      <button class="btn btn-primary" onclick="test6_crashRecovery()">Run Test</button>
+      <button class="btn btn-primary" id="btn6">Run Test</button>
       <div id="result6"></div>
     </div>
 
-    <!-- Test 7: Bulk Operations -->
+    <!-- Test 7 -->
     <div class="test-card">
       <h2><span class="icon">📦</span> Test 7: Bulk Operations</h2>
       <p>Tests bulk insert/export (100 patients)</p>
-      <button class="btn btn-primary" onclick="test7_bulk()">Run Test</button>
+      <button class="btn btn-primary" id="btn7">Run Test</button>
       <div id="result7"></div>
     </div>
 
-    <!-- Test 8: Metadata -->
+    <!-- Test 8 -->
     <div class="test-card">
       <h2><span class="icon">⚙️</span> Test 8: Metadata Storage</h2>
       <p>Tests sync metadata (rev, checksum, deviceId)</p>
-      <button class="btn btn-primary" onclick="test8_metadata()">Run Test</button>
+      <button class="btn btn-primary" id="btn8">Run Test</button>
       <div id="result8"></div>
     </div>
 
-    <!-- Test 9: Transaction Atomicity -->
+    <!-- Test 9 -->
     <div class="test-card">
       <h2><span class="icon">⚛️</span> Test 9: Transaction Safety</h2>
       <p>Tests ACID transaction guarantees</p>
-      <button class="btn btn-primary" onclick="test9_transactions()">Run Test</button>
+      <button class="btn btn-primary" id="btn9">Run Test</button>
       <div id="result9"></div>
     </div>
   </div>
@@ -356,13 +385,21 @@ h1 {
 </div>
 
 <script type="module">
+// Show loading
+document.getElementById('loading').classList.add('show');
+
 // Import storage modules
 import DB from './storage.db.js';
 import QuickStorage from './storage.quickstart.js';
 
+// Hide loading after modules load
+setTimeout(() => {
+  document.getElementById('loading').classList.remove('show');
+}, 100);
+
 // Global state
-window.testDB = null;
-window.testStats = {
+let testDB = null;
+let testStats = {
   total: 0,
   passed: 0,
   failed: 0
@@ -377,7 +414,7 @@ window.monitor = {
     logEntry.innerHTML = `
       <span class="log-time">${time}</span>
       <span class="log-level">${level}</span>
-      <span class="log-message">${category}: ${message} ${data ? JSON.stringify(data) : ''}</span>
+      <span class="log-message">${category}: ${message} ${data ? JSON.stringify(data).slice(0, 100) : ''}</span>
     `;
     const log = document.getElementById('eventLog');
     log.insertBefore(logEntry, log.firstChild);
@@ -398,27 +435,26 @@ function showResult(testNum, success, message, data = null) {
     el.textContent += '\n\n' + JSON.stringify(data, null, 2);
   }
 
-  // Update stats
-  window.testStats.total++;
+  testStats.total++;
   if (success) {
-    window.testStats.passed++;
+    testStats.passed++;
   } else {
-    window.testStats.failed++;
+    testStats.failed++;
   }
   updateStatsUI();
 }
 
 function updateStatsUI() {
-  document.getElementById('statTests').textContent = window.testStats.total;
-  document.getElementById('statPassed').textContent = window.testStats.passed;
-  document.getElementById('statFailed').textContent = window.testStats.failed;
+  document.getElementById('statTests').textContent = testStats.total;
+  document.getElementById('statPassed').textContent = testStats.passed;
+  document.getElementById('statFailed').textContent = testStats.failed;
 }
 
 async function updateStorageStats() {
   try {
-    if (!window.testDB) return;
+    if (!testDB) return;
 
-    const stats = await DB.getStorageStats(window.testDB);
+    const stats = await DB.getStorageStats(testDB);
     document.getElementById('statPatients').textContent = stats.patients || 0;
     document.getElementById('statPatches').textContent = stats.pendingPatches || 0;
     document.getElementById('statStorage').textContent =
@@ -428,17 +464,16 @@ async function updateStorageStats() {
   }
 }
 
-// ==================== TEST 1: Initialize Storage ====================
-window.test1_init = async function() {
+// ==================== TESTS ====================
+
+async function test1_init() {
   try {
     const t0 = performance.now();
-
     const result = await QuickStorage.init({ build: 'test-v1.0' });
-
     const elapsed = Math.round(performance.now() - t0);
 
     if (result.success) {
-      window.testDB = QuickStorage.getDB();
+      testDB = QuickStorage.getDB();
       showResult(1, true, `Initialized in ${elapsed}ms`, {
         mode: result.mode,
         deviceId: result.deviceId
@@ -450,18 +485,13 @@ window.test1_init = async function() {
   } catch (error) {
     showResult(1, false, error.message);
   }
-};
+}
 
-// ==================== TEST 2: Add Patient ====================
-window.test2_addPatient = async function() {
+async function test2_addPatient() {
   try {
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
     const t0 = performance.now();
-    const correlationId = 'test-' + Date.now();
-
     const patient = {
       name: 'Test Patient ' + Date.now(),
       location: 'Bed 1',
@@ -471,9 +501,9 @@ window.test2_addPatient = async function() {
       unitId: 'Unit-Test'
     };
 
-    const saved = await DB.upsertPatient(window.testDB, patient, {
+    const saved = await DB.upsertPatient(testDB, patient, {
       unitId: 'Unit-Test',
-      correlationId
+      correlationId: 'test-' + Date.now()
     });
 
     const elapsed = Math.round(performance.now() - t0);
@@ -491,19 +521,14 @@ window.test2_addPatient = async function() {
   } catch (error) {
     showResult(2, false, error.message);
   }
-};
+}
 
-// ==================== TEST 3: Query by Unit ====================
-window.test3_query = async function() {
+async function test3_query() {
   try {
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
     const t0 = performance.now();
-
-    const patients = await DB.listPatientsByUnit(window.testDB, 'Unit-Test');
-
+    const patients = await DB.listPatientsByUnit(testDB, 'Unit-Test');
     const elapsed = Math.round(performance.now() - t0);
 
     showResult(3, true, `Query completed in ${elapsed}ms`, {
@@ -513,16 +538,12 @@ window.test3_query = async function() {
   } catch (error) {
     showResult(3, false, error.message);
   }
-};
+}
 
-// ==================== TEST 4: Soft Delete ====================
-window.test4_softDelete = async function() {
+async function test4_softDelete() {
   try {
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
-    // First create a patient to delete
     const patient = {
       name: 'Delete Test Patient',
       location: 'Bed 2',
@@ -530,19 +551,16 @@ window.test4_softDelete = async function() {
       unitId: 'Unit-Test'
     };
 
-    const saved = await DB.upsertPatient(window.testDB, patient, { unitId: 'Unit-Test' });
+    const saved = await DB.upsertPatient(testDB, patient, { unitId: 'Unit-Test' });
 
-    // Now soft delete it
     const t0 = performance.now();
-    await DB.softDeletePatient(window.testDB, saved.id);
+    await DB.softDeletePatient(testDB, saved.id);
     const elapsed = Math.round(performance.now() - t0);
 
-    // Verify it's deleted
-    const patients = await DB.listPatientsByUnit(window.testDB, 'Unit-Test');
+    const patients = await DB.listPatientsByUnit(testDB, 'Unit-Test');
     const deleted = patients.find(p => p.id === saved.id);
 
-    // Check trash
-    const trash = await DB.listTrash(window.testDB, { type: 'patient' });
+    const trash = await DB.listTrash(testDB, { type: 'patient' });
     const inTrash = trash.some(t => t.originalId === saved.id);
 
     if (!deleted && inTrash) {
@@ -553,23 +571,19 @@ window.test4_softDelete = async function() {
       });
       await updateStorageStats();
     } else {
-      showResult(4, false, 'Soft delete failed - patient still visible or not in trash');
+      showResult(4, false, 'Soft delete failed');
     }
   } catch (error) {
     showResult(4, false, error.message);
   }
-};
+}
 
-// ==================== TEST 5: Patch Queue ====================
-window.test5_patches = async function() {
+async function test5_patches() {
   try {
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
     const t0 = performance.now();
 
-    // Enqueue a patch
     const patch = {
       id: 'p_test_' + Date.now(),
       operation: 'updatePatient',
@@ -577,16 +591,10 @@ window.test5_patches = async function() {
       ts: Date.now()
     };
 
-    await DB.enqueuePatch(window.testDB, patch);
-
-    // Load patches
-    const patches = await DB.listPendingPatches(window.testDB);
-
-    // Acknowledge the patch
-    await DB.acknowledgePatch(window.testDB, patch.id);
-
-    // Verify it's acknowledged
-    const afterAck = await DB.listPendingPatches(window.testDB);
+    await DB.enqueuePatch(testDB, patch);
+    const patches = await DB.listPendingPatches(testDB);
+    await DB.acknowledgePatch(testDB, patch.id);
+    const afterAck = await DB.listPendingPatches(testDB);
 
     const elapsed = Math.round(performance.now() - t0);
 
@@ -606,20 +614,16 @@ window.test5_patches = async function() {
   } catch (error) {
     showResult(5, false, error.message);
   }
-};
+}
 
-// ==================== TEST 6: Crash Recovery ====================
-window.test6_crashRecovery = async function() {
+async function test6_crashRecovery() {
   try {
     const el = document.getElementById('result6');
     el.className = 'result info';
-    el.textContent = '⏳ Testing crash recovery...\n\nSteps:\n1. Adding patient\n2. Checking WAL\n3. Simulating recovery';
+    el.textContent = '⏳ Testing crash recovery...';
 
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
-    // Add patient (which creates WAL entry)
     const patient = {
       name: 'Crash Test Patient ' + Date.now(),
       location: 'Bed 3',
@@ -627,20 +631,15 @@ window.test6_crashRecovery = async function() {
       unitId: 'Unit-Test'
     };
 
-    const saved = await DB.upsertPatient(window.testDB, patient, { unitId: 'Unit-Test' });
-
-    // Verify patient persisted
-    const retrieved = await DB.getPatient(window.testDB, saved.id);
-
-    // Check WAL (should be COMMITTED)
-    const stats = await DB.getStorageStats(window.testDB);
+    const saved = await DB.upsertPatient(testDB, patient, { unitId: 'Unit-Test' });
+    const retrieved = await DB.getPatient(testDB, saved.id);
+    const stats = await DB.getStorageStats(testDB);
 
     if (retrieved && retrieved.id === saved.id) {
       showResult(6, true, 'Crash recovery test passed', {
         patientPersisted: true,
         patientId: saved.id,
-        pendingWal: stats.pendingWal,
-        message: 'Patient survived simulated crash'
+        pendingWal: stats.pendingWal
       });
     } else {
       showResult(6, false, 'Patient did not persist');
@@ -648,14 +647,11 @@ window.test6_crashRecovery = async function() {
   } catch (error) {
     showResult(6, false, error.message);
   }
-};
+}
 
-// ==================== TEST 7: Bulk Operations ====================
-window.test7_bulk = async function() {
+async function test7_bulk() {
   try {
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
     const el = document.getElementById('result7');
     el.className = 'result info';
@@ -663,7 +659,6 @@ window.test7_bulk = async function() {
 
     const t0 = performance.now();
 
-    // Generate 100 test patients
     const patients = [];
     for (let i = 0; i < 100; i++) {
       patients.push({
@@ -677,12 +672,8 @@ window.test7_bulk = async function() {
       });
     }
 
-    // Bulk insert
-    await DB.bulkUpsertPatients(window.testDB, patients);
-
-    // Verify
-    const retrieved = await DB.listPatientsByUnit(window.testDB, 'Unit-Bulk');
-
+    await DB.bulkUpsertPatients(testDB, patients);
+    const retrieved = await DB.listPatientsByUnit(testDB, 'Unit-Bulk');
     const elapsed = Math.round(performance.now() - t0);
 
     if (retrieved.length >= 100) {
@@ -698,26 +689,21 @@ window.test7_bulk = async function() {
   } catch (error) {
     showResult(7, false, error.message);
   }
-};
+}
 
-// ==================== TEST 8: Metadata ====================
-window.test8_metadata = async function() {
+async function test8_metadata() {
   try {
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
     const t0 = performance.now();
 
-    // Set metadata
-    await DB.setMeta(window.testDB, 'clientRev', 42);
-    await DB.setMeta(window.testDB, 'clientChecksum', 'test-checksum-abc123');
-    await DB.setMeta(window.testDB, 'testData', { nested: { value: 'test' } });
+    await DB.setMeta(testDB, 'clientRev', 42);
+    await DB.setMeta(testDB, 'clientChecksum', 'test-checksum-abc123');
+    await DB.setMeta(testDB, 'testData', { nested: { value: 'test' } });
 
-    // Get metadata
-    const rev = await DB.getMeta(window.testDB, 'clientRev');
-    const checksum = await DB.getMeta(window.testDB, 'clientChecksum');
-    const testData = await DB.getMeta(window.testDB, 'testData');
+    const rev = await DB.getMeta(testDB, 'clientRev');
+    const checksum = await DB.getMeta(testDB, 'clientChecksum');
+    const testData = await DB.getMeta(testDB, 'testData');
 
     const elapsed = Math.round(performance.now() - t0);
 
@@ -732,19 +718,16 @@ window.test8_metadata = async function() {
         testData
       });
     } else {
-      showResult(8, false, 'Metadata values did not match', { rev, checksum, testData });
+      showResult(8, false, 'Metadata values did not match');
     }
   } catch (error) {
     showResult(8, false, error.message);
   }
-};
+}
 
-// ==================== TEST 9: Transaction Atomicity ====================
-window.test9_transactions = async function() {
+async function test9_transactions() {
   try {
-    if (!window.testDB) {
-      await test1_init();
-    }
+    if (!testDB) await test1_init();
 
     const el = document.getElementById('result9');
     el.className = 'result info';
@@ -752,7 +735,6 @@ window.test9_transactions = async function() {
 
     const t0 = performance.now();
 
-    // Create a patient and patch in single transaction
     const patient = {
       name: 'Transaction Test Patient',
       location: 'Bed 4',
@@ -760,23 +742,19 @@ window.test9_transactions = async function() {
       unitId: 'Unit-Test'
     };
 
-    // This should create patient + WAL entry atomically
-    const saved = await DB.upsertPatient(window.testDB, patient, {
+    const saved = await DB.upsertPatient(testDB, patient, {
       unitId: 'Unit-Test',
       correlationId: 'txn-test'
     });
 
-    // Verify both patient and WAL entry exist
-    const retrieved = await DB.getPatient(window.testDB, saved.id);
-
+    const retrieved = await DB.getPatient(testDB, saved.id);
     const elapsed = Math.round(performance.now() - t0);
 
     if (retrieved && retrieved.id === saved.id) {
       showResult(9, true, `Transaction test completed in ${elapsed}ms`, {
         atomicity: 'PASS',
         patientId: saved.id,
-        rev: retrieved.rev,
-        message: 'Patient + WAL written atomically'
+        rev: retrieved.rev
       });
     } else {
       showResult(9, false, 'Transaction atomicity failed');
@@ -784,11 +762,12 @@ window.test9_transactions = async function() {
   } catch (error) {
     showResult(9, false, error.message);
   }
-};
+}
 
-// ==================== Utility Functions ====================
-window.runAllTests = async function() {
-  window.testStats = { total: 0, passed: 0, failed: 0 };
+// ==================== UTILITY FUNCTIONS ====================
+
+async function runAllTests() {
+  testStats = { total: 0, passed: 0, failed: 0 };
 
   const tests = [
     test1_init,
@@ -804,52 +783,49 @@ window.runAllTests = async function() {
 
   for (const test of tests) {
     await test();
-    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between tests
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  alert(`All tests completed!\n\nPassed: ${window.testStats.passed}\nFailed: ${window.testStats.failed}`);
-};
+  alert(`All tests completed!\n\nPassed: ${testStats.passed}\nFailed: ${testStats.failed}`);
+}
 
-window.runQuickTests = async function() {
-  window.testStats = { total: 0, passed: 0, failed: 0 };
+async function runQuickTests() {
+  testStats = { total: 0, passed: 0, failed: 0 };
 
   await test1_init();
   await test2_addPatient();
   await test3_query();
   await test5_patches();
 
-  alert(`Quick tests completed!\n\nPassed: ${window.testStats.passed}\nFailed: ${window.testStats.failed}`);
-};
+  alert(`Quick tests completed!\n\nPassed: ${testStats.passed}\nFailed: ${testStats.failed}`);
+}
 
-window.refreshStats = async function() {
+async function refreshStats() {
   await updateStorageStats();
   alert('Stats refreshed!');
-};
+}
 
-window.openDevTools = function() {
+function openDevTools() {
   alert('Open DevTools:\n\n1. Press F12\n2. Go to Application tab\n3. Expand IndexedDB\n4. Click "medward_pro"\n5. Inspect stores: patients, units, patches, wal, meta');
-};
+}
 
-window.clearAllData = async function() {
+async function clearAllData() {
   if (!confirm('⚠️ This will delete ALL test data from IndexedDB.\n\nAre you sure?')) {
     return;
   }
 
   try {
-    // Close connection
-    if (window.testDB) {
-      window.testDB.close();
-      window.testDB = null;
+    if (testDB) {
+      testDB.close();
+      testDB = null;
     }
 
-    // Delete database
     await new Promise((resolve, reject) => {
       const req = indexedDB.deleteDatabase('medward_pro');
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
 
-    // Clear localStorage
     localStorage.removeItem('MW_INDEXEDDB_MIGRATED');
 
     alert('✅ All data cleared! Reload page to start fresh.');
@@ -857,13 +833,34 @@ window.clearAllData = async function() {
   } catch (error) {
     alert('❌ Failed to clear data: ' + error.message);
   }
-};
+}
+
+// ==================== EVENT LISTENERS ====================
+
+document.getElementById('btnRunAll').addEventListener('click', runAllTests);
+document.getElementById('btnQuick').addEventListener('click', runQuickTests);
+document.getElementById('btnRefresh').addEventListener('click', refreshStats);
+document.getElementById('btnDevTools').addEventListener('click', openDevTools);
+document.getElementById('btnClear').addEventListener('click', clearAllData);
+
+document.getElementById('btn1').addEventListener('click', test1_init);
+document.getElementById('btn2').addEventListener('click', test2_addPatient);
+document.getElementById('btn3').addEventListener('click', test3_query);
+document.getElementById('btn4').addEventListener('click', test4_softDelete);
+document.getElementById('btn5').addEventListener('click', test5_patches);
+document.getElementById('btn6').addEventListener('click', test6_crashRecovery);
+document.getElementById('btn7').addEventListener('click', test7_bulk);
+document.getElementById('btn8').addEventListener('click', test8_metadata);
+document.getElementById('btn9').addEventListener('click', test9_transactions);
 
 // Auto-refresh stats every 5 seconds
 setInterval(updateStorageStats, 5000);
 
-// Show welcome message
-window.monitor.emit('TEST', 'INFO', 'Test suite loaded - click "Run All Tests" to begin', {});
+// Welcome message
+window.monitor.emit('TEST', 'INFO', 'Test suite loaded - click "Run All Tests" to begin');
+
+// Log that module is ready
+console.log('✅ Test suite loaded and ready');
 </script>
 
 </body>
