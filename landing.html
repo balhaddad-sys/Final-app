@@ -346,11 +346,14 @@ body {
   display: flex;
   gap: 4px;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s;
 }
 
-.unit-card:hover .unit-actions {
+.unit-card:hover .unit-actions,
+.unit-card:active .unit-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .unit-action-btn {
@@ -1460,12 +1463,37 @@ function renderUnits() {
 }
 
 function openAccessModal(unitId) {
-  const unit = state.units.find(u => u.id === unitId);
-  if (!unit) return;
+  console.log('🔍 openAccessModal called with unitId:', unitId);
+  console.log('🔍 Available units:', state.units.map(u => ({ id: u.id, name: u.name })));
   
-  // Direct access - no modal needed
-  sessionStorage.setItem('MW_UNIT', unitId);
-  sessionStorage.setItem('MW_UNIT_NAME', unit.name);
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit) {
+    console.error('❌ Unit not found in state.units!');
+    toast('Unit not found');
+    return;
+  }
+  
+  console.log('✅ Found unit:', unit.name);
+  
+  // Store in BOTH sessionStorage AND localStorage for redundancy
+  try {
+    sessionStorage.setItem('MW_UNIT', unitId);
+    sessionStorage.setItem('MW_UNIT_NAME', unit.name);
+    console.log('✅ Saved to sessionStorage');
+  } catch (e) {
+    console.error('❌ sessionStorage failed:', e);
+  }
+  
+  try {
+    localStorage.setItem('MW_SELECTED_UNIT', unitId);
+    localStorage.setItem('MW_SELECTED_UNIT_NAME', unit.name);
+    console.log('✅ Saved to localStorage');
+  } catch (e) {
+    console.error('❌ localStorage failed:', e);
+  }
+  
+  // Navigate to dashboard
+  console.log('🚀 Navigating to dashboard.html');
   window.location.href = 'dashboard.html';
 }
 
