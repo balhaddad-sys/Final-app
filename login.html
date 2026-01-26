@@ -518,8 +518,8 @@ body.dark-theme .admin-warning {
 
     <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="form-group">
-        <label class="form-label">Username</label>
-        <input type="text" class="form-input" id="username" placeholder="Enter username" autocomplete="username" required>
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="email" placeholder="Enter email" autocomplete="email" required>
       </div>
 
       <div class="form-group">
@@ -547,15 +547,21 @@ body.dark-theme .admin-warning {
     <!-- Register Form (hidden by default) -->
     <form id="registerForm" onsubmit="handleRegister(event)" style="display:none">
       <div class="form-group">
-        <label class="form-label">Choose Username</label>
-        <input type="text" class="form-input" id="regUsername" placeholder="Choose a username" autocomplete="username" required minlength="3">
-        <div class="error-text">Username must be at least 3 characters</div>
+        <label class="form-label">Display Name</label>
+        <input type="text" class="form-input" id="regName" placeholder="Your name" autocomplete="name" required minlength="2">
+        <div class="error-text">Name must be at least 2 characters</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="regEmail" placeholder="Your email" autocomplete="email" required>
+        <div class="error-text">Please enter a valid email</div>
       </div>
 
       <div class="form-group">
         <label class="form-label">Create Password</label>
-        <input type="password" class="form-input" id="regPassword" placeholder="Create a password" autocomplete="new-password" required minlength="4">
-        <div class="error-text">Password must be at least 4 characters</div>
+        <input type="password" class="form-input" id="regPassword" placeholder="Create a password (min 6 characters)" autocomplete="new-password" required minlength="6">
+        <div class="error-text">Password must be at least 6 characters</div>
       </div>
 
       <div class="form-group">
@@ -576,7 +582,7 @@ body.dark-theme .admin-warning {
   </div>
 
   <div class="login-footer">
-    v17.1 • Cloud-First Edition
+    v17.5 • Firebase Edition
   </div>
 </div>
 
@@ -605,12 +611,12 @@ body.dark-theme .admin-warning {
         <div class="settings-row" style="cursor:default">
           <div class="settings-icon">📱</div>
           <div class="settings-label">Version</div>
-          <div class="settings-value">v17.1</div>
+          <div class="settings-value">v17.5</div>
         </div>
         <div class="settings-row" style="cursor:default">
-          <div class="settings-icon">☁️</div>
-          <div class="settings-label">API Status</div>
-          <div class="settings-value" id="apiStatusText">Connected</div>
+          <div class="settings-icon">🔥</div>
+          <div class="settings-label">Backend</div>
+          <div class="settings-value" id="apiStatusText">Firebase</div>
         </div>
       </div>
       
@@ -656,20 +662,23 @@ body.dark-theme .admin-warning {
   </div>
 </div>
 
-<script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyVRA0E6by1lud8waH0Vu7HWuWKlwlOcnq3Qn2cNK3OaVZNrADyNczv0OuYdSq1SJBpZg/exec';
+<script type="module">
+import { login, register, waitForAuth, onAuthChange } from './firebase.auth.js';
 
-// Store API URL for monitor page
-localStorage.setItem('MEDWARD_API_URL', API_URL);
-
-// Check if already logged in
-(function() {
-  const user = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
-  const pass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
-  if (user && pass) {
-    window.location.href = 'loading.html';  // Fixed: was 'index.html' which doesn't exist
+// Check if already logged in (Firebase)
+waitForAuth().then(user => {
+  if (user) {
+    console.log('[Login] Already authenticated, redirecting...');
+    window.location.href = 'landing.html';
   }
-})();
+});
+
+// Also listen for auth changes
+onAuthChange(user => {
+  if (user) {
+    window.location.href = 'landing.html';
+  }
+});
 
 // Theme toggle
 function toggleTheme() {
@@ -782,57 +791,31 @@ function showMessage(text, isError = true) {
   msg.className = 'message ' + (isError ? 'error' : 'success');
 }
 
-// Login handler
+// Login handler (Firebase)
 async function handleLogin(e) {
   e.preventDefault();
-  
-  const username = document.getElementById('username').value.trim();
+
+  const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  const remember = document.getElementById('remember').checked;
-  
-  if (!username || !password) {
-    showMessage('Please enter username and password');
+
+  if (!email || !password) {
+    showMessage('Please enter email and password');
     return;
   }
-  
+
   // Show loading
   document.getElementById('loginText').style.display = 'none';
   document.getElementById('loginSpinner').style.display = 'block';
   document.getElementById('loginBtn').disabled = true;
-  
+
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'login',
-        username: username,
-        password: password
-      })
-    });
-    
-    const result = await response.json();
-    
+    const result = await login(email, password);
+
     if (result.success) {
-      // Store credentials
-      sessionStorage.setItem('MW_USER', username);
-      sessionStorage.setItem('MW_PASS', password);
-      
-      if (remember) {
-        localStorage.setItem('MW_USER', username);
-        localStorage.setItem('MW_PASS', password);
-      }
-      
-      // Clear any stale cache verification flag
-      localStorage.removeItem('MW_CLOUD_VERIFIED');
-      
       showMessage('Login successful! Redirecting...', false);
-      
-      setTimeout(() => {
-        window.location.href = 'loading.html';
-      }, 500);
+      // Redirect handled by onAuthChange listener
     } else {
-      showMessage(result.error || 'Invalid username or password');
+      showMessage(result.error || 'Invalid email or password');
     }
   } catch (error) {
     showMessage('Connection error. Please try again.');
@@ -844,64 +827,58 @@ async function handleLogin(e) {
   }
 }
 
-// Register handler
+// Make handleLogin available globally
+window.handleLogin = handleLogin;
+
+// Register handler (Firebase)
 async function handleRegister(e) {
   e.preventDefault();
-  
-  const username = document.getElementById('regUsername').value.trim();
+
+  const displayName = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
   const confirm = document.getElementById('regConfirm').value;
-  
+
   // Validate
-  if (username.length < 3) {
-    document.getElementById('regUsername').parentElement.classList.add('error');
+  if (displayName.length < 2) {
+    document.getElementById('regName').parentElement.classList.add('error');
     return;
   } else {
-    document.getElementById('regUsername').parentElement.classList.remove('error');
+    document.getElementById('regName').parentElement.classList.remove('error');
   }
-  
-  if (password.length < 4) {
+
+  if (!email || !email.includes('@')) {
+    document.getElementById('regEmail').parentElement.classList.add('error');
+    return;
+  } else {
+    document.getElementById('regEmail').parentElement.classList.remove('error');
+  }
+
+  if (password.length < 6) {
     document.getElementById('regPassword').parentElement.classList.add('error');
     return;
   } else {
     document.getElementById('regPassword').parentElement.classList.remove('error');
   }
-  
+
   if (password !== confirm) {
     document.getElementById('regConfirm').parentElement.classList.add('error');
     return;
   } else {
     document.getElementById('regConfirm').parentElement.classList.remove('error');
   }
-  
+
   // Show loading
   document.getElementById('registerText').style.display = 'none';
   document.getElementById('registerSpinner').style.display = 'block';
   document.getElementById('registerBtn').disabled = true;
-  
+
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'register',
-        username: username,
-        password: password
-      })
-    });
-    
-    const result = await response.json();
-    
+    const result = await register(email, password, displayName);
+
     if (result.success) {
-      showMessage('Account created! You can now log in.', false);
-      
-      // Pre-fill login form
-      document.getElementById('username').value = username;
-      document.getElementById('password').value = '';
-      
-      setTimeout(() => {
-        showLogin();
-      }, 1500);
+      showMessage('Account created! Redirecting...', false);
+      // Auto-login happens, redirect handled by onAuthChange
     } else {
       showMessage(result.error || 'Registration failed');
     }
@@ -915,8 +892,22 @@ async function handleRegister(e) {
   }
 }
 
-// Focus username on load
-document.getElementById('username').focus();
+// Make handleRegister available globally
+window.handleRegister = handleRegister;
+
+// Focus email on load
+document.getElementById('email').focus();
+
+// Make all functions available globally for onclick handlers
+window.toggleTheme = toggleTheme;
+window.updateThemeRow = updateThemeRow;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openSettingsModal = openSettingsModal;
+window.openAdminModal = openAdminModal;
+window.verifyAdminAccess = verifyAdminAccess;
+window.showRegister = showRegister;
+window.showLogin = showLogin;
 </script>
 <script src="medward-tour.js"></script>
 </body>
