@@ -678,34 +678,43 @@ import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js
 import { configureAuthPersistence } from './firebase.config.js';
 
 // ═══════════════════════════════════════════════════════════════════
-// AUTH GUARD - Single source of truth for redirect logic
+// HANDLE GOOGLE REDIRECT FIRST (before auth guard)
+// This fixes the race condition where auth guard fires before
+// Firebase processes the Google redirect result
 // ═══════════════════════════════════════════════════════════════════
 
-requireAuth({
-  onAuthed: (user) => {
-    // User is already logged in - redirect to landing
-    console.log('[Login] Already authenticated, redirecting to landing');
-    setLegacyCredentials(user);
-    safeRedirect('landing.html');
-  },
-  onUnauthed: () => {
-    // User is not logged in - stay on login page
-    console.log('[Login] Not authenticated, ready for login');
+(async function initAuth() {
+  // Process Google redirect result BEFORE checking auth state
+  const redirectResult = await handleGoogleRedirect();
 
-    // Check for Google redirect result (mobile flow)
-    handleGoogleRedirect().then(result => {
-      if (result.success && result.user) {
-        console.log('[Login] Google redirect successful');
-        showMessage('Successfully signed in with Google!', false);
-        setLegacyCredentials(result.user);
-        safeRedirect('landing.html');
-      } else if (!result.success && result.error) {
-        console.error('[Login] Google redirect failed:', result.error);
-        showMessage(result.error || 'Google sign-in failed');
-      }
-    });
+  if (redirectResult.success && redirectResult.user) {
+    // Google redirect succeeded - go to landing
+    console.log('[Login] Google redirect successful, going to landing');
+    showMessage('Successfully signed in with Google!', false);
+    setLegacyCredentials(redirectResult.user);
+    safeRedirect('landing.html');
+    return; // Exit early, no need for auth guard
   }
-});
+
+  // Show error if redirect failed (but not if there was simply no redirect)
+  if (!redirectResult.success && redirectResult.error && !redirectResult.noResult) {
+    console.error('[Login] Google redirect failed:', redirectResult.error);
+    showMessage(redirectResult.error);
+  }
+
+  // Now run auth guard to check if already logged in
+  requireAuth({
+    onAuthed: (user) => {
+      console.log('[Login] Already authenticated, redirecting to landing');
+      setLegacyCredentials(user);
+      safeRedirect('landing.html');
+    },
+    onUnauthed: () => {
+      console.log('[Login] Not authenticated, ready for login');
+      // Page stays on login - ready for user input
+    }
+  });
+})();
 
 // Theme toggle
 function toggleTheme() {
