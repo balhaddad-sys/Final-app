@@ -4986,7 +4986,7 @@ body.dark-theme .readonly-banner {
 <div class="modal-box wide">
 <div class="modal-header">
 <div class="modal-title">✅ Approve Unit Request</div>
-<button class="btn btn-ghost" onclick="closeModal('approveRequestModal')" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<button class="btn btn-ghost" onclick="closeModal('approveRequestModal')" aria-label="Close"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 </div>
 <div class="modal-body" style="padding:20px">
 <!-- Request Details Section -->
@@ -18318,10 +18318,38 @@ window.quickRejectRequest = async function(requestId) {
 };
 
 // Patient CRUD
-window.openAddPatient = function() { $('patientModalTitle').textContent = 'Add Patient'; $('ptId').value = ''; $('ptName').value = ''; $('ptWard').value = 'Ward 14'; $('ptRoom').value = ''; $('ptDx').value = ''; $('ptDoctor').value = state.currentUser?.name || ''; $('ptStatus').value = 'new'; openModal('patientModal'); };
+window.openAddPatient = function() { 
+  // Ensure a unit is selected before adding patients
+  if (!state.currentUnit && state.units.length > 0) {
+    state.currentUnit = state.units[0];
+    state.currentUser = { name: AUTH.user || 'Doctor', role: 'attending' };
+    const unitBadge = $('unitBadge');
+    if (unitBadge) unitBadge.textContent = state.currentUnit.name;
+    sessionStorage.setItem('MW_UNIT', state.currentUnit.id);
+    sessionStorage.setItem('MW_UNIT_NAME', state.currentUnit.name);
+    console.log('⚠️ Auto-selected unit in openAddPatient:', state.currentUnit.name);
+  }
+  if (!state.currentUnit) { 
+    toast('No unit available. Please create a unit first.', true); 
+    return; 
+  }
+  $('patientModalTitle').textContent = 'Add Patient'; $('ptId').value = ''; $('ptName').value = ''; $('ptWard').value = 'Ward 14'; $('ptRoom').value = ''; $('ptDx').value = ''; $('ptDoctor').value = state.currentUser?.name || ''; $('ptStatus').value = 'new'; openModal('patientModal'); 
+};
 window.savePatient = function() { 
   const id = $('ptId').value, name = $('ptName').value.trim(); 
   if (!name) { toast('Name required', true); return; } 
+  
+  // Auto-select first unit if none selected
+  if (!state.currentUnit && state.units.length > 0) {
+    state.currentUnit = state.units[0];
+    state.currentUser = { name: AUTH.user || 'Doctor', role: 'attending' };
+    const unitBadge = $('unitBadge');
+    if (unitBadge) unitBadge.textContent = state.currentUnit.name;
+    sessionStorage.setItem('MW_UNIT', state.currentUnit.id);
+    sessionStorage.setItem('MW_UNIT_NAME', state.currentUnit.name);
+    console.log('⚠️ Auto-selected unit in savePatient:', state.currentUnit.name);
+  }
+  
   if (!state.currentUnit) { toast('No unit selected', true); return; }
   
   const data = { 
@@ -19359,10 +19387,31 @@ async function init() {
   const unitId = sessionStorage.getItem('MW_UNIT');
   const unitName = sessionStorage.getItem('MW_UNIT_NAME');
   
+  console.log('🔍 Unit from session:', { unitId, unitName });
+  console.log('🔍 Available units:', state.units.map(u => ({ id: u.id, name: u.name })));
+  
   if (unitId && unitName) {
-    const unit = state.units.find(u => u.id === unitId) || { id: unitId, name: unitName };
+    let unit = state.units.find(u => u.id === unitId);
+    
+    // If unit not found in state.units, create a proper unit object and add it
+    if (!unit) {
+      console.log('⚠️ Unit not in state.units, creating full unit object');
+      unit = { 
+        id: unitId, 
+        name: unitName, 
+        icon: '🏥', 
+        desc: '', 
+        color: '#005eb8',
+        createdAt: new Date().toISOString()
+      };
+      // Add to state.units so it passes validation later
+      state.units.push(unit);
+    }
+    
     state.currentUnit = unit;
     state.currentUser = { name: AUTH.user || 'Doctor', role: 'attending' };
+    
+    console.log('✅ Current unit set:', state.currentUnit);
     
     const unitBadge = $('unitBadge');
     const dashAvatar = $('dashAvatar');
@@ -19371,6 +19420,38 @@ async function init() {
     if (unitBadge) unitBadge.textContent = unitName;
     if (dashAvatar) dashAvatar.textContent = initials(AUTH.user || 'Doctor');
     if (currentDate) currentDate.textContent = formatDate();
+  } else {
+    // No unit in session - fallback to first available unit
+    console.log('⚠️ No unit in session, falling back to first unit');
+    if (state.units.length > 0) {
+      state.currentUnit = state.units[0];
+      state.currentUser = { name: AUTH.user || 'Doctor', role: 'attending' };
+      
+      const unitBadge = $('unitBadge');
+      const dashAvatar = $('dashAvatar');
+      const currentDate = $('currentDate');
+      
+      if (unitBadge) unitBadge.textContent = state.currentUnit.name;
+      if (dashAvatar) dashAvatar.textContent = initials(AUTH.user || 'Doctor');
+      if (currentDate) currentDate.textContent = formatDate();
+      
+      // Update session storage so it persists
+      sessionStorage.setItem('MW_UNIT', state.currentUnit.id);
+      sessionStorage.setItem('MW_UNIT_NAME', state.currentUnit.name);
+      
+      console.log('✅ Fallback unit set:', state.currentUnit);
+    } else {
+      console.error('❌ No units available to select!');
+    }
+  }
+  
+  // SAFETY: Final check - if still no unit, force create one
+  if (!state.currentUnit && state.units.length > 0) {
+    console.warn('⚠️ SAFETY: state.currentUnit still null, forcing assignment');
+    state.currentUnit = state.units[0];
+    state.currentUser = { name: AUTH.user || 'Doctor', role: 'attending' };
+    const unitBadge = $('unitBadge');
+    if (unitBadge) unitBadge.textContent = state.currentUnit.name;
   }
 
   // Render UI with loaded data (cloud or local fallback)
