@@ -18,26 +18,19 @@ import { onAuthStateChanged, setPersistence, browserLocalPersistence } from './f
  * @param {Object} options
  * @param {Function} options.onAuthed - Called when user is authenticated
  * @param {Function} options.onUnauthed - Called when user is not authenticated
- * @param {number} options.timeout - Max time to wait for auth (default: 5000ms)
+ * @param {number} options.timeout - Max time to wait for auth (default: 3000ms)
  */
-export function requireAuth({ onAuthed, onUnauthed, timeout = 5000 }) {
+export function requireAuth({ onAuthed, onUnauthed, timeout = 3000 }) {
   let fired = false;
   let timeoutId = null;
+
+  console.log('[AuthGuard] Starting auth check...');
 
   // Set persistence explicitly to ensure sessions survive refresh
   setPersistence(auth, browserLocalPersistence).catch(err => {
     console.warn('[AuthGuard] Could not set persistence:', err);
+    // Continue anyway - persistence failure is not fatal
   });
-
-  console.log('[AuthGuard] Waiting for auth state...');
-
-  // Show loading indicator if auth takes too long
-  setTimeout(() => {
-    if (!fired) {
-      document.documentElement.classList.add('auth-pending');
-      console.log('[AuthGuard] Auth slow, showing loader...');
-    }
-  }, 200);
 
   // Listen for auth state (fires once Firebase hydrates)
   const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -48,24 +41,42 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000 }) {
 
     fired = true;
     clearTimeout(timeoutId);
-    document.documentElement.classList.remove('auth-pending');
-    unsubscribe(); // Stop listening after first callback
+    console.log('[AuthGuard] Auth state resolved in', Date.now() % 100000, 'ms');
 
     if (user) {
       console.log('[AuthGuard] ✅ User authenticated:', user.email);
-      onAuthed(user);
+      try {
+        onAuthed(user);
+      } catch (error) {
+        console.error('[AuthGuard] Error in onAuthed callback:', error);
+      }
     } else {
       console.log('[AuthGuard] ❌ No user authenticated');
+      try {
+        onUnauthed();
+      } catch (error) {
+        console.error('[AuthGuard] Error in onUnauthed callback:', error);
+      }
+    }
+
+    // Cleanup
+    unsubscribe();
+  }, (error) => {
+    // Error callback for onAuthStateChanged
+    console.error('[AuthGuard] ❌ Auth state error:', error);
+    if (!fired) {
+      fired = true;
+      clearTimeout(timeoutId);
+      unsubscribe();
       onUnauthed();
     }
   });
 
-  // Timeout fallback (should never happen, but safety net)
+  // Timeout fallback
   timeoutId = setTimeout(() => {
     if (!fired) {
-      console.error('[AuthGuard] ⚠️ Auth timeout - Firebase did not respond');
+      console.error('[AuthGuard] ⚠️ Auth timeout after', timeout, 'ms - proceeding as unauthenticated');
       fired = true;
-      document.documentElement.classList.remove('auth-pending');
       unsubscribe();
       onUnauthed();
     }
