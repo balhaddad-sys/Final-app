@@ -9239,8 +9239,20 @@ function renderPatients() {
 
   const f = state.currentFilter;
   const allPatients = state.patients || [];
-  
-  console.log('renderPatients: total patients:', allPatients.length, 'currentUnit:', state.currentUnit?.name, 'currentUnitId:', state.currentUnit?.id);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // DEBUG LOGGING: Enhanced patient rendering diagnostics
+  // ═══════════════════════════════════════════════════════════════════
+  console.log('🏥 renderPatients DEBUG:', {
+    totalPatients: allPatients.length,
+    currentUnit: state.currentUnit?.name,
+    currentUnitId: state.currentUnit?.id,
+    currentFilter: f,
+    storageUnit: sessionStorage.getItem('MW_UNIT'),
+    storageUnitName: sessionStorage.getItem('MW_UNIT_NAME'),
+    localStorageUnit: localStorage.getItem('MW_SELECTED_UNIT'),
+    availableUnits: state.units?.map(u => ({ id: u.id, name: u.name }))
+  });
   
   // Filter patients by current unit
   let unitPatients;
@@ -9330,10 +9342,31 @@ function renderPatients() {
 function updateStats() {
   // Filter patients by current unit
   const allPatients = state.patients || [];
-  const a = state.currentUnit 
+
+  // ═══════════════════════════════════════════════════════════════════
+  // DEBUG LOGGING: Diagnose why stats might show zero
+  // ═══════════════════════════════════════════════════════════════════
+  console.log('📊 updateStats DEBUG:', {
+    totalPatients: allPatients.length,
+    currentUnitId: state.currentUnit?.id,
+    currentUnitName: state.currentUnit?.name,
+    patientUnitIds: [...new Set(allPatients.map(p => p.unitId))],
+    samplePatients: allPatients.slice(0, 3).map(p => ({ id: p.id, name: p.name, unitId: p.unitId }))
+  });
+
+  const a = state.currentUnit
     ? allPatients.filter(p => p.unitId === state.currentUnit.id)
     : allPatients;
-  
+
+  // Log if there's a mismatch
+  if (allPatients.length > 0 && a.length === 0 && state.currentUnit) {
+    console.warn('⚠️ UNIT MISMATCH DETECTED!', {
+      currentUnitId: state.currentUnit.id,
+      availableUnitIds: [...new Set(allPatients.map(p => p.unitId))],
+      hint: 'Patients exist but none match the current unit ID'
+    });
+  }
+
   $('statTotal').textContent = a.length;
   $('statNew').textContent = a.filter(p => p.status === 'new').length;
   $('statActive').textContent = a.filter(p => p.status === 'active').length;
@@ -19498,6 +19531,29 @@ async function init() {
   renderPatients();
   console.log('✨ UI rendered:', state.patients.length, 'patients');
 
+  // ═══════════════════════════════════════════════════════════════════
+  // AUTO-DETECT UNIT MISMATCH
+  // If patients exist but none match current unit, log diagnostic info
+  // ═══════════════════════════════════════════════════════════════════
+  const allPatients = state.patients || [];
+  if (allPatients.length > 0 && state.currentUnit) {
+    const matchingCount = allPatients.filter(p => p.unitId === state.currentUnit.id).length;
+    if (matchingCount === 0) {
+      const patientUnitIds = [...new Set(allPatients.map(p => p.unitId))];
+      console.warn('═══════════════════════════════════════════════════════════════════');
+      console.warn('⚠️ UNIT MISMATCH DETECTED ON BOOT');
+      console.warn('═══════════════════════════════════════════════════════════════════');
+      console.warn('Current unit:', state.currentUnit.name, '(id:', state.currentUnit.id + ')');
+      console.warn('Total patients in system:', allPatients.length);
+      console.warn('Patients matching current unit: 0');
+      console.warn('Patient unitIds found:', patientUnitIds);
+      console.warn('');
+      console.warn('💡 To fix this, run in console: fixUnitMismatch()');
+      console.warn('💡 Or run: diagnoseSync() for full diagnostic');
+      console.warn('═══════════════════════════════════════════════════════════════════');
+    }
+  }
+
   // Setup event handlers
   const mainTabs = $('mainTabs');
   if (mainTabs) mainTabs.onclick = e => { const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab); };
@@ -19536,6 +19592,118 @@ async function init() {
 
   // Initialize debug panel if enabled
   initDebugPanel();
+
+  // ═══════════════════════════════════════════════════════════════════
+  // GLOBAL DIAGNOSTIC FUNCTION - Call from browser console: diagnoseSync()
+  // ═══════════════════════════════════════════════════════════════════
+  window.diagnoseSync = function() {
+    const allPatients = state.patients || [];
+    const patientUnitIds = [...new Set(allPatients.map(p => p.unitId))];
+
+    console.log('═══════════════════════════════════════════════════════════════════');
+    console.log('🔍 MEDWARD SYNC DIAGNOSTIC REPORT');
+    console.log('═══════════════════════════════════════════════════════════════════');
+
+    console.log('\n📦 STATE:');
+    console.log('  Total patients in state:', allPatients.length);
+    console.log('  Total units in state:', state.units?.length || 0);
+    console.log('  Current unit:', state.currentUnit?.name || 'NOT SET');
+    console.log('  Current unit ID:', state.currentUnit?.id || 'NOT SET');
+
+    console.log('\n🏥 UNIT IDS IN PATIENTS:');
+    patientUnitIds.forEach(uid => {
+      const count = allPatients.filter(p => p.unitId === uid).length;
+      const matchesCurrent = uid === state.currentUnit?.id ? ' ✅ MATCHES CURRENT' : '';
+      console.log(`  ${uid}: ${count} patients${matchesCurrent}`);
+    });
+
+    console.log('\n💾 STORAGE:');
+    console.log('  sessionStorage MW_UNIT:', sessionStorage.getItem('MW_UNIT'));
+    console.log('  sessionStorage MW_UNIT_NAME:', sessionStorage.getItem('MW_UNIT_NAME'));
+    console.log('  localStorage MW_SELECTED_UNIT:', localStorage.getItem('MW_SELECTED_UNIT'));
+    console.log('  localStorage MW_SELECTED_UNIT_NAME:', localStorage.getItem('MW_SELECTED_UNIT_NAME'));
+    console.log('  localStorage MW_CLOUD_VERIFIED:', localStorage.getItem('MW_CLOUD_VERIFIED'));
+
+    console.log('\n🔄 SYNC STATE:');
+    console.log('  sync.isHydrated:', sync.isHydrated);
+    console.log('  sync.isReadOnly:', sync.isReadOnly);
+    console.log('  sync.cloudLoaded:', sync.cloudLoaded);
+    console.log('  boot.cloudLoaded:', boot.cloudLoaded);
+    console.log('  boot.allowLocalWrites:', boot.allowLocalWrites);
+
+    // Check for mismatch
+    if (allPatients.length > 0 && state.currentUnit) {
+      const matchingPatients = allPatients.filter(p => p.unitId === state.currentUnit.id);
+      if (matchingPatients.length === 0) {
+        console.log('\n⚠️ MISMATCH DETECTED:');
+        console.log('  Current unit ID does not match any patient unitId!');
+        console.log('  To fix: Switch to a unit that has patients, or add patients to current unit');
+        console.log('  Available unitIds with patients:', patientUnitIds);
+      }
+    }
+
+    console.log('\n═══════════════════════════════════════════════════════════════════');
+    return { patients: allPatients.length, currentUnit: state.currentUnit, patientUnitIds };
+  };
+
+  // ═══════════════════════════════════════════════════════════════════
+  // FIX UNIT MISMATCH - Call from console: fixUnitMismatch()
+  // Automatically switches to a unit that has patients
+  // ═══════════════════════════════════════════════════════════════════
+  window.fixUnitMismatch = function() {
+    const allPatients = state.patients || [];
+    if (allPatients.length === 0) {
+      console.log('ℹ️ No patients in system - nothing to fix');
+      return false;
+    }
+
+    // Find the first patient's unitId
+    const firstPatientUnitId = allPatients[0].unitId;
+    if (!firstPatientUnitId) {
+      console.log('⚠️ First patient has no unitId');
+      return false;
+    }
+
+    // Check if we already match
+    if (state.currentUnit?.id === firstPatientUnitId) {
+      console.log('✅ Current unit already matches patients');
+      return true;
+    }
+
+    // Find or create the matching unit
+    let matchingUnit = state.units.find(u => u.id === firstPatientUnitId);
+    if (!matchingUnit) {
+      // Create a unit from the patient's unitId
+      matchingUnit = {
+        id: firstPatientUnitId,
+        name: firstPatientUnitId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        icon: '🏥',
+        desc: 'Auto-created unit',
+        color: '#005eb8',
+        createdAt: new Date().toISOString()
+      };
+      state.units.push(matchingUnit);
+      console.log('📋 Created missing unit:', matchingUnit.name);
+    }
+
+    // Switch to the matching unit
+    state.currentUnit = matchingUnit;
+    sessionStorage.setItem('MW_UNIT', matchingUnit.id);
+    sessionStorage.setItem('MW_UNIT_NAME', matchingUnit.name);
+    localStorage.setItem('MW_SELECTED_UNIT', matchingUnit.id);
+    localStorage.setItem('MW_SELECTED_UNIT_NAME', matchingUnit.name);
+
+    // Update UI
+    const unitBadge = $('unitBadge');
+    if (unitBadge) unitBadge.textContent = matchingUnit.name;
+
+    // Re-render
+    renderPatients();
+
+    console.log('✅ Switched to unit:', matchingUnit.name);
+    console.log('📊 Patients now visible:', allPatients.filter(p => p.unitId === matchingUnit.id).length);
+    return true;
+  };
 
   // Periodic background sync (every 60 seconds)
   setInterval(() => {
