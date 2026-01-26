@@ -1335,8 +1335,8 @@ async function loadPatients() {
       
       console.log('📦 Total patients in cache:', allPatients.length);
       
-      // Filter by current unit if one is selected
-      const currentUnitId = sessionStorage.getItem('MW_UNIT');
+      // Filter by current unit if one is selected (with localStorage fallback)
+      const currentUnitId = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
       console.log('🏥 Current unit ID:', currentUnitId);
       
       if (currentUnitId && allPatients.length > 0) {
@@ -1563,9 +1563,9 @@ async function acceptPt(id) {
         if (cached) {
           const data = JSON.parse(cached);
           
-          // Get current unit ID
-          const currentUnitId = sessionStorage.getItem('MW_UNIT');
-          
+          // Get current unit ID (with localStorage fallback)
+          const currentUnitId = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
+
           // Add unit ID to patient if we have one
           if (currentUnitId) {
             newPatient.unitId = currentUnitId;
