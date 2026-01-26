@@ -680,49 +680,61 @@ import { auth } from './firebase.config.js';
 import { getRedirectResult } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
 
 // ═══════════════════════════════════════════════════════════════════
+// DEBUG HELPER - Shows messages on screen for mobile debugging
+// ═══════════════════════════════════════════════════════════════════
+function debugLog(msg) {
+  console.log('[DEBUG]', msg);
+  const msgEl = document.getElementById('message');
+  if (msgEl) {
+    msgEl.className = 'message success';
+    msgEl.style.display = 'block';
+    msgEl.innerHTML = (msgEl.innerHTML ? msgEl.innerHTML + '<br>' : '') + msg;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // MOBILE REDIRECT FLOW - Must run FIRST before anything else
 // ═══════════════════════════════════════════════════════════════════
 
 (async function() {
-  console.log('[Login] Page loaded, checking for Google redirect result...');
+  debugLog('1. Page loaded');
+  debugLog('2. Calling getRedirectResult...');
   
   try {
-    // CRITICAL: Check for redirect result IMMEDIATELY on page load
-    // This must happen before auth guard or any other auth checks
     const result = await getRedirectResult(auth);
     
-    console.log('[Login] getRedirectResult returned:', result ? 'has result' : 'null');
+    debugLog('3. getRedirectResult done: ' + (result ? 'HAS RESULT' : 'null'));
     
     if (result && result.user) {
-      // We just came back from Google sign-in!
-      console.log('[Login] Google redirect SUCCESS! User:', result.user.email);
-      showMessage('Successfully signed in with Google!', false);
+      debugLog('4. SUCCESS! User: ' + result.user.email);
+      debugLog('5. Redirecting to landing.html in 2 sec...');
+      
       setLegacyCredentials(result.user);
       
-      // Go to landing immediately
-      window.location.replace('landing.html');
-      return; // Stop everything else
+      // Delay so you can see the debug messages
+      setTimeout(() => {
+        window.location.href = 'landing.html';
+      }, 2000);
+      return;
     }
+    
+    debugLog('4. No redirect result, checking auth.currentUser...');
+    debugLog('5. auth.currentUser = ' + (auth.currentUser ? auth.currentUser.email : 'null'));
+    
   } catch (error) {
-    console.error('[Login] Google redirect error:', error.code, error.message);
-    if (error.code === 'auth/unauthorized-domain') {
-      showMessage('This domain is not authorized. Contact support.');
-    } else {
-      showMessage(error.message || 'Google sign-in failed');
-    }
+    debugLog('ERROR: ' + error.code + ' - ' + error.message);
   }
   
-  // No redirect result - now check if already logged in
-  console.log('[Login] No redirect result, checking auth state...');
+  debugLog('6. Running requireAuth...');
   
   requireAuth({
     onAuthed: (user) => {
-      console.log('[Login] Already authenticated:', user.email);
+      debugLog('7. requireAuth: AUTHED as ' + user.email);
       setLegacyCredentials(user);
-      safeRedirect('landing.html');
+      setTimeout(() => safeRedirect('landing.html'), 2000);
     },
     onUnauthed: () => {
-      console.log('[Login] Not authenticated, ready for login');
+      debugLog('7. requireAuth: NOT AUTHED - staying on login');
     }
   });
 })();
