@@ -16737,7 +16737,7 @@ window.userImportWardList = async function() {
   
   try {
     if (btn) {
-      btn.innerHTML = '<span class="spinner"></span> Importing...';
+      btn.innerHTML = '<span class="spinner"></span> Starting...';
       btn.disabled = true;
     }
     
@@ -16752,12 +16752,10 @@ window.userImportWardList = async function() {
       return;
     }
     
-    showUserImportStatus('⚡ Starting server-side import...', 'info');
+    showUserImportStatus('⚡ Starting import...', 'info');
     
-    const startTime = Date.now();
-    
-    // 🚀 Use server-side import (saves directly to user's data file)
-    const response = await fetch(CONFIG.API_URL, {
+    // 🚀 FIRE-AND-FORGET: Don't wait for full import
+    fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -16768,65 +16766,97 @@ window.userImportWardList = async function() {
         sheetName: tabName || '',
         clearExisting: clearExisting
       })
+    }).then(res => res.json()).then(data => {
+      console.log('Import response:', data);
+      if (data.success) {
+        if (data.status === 'completed') {
+          showUserImportStatus(`✅ Imported ${data.result?.added || 0} patients!`, 'success');
+          toast('✅ Import complete!');
+        }
+      } else {
+        showUserImportStatus(`❌ ${data.error || 'Import failed'}`, 'error');
+      }
+    }).catch(e => {
+      console.error('Import error:', e);
     });
     
-    const data = await response.json();
-    const totalTime = Date.now() - startTime;
+    // Immediate feedback
+    showUserImportStatus('⏳ Import started. Patients will appear in ~10 seconds...', 'success');
+    toast('⏳ Import started...');
     
-    if (!data.success) {
-      throw new Error(data.error || 'Import failed');
+    // Reset button immediately
+    if (btn) {
+      btn.innerHTML = originalHTML || 'Import';
+      btn.disabled = false;
     }
     
-    if (data.status === 'completed' && data.result) {
-      // Import completed immediately
-      const r = data.result;
-      const timing = r.timing ? `(${r.timing.totalMs}ms server)` : '';
-      const cacheNote = r.fromCache ? ' ⚡cached' : '';
-      
-      showUserImportStatus(`
-        ✅ <b>Import complete!</b> ${timing}${cacheNote}<br>
-        Added: <b>${r.added}</b> new patients | Total: ${r.total}
-      `, 'success');
-      
-      // Refresh local data from server
-      await loadData();
+    // ⏳ Delayed refresh (background import will be done)
+    setTimeout(async () => {
+      showUserImportStatus('🔄 Refreshing data...', 'info');
+      await refreshDataFromServer();
       renderPatients();
-      
-      toast(`✅ Imported ${r.added} patients (${totalTime}ms)`);
-      
-    } else if (data.status === 'queued') {
-      // Import queued for background processing
-      showUserImportStatus(`
-        ⏳ <b>Import queued</b><br>
-        Patients will appear in ~30 seconds. Refresh to see them.
-      `, 'info');
-      
-      toast('⏳ Import started - refresh in 30s');
-      
-      // Auto-refresh after delay
-      setTimeout(async () => {
-        await loadData();
-        renderPatients();
-        toast('🔄 Data refreshed');
-      }, 30000);
-    }
+      showUserImportStatus('✅ Data refreshed!', 'success');
+      toast('🔄 Ward list updated');
+    }, 8000);
     
     localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
       importedAt: new Date().toISOString(),
       sheetId: sheetId,
-      status: data.status
+      status: 'started'
     }));
     
   } catch (e) {
     console.error('User Import error:', e);
     showUserImportStatus(`❌ Error: ${e.message}`, 'error');
-  } finally {
     if (btn) {
       btn.innerHTML = originalHTML || 'Import';
       btn.disabled = false;
     }
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// CANONICAL DATA REFRESH (GLOBAL)
+// ═══════════════════════════════════════════════════════════════════
+
+async function refreshDataFromServer() {
+  try {
+    console.log('Refreshing data from server...');
+    
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'loadData',
+        username: AUTH.user,
+        password: AUTH.pass
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to load data');
+    }
+    
+    // Update local state with server data
+    if (data.data) {
+      if (data.data.patients) state.patients = data.data.patients;
+      if (data.data.units) state.units = data.data.units;
+      state.lastSync = new Date().toISOString();
+    }
+    
+    console.log('Data refreshed, patients:', state.patients.length);
+    return true;
+    
+  } catch (e) {
+    console.error('Failed to refresh data:', e);
+    return false;
+  }
+}
+
+// Alias for compatibility
+window.loadData = refreshDataFromServer;
 
 window.userPreviewImport = async function() {
   const btn = $('btnUserPreviewImport');
