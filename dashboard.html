@@ -36,11 +36,38 @@
   }
 
   // Helper to get Firebase ID token for API calls
+  // Waits for auth state to hydrate if currentUser is not immediately available
   window.getFirebaseToken = async function() {
     try {
-      const user = firebase.auth().currentUser;
+      // Fast path: currentUser is already available
+      let user = firebase.auth().currentUser;
+
+      // If no user yet, wait for auth state to hydrate (up to 5 seconds)
+      if (!user) {
+        console.log('🔄 Waiting for Firebase auth to hydrate...');
+        user = await new Promise((resolve) => {
+          const timeout = setTimeout(() => {
+            console.warn('⚠️ Firebase auth timeout - no user found');
+            resolve(null);
+          }, 5000);
+
+          const unsubscribe = firebase.auth().onAuthStateChanged((authUser) => {
+            clearTimeout(timeout);
+            unsubscribe();
+            if (authUser) {
+              console.log('✅ Firebase auth hydrated:', authUser.email);
+            } else {
+              console.log('⚠️ Firebase auth hydrated but no user');
+            }
+            resolve(authUser);
+          });
+        });
+      }
+
       if (user) {
-        return await user.getIdToken(true);
+        const token = await user.getIdToken(true);
+        console.log('🔑 Firebase token obtained successfully');
+        return token;
       }
     } catch (e) {
       console.warn('Could not get Firebase token:', e);
@@ -16813,6 +16840,21 @@ window.userImportWardList = async function() {
     // Get Firebase ID token for authentication
     const firebaseToken = await window.getFirebaseToken();
 
+    // Debug credential state
+    console.log('🔐 Ward Import Auth Debug:');
+    console.log('  - AUTH.user:', AUTH.user || '(not set)');
+    console.log('  - AUTH.pass:', AUTH.pass ? '(set)' : '(not set)');
+    console.log('  - Firebase token:', firebaseToken ? `${firebaseToken.substring(0, 20)}...` : '(not available)');
+
+    if (!firebaseToken && !AUTH.user) {
+      showUserImportStatus('⚠️ Not authenticated. Please log out and back in.', 'error');
+      if (btn) {
+        btn.innerHTML = originalHTML || 'Import';
+        btn.disabled = false;
+      }
+      return;
+    }
+
     // 🚀 FIRE-AND-FORGET: Don't wait for full import
     // CRITICAL: Pass targetUnitId so server knows where to assign patients
     fetch(CONFIG.API_URL, {
@@ -16837,10 +16879,17 @@ window.userImportWardList = async function() {
           toast('✅ Import complete!');
         }
       } else {
-        showUserImportStatus(`❌ ${data.error || 'Import failed'}`, 'error');
+        let errorMsg = data.error || 'Import failed';
+        // Handle auth-specific errors
+        if (errorMsg.toLowerCase().includes('invalid credentials') || errorMsg.toLowerCase().includes('unauthorized') || errorMsg.toLowerCase().includes('authentication')) {
+          errorMsg = 'Authentication failed. Please log out and back in.';
+          console.error('❌ Auth Error - try logging out and back in');
+        }
+        showUserImportStatus(`❌ ${errorMsg}`, 'error');
       }
     }).catch(e => {
       console.error('Import error:', e);
+      showUserImportStatus(`❌ Connection error: ${e.message}`, 'error');
     });
     
     // Immediate feedback
@@ -17186,6 +17235,16 @@ async function fetchSheetData(sheetId, tabName, preview = false) {
 
   // Get Firebase ID token for authentication
   const firebaseToken = await window.getFirebaseToken();
+
+  // Debug credential state
+  console.log('🔐 fetchSheetData Auth Debug:');
+  console.log('  - AUTH.user:', AUTH.user || '(not set)');
+  console.log('  - AUTH.pass:', AUTH.pass ? '(set)' : '(not set)');
+  console.log('  - Firebase token:', firebaseToken ? `${firebaseToken.substring(0, 20)}...` : '(not available)');
+
+  if (!firebaseToken && !AUTH.user) {
+    throw new Error('Not authenticated. Please log out and back in.');
+  }
 
   const response = await fetch(apiUrl, {
     method: 'POST',
@@ -18535,7 +18594,17 @@ window.extractPatients = async function() {
   try {
     // Get Firebase ID token for authentication
     const firebaseToken = await window.getFirebaseToken();
-    console.log('🔑 Firebase token:', firebaseToken ? 'obtained' : 'not available');
+
+    // Debug credential state
+    console.log('🔐 Auth Debug:');
+    console.log('  - AUTH.user:', AUTH.user || '(not set)');
+    console.log('  - AUTH.pass:', AUTH.pass ? '(set)' : '(not set)');
+    console.log('  - Firebase token:', firebaseToken ? `${firebaseToken.substring(0, 20)}...` : '(not available)');
+
+    // Warn if credentials appear incomplete
+    if (!firebaseToken && !AUTH.user) {
+      console.warn('⚠️ No credentials available - you may need to re-login');
+    }
 
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
@@ -18548,19 +18617,26 @@ window.extractPatients = async function() {
         idToken: firebaseToken
       })
     });
-    
+
     console.log('📥 Response status:', res.status);
-    
+
     if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + res.statusText);
-    
+
     const d = await res.json();
     console.log('📦 Response:', d);
-    
+
     $('importLoading').style.display = 'none';
-    
+
     if (!d.success) {
       $('importError').style.display = 'block';
-      $('importErrorMsg').textContent = d.error || 'API returned an error';
+      // Provide more helpful error messages for auth issues
+      let errorMsg = d.error || 'API returned an error';
+      if (errorMsg.toLowerCase().includes('invalid credentials') || errorMsg.toLowerCase().includes('unauthorized') || errorMsg.toLowerCase().includes('authentication')) {
+        errorMsg = 'Authentication failed. Please try logging out and back in.';
+        console.error('❌ Auth Error - credentials may be stale or invalid');
+        console.error('  - Try: Log out → Clear browser cache → Log back in');
+      }
+      $('importErrorMsg').textContent = errorMsg;
       console.error('❌ API Error:', d.error);
       return;
     }
