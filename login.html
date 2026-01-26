@@ -850,19 +850,27 @@ async function handleGoogleSignIn() {
   btn.innerHTML = '<div class="loading-spinner"></div><span>Signing in...</span>';
 
   try {
+    console.log('[Login] Starting Google sign-in...');
     const result = await signInWithGoogle();
+    console.log('[Login] Google sign-in result:', result);
 
     if (result.success) {
       showMessage('Successfully signed in with Google!', false);
       // Redirect handled by onAuthChange listener
     } else {
+      console.error('[Login] Google sign-in failed:', result.error);
       showMessage(result.error || 'Google sign-in failed');
       btn.disabled = false;
       btn.innerHTML = originalContent;
     }
   } catch (error) {
+    console.error('[Login] Google sign-in exception:', error);
+    console.error('[Login] Error details:', {
+      code: error.code,
+      message: error.message,
+      stack: error.stack
+    });
     showMessage('Connection error. Please try again.');
-    console.error('Google sign-in error:', error);
     btn.disabled = false;
     btn.innerHTML = originalContent;
   }
