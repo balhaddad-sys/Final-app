@@ -15,22 +15,20 @@ import { onAuthStateChanged, setPersistence, browserLocalPersistence } from './f
 
 /**
  * Auth guard - waits for Firebase auth to hydrate before deciding navigation
+ * UPDATED: Longer timeout for mobile devices with slow auth hydration
  * @param {Object} options
  * @param {Function} options.onAuthed - Called when user is authenticated
  * @param {Function} options.onUnauthed - Called when user is not authenticated
- * @param {number} options.timeout - Max time to wait for auth (default: 3000ms)
+ * @param {number} options.timeout - Max time to wait for auth (default: 5000ms for mobile compatibility)
  */
-export function requireAuth({ onAuthed, onUnauthed, timeout = 3000 }) {
+export function requireAuth({ onAuthed, onUnauthed, timeout = 5000 }) {
   let fired = false;
   let timeoutId = null;
 
-  console.log('[AuthGuard] Starting auth check...');
+  console.log('[AuthGuard] Starting auth check with', timeout, 'ms timeout...');
 
-  // Set persistence explicitly to ensure sessions survive refresh
-  setPersistence(auth, browserLocalPersistence).catch(err => {
-    console.warn('[AuthGuard] Could not set persistence:', err);
-    // Continue anyway - persistence failure is not fatal
-  });
+  // NOTE: Persistence is now set explicitly in login.html before sign-in
+  // based on "Keep me logged in" checkbox. Don't override it here.
 
   // Listen for auth state (fires once Firebase hydrates)
   const unsubscribe = onAuthStateChanged(auth, (user) => {
