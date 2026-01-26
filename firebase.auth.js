@@ -101,6 +101,13 @@ export async function signInWithGoogle() {
     try {
         const provider = new GoogleAuthProvider();
 
+        // Configure Google provider with recommended settings
+        provider.addScope('email');
+        provider.addScope('profile');
+        provider.setCustomParameters({
+            prompt: 'select_account'  // Always show account picker
+        });
+
         // Use redirect on mobile, popup on desktop
         if (isMobileDevice()) {
             console.log('[Auth] Mobile detected, using redirect flow');
@@ -121,10 +128,26 @@ export async function signInWithGoogle() {
 
     } catch (error) {
         console.error('[Auth] Google sign-in error:', error.code, error.message);
+        console.error('[Auth] Full error details:', JSON.stringify({
+            code: error.code,
+            message: error.message,
+            name: error.name,
+            customData: error.customData
+        }, null, 2));
 
-        // Handle popup closed by user
-        if (error.code === 'auth/popup-closed-by-user') {
-            return { success: false, error: 'Sign-in cancelled' };
+        // Handle popup closed by user (don't show error)
+        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            return { success: false, error: 'Sign-in cancelled', cancelled: true };
+        }
+
+        // Handle unauthorized domain
+        if (error.code === 'auth/unauthorized-domain') {
+            console.error('[Auth] Domain not authorized. Add this domain to Firebase Console > Authentication > Settings > Authorized domains');
+        }
+
+        // Handle operation not allowed (Google Sign-In not enabled)
+        if (error.code === 'auth/operation-not-allowed') {
+            console.error('[Auth] Google Sign-In is not enabled in Firebase Console. Go to Authentication > Sign-in method > Google and enable it.');
         }
 
         return { success: false, error: getAuthErrorMessage(error.code) };
@@ -155,6 +178,18 @@ export async function handleGoogleRedirect() {
 
     } catch (error) {
         console.error('[Auth] Google redirect error:', error.code, error.message);
+        console.error('[Auth] Redirect error details:', JSON.stringify({
+            code: error.code,
+            message: error.message,
+            name: error.name,
+            customData: error.customData
+        }, null, 2));
+
+        // Handle unauthorized domain
+        if (error.code === 'auth/unauthorized-domain') {
+            console.error('[Auth] Domain not authorized. Add this domain to Firebase Console > Authentication > Settings > Authorized domains');
+        }
+
         return { success: false, error: getAuthErrorMessage(error.code) };
     }
 }
@@ -313,7 +348,7 @@ function getAuthErrorMessage(errorCode) {
     const messages = {
         'auth/email-already-in-use': 'This email is already registered',
         'auth/invalid-email': 'Invalid email address',
-        'auth/operation-not-allowed': 'Email/password accounts are not enabled',
+        'auth/operation-not-allowed': 'Google Sign-In is not enabled. Please contact support.',
         'auth/weak-password': 'Password is too weak (min 6 characters)',
         'auth/user-disabled': 'This account has been disabled',
         'auth/user-not-found': 'No account found with this email',
@@ -323,7 +358,13 @@ function getAuthErrorMessage(errorCode) {
         'auth/network-request-failed': 'Network error. Check your connection',
         'auth/popup-blocked': 'Popup was blocked. Please allow popups for this site',
         'auth/popup-closed-by-user': 'Sign-in cancelled',
-        'auth/account-exists-with-different-credential': 'An account already exists with the same email'
+        'auth/account-exists-with-different-credential': 'An account already exists with the same email',
+        'auth/unauthorized-domain': 'This domain is not authorized for sign-in. Please contact support.',
+        'auth/cancelled-popup-request': 'Sign-in cancelled. Please try again.',
+        'auth/credential-already-in-use': 'This credential is already associated with another account',
+        'auth/internal-error': 'An internal error occurred. Please try again.',
+        'auth/invalid-api-key': 'Invalid API key. Please contact support.',
+        'auth/web-storage-unsupported': 'Your browser does not support web storage. Please enable cookies.'
     };
 
     return messages[errorCode] || 'An error occurred. Please try again';
