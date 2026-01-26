@@ -667,7 +667,7 @@ localStorage.setItem('MEDWARD_API_URL', API_URL);
   const user = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
   const pass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
   if (user && pass) {
-    window.location.href = 'index.html';
+    window.location.href = 'loading.html';  // Fixed: was 'index.html' which doesn't exist
   }
 })();
 
