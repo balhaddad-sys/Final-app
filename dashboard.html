@@ -4644,31 +4644,31 @@ body.dark-theme .readonly-banner {
     
     <div class="form-group" style="margin-bottom:12px;">
       <label class="form-label">📊 Google Sheet URL or ID</label>
-      <input type="text" id="import_sheetUrl" class="form-input" placeholder="Paste sheet URL or ID" style="font-size:0.85rem;">
+      <input type="text" id="user_import_sheetUrl" class="form-input" placeholder="Paste sheet URL or ID" style="font-size:0.85rem;">
     </div>
     
     <div class="form-group" style="margin-bottom:12px;">
       <label class="form-label">📑 Tab Name <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-      <input type="text" id="import_tabName" class="form-input" placeholder="e.g., Male list (active)" style="font-size:0.85rem;">
+      <input type="text" id="user_import_tabName" class="form-input" placeholder="e.g., Male list (active)" style="font-size:0.85rem;">
     </div>
     
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <input type="checkbox" id="import_clearExisting" style="width:16px;height:16px;accent-color:var(--primary);">
-      <label for="import_clearExisting" style="font-size:0.8rem;color:var(--text-secondary);cursor:pointer;">Replace existing patients</label>
+      <input type="checkbox" id="user_import_clearExisting" style="width:16px;height:16px;accent-color:var(--primary);">
+      <label for="user_import_clearExisting" style="font-size:0.8rem;color:var(--text-secondary);cursor:pointer;">Replace existing patients</label>
     </div>
     
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" onclick="importWardList()" style="flex:1;padding:10px;font-size:0.85rem;" id="btnImportList">
+      <button class="btn btn-primary" onclick="userImportWardList()" style="flex:1;padding:10px;font-size:0.85rem;" id="btnUserImportList">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="margin-right:6px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
         Import
       </button>
-      <button class="btn btn-secondary" onclick="previewImport()" style="padding:10px 16px;font-size:0.85rem;" id="btnPreviewImport">Preview</button>
+      <button class="btn btn-secondary" onclick="userPreviewImport()" style="padding:10px 16px;font-size:0.85rem;" id="btnUserPreviewImport">Preview</button>
     </div>
     
     <div id="userImportStatus" style="display:none;padding:10px;border-radius:8px;font-size:0.8rem;margin-top:10px;"></div>
     
-    <div id="lastImportInfo" style="display:none;font-size:0.7rem;color:var(--text-muted);margin-top:8px;padding:6px 8px;background:var(--bg-elevated);border-radius:6px;">
-      <span style="color:var(--success)">✓</span> <span id="lastImportText">Last import: —</span>
+    <div id="userLastImportInfo" style="display:none;font-size:0.7rem;color:var(--text-muted);margin-top:8px;padding:6px 8px;background:var(--bg-elevated);border-radius:6px;">
+      <span style="color:var(--success)">✓</span> <span id="userLastImportText">Last import: —</span>
     </div>
   </div>
   
@@ -16726,6 +16726,142 @@ window.saveSettings = async function() {
 
 const IMPORT_CONFIG_KEY = 'medward_import_config_v1';
 const IMPORT_SNAPSHOT_KEY = 'medward_import_snapshot_v1';
+
+// ═══════════════════════════════════════════════════════════════════
+// USER SETTINGS IMPORT FUNCTIONS (uses unique IDs)
+// ═══════════════════════════════════════════════════════════════════
+
+window.userImportWardList = async function() {
+  const btn = $('btnUserImportList');
+  const originalHTML = btn?.innerHTML;
+  
+  try {
+    if (btn) {
+      btn.innerHTML = '<span class="spinner"></span> Importing...';
+      btn.disabled = true;
+    }
+    
+    const sheetUrl = $('user_import_sheetUrl')?.value || '';
+    const tabName = $('user_import_tabName')?.value || '';
+    const clearExisting = $('user_import_clearExisting')?.checked || false;
+    
+    console.log('User Import - sheetUrl:', sheetUrl, 'length:', sheetUrl.length);
+    
+    const sheetId = extractSheetId(sheetUrl);
+    console.log('User Import - extracted sheetId:', sheetId);
+    
+    if (!sheetId) {
+      showUserImportStatus('⚠️ Please enter a valid Google Sheet URL or ID', 'error');
+      return;
+    }
+    
+    showUserImportStatus('🔄 Fetching sheet data...', 'info');
+    
+    const values = await fetchSheetData(sheetId, tabName);
+    const parsed = parseWardSheetToPatients(values);
+    
+    if (parsed.length === 0) {
+      showUserImportStatus('⚠️ No patients found in sheet. Check format.', 'error');
+      return;
+    }
+    
+    const newPatients = convertToMedWardPatients(parsed);
+    
+    if (clearExisting) {
+      state.patients = newPatients;
+    } else {
+      const existingKeys = new Set(state.patients.map(p => 
+        `${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`
+      ));
+      const toAdd = newPatients.filter(p => 
+        !existingKeys.has(`${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`)
+      );
+      state.patients = [...state.patients, ...toAdd];
+    }
+    
+    localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
+      importedAt: new Date().toISOString(),
+      patientCount: newPatients.length,
+      sheetId: sheetId
+    }));
+    
+    await forceSync();
+    renderPatients();
+    
+    showUserImportStatus(`✅ Imported ${newPatients.length} patients!`, 'success');
+    toast(`✅ Imported ${newPatients.length} patients`);
+    
+  } catch (e) {
+    console.error('User Import error:', e);
+    showUserImportStatus(`❌ Error: ${e.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.innerHTML = originalHTML || 'Import';
+      btn.disabled = false;
+    }
+  }
+};
+
+window.userPreviewImport = async function() {
+  const btn = $('btnUserPreviewImport');
+  const originalText = btn?.textContent;
+  
+  try {
+    if (btn) btn.textContent = 'Loading...';
+    
+    const sheetUrl = $('user_import_sheetUrl')?.value || '';
+    const tabName = $('user_import_tabName')?.value || '';
+    const sheetId = extractSheetId(sheetUrl);
+    
+    if (!sheetId) {
+      showUserImportStatus('⚠️ Enter a valid Google Sheet URL or ID', 'error');
+      return;
+    }
+    
+    showUserImportStatus('🔄 Fetching...', 'info');
+    
+    const values = await fetchSheetData(sheetId, tabName);
+    const parsed = parseWardSheetToPatients(values);
+    
+    const active = parsed.filter(p => p.listType === 'active');
+    const er = parsed.filter(p => p.listType === 'er');
+    const chronic = parsed.filter(p => p.listType === 'chronic');
+    const wards = [...new Set(parsed.map(p => p.ward))].filter(Boolean);
+    
+    showUserImportStatus(`
+      <strong>📋 Preview:</strong><br>
+      Total: ${parsed.length} | Active: ${active.length} | ER: ${er.length} | Chronic: ${chronic.length}<br>
+      Wards: ${wards.join(', ') || 'None'}
+    `, 'success');
+    
+  } catch (e) {
+    console.error('Preview error:', e);
+    showUserImportStatus(`❌ Error: ${e.message}`, 'error');
+  } finally {
+    if (btn) btn.textContent = originalText || 'Preview';
+  }
+};
+
+function showUserImportStatus(message, type = 'info') {
+  const el = $('userImportStatus');
+  if (!el) return;
+  
+  el.style.display = 'block';
+  el.style.background = type === 'error' ? 'rgba(239,68,68,0.1)' : 
+                        type === 'success' ? 'rgba(16,185,129,0.1)' : 
+                        'rgba(59,130,246,0.1)';
+  el.style.color = type === 'error' ? '#dc2626' : 
+                   type === 'success' ? '#059669' : 
+                   '#3b82f6';
+  el.style.border = `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 
+                                  type === 'success' ? 'rgba(16,185,129,0.3)' : 
+                                  'rgba(59,130,246,0.3)'}`;
+  el.innerHTML = message;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SHARED IMPORT FUNCTIONS  
+// ═══════════════════════════════════════════════════════════════════
 
 // Extract Sheet ID from URL or return as-is if already an ID
 function extractSheetId(input) {
