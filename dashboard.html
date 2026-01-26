@@ -16752,67 +16752,70 @@ window.userImportWardList = async function() {
       return;
     }
     
-    showUserImportStatus('⚡ Fetching...', 'info');
+    showUserImportStatus('⚡ Starting server-side import...', 'info');
     
     const startTime = Date.now();
-    const response = await fetchSheetData(sheetId, tabName, false); // full import, not preview
-    const fetchTime = Date.now() - startTime;
     
-    // Use server-side parsed data if available (instant!)
-    let patients;
-    if (response.parsed && response.parsed.patients) {
-      patients = response.parsed.patients.map((p, idx) => ({
-        id: `imported_${Date.now()}_${idx}`,
-        name: p.name,
-        diagnosis: p.diagnosis,
-        age: null,
-        gender: null,
-        ward: p.ward,
-        bed: p.bed,
-        status: p.status === 'Chronic' ? 'chronic' : 'active',
-        assignedDoctor: p.doctor,
-        admissionDate: new Date().toISOString().split('T')[0],
-        medications: [],
-        labs: [],
-        notes: '',
-        tasks: []
-      }));
-    } else {
-      // Fallback to client-side parsing
-      const parsed = parseWardSheetToPatients(response.values || response);
-      patients = convertToMedWardPatients(parsed);
+    // 🚀 Use server-side import (saves directly to user's data file)
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'startWardImport',
+        username: state.currentUser,
+        password: state.sessionToken || localStorage.getItem('medward_session_token'),
+        sheetId: sheetId,
+        sheetName: tabName || '',
+        clearExisting: clearExisting
+      })
+    });
+    
+    const data = await response.json();
+    const totalTime = Date.now() - startTime;
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Import failed');
     }
     
-    if (patients.length === 0) {
-      showUserImportStatus('⚠️ No patients found in sheet.', 'error');
-      return;
-    }
-    
-    if (clearExisting) {
-      state.patients = patients;
-    } else {
-      const existingKeys = new Set(state.patients.map(p => 
-        `${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`
-      ));
-      const toAdd = patients.filter(p => 
-        !existingKeys.has(`${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`)
-      );
-      state.patients = [...state.patients, ...toAdd];
+    if (data.status === 'completed' && data.result) {
+      // Import completed immediately
+      const r = data.result;
+      const timing = r.timing ? `(${r.timing.totalMs}ms server)` : '';
+      const cacheNote = r.fromCache ? ' ⚡cached' : '';
+      
+      showUserImportStatus(`
+        ✅ <b>Import complete!</b> ${timing}${cacheNote}<br>
+        Added: <b>${r.added}</b> new patients | Total: ${r.total}
+      `, 'success');
+      
+      // Refresh local data from server
+      await loadData();
+      renderPatients();
+      
+      toast(`✅ Imported ${r.added} patients (${totalTime}ms)`);
+      
+    } else if (data.status === 'queued') {
+      // Import queued for background processing
+      showUserImportStatus(`
+        ⏳ <b>Import queued</b><br>
+        Patients will appear in ~30 seconds. Refresh to see them.
+      `, 'info');
+      
+      toast('⏳ Import started - refresh in 30s');
+      
+      // Auto-refresh after delay
+      setTimeout(async () => {
+        await loadData();
+        renderPatients();
+        toast('🔄 Data refreshed');
+      }, 30000);
     }
     
     localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
       importedAt: new Date().toISOString(),
-      patientCount: patients.length,
-      sheetId: sheetId
+      sheetId: sheetId,
+      status: data.status
     }));
-    
-    await forceSync();
-    renderPatients();
-    
-    // Show timing info
-    const timing = response.timing ? `(${response.timing.totalMs}ms server, ${fetchTime}ms total)` : `(${fetchTime}ms)`;
-    showUserImportStatus(`✅ Imported ${patients.length} patients! ${timing}`, 'success');
-    toast(`✅ Imported ${patients.length} patients`);
     
   } catch (e) {
     console.error('User Import error:', e);
@@ -16847,31 +16850,20 @@ window.userPreviewImport = async function() {
     const response = await fetchSheetData(sheetId, tabName, true); // preview mode (uses cache)
     const fetchTime = Date.now() - startTime;
     
-    // Use server-side stats if available
+    // Use server-side stats
     const stats = response.stats || {};
-    const cached = response.cached ? ' (cached ⚡)' : '';
-    const timing = response.timing ? ` ${response.timing.totalMs}ms` : '';
+    const cached = response.cached ? ' ⚡cached' : '';
+    const timing = response.timing ? `${response.timing.totalMs}ms` : '';
     
     if (stats.total !== undefined) {
       showUserImportStatus(`
         <strong>📋 Preview${cached}</strong><br>
         Total: <b>${stats.total}</b> | Active: ${stats.active} | ER: ${stats.er} | Chronic: ${stats.chronic}<br>
         Wards: ${stats.wards?.join(', ') || 'None'}<br>
-        <small style="opacity:0.7">⚡${timing} server, ${fetchTime}ms total</small>
+        <small style="opacity:0.7">⚡ ${timing} server, ${fetchTime}ms total</small>
       `, 'success');
     } else {
-      // Fallback
-      const parsed = parseWardSheetToPatients(response.values || response);
-      const active = parsed.filter(p => p.listType === 'active').length;
-      const er = parsed.filter(p => p.listType === 'er').length;
-      const chronic = parsed.filter(p => p.listType === 'chronic').length;
-      const wards = [...new Set(parsed.map(p => p.ward))].filter(Boolean);
-      
-      showUserImportStatus(`
-        <strong>📋 Preview</strong><br>
-        Total: <b>${parsed.length}</b> | Active: ${active} | ER: ${er} | Chronic: ${chronic}<br>
-        Wards: ${wards.join(', ') || 'None'}
-      `, 'success');
+      showUserImportStatus('⚠️ Could not parse preview data', 'error');
     }
     
   } catch (e) {
