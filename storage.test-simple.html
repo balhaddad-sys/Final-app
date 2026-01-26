@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>IndexedDB Storage - Simple Test</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f3f4f6;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+h1 {
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 30px;
+  font-size: 0.9rem;
+}
+
+.alert {
+  background: #dbeafe;
+  border: 1px solid #3b82f6;
+  color: #1e40af;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+}
+
+.alert.success {
+  background: #d1fae5;
+  border-color: #059669;
+  color: #065f46;
+}
+
+.alert.error {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #005eb8;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #004a93;
+}
+
+.btn-success {
+  background: #059669;
+  color: white;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.test-section {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.test-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  color: #111827;
+}
+
+.result {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+}
+
+.result.show {
+  display: block;
+}
+
+.result.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #059669;
+}
+
+.result.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #dc2626;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #005eb8;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.log {
+  background: #1f2937;
+  color: #f3f4f6;
+  padding: 15px;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.log-entry {
+  margin-bottom: 5px;
+  padding: 5px 0;
+  border-bottom: 1px solid #374151;
+}
+
+.spinner {
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #005eb8;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+
+<h1>🧪 IndexedDB Storage - Simple Test</h1>
+<p class="subtitle">Standalone test (no server required)</p>
+
+<div id="browserCheck" class="alert" style="display: none;"></div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-value" id="statTests">0</div>
+    <div class="stat-label">Tests</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="statPassed">0</div>
+    <div class="stat-label">Passed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="statPatients">0</div>
+    <div class="stat-label">Patients</div>
+  </div>
+</div>
+
+<div class="test-section">
+  <h2>Quick Tests</h2>
+  <button class="btn btn-primary" onclick="runAllTests()">▶ Run All Tests</button>
+  <button class="btn btn-success" onclick="runSingleTest()">⚡ Single Test</button>
+  <button class="btn btn-danger" onclick="clearData()">🗑️ Clear Data</button>
+  <div id="result" class="result"></div>
+  <div id="log" class="log"></div>
+</div>
+
+<div class="test-section">
+  <h2>Manual DevTools Check</h2>
+  <ol style="line-height: 1.8; color: #4b5563; font-size: 0.875rem;">
+    <li>Press <kbd>F12</kbd> to open DevTools</li>
+    <li>Click <strong>Application</strong> tab (Chrome/Edge) or <strong>Storage</strong> tab (Firefox)</li>
+    <li>Expand <strong>IndexedDB</strong> → <strong>medward_pro</strong></li>
+    <li>You should see stores: patients, wal, meta</li>
+    <li>Click <strong>patients</strong> → you should see test records</li>
+  </ol>
+</div>
+
+<script>
+// ==================== Global State ====================
+let testDB = null;
+let stats = { tests: 0, passed: 0, patients: 0 };
+
+// ==================== Logging ====================
+function log(message, isError = false) {
+  const logDiv = document.getElementById('log');
+  const time = new Date().toLocaleTimeString();
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.style.color = isError ? '#fca5a5' : '#d1fae5';
+  entry.textContent = `[${time}] ${message}`;
+  logDiv.insertBefore(entry, logDiv.firstChild);
+
+  // Keep last 20 entries
+  if (logDiv.children.length > 20) {
+    logDiv.removeChild(logDiv.lastChild);
+  }
+
+  console.log(message);
+}
+
+function showResult(success, message, data = null) {
+  const resultDiv = document.getElementById('result');
+  resultDiv.className = `result show ${success ? 'success' : 'error'}`;
+  resultDiv.textContent = `${success ? '✅ PASS' : '❌ FAIL'}: ${message}`;
+
+  if (data) {
+    resultDiv.textContent += '\n\n' + JSON.stringify(data, null, 2);
+  }
+
+  stats.tests++;
+  if (success) stats.passed++;
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('statTests').textContent = stats.tests;
+  document.getElementById('statPassed').textContent = stats.passed;
+  document.getElementById('statPatients').textContent = stats.patients;
+}
+
+// ==================== Browser Check ====================
+function checkBrowser() {
+  const alertDiv = document.getElementById('browserCheck');
+
+  if (!window.indexedDB) {
+    alertDiv.className = 'alert error';
+    alertDiv.style.display = 'block';
+    alertDiv.textContent = '❌ IndexedDB not supported in this browser. Try Chrome, Firefox, or Edge.';
+    return false;
+  }
+
+  alertDiv.className = 'alert success';
+  alertDiv.style.display = 'block';
+  alertDiv.textContent = '✅ IndexedDB supported! Click "Run All Tests" to begin.';
+  log('✅ IndexedDB supported');
+  return true;
+}
+
+// ==================== IndexedDB Functions ====================
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('medward_pro', 1);
+
+    req.onupgradeneeded = () => {
+      const db = req.result;
+
+      if (!db.objectStoreNames.contains('patients')) {
+        const s = db.createObjectStore('patients', { keyPath: 'id' });
+        s.createIndex('by_unit', 'unitId', { unique: false });
+        s.createIndex('by_updated', 'updatedAt', { unique: false });
+        log('Created patients store');
+      }
+
+      if (!db.objectStoreNames.contains('wal')) {
+        const s = db.createObjectStore('wal', { keyPath: 'opId' });
+        s.createIndex('by_status', 'status', { unique: false });
+        log('Created WAL store');
+      }
+
+      if (!db.objectStoreNames.contains('meta')) {
+        db.createObjectStore('meta', { keyPath: 'key' });
+        log('Created meta store');
+      }
+    };
+
+    req.onsuccess = () => {
+      log('Database opened successfully');
+      resolve(req.result);
+    };
+
+    req.onerror = () => {
+      log('Failed to open database: ' + req.error, true);
+      reject(req.error);
+    };
+  });
+}
+
+function addPatient(db, patient) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['patients', 'wal'], 'readwrite');
+    const patients = tx.objectStore('patients');
+    const wal = tx.objectStore('wal');
+
+    const opId = 'op_' + Date.now();
+    const record = {
+      ...patient,
+      id: patient.id || 'p_' + Date.now(),
+      rev: 1,
+      updatedAt: Date.now()
+    };
+
+    // Write to WAL
+    wal.put({ opId, status: 'PENDING', kind: 'ADD', ts: Date.now(), data: record });
+
+    // Write patient
+    patients.put(record);
+
+    // Mark WAL as committed
+    wal.put({ opId, status: 'COMMITTED', kind: 'ADD', ts: Date.now(), data: record });
+
+    tx.oncomplete = () => {
+      log(`Patient added: ${record.name} (id: ${record.id})`);
+      resolve(record);
+    };
+
+    tx.onerror = () => {
+      log('Failed to add patient: ' + tx.error, true);
+      reject(tx.error);
+    };
+  });
+}
+
+function listPatients(db) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['patients'], 'readonly');
+    const patients = tx.objectStore('patients');
+    const req = patients.getAll();
+
+    req.onsuccess = () => {
+      const count = req.result ? req.result.length : 0;
+      log(`Found ${count} patients`);
+      resolve(req.result || []);
+    };
+
+    req.onerror = () => {
+      log('Failed to list patients: ' + req.error, true);
+      reject(req.error);
+    };
+  });
+}
+
+function countRecords(db, storeName) {
+  return new Promise((resolve) => {
+    const tx = db.transaction([storeName], 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.count();
+    req.onsuccess = () => resolve(req.result || 0);
+    req.onerror = () => resolve(0);
+  });
+}
+
+// ==================== Tests ====================
+async function test1_init() {
+  log('Test 1: Initialize database...');
+  const t0 = performance.now();
+
+  try {
+    testDB = await openDB();
+    const elapsed = Math.round(performance.now() - t0);
+
+    showResult(true, `Database initialized in ${elapsed}ms`, {
+      name: testDB.name,
+      version: testDB.version,
+      stores: Array.from(testDB.objectStoreNames)
+    });
+
+    return true;
+  } catch (error) {
+    showResult(false, error.message);
+    return false;
+  }
+}
+
+async function test2_addPatient() {
+  log('Test 2: Add patient...');
+
+  if (!testDB) {
+    const success = await test1_init();
+    if (!success) return false;
+  }
+
+  try {
+    const patient = {
+      name: 'Test Patient ' + Date.now(),
+      location: 'Bed 1',
+      status: 'stable',
+      unitId: 'Unit-Test'
+    };
+
+    const saved = await addPatient(testDB, patient);
+
+    showResult(true, 'Patient added successfully', {
+      id: saved.id,
+      name: saved.name,
+      rev: saved.rev
+    });
+
+    return true;
+  } catch (error) {
+    showResult(false, error.message);
+    return false;
+  }
+}
+
+async function test3_list() {
+  log('Test 3: List patients...');
+
+  if (!testDB) {
+    const success = await test1_init();
+    if (!success) return false;
+  }
+
+  try {
+    const patients = await listPatients(testDB);
+    stats.patients = patients.length;
+    updateStats();
+
+    showResult(true, `Found ${patients.length} patients`, {
+      patients: patients.map(p => ({ id: p.id, name: p.name, status: p.status }))
+    });
+
+    return true;
+  } catch (error) {
+    showResult(false, error.message);
+    return false;
+  }
+}
+
+async function test4_verify() {
+  log('Test 4: Verify data persistence...');
+
+  try {
+    // Close and reopen database
+    if (testDB) {
+      testDB.close();
+    }
+
+    testDB = await openDB();
+    const patients = await listPatients(testDB);
+
+    if (patients.length > 0) {
+      showResult(true, `Data persisted! Found ${patients.length} patients after reopen`, {
+        patients: patients.length
+      });
+      return true;
+    } else {
+      showResult(false, 'No patients found after reopen');
+      return false;
+    }
+  } catch (error) {
+    showResult(false, error.message);
+    return false;
+  }
+}
+
+// ==================== User Actions ====================
+async function runSingleTest() {
+  log('Running single test...');
+  stats = { tests: 0, passed: 0, patients: 0 };
+  updateStats();
+
+  await test1_init();
+  await new Promise(r => setTimeout(r, 500));
+  await test2_addPatient();
+  await new Promise(r => setTimeout(r, 500));
+  await test3_list();
+
+  alert(`Test completed!\nPassed: ${stats.passed}/${stats.tests}`);
+}
+
+async function runAllTests() {
+  log('Running all tests...');
+  stats = { tests: 0, passed: 0, patients: 0 };
+  updateStats();
+
+  await test1_init();
+  await new Promise(r => setTimeout(r, 500));
+
+  await test2_addPatient();
+  await new Promise(r => setTimeout(r, 500));
+
+  await test2_addPatient(); // Add another
+  await new Promise(r => setTimeout(r, 500));
+
+  await test3_list();
+  await new Promise(r => setTimeout(r, 500));
+
+  await test4_verify();
+
+  alert(`All tests completed!\nPassed: ${stats.passed}/${stats.tests}\nPatients: ${stats.patients}`);
+}
+
+async function clearData() {
+  if (!confirm('Clear all test data?')) return;
+
+  try {
+    if (testDB) {
+      testDB.close();
+      testDB = null;
+    }
+
+    await new Promise((resolve, reject) => {
+      const req = indexedDB.deleteDatabase('medward_pro');
+      req.onsuccess = () => {
+        log('Database deleted');
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+
+    stats = { tests: 0, passed: 0, patients: 0 };
+    updateStats();
+
+    document.getElementById('result').className = 'result';
+    document.getElementById('log').innerHTML = '';
+
+    alert('✅ All data cleared!');
+    log('Ready for new tests');
+
+  } catch (error) {
+    alert('❌ Failed to clear: ' + error.message);
+    log('Clear failed: ' + error.message, true);
+  }
+}
+
+// ==================== Init ====================
+window.addEventListener('load', () => {
+  checkBrowser();
+  log('Test page ready. Click "Run All Tests" to begin.');
+});
+</script>
+
+</body>
+</html>
