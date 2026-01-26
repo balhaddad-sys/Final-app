@@ -680,6 +680,8 @@ handleGoogleRedirect().then(result => {
   if (result.success && result.user) {
     console.log('[Login] Google redirect successful');
     showMessage('Successfully signed in with Google!', false);
+    // Set legacy credentials for dashboard authentication
+    setLegacyCredentials(result.user);
     // Redirect handled by onAuthChange listener
   } else if (!result.success) {
     console.error('[Login] Google redirect failed:', result.error);
@@ -691,6 +693,8 @@ handleGoogleRedirect().then(result => {
 waitForAuth().then(user => {
   if (user) {
     console.log('[Login] Already authenticated, redirecting...');
+    // Set legacy credentials for dashboard authentication
+    setLegacyCredentials(user);
     window.location.href = 'landing.html';
   }
 });
@@ -698,9 +702,27 @@ waitForAuth().then(user => {
 // Also listen for auth changes
 onAuthChange(user => {
   if (user) {
+    // Set legacy credentials for dashboard authentication
+    setLegacyCredentials(user);
     window.location.href = 'landing.html';
   }
 });
+
+// Helper function to set legacy credentials after Firebase auth
+function setLegacyCredentials(user) {
+  if (!user) return;
+
+  const userEmail = user.email || user.uid;
+  const userToken = 'FIREBASE_AUTH'; // Marker for Firebase authentication
+
+  // Set credentials in both sessionStorage and localStorage
+  sessionStorage.setItem('MW_USER', userEmail);
+  sessionStorage.setItem('MW_PASS', userToken);
+  localStorage.setItem('MW_USER', userEmail);
+  localStorage.setItem('MW_PASS', userToken);
+
+  console.log('[Login] Legacy credentials set for:', userEmail);
+}
 
 // Theme toggle
 function toggleTheme() {

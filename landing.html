@@ -1036,8 +1036,33 @@ waitForAuth().then(user => {
   }
 
   state.currentUser = user;
+
+  // Ensure legacy credentials are set for dashboard authentication
+  ensureLegacyCredentials(user);
+
   initApp();
 });
+
+// Helper function to ensure legacy credentials are set
+function ensureLegacyCredentials(user) {
+  if (!user) return;
+
+  const userEmail = user.email || user.uid;
+  const userToken = 'FIREBASE_AUTH';
+
+  // Check if credentials already exist
+  const existingUser = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
+  const existingPass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
+
+  // If credentials are missing, set them
+  if (!existingUser || !existingPass) {
+    console.log('[Landing] Setting missing credentials for:', userEmail);
+    sessionStorage.setItem('MW_USER', userEmail);
+    sessionStorage.setItem('MW_PASS', userToken);
+    localStorage.setItem('MW_USER', userEmail);
+    localStorage.setItem('MW_PASS', userToken);
+  }
+}
 
 // Also listen for auth changes (logout from another tab)
 onAuthChange(user => {
