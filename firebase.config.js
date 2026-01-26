@@ -29,7 +29,9 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    updateProfile
+    updateProfile,
+    GoogleAuthProvider,
+    signInWithPopup
 } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
 
 // Firebase configuration
@@ -87,5 +89,7 @@ export {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    updateProfile
+    updateProfile,
+    GoogleAuthProvider,
+    signInWithPopup
 };
