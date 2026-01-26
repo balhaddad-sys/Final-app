@@ -11,7 +11,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MedWard Pro v17.1</title>
+<title>MedWard Pro v17.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css"/>
 <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
@@ -4511,8 +4511,17 @@ body.dark-theme .readonly-banner {
   </div>
 </div>
 <div class="section-body">
+  <!-- Target Unit Indicator -->
+  <div id="importTargetUnit" style="padding:10px 12px;background:linear-gradient(135deg,rgba(0,94,184,0.1),rgba(0,119,204,0.05));border:1px solid rgba(0,94,184,0.2);border-radius:8px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+    <span style="font-size:1.2rem">🏥</span>
+    <div>
+      <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Importing to</div>
+      <div id="importTargetUnitName" style="font-weight:700;color:var(--primary)">Select a unit first</div>
+    </div>
+  </div>
+  
   <p style="color:var(--text-secondary);font-size:0.82rem;margin-bottom:14px">
-    Import patients from Google Sheets. Automatically organizes by ward, ER, and chronic status.
+    Import patients from Google Sheets. Patients will be assigned to the current unit with their ward as their physical location.
   </p>
   
   <!-- Sheet URL Input -->
@@ -4534,7 +4543,7 @@ body.dark-theme .readonly-banner {
   <div style="display:flex;gap:8px;margin-bottom:12px">
     <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text-secondary);cursor:pointer">
       <input type="checkbox" id="import_clearExisting" style="width:16px;height:16px;accent-color:var(--primary)">
-      Replace existing patients
+      Replace existing patients (in current unit only)
     </label>
   </div>
   
@@ -16705,7 +16714,7 @@ function updateProfileBadges() {
 
 // Admin functions
 window.openAdminLogin = function() { $('adminPwd').value = ''; $('adminError').classList.remove('show'); openModal('adminModal'); };
-window.loginAdmin = function() { if ($('adminPwd').value === state.settings.adminPassword) { closeModal('adminModal'); showPage('adminPanel'); $('apiUrl').value = state.settings.apiUrl || ''; $('drugRefUrl').value = state.settings.drugRefUrl || ''; renderUnitsTable(); loadUnitRequests(); } else $('adminError').classList.add('show'); };
+window.loginAdmin = function() { if ($('adminPwd').value === state.settings.adminPassword) { closeModal('adminModal'); showPage('adminPanel'); $('apiUrl').value = state.settings.apiUrl || ''; $('drugRefUrl').value = state.settings.drugRefUrl || ''; renderUnitsTable(); loadUnitRequests(); updateImportTargetUnit(); } else $('adminError').classList.add('show'); };
 window.exitAdmin = function() { window.location.href = 'landing.html'; };
 window.openAddUnitModal = function() { state.editingUnitId = null; $('unitModalTitle').textContent = 'Add Unit'; $('uName').value = ''; $('uIcon').value = '🏥'; $('uCode').value = ''; $('uDesc').value = ''; openModal('unitModal'); };
 window.addUnit = window.openAddUnitModal;
@@ -16775,6 +16784,13 @@ window.userImportWardList = async function() {
   const originalHTML = btn?.innerHTML;
   
   try {
+    // CRITICAL: Validate that a unit is selected before importing
+    if (!state.currentUnit || !state.currentUnit.id) {
+      showUserImportStatus('⚠️ Please select a unit first. Patients will be imported into the current unit.', 'error');
+      toast('Select a unit before importing', true);
+      return;
+    }
+    
     if (btn) {
       btn.innerHTML = '<span class="spinner"></span> Starting...';
       btn.disabled = true;
@@ -16791,9 +16807,10 @@ window.userImportWardList = async function() {
       return;
     }
     
-    showUserImportStatus('⚡ Starting import...', 'info');
+    showUserImportStatus(`⚡ Importing to ${state.currentUnit.name}...`, 'info');
     
     // 🚀 FIRE-AND-FORGET: Don't wait for full import
+    // CRITICAL: Pass targetUnitId so server knows where to assign patients
     fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -16803,13 +16820,15 @@ window.userImportWardList = async function() {
         password: AUTH.pass,
         sheetId: sheetId,
         sheetName: tabName || '',
-        clearExisting: clearExisting
+        clearExisting: clearExisting,
+        targetUnitId: state.currentUnit.id,      // CRITICAL: Target unit for patients
+        targetUnitName: state.currentUnit.name   // For logging
       })
     }).then(res => res.json()).then(data => {
       console.log('Import response:', data);
       if (data.success) {
         if (data.status === 'completed') {
-          showUserImportStatus(`✅ Imported ${data.result?.added || 0} patients!`, 'success');
+          showUserImportStatus(`✅ Imported ${data.result?.added || 0} patients to ${state.currentUnit.name}!`, 'success');
           toast('✅ Import complete!');
         }
       } else {
@@ -16820,8 +16839,8 @@ window.userImportWardList = async function() {
     });
     
     // Immediate feedback
-    showUserImportStatus('⏳ Import started. Patients will appear in ~10 seconds...', 'success');
-    toast('⏳ Import started...');
+    showUserImportStatus(`⏳ Import started to ${state.currentUnit.name}. Patients will appear in ~10 seconds...`, 'success');
+    toast(`⏳ Importing to ${state.currentUnit.name}...`);
     
     // Reset button immediately
     if (btn) {
@@ -16841,7 +16860,9 @@ window.userImportWardList = async function() {
     localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
       importedAt: new Date().toISOString(),
       sheetId: sheetId,
-      status: 'started'
+      status: 'started',
+      unitId: state.currentUnit.id,
+      unitName: state.currentUnit.name
     }));
     
   } catch (e) {
@@ -17387,18 +17408,26 @@ function parseWardSheetToPatients(values) {
 }
 
 // Convert parsed data to MedWard patient format
-function convertToMedWardPatients(parsedPatients) {
+// IMPORTANT: unitId links patients to organizational units, ward is their physical location
+function convertToMedWardPatients(parsedPatients, targetUnitId = null) {
+  // Use current unit if no target specified
+  const unitId = targetUnitId || (state.currentUnit ? state.currentUnit.id : null);
+  
+  console.log('convertToMedWardPatients: Assigning unitId:', unitId, 'to', parsedPatients.length, 'patients');
+  
   return parsedPatients.map((p, idx) => ({
     id: `imported_${Date.now()}_${idx}`,
     name: p.name,
     diagnosis: p.diagnosis,
     age: null,
     gender: null,
-    ward: p.ward,
+    ward: p.ward,      // Ward = physical location (Ward 20, Ward 21, etc.)
     bed: p.bed,
+    room: p.bed,       // Also set room for compatibility
     doctor: p.doctor,
     status: p.listType === 'chronic' ? 'chronic' : 'active',
     listType: p.listType,
+    unitId: unitId,    // CRITICAL: Links patient to organizational unit
     medications: [],
     labData: null,
     notes: '',
@@ -17476,6 +17505,13 @@ window.importWardList = async function() {
   const originalHTML = btn?.innerHTML;
   
   try {
+    // CRITICAL: Validate that a unit is selected before importing
+    if (!state.currentUnit || !state.currentUnit.id) {
+      showImportStatus('⚠️ Please select a unit first. Patients need to be assigned to an organizational unit.', 'error');
+      toast('Select a unit before importing', true);
+      return;
+    }
+    
     if (btn) {
       btn.innerHTML = '<span class="spinner"></span> Importing...';
       btn.disabled = true;
@@ -17490,6 +17526,7 @@ window.importWardList = async function() {
     console.log('=== IMPORT DEBUG ===');
     console.log('Raw input value:', sheetUrl);
     console.log('Input length:', sheetUrl.length);
+    console.log('Target unit:', state.currentUnit.name, '(', state.currentUnit.id, ')');
     
     const sheetId = extractSheetId(sheetUrl);
     
@@ -17524,30 +17561,40 @@ window.importWardList = async function() {
       return;
     }
     
-    // Convert to MedWard format
-    const newPatients = convertToMedWardPatients(parsed);
+    // Convert to MedWard format - PASS THE CURRENT UNIT ID
+    const newPatients = convertToMedWardPatients(parsed, state.currentUnit.id);
+    
+    console.log('Converted patients with unitId:', state.currentUnit.id);
+    console.log('Sample patient:', newPatients[0]);
     
     // Apply to state
     if (clearExisting) {
-      state.patients = newPatients;
+      // Only clear patients from the current unit, not all patients
+      state.patients = state.patients.filter(p => p.unitId !== state.currentUnit.id);
+      state.patients = [...state.patients, ...newPatients];
+      console.log('Cleared existing patients for unit:', state.currentUnit.name);
     } else {
-      // Merge: add new, skip existing by name+ward
-      const existingKeys = new Set(state.patients.map(p => 
-        `${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`
-      ));
+      // Merge: add new, skip existing by name+ward within the same unit
+      const existingKeys = new Set(state.patients
+        .filter(p => p.unitId === state.currentUnit.id)
+        .map(p => `${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`)
+      );
       
       const toAdd = newPatients.filter(p => 
         !existingKeys.has(`${p.name?.toLowerCase()}|${p.ward?.toLowerCase()}`)
       );
       
       state.patients = [...state.patients, ...toAdd];
+      console.log('Merged:', toAdd.length, 'new patients,', (newPatients.length - toAdd.length), 'duplicates skipped');
     }
     
     // Save snapshot for recovery
     localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
       importedAt: new Date().toISOString(),
       patientCount: newPatients.length,
-      sheetId: sheetId
+      sheetId: sheetId,
+      unitId: state.currentUnit.id,
+      unitName: state.currentUnit.name
     }));
     
     // Sync to cloud
@@ -17560,12 +17607,12 @@ window.importWardList = async function() {
     const info = $('lastImportInfo');
     const text = $('lastImportText');
     if (info && text) {
-      text.textContent = `Last import: Just now (${newPatients.length} patients)`;
+      text.textContent = `Last import: Just now (${newPatients.length} patients to ${state.currentUnit.name})`;
       info.style.display = 'block';
     }
     
-    showImportStatus(`✅ Successfully imported ${newPatients.length} patients!`, 'success');
-    toast(`✅ Imported ${newPatients.length} patients from sheet`);
+    showImportStatus(`✅ Successfully imported ${newPatients.length} patients to ${state.currentUnit.name}!`, 'success');
+    toast(`✅ Imported ${newPatients.length} patients to ${state.currentUnit.name}`);
     
   } catch (e) {
     console.error('Import error:', e);
@@ -17608,7 +17655,26 @@ window.switchAdminTab = function(tabName) {
   if (tabName === 'trash') {
     renderTrash();
   }
+  
+  // Update import target unit indicator when switching to settings
+  if (tabName === 'settings') {
+    updateImportTargetUnit();
+  }
 };
+
+// Update the import target unit indicator
+function updateImportTargetUnit() {
+  const indicator = $('importTargetUnitName');
+  if (indicator) {
+    if (state.currentUnit && state.currentUnit.name) {
+      indicator.textContent = state.currentUnit.name;
+      indicator.style.color = 'var(--primary)';
+    } else {
+      indicator.textContent = '⚠️ No unit selected - please select a unit first';
+      indicator.style.color = 'var(--danger)';
+    }
+  }
+}
 
 $('adminTabs')?.addEventListener('click', e => {
   const tab = e.target.closest('.admin-tab');
@@ -18901,7 +18967,7 @@ async function init() {
     initSyncEngineV2();
   }
 
-  console.log('🚀 MedWard Pro v17.1 - Build:', CONFIG.BUILD_ID);
+  console.log('🚀 MedWard Pro v17.2 - Build:', CONFIG.BUILD_ID);
   console.log('📦 CACHE-FIRST BOOT: Using cache warmed by loading.html');
   
   // Run boot diagnostics
