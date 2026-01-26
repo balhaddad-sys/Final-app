@@ -9304,47 +9304,33 @@ function renderPatients() {
   const f = state.currentFilter;
   const allPatients = state.patients || [];
   
-  console.log('renderPatients: total patients:', allPatients.length, 'currentUnit:', state.currentUnit?.name, 'showingAllUnits:', showingAllUnits);
+  console.log('renderPatients: total patients:', allPatients.length, 'currentUnit:', state.currentUnit?.name, 'currentUnitId:', state.currentUnit?.id);
   
-  // ★ SHOW ALL PATIENTS if flag is set or no unit selected
+  // Filter patients by current unit
   let unitPatients;
-  if (showingAllUnits || !state.currentUnit) {
-    // Show all patients
-    unitPatients = allPatients;
-    console.log('renderPatients: showing ALL patients:', unitPatients.length);
-  } else {
-    // Filter by current unit
+  if (state.currentUnit) {
     unitPatients = allPatients.filter(p => p.unitId === state.currentUnit.id);
-    console.log('renderPatients: filtered by unit:', state.currentUnit.id, 'count:', unitPatients.length);
+    console.log('renderPatients: filtered by unit, count:', unitPatients.length);
+  } else {
+    // No unit selected - show all (fallback)
+    unitPatients = allPatients;
+    console.log('renderPatients: no unit selected, showing all');
   }
   
   let filtered = f === 'all' ? [...unitPatients] : unitPatients.filter(p => p.status === f);
 
   // Empty state
   if (!filtered.length) {
-    // Check if there are patients but just in other units
-    if (allPatients.length > 0 && unitPatients.length === 0) {
-      container.innerHTML = `
-        <div style="text-align:center; padding:40px; color:var(--text-muted);">
-          <div style="font-size:2rem; margin-bottom:10px;">📭</div>
-          <div>No patients in this unit</div>
-          <div style="margin-top:10px; font-size:0.9rem;">
-            ${allPatients.length} patients in other units. 
-            <a href="#" onclick="showAllUnitsPatients(); return false;" style="color:var(--primary);">View all</a>
-          </div>
-        </div>`;
-    } else {
-      container.innerHTML = `
-        <div style="text-align:center; padding:40px; color:var(--text-muted);">
-          <div style="font-size:2rem; margin-bottom:10px;">📭</div>
-          <div>No patients in this unit</div>
-        </div>`;
-    }
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px; color:var(--text-muted);">
+        <div style="font-size:2rem; margin-bottom:10px;">📭</div>
+        <div>No patients in this unit</div>
+      </div>`;
     updateStats();
     return;
   }
 
-  // Group by wards
+  // Group by wards (wards are locations, not units)
   const wards = {};
   filtered.forEach(p => {
     const w = p.ward || 'Unassigned';
@@ -9353,13 +9339,14 @@ function renderPatients() {
   });
 
   // Render with Clinical Clarity design
-  const order = ['Ward 14', 'Ward 22', 'Ward 27', 'ICU', 'ER/Unassigned', 'Unassigned'];
+  const order = ['Ward 10', 'Ward 19', 'Ward 20', 'Ward 21', 'Ward 22', 'Ward 27', 'Ward 5', 'ICU', 'ER', 'ER/Unassigned', 'Unassigned'];
   let html = '';
 
   Object.keys(wards).sort((a, b) => {
     const aIdx = order.indexOf(a) === -1 ? 99 : order.indexOf(a);
     const bIdx = order.indexOf(b) === -1 ? 99 : order.indexOf(b);
-    return aIdx - bIdx;
+    if (aIdx !== bIdx) return aIdx - bIdx;
+    return a.localeCompare(b);
   }).forEach(ward => {
     const ps = wards[ward];
     html += `<div class="ward-section">
@@ -9405,11 +9392,11 @@ function renderPatients() {
 }
 
 function updateStats() {
-  // Filter patients by current unit (or show all if flag is set)
+  // Filter patients by current unit
   const allPatients = state.patients || [];
-  const a = (showingAllUnits || !state.currentUnit)
-    ? allPatients
-    : allPatients.filter(p => p.unitId === state.currentUnit.id);
+  const a = state.currentUnit 
+    ? allPatients.filter(p => p.unitId === state.currentUnit.id)
+    : allPatients;
   
   $('statTotal').textContent = a.length;
   $('statNew').textContent = a.filter(p => p.status === 'new').length;
@@ -16557,7 +16544,6 @@ window.enterUnit = function() {
   if (!n) { toast('Enter name', true); return; }
   state.currentUnit = getUnit(state.selectedUnitId);
   state.currentUser = { name: n, role: $('userRole').value };
-  showingAllUnits = false;  // Reset flag when selecting specific unit
 
   // Save credentials if "Remember Me" is checked
   if ($('rememberMe')?.checked) {
@@ -16868,20 +16854,6 @@ window.userImportWardList = async function() {
 // ═══════════════════════════════════════════════════════════════════
 
 // Helper to show patients from all units
-// Flag to show all patients regardless of unit
-let showingAllUnits = false;
-
-function showAllUnitsPatients() {
-  showingAllUnits = true;  // Set flag
-  state.currentUnit = null;
-  state.selectedUnitId = null;
-  const badge = $('unitBadge');
-  if (badge) badge.textContent = 'All Units';
-  renderPatients();
-  updateStats();
-  toast('Showing all ' + (state.patients?.length || 0) + ' patients');
-}
-
 async function refreshDataFromServer() {
   try {
     console.log('🔄 Refreshing data from server...');
