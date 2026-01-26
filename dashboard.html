@@ -19383,11 +19383,25 @@ async function init() {
   // Clear any stale cache flags since we've now done proper boot
   localStorage.removeItem('MW_CACHE_STALE');
   
-  // Load unit from session
-  const unitId = sessionStorage.getItem('MW_UNIT');
-  const unitName = sessionStorage.getItem('MW_UNIT_NAME');
+  // Load unit from session (try sessionStorage first, then localStorage as fallback)
+  let unitId = sessionStorage.getItem('MW_UNIT');
+  let unitName = sessionStorage.getItem('MW_UNIT_NAME');
   
-  console.log('🔍 Unit from session:', { unitId, unitName });
+  // Fallback to localStorage if sessionStorage is empty
+  if (!unitId || !unitName) {
+    console.log('⚠️ sessionStorage empty, trying localStorage fallback');
+    unitId = localStorage.getItem('MW_SELECTED_UNIT');
+    unitName = localStorage.getItem('MW_SELECTED_UNIT_NAME');
+    
+    // If found in localStorage, copy to sessionStorage
+    if (unitId && unitName) {
+      sessionStorage.setItem('MW_UNIT', unitId);
+      sessionStorage.setItem('MW_UNIT_NAME', unitName);
+      console.log('✅ Restored from localStorage:', unitName);
+    }
+  }
+  
+  console.log('🔍 Unit from storage:', { unitId, unitName });
   console.log('🔍 Available units:', state.units.map(u => ({ id: u.id, name: u.name })));
   
   if (unitId && unitName) {
