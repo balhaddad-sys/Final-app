@@ -675,15 +675,37 @@ body.dark-theme .admin-warning {
 <script type="module">
 import { login, register, signInWithGoogle, handleGoogleRedirect, waitForAuth, onAuthChange } from './firebase.auth.js';
 
+// Flag to prevent multiple redirects
+let isRedirecting = false;
+
+// Helper function to redirect to dashboard
+function redirectToDashboard(user, source) {
+  if (isRedirecting) {
+    console.log('[Login] Already redirecting, skipping...');
+    return;
+  }
+
+  isRedirecting = true;
+  console.log(`[Login] Redirecting to dashboard from: ${source}`);
+
+  try {
+    // Set legacy credentials for dashboard authentication
+    setLegacyCredentials(user);
+  } catch (error) {
+    console.error('[Login] Error setting credentials:', error);
+  }
+
+  // Always redirect even if credentials fail
+  window.location.href = 'landing.html';
+}
+
 // Handle Google redirect result (for mobile sign-in)
 handleGoogleRedirect().then(result => {
   if (result.success && result.user) {
     console.log('[Login] Google redirect successful');
     showMessage('Successfully signed in with Google!', false);
-    // Set legacy credentials for dashboard authentication
-    setLegacyCredentials(result.user);
-    // Redirect handled by onAuthChange listener
-  } else if (!result.success) {
+    redirectToDashboard(result.user, 'handleGoogleRedirect');
+  } else if (!result.success && result.error) {
     console.error('[Login] Google redirect failed:', result.error);
     showMessage(result.error || 'Google sign-in failed');
   }
@@ -691,31 +713,22 @@ handleGoogleRedirect().then(result => {
 
 // Check if already logged in (Firebase)
 waitForAuth().then(user => {
-  if (user) {
-    console.log('[Login] Already authenticated, redirecting...');
-    // Set legacy credentials for dashboard authentication
-    setLegacyCredentials(user);
-    window.location.href = 'landing.html';
+  if (user && !isRedirecting) {
+    console.log('[Login] Already authenticated');
+    redirectToDashboard(user, 'waitForAuth');
   }
 });
 
-// Also listen for auth changes (with error handling)
+// Also listen for auth changes (backup mechanism)
 onAuthChange(user => {
-  if (user) {
-    try {
-      console.log('[Login] Auth state changed, user logged in:', user.email);
-      // Set legacy credentials for dashboard authentication
-      setLegacyCredentials(user);
-      // Redirect to dashboard (only if not already redirecting)
-      if (!window.location.href.includes('landing.html')) {
-        console.log('[Login] Redirecting to dashboard...');
-        window.location.href = 'landing.html';
+  if (user && !isRedirecting) {
+    console.log('[Login] Auth state changed, user logged in:', user.email);
+    // Small delay to let other handlers complete first
+    setTimeout(() => {
+      if (!isRedirecting) {
+        redirectToDashboard(user, 'onAuthChange');
       }
-    } catch (error) {
-      console.error('[Login] Error in auth change handler:', error);
-      // Still try to redirect even if credentials fail
-      window.location.href = 'landing.html';
-    }
+    }, 100);
   }
 });
 
@@ -866,9 +879,9 @@ async function handleLogin(e) {
   try {
     const result = await login(email, password);
 
-    if (result.success) {
+    if (result.success && result.user) {
       showMessage('Login successful! Redirecting...', false);
-      // Redirect handled by onAuthChange listener
+      redirectToDashboard(result.user, 'handleLogin');
     } else {
       showMessage(result.error || 'Invalid email or password');
     }
@@ -900,24 +913,22 @@ async function handleGoogleSignIn() {
     console.log('[Login] Google sign-in result:', result);
 
     if (result.success && result.pending) {
-      // Mobile redirect - page will navigate away
+      // Mobile redirect - page will navigate away to Google
       console.log('[Login] Redirecting to Google...');
       // Keep loading state, page will redirect
     } else if (result.success && result.user) {
       // Desktop popup success - redirect immediately
-      console.log('[Login] Google sign-in successful, redirecting...');
+      console.log('[Login] Google sign-in successful');
       showMessage('Successfully signed in with Google!', false);
-
-      // Set legacy credentials immediately
-      setLegacyCredentials(result.user);
-
-      // Redirect to dashboard
-      setTimeout(() => {
-        window.location.href = 'landing.html';
-      }, 500); // Small delay to show success message
-    } else {
+      redirectToDashboard(result.user, 'handleGoogleSignIn');
+    } else if (!result.cancelled) {
+      // Only show error if not cancelled by user
       console.error('[Login] Google sign-in failed:', result.error);
       showMessage(result.error || 'Google sign-in failed');
+      btn.disabled = false;
+      btn.innerHTML = originalContent;
+    } else {
+      // User cancelled
       btn.disabled = false;
       btn.innerHTML = originalContent;
     }
@@ -983,9 +994,9 @@ async function handleRegister(e) {
   try {
     const result = await register(email, password, displayName);
 
-    if (result.success) {
+    if (result.success && result.user) {
       showMessage('Account created! Redirecting...', false);
-      // Auto-login happens, redirect handled by onAuthChange
+      redirectToDashboard(result.user, 'handleRegister');
     } else {
       showMessage(result.error || 'Registration failed');
     }
