@@ -16762,8 +16762,8 @@ window.userImportWardList = async function() {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'startWardImport',
-        username: state.currentUser,
-        password: state.sessionToken || localStorage.getItem('medward_session_token'),
+        username: AUTH.user,
+        password: AUTH.pass,
         sheetId: sheetId,
         sheetName: tabName || '',
         clearExisting: clearExisting
