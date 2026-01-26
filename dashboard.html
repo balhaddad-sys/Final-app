@@ -19907,6 +19907,176 @@ else init();
   </div>
 </div>
 
+<script src="monitor.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// MONITORING INTEGRATION (System Monitor)
+// ═══════════════════════════════════════════════════════════════════
+
+// Expose MedWard functions for monitor.html testing
+window.MedWard = window.MedWard || {};
+
+// Sync wrapper with monitoring
+window.MedWard.syncNow = async function ({ correlationId, source } = {}) {
+  const id = correlationId || (crypto.randomUUID?.() || Math.random().toString(16).slice(2));
+  window.monitor?.emit("SYNC", "INFO", "syncNow:start", { id, source });
+
+  const t0 = performance.now();
+  try {
+    // Call the existing sync function
+    await loadFromCloud(true);
+    const ms = Math.round(performance.now() - t0);
+    window.monitor?.emit("SYNC", "SUCCESS", "syncNow:done", { id, ms, source });
+    return { success: true, ms };
+  } catch (e) {
+    const ms = Math.round(performance.now() - t0);
+    window.monitor?.emit("SYNC", "ERROR", "syncNow:fail", {
+      id, ms, source,
+      message: e?.message || String(e),
+      stack: e?.stack || null
+    });
+    throw e;
+  }
+};
+
+// Save patient wrapper with monitoring
+window.MedWard.savePatient = async function(patient, { correlationId, source } = {}) {
+  const id = correlationId || (crypto.randomUUID?.() || Math.random().toString(16).slice(2));
+  window.monitor?.emit("STORE", "INFO", "savePatient:start", {
+    id, source,
+    name: patient?.name,
+    location: patient?.location,
+    isMonitorTest: patient?._monitor
+  });
+
+  const t0 = performance.now();
+  try {
+    // Skip adding test patients from monitor to actual patient list
+    if (!patient?._monitor) {
+      // Add patient to state
+      const newPatient = {
+        id: uid(),
+        unitId: state.currentUnit?.id || null,
+        ...patient,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      state.patients.push(newPatient);
+      markDirty();
+      renderDashboard();
+    }
+
+    const ms = Math.round(performance.now() - t0);
+    window.monitor?.emit("STORE", "SUCCESS", "savePatient:done", { id, ms, source });
+    return { success: true, ms };
+  } catch (e) {
+    const ms = Math.round(performance.now() - t0);
+    window.monitor?.emit("STORE", "ERROR", "savePatient:fail", {
+      id, ms, source,
+      message: e?.message || String(e)
+    });
+    throw e;
+  }
+};
+
+// Delete test patient wrapper
+window.MedWard.deleteTestPatient = async function({ correlationId, source } = {}) {
+  const id = correlationId || (crypto.randomUUID?.() || Math.random().toString(16).slice(2));
+  window.monitor?.emit("STORE", "INFO", "deleteTestPatient:start", { id, source });
+
+  const t0 = performance.now();
+  try {
+    // Find and remove test patients
+    const before = state.patients.length;
+    state.patients = state.patients.filter(p => !p._monitor);
+    const after = state.patients.length;
+    const deleted = before - after;
+
+    if (deleted > 0) {
+      markDirty();
+      renderDashboard();
+    }
+
+    const ms = Math.round(performance.now() - t0);
+    window.monitor?.emit("STORE", "SUCCESS", "deleteTestPatient:done", { id, ms, deleted, source });
+    return { success: true, deleted, ms };
+  } catch (e) {
+    const ms = Math.round(performance.now() - t0);
+    window.monitor?.emit("STORE", "ERROR", "deleteTestPatient:fail", {
+      id, ms, source,
+      message: e?.message || String(e)
+    });
+    throw e;
+  }
+};
+
+// Instrument critical operations
+if (window.monitor) {
+  // Wrap existing sync/save operations to emit events
+  const originalMarkDirty = window.markDirty;
+  if (originalMarkDirty) {
+    window.markDirty = function() {
+      window.monitor.emit("STORE", "INFO", "Data marked dirty (pending sync)");
+      return originalMarkDirty.apply(this, arguments);
+    };
+  }
+
+  // Log when app is ready
+  window.monitor.emit("APP", "SUCCESS", "MedWard dashboard initialized", {
+    unit: state.currentUnit?.name,
+    user: state.currentUser?.name,
+    patients: state.patients?.length || 0
+  });
+}
+
+// Add "Open Monitor" button to settings or nav
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', addMonitorButton);
+} else {
+  addMonitorButton();
+}
+
+function addMonitorButton() {
+  // Try to find a good place to add the button
+  // This will add a floating action button in the bottom right
+  const btn = document.createElement('button');
+  btn.innerHTML = '📊';
+  btn.title = 'Open System Monitor';
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 2px solid rgba(255,255,255,0.2);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 9999;
+    transition: all 0.3s ease;
+  `;
+
+  btn.addEventListener('mouseenter', () => {
+    btn.style.transform = 'scale(1.1)';
+    btn.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+  });
+
+  btn.addEventListener('mouseleave', () => {
+    btn.style.transform = 'scale(1)';
+    btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+  });
+
+  btn.addEventListener('click', () => {
+    window.open('monitor.html', '_blank', 'width=1400,height=900');
+  });
+
+  document.body.appendChild(btn);
+}
+</script>
+
 <script src="error-analyzer.js"></script>
 <script src="medward-tour.js"></script>
 </body>
