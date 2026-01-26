@@ -16821,7 +16821,7 @@ window.userImportWardList = async function() {
 
 async function refreshDataFromServer() {
   try {
-    console.log('Refreshing data from server...');
+    console.log('🔄 Refreshing data from server...');
     
     const res = await fetch(CONFIG.API_URL, {
       method: 'POST',
@@ -16829,11 +16829,16 @@ async function refreshDataFromServer() {
       body: JSON.stringify({
         action: 'loadData',
         username: AUTH.user,
-        password: AUTH.pass
+        password: AUTH.pass,
+        clientRev: 0  // Force full reload
       })
     });
     
-    const data = await res.json();
+    const text = await res.text();
+    console.log('Server response length:', text.length);
+    
+    const data = JSON.parse(text);
+    console.log('Parsed response:', data.success, 'hasData:', !!data.data);
     
     if (!data.success) {
       throw new Error(data.error || 'Failed to load data');
@@ -16841,16 +16846,39 @@ async function refreshDataFromServer() {
     
     // Update local state with server data
     if (data.data) {
-      if (data.data.patients) state.patients = data.data.patients;
-      if (data.data.units) state.units = data.data.units;
+      console.log('Server patients count:', data.data.patients?.length || 0);
+      
+      if (data.data.patients && data.data.patients.length > 0) {
+        state.patients = data.data.patients;
+        console.log('✅ Updated state.patients:', state.patients.length);
+      }
+      if (data.data.units) {
+        state.units = data.data.units;
+      }
       state.lastSync = new Date().toISOString();
+      
+      // Save to localStorage as backup
+      try {
+        localStorage.setItem('medward_patients_backup', JSON.stringify(state.patients));
+      } catch(e) {}
+      
+      // ★ CRITICAL: Re-render the UI
+      if (typeof renderPatients === 'function') {
+        renderPatients();
+        console.log('✅ renderPatients() called');
+      }
+      
+      // Update stats
+      if (typeof updateStats === 'function') {
+        updateStats();
+      }
     }
     
-    console.log('Data refreshed, patients:', state.patients.length);
+    console.log('✅ Data refresh complete, patients:', state.patients.length);
     return true;
     
   } catch (e) {
-    console.error('Failed to refresh data:', e);
+    console.error('❌ Failed to refresh data:', e);
     return false;
   }
 }
