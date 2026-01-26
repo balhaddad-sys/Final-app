@@ -711,14 +711,10 @@ function debugLog(msg) {
 
     if (result && result.user) {
       debugLog('4. SUCCESS! User: ' + result.user.email);
-      debugLog('5. Redirecting to landing.html in 2 sec...');
+      debugLog('5. Redirecting to landing.html...');
 
       setLegacyCredentials(result.user);
-
-      // Delay so you can see the debug messages
-      setTimeout(() => {
-        window.location.href = 'landing.html';
-      }, 2000);
+      safeRedirect('landing.html');
       return;
     }
 
@@ -735,7 +731,7 @@ function debugLog(msg) {
     onAuthed: (user) => {
       debugLog('7. requireAuth: AUTHED as ' + user.email);
       setLegacyCredentials(user);
-      setTimeout(() => safeRedirect('landing.html'), 2000);
+      safeRedirect('landing.html');
     },
     onUnauthed: () => {
       debugLog('7. requireAuth: NOT AUTHED - staying on login');
@@ -811,9 +807,9 @@ async function verifyAdminAccess() {
   if (VALID_KEYS.includes(adminKey)) {
     // Store admin key in session
     sessionStorage.setItem('MW_ADMIN_KEY', adminKey);
-    
+
     // Redirect to monitor
-    window.location.href = 'monitor.html';
+    safeRedirect('monitor.html');
   } else {
     alert('❌ Access Denied\n\nInvalid admin key');
     document.getElementById('adminBtnText').style.display = 'inline';
