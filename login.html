@@ -699,19 +699,32 @@ function debugLog(msg) {
 (async function() {
   debugLog('1. Page loaded');
 
-  // CRITICAL: Do NOT set persistence here - it should already be set from when
-  // the user clicked "Sign in with Google". Setting it again can clear the redirect state.
+  // Check browser storage availability (critical for redirect flow)
+  try {
+    localStorage.setItem('test', '1');
+    localStorage.removeItem('test');
+    debugLog('2. localStorage: AVAILABLE');
+  } catch (e) {
+    debugLog('2. localStorage: BLOCKED - ' + e.message);
+    debugLog('⚠️ Private browsing or storage blocked!');
+  }
 
-  debugLog('2. Calling getRedirectResult...');
+  // Check for Firebase redirect state keys
+  const hasRedirectState = Object.keys(localStorage).some(key =>
+    key.includes('firebase') || key.includes('redirect')
+  );
+  debugLog('3. Firebase redirect state in storage: ' + (hasRedirectState ? 'YES' : 'NO'));
+
+  debugLog('4. Calling getRedirectResult...');
 
   try {
     const result = await getRedirectResult(auth);
 
-    debugLog('3. getRedirectResult done: ' + (result ? 'HAS RESULT' : 'null'));
+    debugLog('5. getRedirectResult done: ' + (result ? 'HAS RESULT' : 'null'));
 
     if (result && result.user) {
-      debugLog('4. SUCCESS! User: ' + result.user.email);
-      debugLog('5. Redirecting to landing.html in 2 sec...');
+      debugLog('6. SUCCESS! User: ' + result.user.email);
+      debugLog('7. Redirecting to landing.html in 2 sec...');
 
       setLegacyCredentials(result.user);
 
@@ -722,23 +735,23 @@ function debugLog(msg) {
       return;
     }
 
-    debugLog('4. No redirect result, checking auth.currentUser...');
-    debugLog('5. auth.currentUser = ' + (auth.currentUser ? auth.currentUser.email : 'null'));
+    debugLog('6. No redirect result, checking auth.currentUser...');
+    debugLog('7. auth.currentUser = ' + (auth.currentUser ? auth.currentUser.email : 'null'));
 
   } catch (error) {
     debugLog('ERROR: ' + error.code + ' - ' + error.message);
   }
 
-  debugLog('6. Running requireAuth...');
+  debugLog('8. Running requireAuth...');
 
   requireAuth({
     onAuthed: (user) => {
-      debugLog('7. requireAuth: AUTHED as ' + user.email);
+      debugLog('9. requireAuth: AUTHED as ' + user.email);
       setLegacyCredentials(user);
       setTimeout(() => safeRedirect('landing.html'), 2000);
     },
     onUnauthed: () => {
-      debugLog('7. requireAuth: NOT AUTHED - staying on login');
+      debugLog('9. requireAuth: NOT AUTHED - staying on login');
     }
   });
 })();
@@ -905,15 +918,16 @@ window.handleLogin = handleLogin;
 async function handleGoogleSignIn() {
   const btn = document.getElementById('googleSignInBtn');
   const originalContent = btn.innerHTML;
-  const rememberMe = document.getElementById('remember').checked;
 
   // Show loading state
   btn.disabled = true;
   btn.innerHTML = '<div class="loading-spinner"></div><span>Signing in...</span>';
 
   try {
-    // CRITICAL: Set auth persistence BEFORE attempting Google sign-in
-    await configureAuthPersistence(rememberMe);
+    // CRITICAL: Always use LOCAL persistence for Google redirect flow
+    // The redirect state MUST be stored in localStorage to survive the redirect
+    // (SESSION persistence won't work reliably with redirects)
+    await configureAuthPersistence(true); // true = LOCAL persistence
 
     console.log('[Login] Starting Google sign-in...');
     const result = await signInWithGoogle();
