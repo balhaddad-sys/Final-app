@@ -9304,22 +9304,18 @@ function renderPatients() {
   const f = state.currentFilter;
   const allPatients = state.patients || [];
   
-  console.log('renderPatients: total patients:', allPatients.length, 'currentUnit:', state.currentUnit?.name);
+  console.log('renderPatients: total patients:', allPatients.length, 'currentUnit:', state.currentUnit?.name, 'showingAllUnits:', showingAllUnits);
   
-  // ★ AUTO-SELECT UNIT if none selected but units exist
-  if (!state.currentUnit && state.units && state.units.length > 0) {
-    ensureValidCurrentUnit();
-  }
-  
-  // ★ SHOW ALL PATIENTS if no unit selected (fallback)
+  // ★ SHOW ALL PATIENTS if flag is set or no unit selected
   let unitPatients;
-  if (state.currentUnit) {
+  if (showingAllUnits || !state.currentUnit) {
+    // Show all patients
+    unitPatients = allPatients;
+    console.log('renderPatients: showing ALL patients:', unitPatients.length);
+  } else {
+    // Filter by current unit
     unitPatients = allPatients.filter(p => p.unitId === state.currentUnit.id);
     console.log('renderPatients: filtered by unit:', state.currentUnit.id, 'count:', unitPatients.length);
-  } else {
-    // No unit selected - show all patients
-    unitPatients = allPatients;
-    console.log('renderPatients: showing all patients (no unit selected)');
   }
   
   let filtered = f === 'all' ? [...unitPatients] : unitPatients.filter(p => p.status === f);
@@ -9409,11 +9405,11 @@ function renderPatients() {
 }
 
 function updateStats() {
-  // Filter patients by current unit
+  // Filter patients by current unit (or show all if flag is set)
   const allPatients = state.patients || [];
-  const a = state.currentUnit 
-    ? allPatients.filter(p => p.unitId === state.currentUnit.id)
-    : allPatients;
+  const a = (showingAllUnits || !state.currentUnit)
+    ? allPatients
+    : allPatients.filter(p => p.unitId === state.currentUnit.id);
   
   $('statTotal').textContent = a.length;
   $('statNew').textContent = a.filter(p => p.status === 'new').length;
@@ -16561,6 +16557,7 @@ window.enterUnit = function() {
   if (!n) { toast('Enter name', true); return; }
   state.currentUnit = getUnit(state.selectedUnitId);
   state.currentUser = { name: n, role: $('userRole').value };
+  showingAllUnits = false;  // Reset flag when selecting specific unit
 
   // Save credentials if "Remember Me" is checked
   if ($('rememberMe')?.checked) {
@@ -16871,13 +16868,18 @@ window.userImportWardList = async function() {
 // ═══════════════════════════════════════════════════════════════════
 
 // Helper to show patients from all units
+// Flag to show all patients regardless of unit
+let showingAllUnits = false;
+
 function showAllUnitsPatients() {
+  showingAllUnits = true;  // Set flag
   state.currentUnit = null;
   state.selectedUnitId = null;
   const badge = $('unitBadge');
   if (badge) badge.textContent = 'All Units';
   renderPatients();
-  toast('Showing all patients');
+  updateStats();
+  toast('Showing all ' + (state.patients?.length || 0) + ' patients');
 }
 
 async function refreshDataFromServer() {
