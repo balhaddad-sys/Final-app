@@ -673,80 +673,38 @@ body.dark-theme .admin-warning {
 </div>
 
 <script type="module">
-import { login, register, signInWithGoogle, handleGoogleRedirect, waitForAuth, onAuthChange } from './firebase.auth.js';
+import { login, register, signInWithGoogle, handleGoogleRedirect } from './firebase.auth.js';
+import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js';
 
-// Flag to prevent multiple redirects
-let isRedirecting = false;
+// ═══════════════════════════════════════════════════════════════════
+// AUTH GUARD - Single source of truth for redirect logic
+// ═══════════════════════════════════════════════════════════════════
 
-// Helper function to redirect to dashboard
-function redirectToDashboard(user, source) {
-  if (isRedirecting) {
-    console.log('[Login] Already redirecting, skipping...');
-    return;
-  }
-
-  isRedirecting = true;
-  console.log(`[Login] Redirecting to dashboard from: ${source}`);
-
-  try {
-    // Set legacy credentials for dashboard authentication
+requireAuth({
+  onAuthed: (user) => {
+    // User is already logged in - redirect to landing
+    console.log('[Login] Already authenticated, redirecting to landing');
     setLegacyCredentials(user);
-  } catch (error) {
-    console.error('[Login] Error setting credentials:', error);
-  }
+    safeRedirect('landing.html');
+  },
+  onUnauthed: () => {
+    // User is not logged in - stay on login page
+    console.log('[Login] Not authenticated, ready for login');
 
-  // Always redirect even if credentials fail
-  window.location.href = 'landing.html';
-}
-
-// Handle Google redirect result (for mobile sign-in)
-handleGoogleRedirect().then(result => {
-  if (result.success && result.user) {
-    console.log('[Login] Google redirect successful');
-    showMessage('Successfully signed in with Google!', false);
-    redirectToDashboard(result.user, 'handleGoogleRedirect');
-  } else if (!result.success && result.error) {
-    console.error('[Login] Google redirect failed:', result.error);
-    showMessage(result.error || 'Google sign-in failed');
-  }
-});
-
-// Check if already logged in (Firebase)
-waitForAuth().then(user => {
-  if (user && !isRedirecting) {
-    console.log('[Login] Already authenticated');
-    redirectToDashboard(user, 'waitForAuth');
-  }
-});
-
-// Also listen for auth changes (backup mechanism)
-onAuthChange(user => {
-  if (user && !isRedirecting) {
-    console.log('[Login] Auth state changed, user logged in:', user.email);
-    // Small delay to let other handlers complete first
-    setTimeout(() => {
-      if (!isRedirecting) {
-        redirectToDashboard(user, 'onAuthChange');
+    // Check for Google redirect result (mobile flow)
+    handleGoogleRedirect().then(result => {
+      if (result.success && result.user) {
+        console.log('[Login] Google redirect successful');
+        showMessage('Successfully signed in with Google!', false);
+        setLegacyCredentials(result.user);
+        safeRedirect('landing.html');
+      } else if (!result.success && result.error) {
+        console.error('[Login] Google redirect failed:', result.error);
+        showMessage(result.error || 'Google sign-in failed');
       }
-    }, 100);
+    });
   }
 });
-
-// Helper function to set legacy credentials after Firebase auth
-function setLegacyCredentials(user) {
-  if (!user) return;
-
-  const userEmail = user.email || user.uid;
-  const userToken = 'FIREBASE_AUTH'; // Marker for Firebase authentication
-
-  // Set credentials in both sessionStorage and localStorage
-  sessionStorage.setItem('MW_USER', userEmail);
-  sessionStorage.setItem('MW_PASS', userToken);
-  localStorage.setItem('MW_USER', userEmail);
-  localStorage.setItem('MW_PASS', userToken);
-
-  console.log('[Login] Legacy credentials set for:', userEmail);
-}
 
 // Theme toggle
 function toggleTheme() {
@@ -881,14 +839,17 @@ async function handleLogin(e) {
 
     if (result.success && result.user) {
       showMessage('Login successful! Redirecting...', false);
-      redirectToDashboard(result.user, 'handleLogin');
+      setLegacyCredentials(result.user);
+      safeRedirect('landing.html');
     } else {
       showMessage(result.error || 'Invalid email or password');
+      document.getElementById('loginText').style.display = 'inline';
+      document.getElementById('loginSpinner').style.display = 'none';
+      document.getElementById('loginBtn').disabled = false;
     }
   } catch (error) {
     showMessage('Connection error. Please try again.');
     console.error('Login error:', error);
-  } finally {
     document.getElementById('loginText').style.display = 'inline';
     document.getElementById('loginSpinner').style.display = 'none';
     document.getElementById('loginBtn').disabled = false;
@@ -920,7 +881,8 @@ async function handleGoogleSignIn() {
       // Desktop popup success - redirect immediately
       console.log('[Login] Google sign-in successful');
       showMessage('Successfully signed in with Google!', false);
-      redirectToDashboard(result.user, 'handleGoogleSignIn');
+      setLegacyCredentials(result.user);
+      safeRedirect('landing.html');
     } else if (!result.cancelled) {
       // Only show error if not cancelled by user
       console.error('[Login] Google sign-in failed:', result.error);
@@ -996,14 +958,17 @@ async function handleRegister(e) {
 
     if (result.success && result.user) {
       showMessage('Account created! Redirecting...', false);
-      redirectToDashboard(result.user, 'handleRegister');
+      setLegacyCredentials(result.user);
+      safeRedirect('landing.html');
     } else {
       showMessage(result.error || 'Registration failed');
+      document.getElementById('registerText').style.display = 'inline';
+      document.getElementById('registerSpinner').style.display = 'none';
+      document.getElementById('registerBtn').disabled = false;
     }
   } catch (error) {
     showMessage('Connection error. Please try again.');
     console.error('Register error:', error);
-  } finally {
     document.getElementById('registerText').style.display = 'inline';
     document.getElementById('registerSpinner').style.display = 'none';
     document.getElementById('registerBtn').disabled = false;
