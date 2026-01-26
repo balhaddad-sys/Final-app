@@ -676,42 +676,53 @@ body.dark-theme .admin-warning {
 import { login, register, signInWithGoogle, handleGoogleRedirect } from './firebase.auth.js';
 import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js';
 import { configureAuthPersistence } from './firebase.config.js';
+import { auth } from './firebase.config.js';
+import { getRedirectResult } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
 
 // ═══════════════════════════════════════════════════════════════════
-// HANDLE GOOGLE REDIRECT FIRST (before auth guard)
-// This fixes the race condition where auth guard fires before
-// Firebase processes the Google redirect result
+// MOBILE REDIRECT FLOW - Must run FIRST before anything else
 // ═══════════════════════════════════════════════════════════════════
 
-(async function initAuth() {
-  // Process Google redirect result BEFORE checking auth state
-  const redirectResult = await handleGoogleRedirect();
-
-  if (redirectResult.success && redirectResult.user) {
-    // Google redirect succeeded - go to landing
-    console.log('[Login] Google redirect successful, going to landing');
-    showMessage('Successfully signed in with Google!', false);
-    setLegacyCredentials(redirectResult.user);
-    safeRedirect('landing.html');
-    return; // Exit early, no need for auth guard
+(async function() {
+  console.log('[Login] Page loaded, checking for Google redirect result...');
+  
+  try {
+    // CRITICAL: Check for redirect result IMMEDIATELY on page load
+    // This must happen before auth guard or any other auth checks
+    const result = await getRedirectResult(auth);
+    
+    console.log('[Login] getRedirectResult returned:', result ? 'has result' : 'null');
+    
+    if (result && result.user) {
+      // We just came back from Google sign-in!
+      console.log('[Login] Google redirect SUCCESS! User:', result.user.email);
+      showMessage('Successfully signed in with Google!', false);
+      setLegacyCredentials(result.user);
+      
+      // Go to landing immediately
+      window.location.replace('landing.html');
+      return; // Stop everything else
+    }
+  } catch (error) {
+    console.error('[Login] Google redirect error:', error.code, error.message);
+    if (error.code === 'auth/unauthorized-domain') {
+      showMessage('This domain is not authorized. Contact support.');
+    } else {
+      showMessage(error.message || 'Google sign-in failed');
+    }
   }
-
-  // Show error if redirect failed (but not if there was simply no redirect)
-  if (!redirectResult.success && redirectResult.error && !redirectResult.noResult) {
-    console.error('[Login] Google redirect failed:', redirectResult.error);
-    showMessage(redirectResult.error);
-  }
-
-  // Now run auth guard to check if already logged in
+  
+  // No redirect result - now check if already logged in
+  console.log('[Login] No redirect result, checking auth state...');
+  
   requireAuth({
     onAuthed: (user) => {
-      console.log('[Login] Already authenticated, redirecting to landing');
+      console.log('[Login] Already authenticated:', user.email);
       setLegacyCredentials(user);
       safeRedirect('landing.html');
     },
     onUnauthed: () => {
       console.log('[Login] Not authenticated, ready for login');
-      // Page stays on login - ready for user input
     }
   });
 })();
