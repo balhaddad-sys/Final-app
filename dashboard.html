@@ -5430,6 +5430,19 @@ body.dark-theme .readonly-banner {
 (function(){
 'use strict';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTHENTICATION GUARD - Redirect to login if not authenticated
+// ═══════════════════════════════════════════════════════════════════════════
+(function authGuard() {
+  const user = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
+  const pass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
+  if (!user || !pass) {
+    console.log('⚠️ No credentials found - redirecting to login');
+    window.location.href = 'login.html';
+    return;
+  }
+})();
+
 /* ═══════════════════════════════════════════════════════════════════════════
    MEDWARD PRO - JAVASCRIPT APPLICATION (LUXURY STANDARD)
    ═══════════════════════════════════════════════════════════════════════════
@@ -7144,10 +7157,10 @@ function updateSessionsUI() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CLOUD OPERATIONS
+// CLOUD OPERATIONS (Sync Engine - with timeout/abort support)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function callCloud(action, extra = {}) {
+async function callCloudSync(action, extra = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SYNC_CONFIG.FETCH_TIMEOUT_MS);
   
@@ -7191,7 +7204,7 @@ async function loadFromCloud(forceFullLoad = false) {
   try {
     updateSyncStatus('loading');
     
-    const response = await callCloud('loadData', {
+    const response = await callCloudSync('loadData', {
       clientRev: forceFullLoad ? 0 : sync.clientRev,
       clientChecksum: forceFullLoad ? null : sync.clientChecksum,
       deviceInfo: { clientRev: sync.clientRev, platform: navigator.platform }
@@ -7298,7 +7311,7 @@ async function flushPatches() {
     
     const patchIds = sync.patchQueue.map(p => p.id);
     
-    const response = await callCloud('patches', {
+    const response = await callCloudSync('patches', {
       patches: sync.patchQueue.map(p => ({ operation: p.operation, payload: p.payload })),
       patchIds: patchIds,
       baseRev: sync.clientRev
@@ -7412,7 +7425,7 @@ async function saveSnapshot(options = {}) {
     
     delete payload.settings.apiUrl;
     
-    const response = await callCloud('saveData', {
+    const response = await callCloudSync('saveData', {
       payload,
       baseRev: options.force ? null : sync.clientRev,
       force: options.force
@@ -7505,7 +7518,7 @@ async function handlePatchConflict(response) {
   console.warn('⚠️ Patch conflict - attempting rebase...');
   
   try {
-    const rebaseResponse = await callCloud('rebase', {
+    const rebaseResponse = await callCloudSync('rebase', {
       clientPatches: sync.patchQueue,
       baseRev: sync.clientRev
     });
@@ -7693,7 +7706,7 @@ function startHeartbeat() {
 
 async function sendHeartbeat() {
   try {
-    const response = await callCloud('heartbeat', {
+    const response = await callCloudSync('heartbeat', {
       deviceInfo: { clientRev: sync.clientRev, platform: navigator.platform }
     });
     
@@ -16488,6 +16501,8 @@ window.logout = function() {
   // Clear all credentials
   localStorage.removeItem('MW_USER');
   localStorage.removeItem('MW_PASS');
+  localStorage.removeItem('MW_SELECTED_UNIT');
+  localStorage.removeItem('MW_SELECTED_UNIT_NAME');
   sessionStorage.removeItem('MW_USER');
   sessionStorage.removeItem('MW_PASS');
   sessionStorage.removeItem('MW_UNIT');
@@ -16534,6 +16549,8 @@ window.goToLanding = function() {
   // Go back to landing page to switch units
   sessionStorage.removeItem('MW_UNIT');
   sessionStorage.removeItem('MW_UNIT_NAME');
+  localStorage.removeItem('MW_SELECTED_UNIT');
+  localStorage.removeItem('MW_SELECTED_UNIT_NAME');
   window.location.href = 'landing.html';
 };
 
@@ -19526,6 +19543,11 @@ async function init() {
     startHeartbeat();
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // SHOW DASHBOARD - Ensure the dashboard page is visible
+  // ═══════════════════════════════════════════════════════════════════
+  showPage('dashboard');
+  console.log('✅ Dashboard initialized and displayed');
   
   // ═══════════════════════════════════════════════════════════════════
   // LIFECYCLE EVENTS - Ensure data is saved on app close/background
