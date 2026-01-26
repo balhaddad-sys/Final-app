@@ -1172,6 +1172,23 @@ async function loadData() {
       state.rev = data.rev || parseInt(localStorage.getItem('MW_REV') || '1', 10);
       syncState.clientRev = state.rev;
       
+      // ═══════════════════════════════════════════════════════════════════
+      // ENSURE DEFAULT UNIT EXISTS - For new users with empty units array
+      // ═══════════════════════════════════════════════════════════════════
+      if (state.units.length === 0) {
+        console.log('📋 No units found - creating default unit');
+        state.units = [{ 
+          id: 'med-e', 
+          name: 'Medicine Unit E', 
+          icon: '🏥', 
+          desc: 'Internal Medicine', 
+          code: '1234', 
+          color: '#14b8a6',
+          createdAt: new Date().toISOString()
+        }];
+        updateLocalCache();
+      }
+      
       // Cache is verified - full access
       state.isHydrated = true;
       state.isReadOnly = false;
@@ -1479,7 +1496,7 @@ function openAccessModal(unitId) {
   try {
     sessionStorage.setItem('MW_UNIT', unitId);
     sessionStorage.setItem('MW_UNIT_NAME', unit.name);
-    console.log('✅ Saved to sessionStorage');
+    console.log('✅ Saved to sessionStorage:', sessionStorage.getItem('MW_UNIT'));
   } catch (e) {
     console.error('❌ sessionStorage failed:', e);
   }
@@ -1487,13 +1504,23 @@ function openAccessModal(unitId) {
   try {
     localStorage.setItem('MW_SELECTED_UNIT', unitId);
     localStorage.setItem('MW_SELECTED_UNIT_NAME', unit.name);
-    console.log('✅ Saved to localStorage');
+    console.log('✅ Saved to localStorage:', localStorage.getItem('MW_SELECTED_UNIT'));
   } catch (e) {
     console.error('❌ localStorage failed:', e);
   }
   
+  // ═══════════════════════════════════════════════════════════════════
+  // VERIFY STORAGE WAS WRITTEN SUCCESSFULLY
+  // ═══════════════════════════════════════════════════════════════════
+  const storedUnit = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
+  if (!storedUnit) {
+    console.error('❌ CRITICAL: Failed to store unit - storage not working!');
+    toast('Storage error - please check browser settings');
+    return;
+  }
+  
   // Navigate to dashboard
-  console.log('🚀 Navigating to dashboard.html');
+  console.log('🚀 Navigating to dashboard.html with unit:', storedUnit);
   window.location.href = 'dashboard.html';
 }
 
@@ -1756,6 +1783,8 @@ function doLogout() {
   
   localStorage.removeItem('MW_USER');
   localStorage.removeItem('MW_PASS');
+  localStorage.removeItem('MW_SELECTED_UNIT');
+  localStorage.removeItem('MW_SELECTED_UNIT_NAME');
   sessionStorage.removeItem('MW_USER');
   sessionStorage.removeItem('MW_PASS');
   sessionStorage.removeItem('MW_UNIT');
