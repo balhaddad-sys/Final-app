@@ -288,6 +288,13 @@ export async function getUserProfile(uid) {
 export function onAuthChange(callback) {
     authStateListeners.push(callback);
 
+    // If user is already authenticated, call callback immediately
+    // This prevents race conditions where auth state is determined before callback is registered
+    if (currentUser !== null) {
+        console.log('[Auth] User already authenticated, calling callback immediately');
+        setTimeout(() => callback(currentUser), 0);
+    }
+
     // Return unsubscribe function
     return () => {
         authStateListeners = authStateListeners.filter(cb => cb !== callback);

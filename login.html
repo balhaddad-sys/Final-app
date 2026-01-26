@@ -895,7 +895,9 @@ async function handleGoogleSignIn() {
     } else if (result.success) {
       // Desktop popup success
       showMessage('Successfully signed in with Google!', false);
-      // Redirect handled by onAuthChange listener
+      // Redirect immediately - don't wait for onAuthChange listener
+      console.log('[Login] Google sign-in successful, redirecting to landing page...');
+      window.location.href = 'landing.html';
     } else {
       console.error('[Login] Google sign-in failed:', result.error);
       showMessage(result.error || 'Google sign-in failed');
