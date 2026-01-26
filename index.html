@@ -8,13 +8,19 @@
     (function() {
       const user = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
       const pass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
-      const unit = sessionStorage.getItem('MW_UNIT');
-      
+      // Check sessionStorage first, then localStorage fallback (Bug #3 fix)
+      const unit = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
+
       if (!user || !pass) {
         window.location.replace('login.html');
       } else if (!unit) {
         window.location.replace('landing.html');
       } else {
+        // If unit was found in localStorage but not sessionStorage, restore session
+        if (!sessionStorage.getItem('MW_UNIT') && localStorage.getItem('MW_SELECTED_UNIT')) {
+          sessionStorage.setItem('MW_UNIT', localStorage.getItem('MW_SELECTED_UNIT'));
+          sessionStorage.setItem('MW_UNIT_NAME', localStorage.getItem('MW_SELECTED_UNIT_NAME') || '');
+        }
         window.location.replace('dashboard.html');
       }
     })();
