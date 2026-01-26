@@ -4665,6 +4665,11 @@ body.dark-theme .readonly-banner {
       <button class="btn btn-secondary" onclick="userPreviewImport()" style="padding:10px 16px;font-size:0.85rem;" id="btnUserPreviewImport">Preview</button>
     </div>
     
+    <!-- Cleanup button -->
+    <button class="btn" onclick="cleanupWardUnits()" style="width:100%;margin-top:8px;padding:8px;font-size:0.8rem;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);" id="btnCleanupUnits">
+      🧹 Cleanup Ward Units (if units showing incorrectly)
+    </button>
+    
     <div id="userImportStatus" style="display:none;padding:10px;border-radius:8px;font-size:0.8rem;margin-top:10px;"></div>
     
     <div id="userLastImportInfo" style="display:none;font-size:0.7rem;color:var(--text-muted);margin-top:8px;padding:6px 8px;background:var(--bg-elevated);border-radius:6px;">
@@ -16931,6 +16936,55 @@ async function refreshDataFromServer() {
 
 // Alias for compatibility
 window.loadData = refreshDataFromServer;
+
+// 🧹 Cleanup ward units that were incorrectly created
+window.cleanupWardUnits = async function() {
+  if (!confirm('This will remove all Ward units (Ward 10, Ward 19, etc.) and keep only your main unit. Patients will be reassigned. Continue?')) {
+    return;
+  }
+  
+  const btn = $('btnCleanupUnits');
+  const originalText = btn?.textContent;
+  
+  try {
+    if (btn) {
+      btn.textContent = '🧹 Cleaning up...';
+      btn.disabled = true;
+    }
+    
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'cleanupWardUnits',
+        username: AUTH.user,
+        password: AUTH.pass
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Cleanup failed');
+    }
+    
+    toast(`✅ Removed ${data.removedUnits} ward units, reassigned ${data.reassignedPatients} patients to ${data.targetUnit}`);
+    
+    // Refresh data
+    await refreshDataFromServer();
+    
+    showUserImportStatus(`✅ Cleanup complete! Removed ${data.removedUnits} units.`, 'success');
+    
+  } catch (e) {
+    console.error('Cleanup error:', e);
+    toast('❌ Cleanup failed: ' + e.message, true);
+  } finally {
+    if (btn) {
+      btn.textContent = originalText || '🧹 Cleanup Ward Units';
+      btn.disabled = false;
+    }
+  }
+};
 
 window.userPreviewImport = async function() {
   const btn = $('btnUserPreviewImport');
