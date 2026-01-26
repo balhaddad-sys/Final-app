@@ -9272,6 +9272,31 @@ function renderUnitsTable() {
   `).join('');
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// 🏥 ENSURE VALID CURRENT UNIT (auto-select after import)
+// ═══════════════════════════════════════════════════════════════════
+function ensureValidCurrentUnit() {
+  if (!state.units || state.units.length === 0) {
+    state.currentUnit = null;
+    console.log('ensureValidCurrentUnit: No units available');
+    return;
+  }
+
+  // If current unit is missing or invalid, select first unit
+  const stillExists = state.currentUnit &&
+    state.units.some(u => u.id === state.currentUnit.id);
+
+  if (!stillExists) {
+    state.currentUnit = state.units[0];
+    state.selectedUnitId = state.currentUnit.id;
+    console.log('ensureValidCurrentUnit: Auto-selected unit:', state.currentUnit.name);
+    
+    // Update UI
+    const badge = $('unitBadge');
+    if (badge) badge.textContent = state.currentUnit.name;
+  }
+}
+
 function renderPatients() {
   const container = $('patientsList');
   if (!container) return;
@@ -9279,20 +9304,46 @@ function renderPatients() {
   const f = state.currentFilter;
   const allPatients = state.patients || [];
   
-  // CRITICAL: Filter patients by current unit
-  const unitPatients = state.currentUnit 
-    ? allPatients.filter(p => p.unitId === state.currentUnit.id)
-    : allPatients;
+  console.log('renderPatients: total patients:', allPatients.length, 'currentUnit:', state.currentUnit?.name);
+  
+  // ★ AUTO-SELECT UNIT if none selected but units exist
+  if (!state.currentUnit && state.units && state.units.length > 0) {
+    ensureValidCurrentUnit();
+  }
+  
+  // ★ SHOW ALL PATIENTS if no unit selected (fallback)
+  let unitPatients;
+  if (state.currentUnit) {
+    unitPatients = allPatients.filter(p => p.unitId === state.currentUnit.id);
+    console.log('renderPatients: filtered by unit:', state.currentUnit.id, 'count:', unitPatients.length);
+  } else {
+    // No unit selected - show all patients
+    unitPatients = allPatients;
+    console.log('renderPatients: showing all patients (no unit selected)');
+  }
   
   let filtered = f === 'all' ? [...unitPatients] : unitPatients.filter(p => p.status === f);
 
   // Empty state
   if (!filtered.length) {
-    container.innerHTML = `
-      <div style="text-align:center; padding:40px; color:var(--text-muted);">
-        <div style="font-size:2rem; margin-bottom:10px;">📭</div>
-        <div>No patients in this unit</div>
-      </div>`;
+    // Check if there are patients but just in other units
+    if (allPatients.length > 0 && unitPatients.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px; color:var(--text-muted);">
+          <div style="font-size:2rem; margin-bottom:10px;">📭</div>
+          <div>No patients in this unit</div>
+          <div style="margin-top:10px; font-size:0.9rem;">
+            ${allPatients.length} patients in other units. 
+            <a href="#" onclick="showAllUnitsPatients(); return false;" style="color:var(--primary);">View all</a>
+          </div>
+        </div>`;
+    } else {
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px; color:var(--text-muted);">
+          <div style="font-size:2rem; margin-bottom:10px;">📭</div>
+          <div>No patients in this unit</div>
+        </div>`;
+    }
     updateStats();
     return;
   }
@@ -16819,6 +16870,16 @@ window.userImportWardList = async function() {
 // CANONICAL DATA REFRESH (GLOBAL)
 // ═══════════════════════════════════════════════════════════════════
 
+// Helper to show patients from all units
+function showAllUnitsPatients() {
+  state.currentUnit = null;
+  state.selectedUnitId = null;
+  const badge = $('unitBadge');
+  if (badge) badge.textContent = 'All Units';
+  renderPatients();
+  toast('Showing all patients');
+}
+
 async function refreshDataFromServer() {
   try {
     console.log('🔄 Refreshing data from server...');
@@ -16847,13 +16908,15 @@ async function refreshDataFromServer() {
     // Update local state with server data
     if (data.data) {
       console.log('Server patients count:', data.data.patients?.length || 0);
+      console.log('Server units count:', data.data.units?.length || 0);
       
-      if (data.data.patients && data.data.patients.length > 0) {
+      if (data.data.patients) {
         state.patients = data.data.patients;
         console.log('✅ Updated state.patients:', state.patients.length);
       }
       if (data.data.units) {
         state.units = data.data.units;
+        console.log('✅ Updated state.units:', state.units.length);
       }
       state.lastSync = new Date().toISOString();
       
@@ -16862,7 +16925,16 @@ async function refreshDataFromServer() {
         localStorage.setItem('medward_patients_backup', JSON.stringify(state.patients));
       } catch(e) {}
       
-      // ★ CRITICAL: Re-render the UI
+      // ★ CRITICAL: Ensure a valid unit is selected
+      ensureValidCurrentUnit();
+      
+      // ★ CRITICAL: Re-render units selector
+      if (typeof renderUnits === 'function') {
+        renderUnits();
+        console.log('✅ renderUnits() called');
+      }
+      
+      // ★ CRITICAL: Re-render the patients list
       if (typeof renderPatients === 'function') {
         renderPatients();
         console.log('✅ renderPatients() called');
@@ -16874,7 +16946,7 @@ async function refreshDataFromServer() {
       }
     }
     
-    console.log('✅ Data refresh complete, patients:', state.patients.length);
+    console.log('✅ Data refresh complete, patients:', state.patients.length, 'units:', state.units?.length);
     return true;
     
   } catch (e) {
