@@ -1097,6 +1097,12 @@ async function initApp() {
       state.units = units;
       renderUnits();
       hideLoading();
+
+      // Mark cloud as verified - this tells dashboard.html that Firebase is working
+      // Without this, dashboard redirects to loading.html which triggers offline mode
+      localStorage.setItem('MW_CLOUD_VERIFIED', Date.now().toString());
+      localStorage.removeItem('MW_OFFLINE_MODE');
+      console.log('[Landing] Cloud verified via Firebase');
     },
     (error) => {
       console.error('[Landing] Units subscription error:', error);
