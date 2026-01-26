@@ -16766,6 +16766,10 @@ window.userImportWardList = async function() {
     
     if (!sheetId) {
       showUserImportStatus('⚠️ Please enter a valid Google Sheet URL or ID', 'error');
+      if (btn) {
+        btn.innerHTML = originalHTML || 'Import';
+        btn.disabled = false;
+      }
       return;
     }
     
@@ -16830,6 +16834,8 @@ window.userImportWardList = async function() {
   } catch (e) {
     console.error('User Import error:', e);
     showUserImportStatus(`❌ Error: ${e.message}`, 'error');
+  } finally {
+    // Always ensure button is re-enabled
     if (btn) {
       btn.innerHTML = originalHTML || 'Import';
       btn.disabled = false;
@@ -17545,6 +17551,10 @@ window.importWardList = async function() {
     if (!sheetId) {
       alert('DEBUG: sheetId is null.\nInput was: ' + sheetUrl + '\nLength: ' + sheetUrl.length);
       showImportStatus('⚠️ Please enter a valid Google Sheet URL or ID', 'error');
+      if (btn) {
+        btn.innerHTML = originalHTML || 'Import';
+        btn.disabled = false;
+      }
       return;
     }
     
@@ -17552,6 +17562,10 @@ window.importWardList = async function() {
     const apiUrl = CONFIG.API_URL;
     if (!apiUrl) {
       showImportStatus('⚠️ API not configured.', 'error');
+      if (btn) {
+        btn.innerHTML = originalHTML || 'Import';
+        btn.disabled = false;
+      }
       return;
     }
     
@@ -17568,6 +17582,10 @@ window.importWardList = async function() {
     
     if (parsed.length === 0) {
       showImportStatus('⚠️ No patients found in sheet. Check the format.', 'error');
+      if (btn) {
+        btn.innerHTML = originalHTML || 'Import';
+        btn.disabled = false;
+      }
       return;
     }
     
