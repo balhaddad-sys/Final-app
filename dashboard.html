@@ -17576,8 +17576,10 @@ window.previewImport = async function() {
     }
     
     showImportStatus('🔄 Fetching sheet data...', 'info');
-    
-    const values = await fetchSheetData(sheetId, tabName);
+
+    const response = await fetchSheetData(sheetId, tabName);
+    // Extract row data from response - server returns values in 'values' or 'rows' property
+    const values = response.values || response.rows || (Array.isArray(response) ? response : []);
     const parsed = parseWardSheetToPatients(values);
     
     // Group by type for summary
@@ -17677,9 +17679,11 @@ window.importWardList = async function() {
     
     // Fetch and parse
     console.log('Calling fetchSheetData...');
-    const values = await fetchSheetData(sheetId, tabName);
+    const response = await fetchSheetData(sheetId, tabName);
+    // Extract row data from response - server returns values in 'values' or 'rows' property
+    const values = response.values || response.rows || (Array.isArray(response) ? response : []);
     console.log('Got values:', values?.length, 'rows');
-    
+
     showImportStatus('🔄 Parsing patients...', 'info');
     const parsed = parseWardSheetToPatients(values);
     console.log('Parsed patients:', parsed?.length);
