@@ -16824,7 +16824,8 @@ function showImportStatus(message, type = 'info') {
 
 // Fetch sheet data via Apps Script backend
 async function fetchSheetData(sheetId, tabName) {
-  const apiUrl = state.settings?.apiUrl || CONFIG.API_URL;
+  // Use CONFIG.API_URL directly since it's hardcoded
+  const apiUrl = CONFIG.API_URL;
   
   if (!apiUrl) {
     throw new Error('API endpoint not configured.');
@@ -17170,8 +17171,10 @@ window.importWardList = async function() {
       return;
     }
     
-    if (!state.settings?.apiUrl) {
-      showImportStatus('⚠️ API not configured. Contact admin.', 'error');
+    // Use CONFIG.API_URL directly since it's hardcoded
+    const apiUrl = CONFIG.API_URL;
+    if (!apiUrl) {
+      showImportStatus('⚠️ API not configured.', 'error');
       return;
     }
     
