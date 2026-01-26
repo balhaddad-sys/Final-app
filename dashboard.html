@@ -16825,11 +16825,16 @@ function showImportStatus(message, type = 'info') {
 
 // Fetch sheet data via Apps Script backend
 async function fetchSheetData(sheetId, tabName) {
-  if (!state.settings?.apiUrl) {
-    throw new Error('API endpoint not configured. Please set up in Settings first.');
+  const apiUrl = state.settings?.apiUrl || CONFIG.API_URL;
+  
+  if (!apiUrl) {
+    throw new Error('API endpoint not configured.');
   }
   
-  const response = await fetch(state.settings.apiUrl, {
+  console.log('fetchSheetData - using API:', apiUrl);
+  console.log('fetchSheetData - sheetId:', sheetId, 'tabName:', tabName);
+  
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
@@ -16840,6 +16845,8 @@ async function fetchSheetData(sheetId, tabName) {
   });
   
   const data = await response.json();
+  console.log('fetchSheetData - response:', data);
+  
   if (!data.ok && !data.success) {
     throw new Error(data.error || 'Failed to fetch sheet data');
   }
