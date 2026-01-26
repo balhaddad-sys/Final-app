@@ -12,6 +12,8 @@ import {
     signOut,
     onAuthStateChanged,
     updateProfile,
+    GoogleAuthProvider,
+    signInWithPopup,
     doc,
     setDoc,
     getDoc,
@@ -77,6 +79,52 @@ export async function login(email, password) {
 
     } catch (error) {
         console.error('[Auth] Login error:', error.code, error.message);
+        return { success: false, error: getAuthErrorMessage(error.code) };
+    }
+}
+
+/**
+ * Sign in with Google
+ * @returns {Promise<object>} Result object
+ */
+export async function signInWithGoogle() {
+    try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        // Check if user document exists, create if not
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            // Create user document for new Google users
+            await setDoc(userDocRef, {
+                email: user.email,
+                displayName: user.displayName || user.email.split('@')[0],
+                photoURL: user.photoURL || null,
+                role: 'user',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                settings: {
+                    theme: 'light',
+                    defaultUnit: null
+                }
+            });
+            console.log('[Auth] New Google user created:', user.email);
+        }
+
+        console.log('[Auth] User logged in with Google:', user.email);
+        return { success: true, user };
+
+    } catch (error) {
+        console.error('[Auth] Google sign-in error:', error.code, error.message);
+
+        // Handle popup closed by user
+        if (error.code === 'auth/popup-closed-by-user') {
+            return { success: false, error: 'Sign-in cancelled' };
+        }
+
         return { success: false, error: getAuthErrorMessage(error.code) };
     }
 }
@@ -216,7 +264,10 @@ function getAuthErrorMessage(errorCode) {
         'auth/wrong-password': 'Incorrect password',
         'auth/invalid-credential': 'Invalid email or password',
         'auth/too-many-requests': 'Too many failed attempts. Please try again later',
-        'auth/network-request-failed': 'Network error. Check your connection'
+        'auth/network-request-failed': 'Network error. Check your connection',
+        'auth/popup-blocked': 'Popup was blocked. Please allow popups for this site',
+        'auth/popup-closed-by-user': 'Sign-in cancelled',
+        'auth/account-exists-with-different-credential': 'An account already exists with the same email'
     };
 
     return messages[errorCode] || 'An error occurred. Please try again';
