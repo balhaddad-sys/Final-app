@@ -18491,7 +18491,7 @@ window.extractPatients = async function() {
     const res = await fetch(state.settings.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'extractPatients', image: state.importImage })
+      body: JSON.stringify({ action: 'extractPatients', image: state.importImage, username: AUTH.user, password: AUTH.pass })
     });
     
     console.log('📥 Response status:', res.status);
