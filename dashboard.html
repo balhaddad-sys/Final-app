@@ -4198,7 +4198,8 @@ body.dark-theme .readonly-banner {
 (function() {
   const user = sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER');
   const pass = sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS');
-  const unit = sessionStorage.getItem('MW_UNIT');
+  // Check sessionStorage first, then localStorage fallback
+  const unit = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
   
   if (!user || !pass) {
     window.location.href = 'login.html';
@@ -4208,6 +4209,12 @@ body.dark-theme .readonly-banner {
   if (!unit) {
     window.location.href = 'landing.html';
     return;
+  }
+  
+  // If unit was found in localStorage but not sessionStorage, copy it over
+  if (!sessionStorage.getItem('MW_UNIT') && localStorage.getItem('MW_SELECTED_UNIT')) {
+    sessionStorage.setItem('MW_UNIT', localStorage.getItem('MW_SELECTED_UNIT'));
+    sessionStorage.setItem('MW_UNIT_NAME', localStorage.getItem('MW_SELECTED_UNIT_NAME') || '');
   }
 })();
 </script>
