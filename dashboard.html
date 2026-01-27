@@ -6853,18 +6853,25 @@ async function callCloud(action, payload = {}) {
         case 'updateSettings':
           return await fb.updateSettings(payload.settings || payload);
 
+        // Image-based AI operations
+        case 'identifyMedication':
+          return await fb.identifyMedication(payload.image, payload.additionalInfo);
+        case 'analyzeDocument':
+          return await fb.analyzeDocument(payload.image, payload.documentType, payload.patientContext);
+        case 'extractPatients':
+          return await fb.extractPatients(payload.image, payload.format);
+        case 'analyzeLabsEnhanced':
+          return await fb.analyzeLabsEnhanced(payload.image || payload.labs, payload.patientContext, payload.model);
+
         // Operations not yet migrated - return success with warning
         case 'patches':
         case 'recordFeedback':
-        case 'identifyMedication':
-        case 'analyzeDocument':
         case 'startWardImport':
         case 'cleanupWardUnits':
         case 'importWardList':
         case 'submitUnitRequest':
         case 'getUnitRequests':
         case 'updateUnitRequest':
-        case 'extractPatients':
           console.warn(`⚠️ Action '${action}' not yet migrated to Firebase. Returning mock success.`);
           return { success: true, warning: `Action '${action}' pending migration`, data: payload };
 

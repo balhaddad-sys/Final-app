@@ -406,6 +406,63 @@ export async function oncallConsult(scenario, patientContext = null, urgency = '
 }
 
 // ============================================================================
+// IMAGE-BASED AI FUNCTIONS (Vision)
+// ============================================================================
+
+/**
+ * Identifies medication from an image.
+ *
+ * @param {string} image - Base64 encoded image
+ * @param {string} additionalInfo - Additional context (optional)
+ * @returns {Promise<Object>} { success, identification, model, usage }
+ */
+export async function identifyMedication(image, additionalInfo = null) {
+  return callFunction('identifyMedication', { image, additionalInfo });
+}
+
+/**
+ * Analyzes a clinical document or image.
+ *
+ * @param {string} image - Base64 encoded image
+ * @param {string} documentType - Type of document (optional)
+ * @param {Object} patientContext - Patient context (optional)
+ * @returns {Promise<Object>} { success, analysis, model, usage }
+ */
+export async function analyzeDocument(image, documentType = null, patientContext = null) {
+  return callFunction('analyzeDocument', { image, documentType, patientContext });
+}
+
+/**
+ * Extracts patient information from an image.
+ *
+ * @param {string} image - Base64 encoded image
+ * @param {string} format - Format hint (e.g., 'handover sheet', 'patient list')
+ * @returns {Promise<Object>} { success, patients, rawText, count, model, usage }
+ */
+export async function extractPatients(image, format = null) {
+  return callFunction('extractPatients', { image, format });
+}
+
+/**
+ * Enhanced lab analysis with image support.
+ *
+ * @param {string|Object} imageOrLabs - Base64 image or structured lab data
+ * @param {Object} patientContext - Patient context (optional)
+ * @param {string} model - Model override (optional)
+ * @returns {Promise<Object>} { success, analysis, model, usage }
+ */
+export async function analyzeLabsEnhanced(imageOrLabs, patientContext = null, model = null) {
+  const isImage = typeof imageOrLabs === 'string' &&
+    (imageOrLabs.startsWith('data:image') || imageOrLabs.length > 1000);
+
+  if (isImage) {
+    return callFunction('analyzeLabsEnhanced', { image: imageOrLabs, patientContext, model });
+  } else {
+    return callFunction('analyzeLabsEnhanced', { labs: imageOrLabs, patientContext, model });
+  }
+}
+
+// ============================================================================
 // USER PROFILE & SETTINGS
 // ============================================================================
 

@@ -1313,6 +1313,350 @@ exports.updateSettings = functions.https.onCall(async (data, context) => {
   }
 });
 
+// ============================================================================
+// IMAGE-BASED AI FUNCTIONS (Claude Vision)
+// ============================================================================
+
+/**
+ * Calls Claude API with image support.
+ */
+async function callClaudeVisionAPI(imageBase64, textPrompt, options = {}) {
+  const apiKey = getClaudeApiKey();
+
+  if (!apiKey) {
+    throw new Error('Claude API key not configured');
+  }
+
+  const fetch = (await import('node-fetch')).default;
+
+  // Determine media type from base64 header or default to jpeg
+  let mediaType = 'image/jpeg';
+  if (imageBase64.startsWith('data:')) {
+    const match = imageBase64.match(/^data:([^;]+);base64,/);
+    if (match) {
+      mediaType = match[1];
+      imageBase64 = imageBase64.replace(/^data:[^;]+;base64,/, '');
+    }
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: options.model || AI_CONFIG.MODELS.FAST,
+      max_tokens: options.maxTokens || 4000,
+      temperature: options.temperature || 0.3,
+      system: options.system || '',
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: imageBase64
+            }
+          },
+          {
+            type: 'text',
+            text: textPrompt
+          }
+        ]
+      }]
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Claude API error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Identifies medication from an image.
+ */
+exports.identifyMedication = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, additionalInfo } = data || {};
+
+  if (!image) {
+    throw new functions.https.HttpsError(
+      'invalid-argument', 'Image is required');
+  }
+
+  const systemPrompt = `You are a clinical pharmacist expert at identifying medications from images.
+
+Analyze the image and provide:
+1. **Medication Name** (generic and brand)
+2. **Strength/Dosage**
+3. **Form** (tablet, capsule, injection, etc.)
+4. **Manufacturer** (if visible)
+5. **Common Uses**
+6. **Key Warnings**
+
+If you cannot identify the medication with certainty, say so and explain why.
+IMPORTANT: Always recommend verification with a pharmacist for patient safety.`;
+
+  const prompt = additionalInfo
+    ? `Identify this medication. Additional context: ${additionalInfo}`
+    : 'Identify this medication from the image.';
+
+  try {
+    const response = await callClaudeVisionAPI(image, prompt, {
+      system: systemPrompt,
+      model: AI_CONFIG.MODELS.FAST
+    });
+
+    return {
+      success: true,
+      identification: response.content[0].text,
+      model: AI_CONFIG.MODELS.FAST,
+      usage: response.usage
+    };
+
+  } catch (error) {
+    console.error(`[identifyMedication] Error:`, error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Analyzes a clinical document or image (lab results, X-rays, etc.).
+ */
+exports.analyzeDocument = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, documentType, patientContext } = data || {};
+
+  if (!image) {
+    throw new functions.https.HttpsError(
+      'invalid-argument', 'Image is required');
+  }
+
+  const systemPrompt = `You are an expert clinical analyst helping healthcare professionals interpret medical documents and images.
+
+Provide a structured analysis including:
+1. **Document Type** identified
+2. **Key Findings** - List all significant findings
+3. **Abnormalities** - Highlight any abnormal values or findings
+4. **Clinical Significance** - What these findings mean clinically
+5. **Recommendations** - Suggested follow-up or actions
+
+Use KUWAIT SI UNITS where applicable.
+Flag any CRITICAL or URGENT findings prominently.
+Include disclaimer that this is for educational support only.`;
+
+  let prompt = 'Analyze this clinical document/image.';
+  if (documentType) {
+    prompt = `Analyze this ${documentType}.`;
+  }
+  if (patientContext) {
+    prompt += `\n\nPatient context: ${JSON.stringify(patientContext)}`;
+  }
+
+  try {
+    const response = await callClaudeVisionAPI(image, prompt, {
+      system: systemPrompt,
+      model: AI_CONFIG.MODELS.BALANCED,
+      maxTokens: 6000
+    });
+
+    return {
+      success: true,
+      analysis: response.content[0].text,
+      model: AI_CONFIG.MODELS.BALANCED,
+      usage: response.usage
+    };
+
+  } catch (error) {
+    console.error(`[analyzeDocument] Error:`, error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Extracts patient information from an image (handover sheet, patient list, etc.).
+ */
+exports.extractPatients = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, format } = data || {};
+
+  if (!image) {
+    throw new functions.https.HttpsError(
+      'invalid-argument', 'Image is required');
+  }
+
+  const systemPrompt = `You are a medical data extraction specialist. Extract patient information from the image accurately.
+
+Return the data as a JSON array with this structure:
+[
+  {
+    "name": "Patient Name",
+    "mrn": "MRN if visible",
+    "age": "Age if visible",
+    "gender": "M/F if visible",
+    "bed": "Bed number if visible",
+    "ward": "Ward/Unit if visible",
+    "diagnosis": "Primary diagnosis if visible",
+    "notes": "Any other relevant notes"
+  }
+]
+
+Rules:
+- Extract ALL patients visible in the image
+- Use null for fields that are not visible/readable
+- Preserve exact spelling of names and MRNs
+- If text is unclear, add "(unclear)" suffix
+- Return ONLY valid JSON, no additional text`;
+
+  const prompt = format
+    ? `Extract patient data from this ${format}. Return as JSON array.`
+    : 'Extract all patient information from this image. Return as JSON array.';
+
+  try {
+    const response = await callClaudeVisionAPI(image, prompt, {
+      system: systemPrompt,
+      model: AI_CONFIG.MODELS.BALANCED,
+      maxTokens: 8000
+    });
+
+    let extractedText = response.content[0].text;
+
+    // Try to parse as JSON
+    let patients = [];
+    try {
+      // Find JSON array in response
+      const jsonMatch = extractedText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        patients = JSON.parse(jsonMatch[0]);
+      }
+    } catch (parseError) {
+      console.warn('[extractPatients] Could not parse JSON, returning raw text');
+    }
+
+    return {
+      success: true,
+      patients: patients,
+      rawText: extractedText,
+      count: patients.length,
+      model: AI_CONFIG.MODELS.BALANCED,
+      usage: response.usage
+    };
+
+  } catch (error) {
+    console.error(`[extractPatients] Error:`, error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Enhanced lab analysis with image support.
+ */
+exports.analyzeLabsEnhanced = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, labs, patientContext, model } = data || {};
+
+  if (!image && !labs) {
+    throw new functions.https.HttpsError(
+      'invalid-argument', 'Either image or labs data is required');
+  }
+
+  const systemPrompt = `You are an expert clinical pathologist providing comprehensive laboratory result interpretation.
+
+IMPORTANT - Use KUWAIT SI UNITS:
+- Potassium (K+): 3.5-5.0 mmol/L
+- Sodium (Na+): 136-145 mmol/L
+- Hemoglobin: g/L (not g/dL)
+- Creatinine: µmol/L
+
+Provide structured analysis:
+
+## 🚨 CRITICAL VALUES (if any)
+List any panic/critical values requiring immediate attention
+
+## 📊 RESULTS SUMMARY
+| Test | Result | Reference | Status |
+|------|--------|-----------|--------|
+
+## 🔍 INTERPRETATION
+- Key findings and their clinical significance
+- Patterns identified (e.g., AKI, DKA, sepsis)
+
+## ⚠️ ABNORMALITIES
+- List each abnormality with possible causes
+
+## 📋 RECOMMENDATIONS
+- Suggested follow-up tests
+- Monitoring parameters
+- Specialist referral if needed
+
+## 🎯 CLINICAL PEARLS
+- 2-3 key teaching points`;
+
+  try {
+    let response;
+
+    if (image) {
+      // Use vision API for image
+      const prompt = patientContext
+        ? `Analyze these lab results. Patient context: ${JSON.stringify(patientContext)}`
+        : 'Analyze these laboratory results from the image.';
+
+      response = await callClaudeVisionAPI(image, prompt, {
+        system: systemPrompt,
+        model: model || AI_CONFIG.MODELS.BALANCED,
+        maxTokens: 6000
+      });
+    } else {
+      // Use text API for structured lab data
+      let userMessage = `Analyze these laboratory results:\n${JSON.stringify(labs, null, 2)}`;
+      if (patientContext) {
+        userMessage += `\n\nPatient context:\n${JSON.stringify(patientContext, null, 2)}`;
+      }
+
+      response = await callClaudeAPI([
+        { role: 'user', content: userMessage }
+      ], {
+        system: systemPrompt,
+        model: model || AI_CONFIG.MODELS.BALANCED
+      });
+    }
+
+    return {
+      success: true,
+      analysis: response.content[0].text,
+      model: model || AI_CONFIG.MODELS.BALANCED,
+      usage: response.usage
+    };
+
+  } catch (error) {
+    console.error(`[analyzeLabsEnhanced] Error:`, error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 /**
  * Health check endpoint.
  */
