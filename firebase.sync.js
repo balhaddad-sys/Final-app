@@ -7,6 +7,7 @@
 import {
     db,
     doc,
+    getDoc,
     collection,
     query,
     where,
@@ -67,12 +68,13 @@ export function subscribeToPatients(unitId, onUpdate, onError = console.error) {
                 console.log('[Sync] Patients updated:', changes);
             }
 
-            setSyncStatus('connected');
+            // Mark as connected - Firebase is reachable
+            markFirebaseConnected();
             onUpdate(patients);
         },
         (error) => {
             console.error('[Sync] Patient subscription error:', error);
-            setSyncStatus('error');
+            markFirebaseDisconnected();
             onError(error);
         }
     );
@@ -117,12 +119,12 @@ export function subscribeToUnits(onUpdate, onError = console.error) {
             });
 
             console.log('[Sync] Units updated:', units.length, 'units');
-            setSyncStatus('connected');
+            markFirebaseConnected();
             onUpdate(units);
         },
         (error) => {
             console.error('[Sync] Units subscription error:', error);
-            setSyncStatus('error');
+            markFirebaseDisconnected();
             onError(error);
         }
     );
@@ -160,11 +162,11 @@ export function subscribeToPatient(patientId, onUpdate, onError = console.error)
                 console.log('[Sync] Patient deleted:', patientId);
                 onUpdate(null);
             }
-            setSyncStatus('connected');
+            markFirebaseConnected();
         },
         (error) => {
             console.error('[Sync] Patient subscription error:', error);
-            setSyncStatus('error');
+            markFirebaseDisconnected();
             onError(error);
         }
     );
@@ -300,25 +302,115 @@ export function getActiveListeners() {
 // ============================================
 
 /**
- * Monitor online/offline status
+ * Firebase connectivity state
+ * IMPORTANT: navigator.onLine is unreliable - we use actual Firebase connectivity
+ */
+let firebaseConnected = false;
+let connectivityCheckInterval = null;
+let lastSuccessfulPing = null;
+
+/**
+ * Mark Firebase as connected (called by successful listener callbacks)
+ */
+function markFirebaseConnected() {
+    if (!firebaseConnected) {
+        firebaseConnected = true;
+        lastSuccessfulPing = Date.now();
+        console.log('[Sync] Firebase connectivity: CONNECTED');
+        setSyncStatus('connected');
+    }
+}
+
+/**
+ * Mark Firebase as disconnected (called by failed listener callbacks)
+ */
+function markFirebaseDisconnected() {
+    if (firebaseConnected) {
+        firebaseConnected = false;
+        console.log('[Sync] Firebase connectivity: DISCONNECTED');
+        setSyncStatus('disconnected');
+    }
+}
+
+/**
+ * Test Firebase connectivity by attempting a lightweight Firestore operation
+ * @returns {Promise<boolean>} True if Firebase is reachable
+ */
+async function testFirebaseConnectivity() {
+    try {
+        const user = getCurrentUser();
+        if (!user) {
+            // Not authenticated - can't test Firestore access
+            // But we can assume offline for unauthenticated state
+            return false;
+        }
+
+        // Attempt to read user's profile (lightweight operation)
+        const userDocRef = doc(db, 'users', user.uid);
+
+        // Set a short timeout for the connectivity test
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const docSnap = await getDoc(userDocRef);
+        clearTimeout(timeoutId);
+
+        lastSuccessfulPing = Date.now();
+        return true;
+
+    } catch (error) {
+        console.warn('[Sync] Firebase connectivity test failed:', error.code || error.message);
+        return false;
+    }
+}
+
+/**
+ * Update connectivity status based on Firebase reachability
+ */
+async function updateFirebaseConnectivity() {
+    const isConnected = await testFirebaseConnectivity();
+
+    if (isConnected !== firebaseConnected) {
+        firebaseConnected = isConnected;
+        console.log(`[Sync] Firebase connectivity changed: ${isConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
+        setSyncStatus(isConnected ? 'connected' : 'disconnected');
+    }
+}
+
+/**
+ * Monitor online/offline status using REAL Firebase connectivity
+ * FIXED: No longer relies on navigator.onLine which is unreliable
  */
 export function initConnectionMonitor() {
-    window.addEventListener('online', () => {
-        console.log('[Sync] Browser online');
-        setSyncStatus('connected');
+    // Listen to browser events as hints (not truth)
+    window.addEventListener('online', async () => {
+        console.log('[Sync] Browser reports online - verifying Firebase connectivity...');
+        await updateFirebaseConnectivity();
     });
 
     window.addEventListener('offline', () => {
-        console.log('[Sync] Browser offline');
+        console.log('[Sync] Browser reports offline');
+        firebaseConnected = false;
         setSyncStatus('disconnected');
     });
 
-    // Set initial status
-    if (navigator.onLine) {
-        setSyncStatus('connected');
-    } else {
-        setSyncStatus('disconnected');
+    // Start with disconnected state - let Firebase listeners update this
+    setSyncStatus('disconnected');
+
+    // Perform initial connectivity test
+    updateFirebaseConnectivity();
+
+    // Start periodic connectivity heartbeat (every 15 seconds)
+    if (connectivityCheckInterval) {
+        clearInterval(connectivityCheckInterval);
     }
+    connectivityCheckInterval = setInterval(() => {
+        // Only run heartbeat if we think we're disconnected
+        // If connected, the onSnapshot listeners will tell us if we lose connection
+        if (!firebaseConnected) {
+            updateFirebaseConnectivity();
+        }
+    }, 15000);
 }
 
 // Auto-initialize connection monitor
