@@ -1,5 +1,5 @@
-"functions": [
-  {
+{
+  "functions": {
     "source": "functions",
     "codebase": "default",
     "ignore": [
@@ -8,9 +8,15 @@
       "firebase-debug.log",
       "firebase-debug.*.log"
     ],
-    "runtime": "nodejs18" 
-  }
-
+    "runtime": "nodejs18"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
   },
   "emulators": {
     "functions": {
@@ -37,5 +43,9 @@
     "ui": {
       "enabled": true
     }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }
