@@ -95,49 +95,45 @@ function isMobileDevice() {
 
 /**
  * Sign in with Google
+ * FIXED: Always use popup - redirect is broken on many mobile browsers
  * @returns {Promise<object>} Result object
  */
 export async function signInWithGoogle() {
     try {
         const provider = new GoogleAuthProvider();
 
-        // Configure Google provider with recommended settings
+        // Configure Google provider
         provider.addScope('email');
         provider.addScope('profile');
         provider.setCustomParameters({
             prompt: 'select_account'  // Always show account picker
         });
 
-        // Use redirect on mobile, popup on desktop
-        if (isMobileDevice()) {
-            console.log('[Auth] Mobile detected, using redirect flow');
-            await signInWithRedirect(auth, provider);
-            // Return pending - actual result will be handled by handleGoogleRedirect
-            return { success: true, pending: true };
-        } else {
-            console.log('[Auth] Desktop detected, using popup flow');
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
+        // FIXED: Always use popup - redirect flow is unreliable on mobile
+        // Modern mobile browsers handle popups well
+        console.log('[Auth] Using popup flow for Google sign-in');
+        
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
 
-            // Check if user document exists, create if not
-            await createUserProfileIfNeeded(user);
+        // Check if user document exists, create if not
+        await createUserProfileIfNeeded(user);
 
-            console.log('[Auth] User logged in with Google:', user.email);
-            return { success: true, user };
-        }
+        console.log('[Auth] User logged in with Google:', user.email);
+        return { success: true, user };
 
     } catch (error) {
         console.error('[Auth] Google sign-in error:', error.code, error.message);
-        console.error('[Auth] Full error details:', JSON.stringify({
-            code: error.code,
-            message: error.message,
-            name: error.name,
-            customData: error.customData
-        }, null, 2));
 
         // Handle popup closed by user (don't show error)
         if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
             return { success: false, error: 'Sign-in cancelled', cancelled: true };
+        }
+
+        // Handle popup blocked
+        if (error.code === 'auth/popup-blocked') {
+            console.error('[Auth] Popup was blocked. Please allow popups for this site.');
+            return { success: false, error: 'Popup blocked. Please allow popups and try again.' };
         }
 
         // Handle unauthorized domain
@@ -147,7 +143,7 @@ export async function signInWithGoogle() {
 
         // Handle operation not allowed (Google Sign-In not enabled)
         if (error.code === 'auth/operation-not-allowed') {
-            console.error('[Auth] Google Sign-In is not enabled in Firebase Console. Go to Authentication > Sign-in method > Google and enable it.');
+            console.error('[Auth] Google Sign-In is not enabled in Firebase Console.');
         }
 
         return { success: false, error: getAuthErrorMessage(error.code) };
