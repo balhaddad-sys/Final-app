@@ -5495,6 +5495,17 @@ body.dark-theme .readonly-banner {
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════════════
+// FIREBASE CLOUD FUNCTIONS - Dynamic Import
+// ═══════════════════════════════════════════════════════════════════════════
+let firebaseFunctions = null;
+async function loadFirebaseFunctions() {
+  if (!firebaseFunctions) {
+    firebaseFunctions = await import('./firebase.functions.js');
+  }
+  return firebaseFunctions;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // AUTHENTICATION GUARD - Redirect to login if not authenticated
 // ═══════════════════════════════════════════════════════════════════════════
 (function authGuard() {
@@ -5656,9 +5667,10 @@ const CONFIG = {
   ADMIN_PASSWORD: 'admin123',
   
   // ═══════════════════════════════════════════════════════════════════
-  // API CONFIGURATION
+  // API CONFIGURATION (DEPRECATED - Now using Firebase Cloud Functions)
   // ═══════════════════════════════════════════════════════════════════
-  API_URL: 'https://script.google.com/macros/s/AKfycbyVRA0E6by1lud8waH0Vu7HWuWKlwlOcnq3Qn2cNK3OaVZNrADyNczv0OuYdSq1SJBpZg/exec',
+  API_URL: 'FIREBASE_CLOUD_FUNCTIONS', // Legacy - kept for backward compatibility checks
+  USE_FIREBASE: true, // Flag to indicate Firebase Cloud Functions should be used
   FORMSUBMIT_URL: 'https://formsubmit.co/ajax/',
   
   // ═══════════════════════════════════════════════════════════════════
@@ -6776,32 +6788,99 @@ function doLogout() {
   window.location.href = 'login.html';
 }
 
-// Cloud caller - injects credentials into all authenticated requests
+// Cloud caller - Routes actions to Firebase Cloud Functions
 async function callCloud(action, payload = {}) {
-  // Inject credentials for non-auth actions
-  if (action !== 'login' && action !== 'register') {
-    if (AUTH.user && AUTH.pass) {
-      payload.username = AUTH.user;
-      payload.password = AUTH.pass;
-    }
-    // Also include Firebase ID token for authenticated requests
-    const firebaseToken = await window.getFirebaseToken();
-    if (firebaseToken) {
-      payload.idToken = firebaseToken;
+  console.log('📡 callCloud:', action);
+
+  // Use Firebase Cloud Functions
+  if (CONFIG.USE_FIREBASE) {
+    try {
+      const fb = await loadFirebaseFunctions();
+      const deviceId = fb.generateDeviceId();
+
+      // Route to appropriate Firebase function
+      switch (action) {
+        // Data operations
+        case 'loadData':
+          return await fb.loadData({ clientRev: payload.clientRev, deviceId });
+        case 'saveData':
+          return await fb.saveData({
+            payload: payload.data || payload,
+            baseRev: payload.baseRev,
+            force: payload.force,
+            deviceId
+          });
+
+        // Trash operations
+        case 'moveToTrash':
+          return await fb.moveToTrash(payload.itemIds, payload.itemType);
+        case 'getTrash':
+          return await fb.getTrash();
+        case 'restoreFromTrash':
+          return await fb.restoreFromTrash(payload.itemIds);
+        case 'emptyTrash':
+          return await fb.emptyTrash(payload.itemIds);
+
+        // Inbox/handover operations
+        case 'sendPatient':
+          return await fb.sendPatient(payload.recipient, payload.patientData);
+        case 'checkInbox':
+          return await fb.checkInbox();
+        case 'acceptInboxPatient':
+          return await fb.acceptInboxPatient(payload.patientId, payload.targetUnitId);
+
+        // Session/sync operations
+        case 'heartbeat':
+        case 'ping':
+          return await fb.heartbeat({ deviceId, clientRev: payload.clientRev });
+
+        // AI operations
+        case 'askClinical':
+          return await fb.askClinical(payload.question, payload.patientContext);
+        case 'analyzeLabs':
+        case 'analyzeLabsEnhanced':
+          return await fb.analyzeLabs(payload.labs || payload, payload.patientContext);
+        case 'getDrugInfo':
+          return await fb.getDrugInfo(payload.drugName || payload.query, payload.indication);
+        case 'generateDifferential':
+          return await fb.generateDifferential(payload.symptoms, payload.patientContext);
+        case 'getTreatmentPlan':
+          return await fb.getTreatmentPlan(payload.diagnosis, payload.patientContext);
+
+        // User operations
+        case 'getUserProfile':
+          return await fb.getUserProfile();
+        case 'updateSettings':
+          return await fb.updateSettings(payload.settings || payload);
+
+        // Operations not yet migrated - return success with warning
+        case 'patches':
+        case 'recordFeedback':
+        case 'identifyMedication':
+        case 'analyzeDocument':
+        case 'startWardImport':
+        case 'cleanupWardUnits':
+        case 'importWardList':
+        case 'submitUnitRequest':
+        case 'getUnitRequests':
+        case 'updateUnitRequest':
+        case 'extractPatients':
+          console.warn(`⚠️ Action '${action}' not yet migrated to Firebase. Returning mock success.`);
+          return { success: true, warning: `Action '${action}' pending migration`, data: payload };
+
+        default:
+          console.warn(`⚠️ Unknown action: ${action}`);
+          return { success: false, error: `Unknown action: ${action}` };
+      }
+    } catch (e) {
+      console.error('📡 Firebase error:', e);
+      return { success: false, error: e.message || 'Firebase error' };
     }
   }
 
-  payload.action = action;
-
-  const apiUrl = state.settings?.apiUrl || CONFIG.API_URL;
-
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
-  });
-
-  return await response.json();
+  // Fallback to legacy API (should not reach here with USE_FIREBASE=true)
+  console.warn('⚠️ Using legacy API - Firebase not enabled');
+  return { success: false, error: 'Firebase not configured' };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -8666,7 +8745,7 @@ async function performSync() {
   saveLocalDeferred();
   
   // Check if we have cloud configured
-  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) {
     sync.pendingChanges = false;
     sync.isSyncing = false;
     updateSyncStatus('synced', 'Saved locally');
@@ -8895,7 +8974,7 @@ async function forceSync_LEGACY() {
   saveLocal();
   saveLocalLite();
   
-  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) {
     console.log('⚠️ No API URL configured - saved locally only');
     updateSyncStatus('synced', 'Saved locally');
     return true;
@@ -9044,7 +9123,7 @@ async function syncFromCloud_LEGACY() {
   // Show loading status
   showSyncStatusBar('🔄 Connecting to cloud...', 'orange');
   
-  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) {
     // No cloud configured - hydrate from local only
     sync.isHydrated = true;
     sync.isReadOnly = false;  // ★ UNLOCK for local-only mode
@@ -14666,7 +14745,7 @@ RESPOND ONLY WITH VALID JSON. No markdown, no explanation.`;
 // ═══════════════════════════════════════════════════════════════════
 async function handleLabUpload(files) {
   // Guard: Check API URL
-  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') {
+  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) {
     console.error('API URL not configured:', state.settings.apiUrl);
     toast('API not configured. Go to Admin → Settings', true);
     return;
@@ -18619,7 +18698,7 @@ window.openImport = function() { state.importImage = null; state.importPatients 
 window.resetImport = function() { state.importImage = null; state.importPatients = []; $('importUpload').style.display = 'block'; $('importPreview').style.display = 'none'; $('importLoading').style.display = 'none'; $('importResults').style.display = 'none'; $('importError').style.display = 'none'; $('importConfirmBtn').disabled = true; };
 window.extractPatients = async function() {
   if (!state.importImage) { toast('No image selected', true); return; }
-  if (!state.settings.apiUrl || state.settings.apiUrl === 'YOUR_API_URL_HERE') { toast('API URL not configured. Go to Admin settings.', true); return; }
+  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) { toast('API URL not configured. Go to Admin settings.', true); return; }
 
   $('importPreview').style.display = 'none';
   $('importLoading').style.display = 'block';

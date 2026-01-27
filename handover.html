@@ -761,7 +761,14 @@ body {
 </div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbyVRA0E6by1lud8waH0Vu7HWuWKlwlOcnq3Qn2cNK3OaVZNrADyNczv0OuYdSq1SJBpZg/exec';
+// Firebase Cloud Functions - loaded dynamically
+let firebaseFunctions = null;
+async function loadFirebaseFunctions() {
+  if (!firebaseFunctions) {
+    firebaseFunctions = await import('./firebase.functions.js');
+  }
+  return firebaseFunctions;
+}
 
 const AUTH = {
   user: sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER'),
@@ -1605,38 +1612,34 @@ async function acceptPt(id) {
 }
 
 async function callAPI(action, extra = {}) {
-  const requestBody = { action, username: AUTH.user, password: AUTH.pass, ...extra };
-  
   console.log('📡 API Call:', action);
 
-  let res;
   try {
-    res = await fetch(API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(requestBody)
-    });
-  } catch (e) {
-    console.error('📡 Network error:', e);
-    toast('Network error');
-    return { success: false, error: 'Network error: ' + e.message };
-  }
+    // Use Firebase Cloud Functions instead of Google Apps Script
+    const fb = await loadFirebaseFunctions();
 
-  const text = await res.text();
+    let result;
+    switch (action) {
+      case 'sendPatient':
+        result = await fb.sendPatient(extra.recipient, extra.patientData);
+        break;
+      case 'checkInbox':
+        result = await fb.checkInbox();
+        break;
+      case 'acceptInboxPatient':
+        result = await fb.acceptInboxPatient(extra.patientId, extra.targetUnitId);
+        break;
+      default:
+        console.error('📡 Unknown action:', action);
+        return { success: false, error: 'Unknown action: ' + action };
+    }
 
-  if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-    console.error('📡 Got HTML instead of JSON');
-    toast('Server error');
-    return { success: false, error: 'Server returned HTML' };
-  }
-
-  try {
-    const result = JSON.parse(text);
     console.log('📡', action, result.success ? '✅' : '❌');
     return result;
   } catch (e) {
-    console.error('📡 Invalid JSON');
-    return { success: false, error: 'Invalid response' };
+    console.error('📡 Error:', e);
+    toast('Error: ' + (e.message || 'Unknown error'));
+    return { success: false, error: e.message || 'Unknown error' };
   }
 }
 

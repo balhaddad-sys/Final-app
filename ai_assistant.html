@@ -436,8 +436,17 @@ body {
   }
 })();
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbyVRA0E6by1lud8waH0Vu7HWuWKlwlOcnq3Qn2cNK3OaVZNrADyNczv0OuYdSq1SJBpZg/exec';
+// Firebase Cloud Functions - imported dynamically
+let firebaseFunctions = null;
 let isLoading = false;
+
+// Load Firebase Functions module
+async function loadFirebaseFunctions() {
+  if (!firebaseFunctions) {
+    firebaseFunctions = await import('./firebase.functions.js');
+  }
+  return firebaseFunctions;
+}
 
 function initTheme() {
   if (localStorage.getItem('MEDWARD_THEME') === 'dark') document.body.classList.add('dark-theme');
@@ -501,18 +510,15 @@ RESPOND IN THIS EXACT FORMAT (use these exact section headers):
 Keep each section concise (2-4 bullet points max). Include specific doses where relevant. This is for quick on-call reference.`;
   
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'askClinical', question: structuredPrompt })
-    });
-    const data = await res.json();
+    // Use Firebase Cloud Functions instead of Google Apps Script
+    const fb = await loadFirebaseFunctions();
+    const data = await fb.askClinical(structuredPrompt);
     removeLoading(loadingId);
-    
+
     if (data.success && data.answer) {
       addStructuredResponse(data.answer);
     } else {
-      addSimpleResponse('Unable to process request. Please try again.');
+      addSimpleResponse(data.error || 'Unable to process request. Please try again.');
     }
   } catch (e) {
     removeLoading(loadingId);

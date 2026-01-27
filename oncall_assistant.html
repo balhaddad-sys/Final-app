@@ -893,7 +893,14 @@ a.nav-item{color:var(--text-muted)}
   }
 })();
 
-var apiUrl='https://script.google.com/macros/s/AKfycbyVRA0E6by1lud8waH0Vu7HWuWKlwlOcnq3Qn2cNK3OaVZNrADyNczv0OuYdSq1SJBpZg/exec';
+// Firebase Cloud Functions - loaded dynamically
+var firebaseFunctions = null;
+async function loadFirebaseFunctions() {
+  if (!firebaseFunctions) {
+    firebaseFunctions = await import('./firebase.functions.js');
+  }
+  return firebaseFunctions;
+}
 var gfrSex='';
 var callLogs = JSON.parse(localStorage.getItem('ONCALL_CALLS')) || [];
 
@@ -1260,23 +1267,23 @@ function calcQTc(e){
   else{box.className+=' success';box.innerHTML='<div class="result-title">'+qtc+'ms</div><div class="result-content">Normal</div>';}
 }
 
-function askAI(){
+async function askAI(){
   var input=document.getElementById('aiInput');
   var resp=document.getElementById('aiResponse');
   var q=input.value;
   if(!q){alert('Enter question');return;}
   resp.className='ai-response visible';
   resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label">Loading...</span></div><div class="ai-response-body"><div class="ai-loading"><div class="ai-loading-spinner"></div></div></div>';
-  fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'oncallAskClinical',question:q})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var ans=d.answer||d.response||'No response';
+  try {
+    // Use Firebase Cloud Functions instead of Google Apps Script
+    var fb = await loadFirebaseFunctions();
+    var d = await fb.oncallConsult(q, null, 'medium');
+    var ans = d.consultation || d.answer || d.response || 'No response';
     resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label">Response</span></div><div class="ai-response-body">'+ans+'</div>';
     input.value='';
-  })
-  .catch(function(err){
-    resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label" style="color:var(--danger)">Error</span></div><div class="ai-response-body">'+err.message+'</div>';
-  });
+  } catch(err) {
+    resp.innerHTML='<div class="ai-response-header"><span class="ai-response-label" style="color:var(--danger)">Error</span></div><div class="ai-response-body">'+(err.message||'Network error')+'</div>';
+  }
 }
 
 document.getElementById('aiInput').onkeydown=function(e){if(e.keyCode===13)askAI();};
