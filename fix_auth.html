@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Auth | MedWard Pro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .status { 
+      padding: 16px; 
+      border-radius: 12px; 
+      margin: 20px 0;
+      font-weight: 600;
+    }
+    .status.loading { background: #fef3c7; color: #92400e; }
+    .status.success { background: #d1fae5; color: #065f46; }
+    .status.error { background: #fee2e2; color: #991b1b; }
+    .info { font-size: 0.9rem; color: #666; margin: 16px 0; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .btn-primary { background: #005eb8; color: white; }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .log { 
+      text-align: left; 
+      background: #1e1e1e; 
+      color: #0f0; 
+      padding: 12px; 
+      border-radius: 8px; 
+      font-family: monospace; 
+      font-size: 11px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🔧 MedWard Auth Fix</h1>
+  <p style="color:#666">Fixes the Google Sign-In redirect issue</p>
+  
+  <div class="status loading" id="status">⏳ Checking Firebase...</div>
+  
+  <div class="info" id="info"></div>
+  
+  <button class="btn btn-primary" id="fixBtn" disabled onclick="doFix()">Fix & Go to App</button>
+  <button class="btn btn-secondary" onclick="location.href='login.html'">Back to Login</button>
+  
+  <div class="log" id="log"></div>
+</div>
+
+<script type="module">
+import { auth, onAuthStateChanged } from './firebase.config.js';
+
+const statusEl = document.getElementById('status');
+const infoEl = document.getElementById('info');
+const fixBtn = document.getElementById('fixBtn');
+const logEl = document.getElementById('log');
+
+function log(msg) {
+  console.log(msg);
+  logEl.textContent += msg + '\n';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setStatus(text, type) {
+  statusEl.textContent = text;
+  statusEl.className = 'status ' + type;
+}
+
+log('Starting auth check...');
+
+// Wait for Firebase to tell us the auth state
+let resolved = false;
+
+// Timeout after 8 seconds
+setTimeout(() => {
+  if (!resolved) {
+    resolved = true;
+    log('Timeout - no auth state received');
+    setStatus('❌ Could not detect login', 'error');
+    infoEl.innerHTML = 'Firebase did not respond in time.<br>Try <a href="login.html">logging in again</a>.';
+  }
+}, 8000);
+
+onAuthStateChanged(auth, (user) => {
+  if (resolved) return;
+  resolved = true;
+  
+  log('Auth state received: ' + (user ? user.email : 'null'));
+  
+  if (user) {
+    setStatus('✅ Signed in as ' + user.email, 'success');
+    infoEl.innerHTML = 'Click the button below to fix your session and go to the app.';
+    fixBtn.disabled = false;
+    
+    // Store user globally for the fix function
+    window._firebaseUser = user;
+    
+    log('User UID: ' + user.uid);
+    log('Ready to fix session storage');
+  } else {
+    setStatus('❌ Not signed in', 'error');
+    infoEl.innerHTML = 'You need to <a href="login.html">sign in</a> first.';
+    log('No user found');
+  }
+});
+
+// Fix function
+window.doFix = function() {
+  const user = window._firebaseUser;
+  if (!user) {
+    alert('No user found!');
+    return;
+  }
+  
+  log('Fixing session storage...');
+  
+  try {
+    // Set session storage
+    sessionStorage.setItem('MW_USER', user.email);
+    sessionStorage.setItem('MW_PASS', 'FIREBASE_AUTH');
+    log('✓ Session storage set');
+    
+    // Set local storage
+    localStorage.setItem('MW_USER', user.email);
+    localStorage.setItem('MW_PASS', 'FIREBASE_AUTH');
+    log('✓ Local storage set');
+    
+    // Clear any pending flags
+    sessionStorage.removeItem('MW_AUTH_PENDING');
+    log('✓ Cleared pending flags');
+    
+    // Verify
+    const check = sessionStorage.getItem('MW_USER');
+    log('Verification: MW_USER = ' + check);
+    
+    if (check === user.email) {
+      setStatus('✅ Fixed! Redirecting...', 'success');
+      log('SUCCESS - redirecting to landing.html');
+      
+      setTimeout(() => {
+        window.location.href = 'landing.html';
+      }, 1000);
+    } else {
+      setStatus('❌ Storage write failed', 'error');
+      log('ERROR: Storage verification failed');
+    }
+  } catch (e) {
+    log('ERROR: ' + e.message);
+    setStatus('❌ Fix failed: ' + e.message, 'error');
+  }
+};
+</script>
+
+</body>
+</html>
