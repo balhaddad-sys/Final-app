@@ -2,17 +2,16 @@
  * Professional Auth Guard for MedWard Pro - FIXED VERSION
  * ========================================================
  * Key fixes:
- * 1. Increased null debounce from 500ms to 1500ms for mobile
- * 2. Added final auth.currentUser check before calling onUnauthed
+ * 1. Configurable nullDebounce (default 1500ms instead of 500ms)
+ * 2. Final auth.currentUser check before giving up
  * 3. Better logging for debugging
  */
 
 import { auth } from './firebase.config.js';
-import { onAuthStateChanged, setPersistence, browserLocalPersistence } from './firebase.config.js';
+import { onAuthStateChanged } from './firebase.config.js';
 
 /**
  * Auth guard - waits for Firebase auth to hydrate before deciding navigation
- * FIXED: Longer debounce for mobile devices with slow auth hydration
  * @param {Object} options
  * @param {Function} options.onAuthed - Called when user is authenticated
  * @param {Function} options.onUnauthed - Called when user is not authenticated
@@ -24,14 +23,7 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000, nullDebounce
   let timeoutId = null;
   let nullDebounceId = null;
 
-  console.log('[AuthGuard] Starting auth check with', timeout, 'ms timeout,', nullDebounce, 'ms null debounce...');
-
-  // Check if we have a pending auth flag (set during Google sign-in redirect)
-  const authPending = sessionStorage.getItem('MW_AUTH_PENDING');
-  if (authPending) {
-    console.log('[AuthGuard] Auth pending flag detected - extending timeout');
-    timeout = Math.max(timeout, 6000);  // Give extra time if we know auth should be coming
-  }
+  console.log('[AuthGuard] Starting auth check (timeout:', timeout, 'ms, nullDebounce:', nullDebounce, 'ms)');
 
   // Listen for auth state
   const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -49,9 +41,6 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000, nullDebounce
       fired = true;
       unsubscribe();
       
-      // Clear pending flag if it exists
-      sessionStorage.removeItem('MW_AUTH_PENDING');
-      
       console.log('[AuthGuard] ✅ User authenticated:', user.email);
       try {
         onAuthed(user);
@@ -59,22 +48,19 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000, nullDebounce
         console.error('[AuthGuard] Error in onAuthed callback:', error);
       }
     } else {
-      // Got null - but don't act immediately!
-      // FIXED: Increased from 500ms to 1500ms for mobile compatibility
+      // Got null - wait before deciding (Firebase may still be loading)
       console.log('[AuthGuard] Got null, waiting', nullDebounce, 'ms for session to load...');
       
       clearTimeout(nullDebounceId);
       nullDebounceId = setTimeout(() => {
         if (fired) return;
         
-        // FIXED: Check auth.currentUser one more time before giving up
-        // Sometimes onAuthStateChanged fires null but currentUser is populated
+        // FIXED: Check auth.currentUser one more time
         const currentUser = auth.currentUser;
         if (currentUser) {
           fired = true;
           clearTimeout(timeoutId);
           unsubscribe();
-          sessionStorage.removeItem('MW_AUTH_PENDING');
           console.log('[AuthGuard] ✅ User found via currentUser check:', currentUser.email);
           try {
             onAuthed(currentUser);
@@ -84,11 +70,10 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000, nullDebounce
           return;
         }
         
-        // Still no user after debounce - truly unauthenticated
+        // Still no user - truly unauthenticated
         fired = true;
         clearTimeout(timeoutId);
         unsubscribe();
-        sessionStorage.removeItem('MW_AUTH_PENDING');
         
         console.log('[AuthGuard] ❌ No user after debounce');
         try {
@@ -96,32 +81,29 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000, nullDebounce
         } catch (error) {
           console.error('[AuthGuard] Error in onUnauthed callback:', error);
         }
-      }, nullDebounce);  // FIXED: Use configurable nullDebounce instead of hardcoded 500
+      }, nullDebounce);
     }
   }, (error) => {
-    // Error callback for onAuthStateChanged
     console.error('[AuthGuard] ❌ Auth state error:', error);
     if (!fired) {
       fired = true;
       clearTimeout(timeoutId);
       clearTimeout(nullDebounceId);
       unsubscribe();
-      sessionStorage.removeItem('MW_AUTH_PENDING');
       onUnauthed();
     }
   });
 
-  // Timeout fallback (overall safety net)
+  // Timeout fallback
   timeoutId = setTimeout(() => {
     if (!fired) {
-      // FIXED: Final check of auth.currentUser before timeout
+      // Final check
       const currentUser = auth.currentUser;
       if (currentUser) {
         fired = true;
         clearTimeout(nullDebounceId);
         unsubscribe();
-        sessionStorage.removeItem('MW_AUTH_PENDING');
-        console.log('[AuthGuard] ✅ User found at timeout via currentUser:', currentUser.email);
+        console.log('[AuthGuard] ✅ User found at timeout:', currentUser.email);
         try {
           onAuthed(currentUser);
         } catch (error) {
@@ -134,7 +116,6 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000, nullDebounce
       fired = true;
       clearTimeout(nullDebounceId);
       unsubscribe();
-      sessionStorage.removeItem('MW_AUTH_PENDING');
       onUnauthed();
     }
   }, timeout);
@@ -142,8 +123,6 @@ export function requireAuth({ onAuthed, onUnauthed, timeout = 5000, nullDebounce
 
 /**
  * One-shot auth check - returns current auth state
- * Use this for pages that need to know auth status but don't redirect
- * @returns {Promise<object|null>} User object or null
  */
 export function checkAuth() {
   return new Promise((resolve) => {
@@ -156,7 +135,6 @@ export function checkAuth() {
 
 /**
  * Helper to set legacy credentials after Firebase auth
- * (for backward compatibility with dashboard)
  */
 export function setLegacyCredentials(user) {
   if (!user) return;
