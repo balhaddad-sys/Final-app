@@ -8072,34 +8072,59 @@ function formatShortDate(iso) {
 }
 
 function compress(file, max, cb) {
+  if (!file) {
+    console.error('❌ compress: No file provided');
+    cb(null);
+    return;
+  }
+
   const r = new FileReader();
-  r.onerror = () => {
-    console.error('❌ FileReader error');
+  r.onerror = (err) => {
+    console.error('❌ FileReader error:', err);
+    console.error('❌ File details:', { name: file.name, type: file.type, size: file.size });
     cb(null);
   };
   r.onload = e => {
+    if (!e.target || !e.target.result) {
+      console.error('❌ FileReader result is empty');
+      cb(null);
+      return;
+    }
+
     const img = new Image();
-    img.onerror = () => {
-      console.error('❌ Image load error');
+    img.onerror = (err) => {
+      console.error('❌ Image load error:', err);
+      console.error('❌ Could not load image from file:', file.name);
       cb(null);
     };
     img.onload = () => {
-      const c = document.createElement('canvas'), ctx = c.getContext('2d');
-      let w = img.width, h = img.height, q = CONFIG.IMAGE_QUALITY;
-      if (w > CONFIG.MAX_DIM || h > CONFIG.MAX_DIM) {
-        if (w > h) { h = Math.round(h * CONFIG.MAX_DIM / w); w = CONFIG.MAX_DIM; }
-        else { w = Math.round(w * CONFIG.MAX_DIM / h); h = CONFIG.MAX_DIM; }
+      try {
+        const c = document.createElement('canvas'), ctx = c.getContext('2d');
+        let w = img.width, h = img.height, q = CONFIG.IMAGE_QUALITY;
+        if (w > CONFIG.MAX_DIM || h > CONFIG.MAX_DIM) {
+          if (w > h) { h = Math.round(h * CONFIG.MAX_DIM / w); w = CONFIG.MAX_DIM; }
+          else { w = Math.round(w * CONFIG.MAX_DIM / h); h = CONFIG.MAX_DIM; }
+        }
+        c.width = w; c.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        let url = c.toDataURL('image/jpeg', q);
+        while (url.length > max && q > 0.3) { q -= 0.1; url = c.toDataURL('image/jpeg', q); }
+        console.log('✅ Compressed image:', url.length, 'bytes');
+        cb(url);
+      } catch (err) {
+        console.error('❌ Canvas/compression error:', err);
+        cb(null);
       }
-      c.width = w; c.height = h;
-      ctx.drawImage(img, 0, 0, w, h);
-      let url = c.toDataURL('image/jpeg', q);
-      while (url.length > max && q > 0.3) { q -= 0.1; url = c.toDataURL('image/jpeg', q); }
-      console.log('✅ Compressed image:', url.length, 'bytes');
-      cb(url);
     };
     img.src = e.target.result;
   };
-  r.readAsDataURL(file);
+
+  try {
+    r.readAsDataURL(file);
+  } catch (err) {
+    console.error('❌ Failed to read file:', err);
+    cb(null);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -19754,7 +19779,26 @@ async function init() {
   if (imagingFileInput) imagingFileInput.onchange = function() { if (this.files[0]) handleImagingUpload(this.files[0]); this.value = ''; };
   
   const importFile = $('importFile');
-  if (importFile) importFile.onchange = function() { if (this.files[0]) { compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => { state.importImage = url; $('importImg').src = url; $('importUpload').style.display = 'none'; $('importPreview').style.display = 'block'; }); } };
+  if (importFile) importFile.onchange = function() {
+    const fileInput = this;
+    if (this.files && this.files[0]) {
+      compress(this.files[0], CONFIG.MAX_IMAGE_SIZE, url => {
+        if (url && url.length > 100) {
+          state.importImage = url;
+          $('importImg').src = url;
+          $('importUpload').style.display = 'none';
+          $('importPreview').style.display = 'block';
+        } else {
+          console.error('❌ Import file compression failed');
+          toast('Failed to load image file. Please try a different image.', true);
+          fileInput.value = '';
+        }
+      });
+    } else {
+      console.error('❌ No file selected for import');
+      toast('No file selected. Please select an image.', true);
+    }
+  };
 
   // Modal close on backdrop click
   $$('.modal').forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove('active'); });
