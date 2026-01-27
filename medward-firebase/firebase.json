@@ -1,16 +1,17 @@
-{
-  "functions": {
+"functions": [
+  {
     "source": "functions",
-    "runtime": "nodejs18",
-    "codebase": "default"
-  },
-  "hosting": {
-    "public": "public",
+    "codebase": "default",
     "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log"
+    ],
+    "runtime": "nodejs18" 
+  }
+]
+
   },
   "emulators": {
     "functions": {
