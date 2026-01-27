@@ -1,14 +1,1011 @@
-/**
- * FIXED Landing Page Initialization Script
- * =========================================
- * Replace the auth section in landing.html with this
- * 
- * Key fixes:
- * 1. Handles getRedirectResult BEFORE requireAuth
- * 2. Respects MW_AUTH_PENDING flag
- * 3. Longer timeouts for mobile
- */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#005eb8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Cache Control -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>MedWard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
+<style>
+:root {
+  --primary: #005eb8;
+  --primary-dark: #003087;
+  --primary-light: #e6f0f9;
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-input: #f1f5f9;
+  --bg-elevated: #f9fafb;
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --success: #059669;
+  --success-bg: #d1fae5;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
 
+body.dark-theme {
+  --primary: #60a5fa;
+  --primary-dark: #93c5fd;
+  --primary-light: #1e3a5f;
+  --bg-app: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-input: #334155;
+  --bg-elevated: #334155;
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --border: #334155;
+  --success-bg: #064e3b;
+  --danger-bg: #7f1d1d;
+  --warning-bg: #78350f;
+  --warning-text: #fcd34d;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 100px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Header */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  background: var(--bg-app);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  border-color: var(--primary);
+}
+
+.icon-btn svg {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.icon-btn:hover svg {
+  color: var(--primary);
+}
+
+.icon-btn.danger:hover {
+  border-color: var(--danger);
+}
+
+.icon-btn.danger:hover svg {
+  color: var(--danger);
+}
+
+/* Logo */
+.logo {
+  width: 80px;
+  height: 80px;
+  background: var(--primary);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 60px auto 20px;
+  box-shadow: 0 8px 24px rgba(0, 94, 184, 0.25);
+}
+
+.logo svg {
+  width: 44px;
+  height: 44px;
+  stroke: #fff;
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.version {
+  color: var(--primary);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* Disclaimer */
+.disclaimer {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  max-width: 400px;
+  margin-bottom: 24px;
+}
+
+.disclaimer-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--warning-text);
+  margin-bottom: 4px;
+}
+
+.disclaimer-text {
+  font-size: 0.75rem;
+  color: var(--warning-text);
+  line-height: 1.4;
+}
+
+/* Quick Links */
+.quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 32px;
+}
+
+.quick-link {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text-main);
+  transition: all 0.2s;
+}
+
+.quick-link:hover {
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.quick-link.purple { background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); }
+.quick-link.teal { background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); }
+.quick-link.blue { background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); }
+.quick-link.purple:hover, .quick-link.teal:hover, .quick-link.blue:hover { border-color: var(--primary); background: var(--bg-elevated); }
+
+.quick-link-icon {
+  font-size: 1.3rem;
+  margin-right: 12px;
+}
+
+.quick-link-text {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.quick-link-arrow {
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+
+/* Units Section */
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.units-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 24px;
+}
+
+.unit-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.unit-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.unit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--unit-color, var(--primary));
+  border-radius: var(--radius) var(--radius) 0 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.unit-card:hover::before {
+  opacity: 1;
+}
+
+.unit-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.unit-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.unit-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.unit-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.unit-card:hover .unit-actions,
+.unit-card:active .unit-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.unit-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 14px 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* Unit Access Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 360px;
+  overflow: hidden;
+  animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-unit-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+}
+
+.modal-unit-icon {
+  font-size: 2rem;
+}
+
+.modal-unit-name {
+  font-weight: 700;
+}
+
+.modal-unit-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 8px;
+  font-weight: 700;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 94, 184, 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  margin-top: 12px;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+}
+
+/* Settings Styles */
+.settings-section {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding: 0 20px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.settings-row:hover {
+  background: var(--bg-elevated);
+}
+
+.settings-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 1.1rem;
+}
+
+.settings-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.settings-value {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.settings-arrow {
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+/* Color Picker */
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.color-option {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border-color: var(--text-main);
+}
+
+/* Emoji Picker */
+.emoji-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.emoji-option {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.emoji-option:hover {
+  border-color: var(--primary);
+}
+
+.emoji-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* Sync Status */
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.sync-status.syncing {
+  color: var(--primary);
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+}
+
+.sync-status.syncing .sync-dot {
+  background: var(--primary);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Trash Styles */
+.trash-empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--text-muted);
+}
+
+.trash-empty-icon {
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+.trash-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.trash-item:last-child {
+  border-bottom: none;
+}
+
+.trash-item-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+.trash-item-info {
+  flex: 1;
+}
+
+.trash-item-name {
+  font-weight: 600;
+}
+
+.trash-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.trash-item-action {
+  padding: 6px 12px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text-main);
+  color: var(--bg-app);
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 2000;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.loading-overlay.active {
+  display: flex;
+}
+
+.loading-box {
+  background: var(--bg-surface);
+  padding: 32px 48px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+</style>
+</head>
+<body>
+<script>
+// Apply saved theme immediately
+(function() {
+  const theme = localStorage.getItem('MEDWARD_THEME');
+  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark-theme');
+  }
+})();
+</script>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="user-badge">
+      <div class="user-avatar" id="userAvatar">DR</div>
+      <span id="userName">Doctor</span>
+    </div>
+    <div class="sync-status" id="syncStatus">
+      <div class="sync-dot"></div>
+      <span id="syncText">Synced</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">
+      <svg id="themeSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg id="themeMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openSettingsModal()" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="icon-btn danger" onclick="doLogout()" title="Log out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- Main Content -->
+<div class="logo">
+  <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+</div>
+
+<h1 class="title">MedWard Pro</h1>
+<p class="subtitle">Ward Management & Decision Support</p>
+<p class="version">Lab Analysis • Drug Reference • Clinical Scoring • v17.5</p>
+
+<!-- Disclaimer -->
+<div class="disclaimer">
+  <div class="disclaimer-title">⚕️ Clinical Decision Support Only</div>
+  <div class="disclaimer-text">Verify all outputs with local protocols. Not a substitute for clinical judgment. If unstable: activate emergency pathway.</div>
+</div>
+
+<!-- Quick Links -->
+<div class="quick-links">
+  <a href="oncall_assistant.html" class="quick-link purple">
+    <span class="quick-link-icon">⚡</span>
+    <span class="quick-link-text">OnCall Assistant</span>
+    <span class="quick-link-arrow">→</span>
+  </a>
+  <a href="ai_assistant.html" class="quick-link teal">
+    <span class="quick-link-icon">🤖</span>
+    <span class="quick-link-text">AI Assistant</span>
+    <span class="quick-link-arrow">→</span>
+  </a>
+  <a href="antibiotic_guide.html" class="quick-link blue">
+    <span class="quick-link-icon">🛡️</span>
+    <span class="quick-link-text">Antibiotic Guide</span>
+    <span class="quick-link-arrow">→</span>
+  </a>
+</div>
+
+<!-- Units Section -->
+<div class="section-title">Your Units</div>
+<div class="units-grid" id="unitsGrid">
+  <!-- Units render here -->
+</div>
+
+<div class="action-buttons">
+  <button class="action-btn" onclick="openAddUnitModal()">
+    <span>+ Add Unit</span>
+  </button>
+</div>
+
+<!-- Unit Modal -->
+<div class="modal-overlay" id="unitModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="unitModalTitle">Add Unit</h3>
+      <button class="modal-close" onclick="closeModal('unitModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Unit Name</label>
+        <input type="text" class="form-input" id="unitName" placeholder="e.g. Medicine Unit E" style="letter-spacing: normal; text-align: left;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <input type="text" class="form-input" id="unitDesc" placeholder="e.g. Internal Medicine" style="letter-spacing: normal; text-align: left;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color</label>
+        <div class="color-picker">
+          <button class="color-option selected" style="background: #005eb8" data-color="#005eb8"></button>
+          <button class="color-option" style="background: #14b8a6" data-color="#14b8a6"></button>
+          <button class="color-option" style="background: #8b5cf6" data-color="#8b5cf6"></button>
+          <button class="color-option" style="background: #f59e0b" data-color="#f59e0b"></button>
+          <button class="color-option" style="background: #ec4899" data-color="#ec4899"></button>
+          <button class="color-option" style="background: #10b981" data-color="#10b981"></button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveUnit()">Save Unit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Settings</h3>
+      <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+    </div>
+    <div class="modal-body" style="padding: 0;">
+      <div class="settings-section">
+        <div class="settings-section-title">Data</div>
+        <div class="settings-row" onclick="forceCloudSync()">
+          <div class="settings-icon">☁️</div>
+          <div class="settings-label">Force Cloud Sync</div>
+          <div class="settings-arrow">→</div>
+        </div>
+        <div class="settings-row" onclick="openTrashModal()">
+          <div class="settings-icon">🗑️</div>
+          <div class="settings-label">Trash</div>
+          <div class="settings-value" id="trashCountBadge">0 items</div>
+          <div class="settings-arrow">→</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Account</div>
+        <div class="settings-row" onclick="doLogout()">
+          <div class="settings-icon">🚪</div>
+          <div class="settings-label" style="color: var(--danger)">Log Out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trash Modal -->
+<div class="modal-overlay" id="trashModal">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Trash</h3>
+      <button class="modal-close" onclick="closeModal('trashModal')">×</button>
+    </div>
+    <div class="modal-body" style="padding: 0; max-height: 400px; overflow-y: auto;">
+      <div id="trashList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Loading...</div>
+  </div>
+</div>
+
+<script type="module">
 import { logout } from './firebase.auth.js';
 import { getUnitsForUser, createUnit, updateUnit, deleteUnit as firebaseDeleteUnit, getAllUnits } from './firebase.store.js';
 import { subscribeToUnits, onSyncStatusChange } from './firebase.sync.js';
@@ -16,7 +1013,7 @@ import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js
 import { auth } from './firebase.config.js';
 import { getRedirectResult } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
 
-const BUILD_ID = '2026-01-26.4';  // Fixed Auth Guard Edition
+const BUILD_ID = '2026-01-27.1';  // FIXED: Google redirect handling
 
 // ═══════════════════════════════════════════════════════════════════════════
 // APP STATE
@@ -31,63 +1028,53 @@ let editingUnitId = null;
 let unsubscribeUnits = null;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// FIXED: Handle possible Google redirect BEFORE checking auth
+// FIXED AUTH: Handle Google redirect BEFORE checking auth state
+// This prevents the redirect loop on mobile devices
 // ═══════════════════════════════════════════════════════════════════════════
 
-(async function handlePossibleRedirect() {
-  console.log('[Landing] Checking for redirect result...');
+(async function handleAuthFlow() {
+  console.log('[Landing] Starting auth flow...');
   
+  // STEP 1: Check for Google redirect result first
   try {
+    console.log('[Landing] Checking for Google redirect result...');
     const result = await getRedirectResult(auth);
     
     if (result && result.user) {
-      console.log('[Landing] Got redirect result for:', result.user.email);
-      // Clear pending flag since we got the result
+      console.log('[Landing] ✅ Got redirect result:', result.user.email);
       sessionStorage.removeItem('MW_AUTH_PENDING');
-      // Set legacy credentials
       setLegacyCredentials(result.user);
-      // Don't redirect - we're already on landing, just initialize
       state.currentUser = {
         uid: result.user.uid,
         email: result.user.email,
         displayName: result.user.displayName || result.user.email?.split('@')[0]
       };
       initApp();
-      return;  // Skip requireAuth since we already have the user
+      return; // Done - skip requireAuth
     }
-    
-    console.log('[Landing] No redirect result, proceeding to requireAuth');
+    console.log('[Landing] No redirect result');
   } catch (error) {
     console.error('[Landing] Redirect result error:', error);
-    // Continue to requireAuth
   }
   
-  // Normal auth guard check
-  runAuthGuard();
-})();
-
-function runAuthGuard() {
+  // STEP 2: Normal auth check with longer timeout for mobile
+  console.log('[Landing] Running requireAuth...');
   requireAuth({
     onAuthed: (user) => {
-      // User is authenticated - initialize app
-      console.log('[Landing] User authenticated:', user.email);
+      console.log('[Landing] ✅ User authenticated:', user.email);
       state.currentUser = user;
       setLegacyCredentials(user);
       initApp();
     },
     onUnauthed: () => {
-      // Check if we have a pending auth flag
+      // Check if auth is pending (Google redirect in progress)
       const authPending = sessionStorage.getItem('MW_AUTH_PENDING');
-      
       if (authPending) {
-        console.log('[Landing] Auth pending flag found, waiting extra time...');
-        
-        // Give Firebase more time to hydrate
+        console.log('[Landing] Auth pending, waiting extra time...');
         setTimeout(() => {
           const currentUser = auth.currentUser;
-          
           if (currentUser) {
-            console.log('[Landing] User appeared after extra wait:', currentUser.email);
+            console.log('[Landing] ✅ User appeared after wait:', currentUser.email);
             sessionStorage.removeItem('MW_AUTH_PENDING');
             state.currentUser = {
               uid: currentUser.uid,
@@ -97,23 +1084,21 @@ function runAuthGuard() {
             setLegacyCredentials(currentUser);
             initApp();
           } else {
-            console.log('[Landing] Still no user after extra wait, redirecting to login');
+            console.log('[Landing] ❌ Still no user, redirecting to login');
             sessionStorage.removeItem('MW_AUTH_PENDING');
             safeRedirect('login.html');
           }
-        }, 2000);  // Extra 2 second wait if pending flag exists
+        }, 2000);
         return;
       }
       
-      // User is not authenticated - redirect to login
-      console.log('[Landing] Not authenticated, redirecting to login');
+      console.log('[Landing] ❌ Not authenticated, redirecting to login');
       safeRedirect('login.html');
     },
-    // FIXED: Use longer null debounce for mobile compatibility
-    nullDebounce: 1500,
+    nullDebounce: 1500,  // FIXED: Wait 1.5s instead of 0.5s for mobile
     timeout: 6000
   });
-}
+})();
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INITIALIZE APP
@@ -142,7 +1127,8 @@ async function initApp() {
       renderUnits();
       hideLoading();
 
-      // Mark cloud as verified
+      // Mark cloud as verified - this tells dashboard.html that Firebase is working
+      // Without this, dashboard redirects to loading.html which triggers offline mode
       localStorage.setItem('MW_CLOUD_VERIFIED', Date.now().toString());
       localStorage.removeItem('MW_OFFLINE_MODE');
       console.log('[Landing] Cloud verified via Firebase');
@@ -160,4 +1146,321 @@ async function initApp() {
   });
 }
 
-// ... rest of your existing functions ...
+function updateUserDisplay() {
+  const user = state.currentUser;
+  if (!user) return;
+
+  const displayName = user.displayName || user.email?.split('@')[0] || 'Doctor';
+  const avatar = displayName.substring(0, 2).toUpperCase();
+
+  document.getElementById('userAvatar').textContent = avatar;
+  document.getElementById('userName').textContent = displayName;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FIREBASE SYNC - Realtime updates handled by subscriptions
+// ═══════════════════════════════════════════════════════════════════════════
+
+// No manual sync needed - Firebase handles it automatically!
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UNIT MANAGEMENT FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function renderUnits() {
+  const grid = document.getElementById('unitsGrid');
+  
+  const unitSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32" style="color:var(--primary)"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>`;
+  
+  if (state.units.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-muted);">
+        <div style="margin-bottom: 8px;">${unitSvg}</div>
+        <div>No units yet. Add your first unit!</div>
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = state.units.map(u => `
+    <div class="unit-card" style="--unit-color: ${u.color || '#005eb8'}" onclick="openAccessModal('${u.id}')">
+      <div class="unit-actions">
+        <button class="unit-action-btn" onclick="event.stopPropagation(); editUnit('${u.id}')" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="unit-action-btn" onclick="event.stopPropagation(); deleteUnit('${u.id}')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div>
+      <div class="unit-icon">${unitSvg}</div>
+      <div class="unit-name">${escapeHtml(u.name)}</div>
+      <div class="unit-desc">${escapeHtml(u.desc || '')}</div>
+    </div>
+  `).join('');
+}
+
+function openAccessModal(unitId) {
+  console.log('🔍 openAccessModal called with unitId:', unitId);
+  console.log('🔍 Available units:', state.units.map(u => ({ id: u.id, name: u.name })));
+  
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit) {
+    console.error('❌ Unit not found in state.units!');
+    toast('Unit not found');
+    return;
+  }
+  
+  console.log('✅ Found unit:', unit.name);
+  
+  // Store in BOTH sessionStorage AND localStorage for redundancy
+  try {
+    sessionStorage.setItem('MW_UNIT', unitId);
+    sessionStorage.setItem('MW_UNIT_NAME', unit.name);
+    console.log('✅ Saved to sessionStorage:', sessionStorage.getItem('MW_UNIT'));
+  } catch (e) {
+    console.error('❌ sessionStorage failed:', e);
+  }
+  
+  try {
+    localStorage.setItem('MW_SELECTED_UNIT', unitId);
+    localStorage.setItem('MW_SELECTED_UNIT_NAME', unit.name);
+    console.log('✅ Saved to localStorage:', localStorage.getItem('MW_SELECTED_UNIT'));
+  } catch (e) {
+    console.error('❌ localStorage failed:', e);
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // VERIFY STORAGE WAS WRITTEN SUCCESSFULLY
+  // ═══════════════════════════════════════════════════════════════════
+  const storedUnit = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
+  if (!storedUnit) {
+    console.error('❌ CRITICAL: Failed to store unit - storage not working!');
+    toast('Storage error - please check browser settings');
+    return;
+  }
+  
+  // Navigate to dashboard
+  console.log('🚀 Navigating to dashboard.html with unit:', storedUnit);
+  window.location.href = 'dashboard.html';
+}
+
+function openAddUnitModal() {
+  editingUnitId = null;
+  document.getElementById('unitModalTitle').textContent = 'Add Unit';
+  document.getElementById('unitName').value = '';
+  document.getElementById('unitDesc').value = '';
+
+  // Reset color picker
+  document.querySelectorAll('.color-option').forEach(b => b.classList.remove('selected'));
+  document.querySelector('.color-option[data-color="#005eb8"]')?.classList.add('selected');
+
+  openModal('unitModal');
+}
+
+function editUnit(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit) return;
+
+  editingUnitId = unitId;
+  document.getElementById('unitModalTitle').textContent = 'Edit Unit';
+  document.getElementById('unitName').value = unit.name;
+  document.getElementById('unitDesc').value = unit.desc || '';
+
+  // Set color picker
+  document.querySelectorAll('.color-option').forEach(b => {
+    b.classList.toggle('selected', b.dataset.color === unit.color);
+  });
+
+  openModal('unitModal');
+}
+
+async function saveUnit() {
+  const name = document.getElementById('unitName').value.trim();
+  const desc = document.getElementById('unitDesc').value.trim();
+  const selectedColorEl = document.querySelector('.color-option.selected');
+  const color = selectedColorEl ? selectedColorEl.dataset.color : '#005eb8';
+
+  if (!name) {
+    toast('Please enter a unit name');
+    return;
+  }
+
+  showLoading('Saving...');
+
+  try {
+    if (editingUnitId) {
+      // Update existing unit in Firebase
+      const result = await updateUnit(editingUnitId, { name, desc, color });
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      toast('Unit updated');
+    } else {
+      // Create new unit in Firebase
+      const result = await createUnit({ name, desc, color });
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      toast('Unit created');
+    }
+
+    closeModal('unitModal');
+    // Realtime listener will update the UI automatically
+  } catch (e) {
+    console.error('Save unit error:', e);
+    toast('Failed to save unit');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function deleteUnit(unitId) {
+  if (!confirm('Delete this unit?')) return;
+
+  showLoading('Deleting...');
+
+  try {
+    const result = await firebaseDeleteUnit(unitId);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+    toast('Unit deleted');
+    // Realtime listener will update the UI automatically
+  } catch (e) {
+    console.error('Delete unit error:', e);
+    toast('Failed to delete unit');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SETTINGS & TRASH FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function openSettingsModal() {
+  openModal('settingsModal');
+}
+
+async function forceCloudSync() {
+  // Firebase syncs automatically - just show confirmation
+  toast('Firebase syncs automatically!');
+}
+
+function openTrashModal() {
+  // Trash functionality can be added later with Firestore queries
+  toast('Trash feature coming soon');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// API calls now handled by Firebase - no manual API needed
+
+function showLoading(text = 'Loading...') {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loading').classList.add('active');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.remove('active');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  const text = document.getElementById('syncText');
+  
+  el.classList.remove('syncing');
+  
+  if (status === 'syncing') {
+    el.classList.add('syncing');
+    text.textContent = 'Syncing...';
+  } else if (status === 'synced') {
+    text.textContent = 'Synced';
+  } else if (status === 'pending') {
+    text.textContent = 'Pending...';
+  } else {
+    text.textContent = 'Offline';
+  }
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark-theme');
+  localStorage.setItem('MEDWARD_THEME', isDark ? 'dark' : 'light');
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const isDark = document.body.classList.contains('dark-theme');
+  document.getElementById('themeSun').style.display = isDark ? 'block' : 'none';
+  document.getElementById('themeMoon').style.display = isDark ? 'none' : 'block';
+}
+
+async function doLogout() {
+  if (!confirm('Log out of MedWard Pro?')) return;
+
+  // Unsubscribe from realtime listeners
+  if (unsubscribeUnits) {
+    unsubscribeUnits();
+  }
+
+  // Firebase logout
+  await logout();
+
+  // Clear any local storage
+  localStorage.removeItem('MW_SELECTED_UNIT');
+  localStorage.removeItem('MW_SELECTED_UNIT_NAME');
+  sessionStorage.removeItem('MW_UNIT');
+  sessionStorage.removeItem('MW_UNIT_NAME');
+
+  window.location.href = 'login.html';
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPOSE FUNCTIONS TO WINDOW (for onclick handlers)
+// ═══════════════════════════════════════════════════════════════════════════
+
+window.toggleTheme = toggleTheme;
+window.openSettingsModal = openSettingsModal;
+window.doLogout = doLogout;
+window.openAddUnitModal = openAddUnitModal;
+window.editUnit = editUnit;
+window.deleteUnit = deleteUnit;
+window.saveUnit = saveUnit;
+window.openAccessModal = openAccessModal;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.forceCloudSync = forceCloudSync;
+window.openTrashModal = openTrashModal;
+</script>
+<script src="medward-tour.js"></script>
+</body>
+</html>
