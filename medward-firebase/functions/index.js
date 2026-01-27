@@ -855,9 +855,9 @@ async function getActiveDeviceCount(userId) {
  */
 function getClaudeApiKey() {
   try {
-    return functions.config().claude?.api_key || process.env.CLAUDE_API_KEY;
+    return functions.config().anthropic?.key || process.env.ANTHROPIC_API_KEY;
   } catch {
-    return process.env.CLAUDE_API_KEY;
+    return process.env.ANTHROPIC_API_KEY;
   }
 }
 
@@ -868,7 +868,7 @@ async function callClaudeAPI(messages, options = {}) {
   const apiKey = getClaudeApiKey();
 
   if (!apiKey) {
-    throw new Error('Claude API key not configured. Set via: firebase functions:config:set claude.api_key="YOUR_KEY"');
+    throw new Error('Claude API key not configured. Set via: firebase functions:config:set anthropic.key="YOUR_KEY"');
   }
 
   const fetch = (await import('node-fetch')).default;
