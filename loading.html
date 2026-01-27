@@ -408,8 +408,17 @@ body.dark-theme .timeout-warning {
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════
+// Firebase Cloud Functions - loaded dynamically
+let firebaseFunctions = null;
+async function loadFirebaseFunctions() {
+  if (!firebaseFunctions) {
+    firebaseFunctions = await import('./firebase.functions.js');
+  }
+  return firebaseFunctions;
+}
+
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbyVRA0E6by1lud8waH0Vu7HWuWKlwlOcnq3Qn2cNK3OaVZNrADyNczv0OuYdSq1SJBpZg/exec',
+  // API_URL removed - now using Firebase Cloud Functions
   TIMEOUT_MS: 15000,           // 15 seconds timeout
   WARNING_MS: 8000,            // Show warning after 8 seconds
   MAX_RETRIES: 3,              // Maximum auto-retry attempts
@@ -871,66 +880,28 @@ async function loadCloudData() {
   
   try {
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 1: Fetch data from cloud
+    // STEP 1: Fetch data from Firebase Cloud Functions
     // ═══════════════════════════════════════════════════════════════════
-    setStatus('Loading your data...', 'Fetching from server');
+    setStatus('Loading your data...', 'Fetching from Firebase');
     setProgress(30);
-    
-    const response = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      cache: 'no-store',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'loadData',
-        username: AUTH.user,
-        password: AUTH.pass,
-        clientRev: 0
-      }),
-      signal: abortController.signal
-    });
-    
+
+    // Load Firebase Functions module
+    const fb = await loadFirebaseFunctions();
+    const deviceId = fb.generateDeviceId();
+
     setProgress(50);
-    
-    const text = await response.text();
+
+    // Call Firebase Cloud Function instead of Google Apps Script
+    const result = await fb.loadData({ clientRev: 0, deviceId });
 
     // Enhanced logging for debugging
-    console.log('📡 Response status:', response.status, response.statusText);
-    console.log('📡 Response length:', text.length, 'characters');
-    console.log('📡 Response preview:', text.substring(0, 200));
-
-    // Check for HTML response (wrong URL or error)
-    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-      console.error('❌ Received HTML instead of JSON. The Google Script might not be properly deployed.');
-      console.error('📄 Response:', text.substring(0, 500));
-
-      // Store response for debugging
-      try {
-        sessionStorage.setItem('MW_LAST_RESPONSE', text.substring(0, 1000));
-      } catch (e) {}
-
-      throw new Error('Google Script returned HTML instead of JSON. Please check:\n• Script is deployed as "Web app"\n• Execute as: "Me"\n• Who has access: "Anyone"');
-    }
+    console.log('📡 Firebase response:', result);
 
     setProgress(60);
 
-    let result;
-    try {
-      result = JSON.parse(text);
-    } catch (parseError) {
-      console.error('❌ Failed to parse response as JSON:', parseError);
-      console.error('📄 Response:', text);
-
-      // Store response for debugging
-      try {
-        sessionStorage.setItem('MW_LAST_RESPONSE', text.substring(0, 1000));
-      } catch (e) {}
-
-      throw new Error('Invalid response from Google Script. Response: ' + text.substring(0, 100));
-    }
-
     if (!result.success) {
-      console.error('❌ Server returned error:', result.error);
-      throw new Error(result.error || 'Failed to load data from server');
+      console.error('❌ Firebase returned error:', result.error);
+      throw new Error(result.error || 'Failed to load data from Firebase');
     }
     
     // ═══════════════════════════════════════════════════════════════════
