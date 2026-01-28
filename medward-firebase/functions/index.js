@@ -48,7 +48,7 @@
 // ============================================================================
 const { onCall } = require('firebase-functions/v2/https');
 const { onRequest } = require('firebase-functions/v2/https');
-const { onUserCreated: onUserCreatedV2 } = require('firebase-functions/v2/identity');
+const { onUserCreated } = require('firebase-functions/v2/identity');
 const admin = require('firebase-admin');
 
 // Legacy v1 imports for config access
@@ -94,7 +94,7 @@ const AI_CONFIG = {
  * - /users/{userId}/data/inbox - Received patient handovers
  * - /users/{userId}/data/sessions - Active device sessions
  */
-exports.onUserCreated = onUserCreatedV2(async (event) => {
+exports.onUserCreated = onUserCreated(async (event) => {
   // In v2, user data is in event.data
   const user = event.data;
   console.log(`[Auth] New user created: ${user.uid} (${user.email})`);
@@ -127,7 +127,7 @@ exports.onUserCreated = onUserCreatedV2(async (event) => {
     updatedBy: { uid: userId, deviceId: 'server' },
     patients: [],
     units: [
-      { id: 'unit_1', name: 'Ward 14', code: '1414', icon: 'ðŸ¥' },
+      { id: 'unit_1', name: 'Ward 14', code: '1414', icon: 'ðŸ¥' },
       { id: 'unit_2', name: 'ICU', code: '9999', icon: 'ðŸš¨' }
     ],
     trash: { units: [], patients: [] },
@@ -206,7 +206,7 @@ exports.loadData = onCall(async (request) => {
         updatedBy: { uid: userId, deviceId: deviceId || 'unknown' },
         patients: [],
         units: [
-          { id: 'unit_1', name: 'Ward 14', code: '1414', icon: 'ðŸ¥' },
+          { id: 'unit_1', name: 'Ward 14', code: '1414', icon: 'ðŸ¥' },
           { id: 'unit_2', name: 'ICU', code: '9999', icon: 'ðŸš¨' }
         ],
         trash: { units: [], patients: [] },
@@ -935,7 +935,7 @@ exports.askClinical = onCall(async (request) => {
 IMPORTANT GUIDELINES:
 - Use KUWAIT SI UNITS: K+ 3.5-5.0, Na+ 136-145 mmol/L, Hgb g/L (not g/dL)
 - Be CONCISE and ACTIONABLE
-- Flag RED FLAGS prominently with âš ï¸
+- Flag RED FLAGS prominently with ⚠️
 - Include relevant differential diagnoses
 - Provide specific medication dosages when applicable
 - Always include a disclaimer that this is for educational purposes only
