@@ -88,6 +88,14 @@ const AI_CONFIG = {
   DEFAULT_TEMPERATURE: 0.3 // Focused, consistent clinical responses
 };
 
+/**
+ * Auth trigger: Creates user profile and initial data when new user signs up.
+ *
+ * Document structure:
+ * - /users/{userId} - User profile
+ * - /users/{userId}/data/active - Active ward data
+ * - /users/{userId}/data/trash - Deleted items
+ * - /users/{userId}/data/inbox - Patient handovers
  * - /users/{userId}/data/sessions - Active device sessions
  *
  * NOTE: Auth triggers use v1 API because v2/identity only has blocking functions
@@ -1422,220 +1430,12 @@ exports.updateSettings = onCall(async (request) => {
  */
 exports.healthCheck = onRequest((req, res) => {
   cors(req, res, () => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      version: '2.0.0'
+    });
   });
 });
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: '2.0.0'
-  });
-});
-// ============================================================================
-// ============================================================================
-// PART 2: FRONTEND CLIENT CONFIGURATION (Browser Only)
-// ============================================================================
-// ============================================================================
-/**
- * This section provides browser-side configuration and client wrappers
- * for calling the Cloud Functions defined above from the browser.
- * 
- * Use these in your frontend application (React, Vue, vanilla JS, etc.)
- */
 
-// ============================================================================
-// FIREBASE PROJECT CONFIGURATION
-// ============================================================================
-// Update these values to match your Firebase project
-const firebaseConfig = {
-  apiKey: "AIzaSyDummy123", // Replace with your actual API key
-  authDomain: "medward-pro.firebaseapp.com",
-  projectId: "medward-pro",
-  storageBucket: "medward-pro.appspot.com",
-  messagingSenderId: "123456789", // Replace with your actual sender ID
-  appId: "1:123456789:web:abc123def456", // Replace with your actual app ID
-  measurementId: "G-ABC123DEF" // Optional
-};
-
-// ============================================================================
-// FRONTEND CLIENT CALLABLE FUNCTIONS
-// ============================================================================
-// These functions are called from the browser and invoke the Cloud Functions above
-// Each function automatically includes authentication
-
-/**
- * Load user data from Firestore
- * @param {Object} data - { clientRev, deviceId }
- * @returns {Promise} - { success, data, rev, upToDate }
- */
-export const loadData = async (data = {}) => {
-  try {
-    const func = httpsCallable(functions, 'loadData');
-    const result = await func(data);
-    return result.data;
-  } catch (error) {
-    console.error('[loadData] Error:', error);
-    throw new Error(`Failed to load data: ${error.message}`);
-  }
-};
-
-/**
- * Save user data with conflict detection
- * @param {Object} data - { payload, baseRev, force, deviceId }
- * @returns {Promise} - { success, newRev }
- */
-export const saveData = async (data) => {
-  try {
-    const func = httpsCallable(functions, 'saveData');
-    const result = await func(data);
-    return result.data;
-  } catch (error) {
-    console.error('[saveData] Error:', error);
-    throw new Error(`Failed to save data: ${error.message}`);
-  }
-};
-
-/**
- * Update user login timestamp
- * @returns {Promise} - { success: true }
- */
-export const onUserSignIn = async () => {
-  try {
-    const func = httpsCallable(functions, 'onUserSignIn');
-    const result = await func({});
-    return result.data;
-  } catch (error) {
-    console.error('[onUserSignIn] Error:', error);
-    throw new Error(`Failed to update login: ${error.message}`);
-  }
-};
-
-/**
- * Get user profile
- * @returns {Promise} - { success, profile }
- */
-export const getUserProfile = async () => {
-  try {
-    const func = httpsCallable(functions, 'getUserProfile');
-    const result = await func({});
-    return result.data;
-  } catch (error) {
-    console.error('[getUserProfile] Error:', error);
-    throw new Error(`Failed to get profile: ${error.message}`);
-  }
-};
-
-/**
- * Update user settings
- * @param {Object} settings - User settings object
- * @returns {Promise} - { success: true }
- */
-export const updateSettings = async (settings) => {
-  try {
-    const func = httpsCallable(functions, 'updateSettings');
-    const result = await func({ settings });
-    return result.data;
-  } catch (error) {
-    console.error('[updateSettings] Error:', error);
-    throw new Error(`Failed to update settings: ${error.message}`);
-  }
-};
-
-/**
- * Analyze lab results with AI
- * @param {Object} data - { labResults, patientContext, model }
- * @returns {Promise} - { success, analysis, model, usage }
- */
-export const analyzeLabs = async (data) => {
-  try {
-    const func = httpsCallable(functions, 'analyzeLabs');
-    const result = await func(data);
-    return result.data;
-  } catch (error) {
-    console.error('[analyzeLabs] Error:', error);
-    throw new Error(`Failed to analyze labs: ${error.message}`);
-  }
-};
-
-/**
- * Get drug information
- * @param {Object} data - { drugName, indication, patientContext, model }
- * @returns {Promise} - { success, drugInfo, model, usage }
- */
-export const getDrugInfo = async (data) => {
-  try {
-    const func = httpsCallable(functions, 'getDrugInfo');
-    const result = await func(data);
-    return result.data;
-  } catch (error) {
-    console.error('[getDrugInfo] Error:', error);
-    throw new Error(`Failed to get drug info: ${error.message}`);
-  }
-};
-
-/**
- * Generate differential diagnosis
- * @param {Object} data - { symptoms, patientContext, model }
- * @returns {Promise} - { success, differential, model, usage }
- */
-export const generateDifferential = async (data) => {
-  try {
-    const func = httpsCallable(functions, 'generateDifferential');
-    const result = await func(data);
-    return result.data;
-  } catch (error) {
-    console.error('[generateDifferential] Error:', error);
-    throw new Error(`Failed to generate differential: ${error.message}`);
-  }
-};
-
-/**
- * Get treatment plan
- * @param {Object} data - { diagnosis, patientContext, model }
- * @returns {Promise} - { success, plan, model, usage }
- */
-export const getTreatmentPlan = async (data) => {
-  try {
-    const func = httpsCallable(functions, 'getTreatmentPlan');
-    const result = await func(data);
-    return result.data;
-  } catch (error) {
-    console.error('[getTreatmentPlan] Error:', error);
-    throw new Error(`Failed to get treatment plan: ${error.message}`);
-  }
-};
-
-/**
- * On-call clinical consultation
- * @param {Object} data - { scenario, patientContext, urgency, model }
- * @returns {Promise} - { success, consultation, model, usage }
- */
-export const oncallConsult = async (data) => {
-  try {
-    const func = httpsCallable(functions, 'oncallConsult');
-    const result = await func(data);
-    return result.data;
-  } catch (error) {
-    console.error('[oncallConsult] Error:', error);
-    throw new Error(`Failed to get consultation: ${error.message}`);
-  }
-};
-
-/**
- * Health check
- * @returns {Promise} - { status, timestamp, version }
- */
-export const healthCheck = async () => {
-  try {
-    const func = httpsCallable(functions, 'healthCheck');
-    const result = await func({});
-    return result.data;
-  } catch (error) {
-    console.error('[healthCheck] Error:', error);
-    throw new Error(`Health check failed: ${error.message}`);
-  }
-};
-
-// ============================================================================
-// EXPORT FIREBASE SERVICES AND CONFIGURATION
-// ============================================================================
-export { app, auth, db, storage, functions, firebaseConfig };
+// End of Cloud Functions - Frontend code should be in a separate file (e.g., public/index.html or src/firebase.js)
