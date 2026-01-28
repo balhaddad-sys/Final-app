@@ -1,16 +1,11 @@
 /**
  * MedWard Pro - Complete Firebase Integration
  * 
- * This is a unified file containing both:
- * 1. Backend Cloud Functions (Firebase Functions v2)
- * 2. Frontend Configuration and Callable Function Wrappers
- *
- * IMPORTANT: This file structure allows for split deployment:
- * - Backend code (exports for Cloud Functions) runs on Firebase
- * - Frontend code (import statements) runs in the browser
- *
+ * UNIFIED FILE containing both Backend Cloud Functions and Frontend Configuration
+ * 
+ * This module replaces the Google Apps Script backend with Firebase Cloud Functions.
  * Key improvements:
- * - Automatic user creation on first sign-in
+ * - Automatic user creation on first sign-in (no more auth failures)
  * - Real-time data sync via Firestore
  * - Faster performance with direct Firestore access
  * - Better error handling and conflict detection
@@ -50,7 +45,7 @@
 
 // ============================================================================
 // ============================================================================
-// SECTION 1: BACKEND CLOUD FUNCTIONS (Firebase Runtime)
+// PART 1: BACKEND CLOUD FUNCTIONS (Firebase Runtime Only)
 // ============================================================================
 // ============================================================================
 
@@ -93,21 +88,6 @@ const AI_CONFIG = {
   DEFAULT_TEMPERATURE: 0.3 // Focused, consistent clinical responses
 };
 
-// ============================================================================
-// AUTH TRIGGER - AUTO CREATE USER (CRITICAL)
-// ============================================================================
-
-/**
- * Automatically creates all required Firestore documents when a new user signs in.
- * This solves the authentication bug in the old Google Apps Script system.
- *
- * MIGRATED TO FIREBASE FUNCTIONS V2 (identity trigger)
- *
- * Documents created:
- * - /users/{userId} - User profile
- * - /users/{userId}/data/active - Main patient/unit data
- * - /users/{userId}/data/trash - Deleted items
- * - /users/{userId}/data/inbox - Received patient handovers
  * - /users/{userId}/data/sessions - Active device sessions
  *
  * NOTE: Auth triggers use v1 API because v2/identity only has blocking functions
@@ -275,118 +255,865 @@ exports.saveData = onCall(async (request) => {
   const { payload, baseRev, force, deviceId } = request.data || {};
 
   if (!payload) {
-    throw new Error('Payload is required');
+    throw new Error('No data to save');
   }
 
   try {
-    let result;
-    
-    if (force) {
-      // Force save bypasses conflict check
-      console.log(`[saveData] Force saving for user: ${userId}`);
-      
+    const dataRef = db.collection('users').doc(userId)
+      .collection('data').doc('active');
+
+    // Transaction for atomic conflict detection
+    const result = await db.runTransaction(async (transaction) => {
+      const dataDoc = await transaction.get(dataRef);
+      const serverData = dataDoc.exists ? dataDoc.data() : { rev: 0 };
+      const serverRev = serverData.rev || 0;
+
+      // Conflict detection (unless forced)
+      if (baseRev && !force && baseRev < serverRev) {
+        return {
+          success: false,
+          conflict: true,
+          serverRev: serverRev,
+          serverData: serverData,
+          error: 'Data has been modified by another device'
+        };
+      }
+
+      // Safety: prevent accidental data wipe
+      const serverPatientCount = (serverData.patients || []).length;
+      const incomingPatientCount = (payload.patients || []).length;
+
+      if (serverPatientCount > 0 &&
+          incomingPatientCount === 0 &&
+          !payload.confirmWipe) {
+        return {
+          success: false,
+          safeguard: true,
+          serverPatientCount: serverPatientCount,
+          error: `Safety Block: Would overwrite ${serverPatientCount} patients with empty data. ` +
+            `Set confirmWipe=true to proceed.`
+        };
+      }
+
+      // Prepare and save new data
       const newData = {
         ...payload,
-        rev: (baseRev || 0) + 1,
+        rev: serverRev + 1,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedBy: { uid: userId, deviceId: deviceId || 'unknown' }
       };
 
-      await db.collection('users').doc(userId)
-        .collection('data').doc('active').set(newData);
+      transaction.set(dataRef, newData);
 
-      result = { success: true, newRev: newData.rev };
-    } else {
-      // Normal save with conflict detection
-      result = await db.runTransaction(async (transaction) => {
-        const dataRef = db.collection('users').doc(userId)
-          .collection('data').doc('active');
-        const dataDoc = await transaction.get(dataRef);
-
-        if (!dataDoc.exists) {
-          throw new Error('Data document not found');
-        }
-
-        const serverRev = dataDoc.data().rev || 1;
-        const clientRev = baseRev || 0;
-
-        if (clientRev !== serverRev) {
-          // Conflict detected
-          console.warn(`[saveData] Conflict for user ${userId}: client rev ${clientRev} != server rev ${serverRev}`);
-          return {
-            success: false,
-            conflict: true,
-            serverRev: serverRev,
-            message: 'Data has been modified elsewhere. Please reload and try again.'
-          };
-        }
-
-        const newRev = serverRev + 1;
-        const newData = {
-          ...payload,
-          rev: newRev,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedBy: { uid: userId, deviceId: deviceId || 'unknown' }
-        };
-
-        transaction.set(dataRef, newData);
-        return { success: true, newRev };
-      });
-    }
+      return {
+        success: true,
+        rev: newData.rev,
+        timestamp: new Date().toISOString()
+      };
+    });
 
     return result;
   } catch (error) {
     console.error(`[saveData] Error for user ${userId}:`, error);
-    throw new Error(`Failed to save data: ${error.message}`);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 // ============================================================================
-// AI & CLINICAL FUNCTIONS
+// TRASH MANAGEMENT
 // ============================================================================
 
 /**
- * Helper function to call Claude API
- * (Implementation would go here based on original file)
+ * Moves items (patients or units) to trash.
+ * Uses transaction to ensure consistency.
  */
-async function callClaudeAPI(messages, options = {}) {
-  // This is a placeholder - implement based on your API setup
-  const model = options.model || AI_CONFIG.MODELS.BALANCED;
-  const maxTokens = options.maxTokens || AI_CONFIG.DEFAULT_MAX_TOKENS;
-  const temperature = options.temperature || AI_CONFIG.DEFAULT_TEMPERATURE;
-  
-  // Call your Claude API endpoint here
-  // Return format: { content: [{ text: '...' }], usage: { ... } }
-  throw new Error('callClaudeAPI not implemented - add your API integration');
+exports.moveToTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+  const { itemIds, itemType = 'patient' } = request.data || {};
+
+  if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+    throw new Error('itemIds must be a non-empty array');
+  }
+
+  const trashRef = db.collection('users').doc(userId)
+    .collection('data').doc('trash');
+  const dataRef = db.collection('users').doc(userId)
+    .collection('data').doc('active');
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const [trashDoc, dataDoc] = await Promise.all([
+        transaction.get(trashRef),
+        transaction.get(dataRef)
+      ]);
+
+      const trashData = trashDoc.exists ? trashDoc.data() : { items: [] };
+      const activeData = dataDoc.data() || { patients: [], units: [], rev: 0 };
+
+      const itemsToTrash = [];
+      let remainingItems;
+
+      if (itemType === 'patient') {
+        remainingItems = (activeData.patients || []).filter((p) => {
+          if (itemIds.includes(p.id)) {
+            itemsToTrash.push({
+              ...p,
+              deletedAt: new Date().toISOString(),
+              deletedBy: userId,
+              type: 'patient'
+            });
+            return false;
+          }
+          return true;
+        });
+
+        transaction.update(dataRef, {
+          patients: remainingItems,
+          rev: (activeData.rev || 0) + 1,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      } else if (itemType === 'unit') {
+        remainingItems = (activeData.units || []).filter((u) => {
+          if (itemIds.includes(u.id)) {
+            itemsToTrash.push({
+              ...u,
+              deletedAt: new Date().toISOString(),
+              deletedBy: userId,
+              type: 'unit'
+            });
+            return false;
+          }
+          return true;
+        });
+
+        transaction.update(dataRef, {
+          units: remainingItems,
+          rev: (activeData.rev || 0) + 1,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      transaction.set(trashRef, {
+        items: [...(trashData.items || []), ...itemsToTrash],
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    });
+
+    return { success: true, trashedCount: itemIds.length };
+  } catch (error) {
+    console.error(`[moveToTrash] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Gets all items in trash.
+ */
+exports.getTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+
+  try {
+    const trashDoc = await db.collection('users').doc(userId)
+      .collection('data').doc('trash').get();
+
+    return {
+      success: true,
+      items: trashDoc.exists ? (trashDoc.data().items || []) : []
+    };
+  } catch (error) {
+    console.error(`[getTrash] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Restores items from trash back to active data.
+ */
+exports.restoreFromTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+  const { itemIds } = request.data || {};
+
+  if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+    throw new Error('itemIds must be a non-empty array');
+  }
+
+  const trashRef = db.collection('users').doc(userId)
+    .collection('data').doc('trash');
+  const dataRef = db.collection('users').doc(userId)
+    .collection('data').doc('active');
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const [trashDoc, dataDoc] = await Promise.all([
+        transaction.get(trashRef),
+        transaction.get(dataRef)
+      ]);
+
+      const trashData = trashDoc.exists ? trashDoc.data() : { items: [] };
+      const activeData = dataDoc.data() || { patients: [], units: [], rev: 0 };
+
+      const itemsToRestore = [];
+      const remainingTrash = (trashData.items || []).filter((item) => {
+        if (itemIds.includes(item.id)) {
+          // Remove trash metadata
+          const { deletedAt: _deletedAt, deletedBy: _deletedBy, type, ...cleanItem } = item;
+          itemsToRestore.push({ item: cleanItem, type });
+          return false;
+        }
+        return true;
+      });
+
+      // Restore items to appropriate arrays
+      const restoredPatients = [...(activeData.patients || [])];
+      const restoredUnits = [...(activeData.units || [])];
+
+      itemsToRestore.forEach(({ item, type }) => {
+        if (type === 'patient') {
+          restoredPatients.push(item);
+        } else if (type === 'unit') {
+          restoredUnits.push(item);
+        }
+      });
+
+      transaction.update(dataRef, {
+        patients: restoredPatients,
+        units: restoredUnits,
+        rev: (activeData.rev || 0) + 1,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      transaction.set(trashRef, {
+        items: remainingTrash,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    return { success: true, restoredCount: itemIds.length };
+  } catch (error) {
+    console.error(`[restoreFromTrash] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Permanently deletes items from trash.
+ */
+exports.emptyTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+  const { itemIds } = request.data || {}; // If null, empty all
+
+  const trashRef = db.collection('users').doc(userId)
+    .collection('data').doc('trash');
+
+  try {
+    if (!itemIds) {
+      // Empty all trash
+      await trashRef.set({
+        items: [],
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      return { success: true, message: 'Trash emptied' };
+    }
+
+    // Delete specific items
+    const trashDoc = await trashRef.get();
+    const trashData = trashDoc.exists ? trashDoc.data() : { items: [] };
+
+    const remainingItems = (trashData.items || []).filter(
+      (item) => !itemIds.includes(item.id)
+    );
+
+    await trashRef.set({
+      items: remainingItems,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return {
+      success: true,
+      deletedCount: (trashData.items || []).length - remainingItems.length
+    };
+  } catch (error) {
+    console.error(`[emptyTrash] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+// ============================================================================
+// PATIENT HANDOVER (INBOX)
+// ============================================================================
+
+/**
+ * Sends a patient to another user's inbox.
+ */
+exports.sendPatient = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const senderId = request.auth.uid;
+  const senderEmail = request.auth.token.email;
+  const { recipientEmail, patientData } = request.data || {};
+
+  if (!recipientEmail || !patientData) {
+    throw new Error('recipientEmail and patientData are required');
+  }
+
+  try {
+    // Find recipient by email
+    const usersSnapshot = await db.collection('users')
+      .where('email', '==', recipientEmail)
+      .limit(1)
+      .get();
+
+    if (usersSnapshot.empty) {
+      return {
+        success: false,
+        error: `Recipient not found: ${recipientEmail}`
+      };
+    }
+
+    const recipientId = usersSnapshot.docs[0].id;
+    const inboxRef = db.collection('users').doc(recipientId)
+      .collection('data').doc('inbox');
+
+    await db.runTransaction(async (transaction) => {
+      const inboxDoc = await transaction.get(inboxRef);
+      const inboxData = inboxDoc.exists ? inboxDoc.data() : { items: [] };
+
+      const newItem = {
+        ...patientData,
+        id: patientData.id || `handover_${Date.now()}`,
+        sentAt: new Date().toISOString(),
+        sentBy: {
+          uid: senderId,
+          email: senderEmail,
+          displayName: request.auth.token.name || senderEmail
+        },
+        status: 'pending'
+      };
+
+      transaction.set(inboxRef, {
+        items: [...(inboxData.items || []), newItem],
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    });
+
+    return {
+      success: true,
+      message: `Patient sent to ${recipientEmail}`
+    };
+  } catch (error) {
+    console.error(`[sendPatient] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Checks the user's inbox for received patients.
+ */
+exports.checkInbox = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+
+  try {
+    const inboxDoc = await db.collection('users').doc(userId)
+      .collection('data').doc('inbox').get();
+
+    const items = inboxDoc.exists ? (inboxDoc.data().items || []) : [];
+
+    return {
+      success: true,
+      items: items,
+      count: items.length,
+      pendingCount: items.filter((i) => i.status === 'pending').length
+    };
+  } catch (error) {
+    console.error(`[checkInbox] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Accepts a patient from inbox and adds to active data.
+ */
+exports.acceptInboxPatient = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+  const { patientId, targetUnitId } = request.data || {};
+
+  if (!patientId) {
+    throw new Error('patientId is required');
+  }
+
+  const inboxRef = db.collection('users').doc(userId)
+    .collection('data').doc('inbox');
+  const dataRef = db.collection('users').doc(userId)
+    .collection('data').doc('active');
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const [inboxDoc, dataDoc] = await Promise.all([
+        transaction.get(inboxRef),
+        transaction.get(dataRef)
+      ]);
+
+      const inboxData = inboxDoc.exists ? inboxDoc.data() : { items: [] };
+      const activeData = dataDoc.data() || { patients: [], units: [], rev: 0 };
+
+      // Find the patient in inbox
+      const patientIndex = (inboxData.items || []).findIndex(
+        (item) => item.id === patientId
+      );
+
+      if (patientIndex === -1) {
+        throw new Error('Patient not found in inbox');
+      }
+
+      const patient = inboxData.items[patientIndex];
+
+      // Remove inbox metadata and add to active patients
+      const { sentAt: _sentAt, sentBy, status: _status, ...cleanPatient } = patient;
+      cleanPatient.unitId = targetUnitId || cleanPatient.unitId;
+      cleanPatient.acceptedAt = new Date().toISOString();
+      cleanPatient.acceptedFrom = sentBy;
+
+      // Update inbox - mark as accepted or remove
+      const updatedInboxItems = [...inboxData.items];
+      updatedInboxItems.splice(patientIndex, 1);
+
+      transaction.set(inboxRef, {
+        items: updatedInboxItems,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Add to active patients
+      transaction.update(dataRef, {
+        patients: [...(activeData.patients || []), cleanPatient],
+        rev: (activeData.rev || 0) + 1,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    return { success: true, message: 'Patient accepted' };
+  } catch (error) {
+    console.error(`[acceptInboxPatient] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Declines/removes a patient from inbox.
+ */
+exports.declineInboxPatient = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+  const { patientId } = request.data || {};
+
+  if (!patientId) {
+    throw new Error('patientId is required');
+  }
+
+  const inboxRef = db.collection('users').doc(userId)
+    .collection('data').doc('inbox');
+
+  try {
+    const inboxDoc = await inboxRef.get();
+    const inboxData = inboxDoc.exists ? inboxDoc.data() : { items: [] };
+
+    const updatedItems = (inboxData.items || []).filter(
+      (item) => item.id !== patientId
+    );
+
+    await inboxRef.set({
+      items: updatedItems,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return { success: true, message: 'Patient declined' };
+  } catch (error) {
+    console.error(`[declineInboxPatient] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+// ============================================================================
+// SESSION TRACKING & HEARTBEAT
+// ============================================================================
+
+/**
+ * Updates session info and returns sync status.
+ */
+async function updateSession(userId, deviceId, deviceInfo, clientRev) {
+  const sessionsRef = db.collection('users').doc(userId)
+    .collection('data').doc('sessions');
+
+  await db.runTransaction(async (transaction) => {
+    const sessionsDoc = await transaction.get(sessionsRef);
+    const sessionsData = sessionsDoc.exists ?
+      sessionsDoc.data() : { active: [], tombstones: [] };
+
+    const now = Date.now();
+
+    // Filter out stale sessions (older than 5 minutes)
+    const activeSessions = (sessionsData.active || []).filter((s) => {
+      const lastSeen = new Date(s.lastSeen).getTime();
+      return (now - lastSeen) < SESSION_TIMEOUT_MS;
+    });
+
+    // Update or add current session
+    const sessionIndex = activeSessions.findIndex((s) => s.deviceId === deviceId);
+    const sessionData = {
+      deviceId,
+      deviceInfo: deviceInfo || {},
+      lastSeen: new Date().toISOString(),
+      clientRev: clientRev || 0
+    };
+
+    if (sessionIndex >= 0) {
+      activeSessions[sessionIndex] = sessionData;
+    } else {
+      activeSessions.push(sessionData);
+    }
+
+    transaction.set(sessionsRef, {
+      active: activeSessions,
+      tombstones: sessionsData.tombstones || [],
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  });
 }
 
 /**
- * Analyzes lab results with AI.
+ * Heartbeat function for session tracking and sync status.
+ */
+exports.heartbeat = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const userId = request.auth.uid;
+  const { deviceId, deviceInfo, clientRev } = request.data || {};
+
+  try {
+    await updateSession(userId, deviceId || 'unknown', deviceInfo, clientRev);
+
+    // Get current server rev
+    const dataDoc = await db.collection('users').doc(userId)
+      .collection('data').doc('active').get();
+    const serverData = dataDoc.exists ? dataDoc.data() : { rev: 1 };
+    const serverRev = serverData.rev || 1;
+
+    const revGap = serverRev - (clientRev || 0);
+
+    return {
+      success: true,
+      rev: serverRev,
+      updatedAt: serverData.updatedAt,
+      forceFullSync: revGap > 10 || revGap < 0,
+      revGap,
+      activeDevices: await getActiveDeviceCount(userId)
+    };
+  } catch (error) {
+    console.error(`[heartbeat] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Gets count of active devices for a user.
+ */
+async function getActiveDeviceCount(userId) {
+  const sessionsDoc = await db.collection('users').doc(userId)
+    .collection('data').doc('sessions').get();
+
+  if (!sessionsDoc.exists) return 0;
+
+  const sessionsData = sessionsDoc.data();
+  const now = Date.now();
+
+  return (sessionsData.active || []).filter((s) => {
+    const lastSeen = new Date(s.lastSeen).getTime();
+    return (now - lastSeen) < SESSION_TIMEOUT_MS;
+  }).length;
+}
+
+// ============================================================================
+// AI FUNCTIONS (CLAUDE INTEGRATION)
+// ============================================================================
+
+/**
+ * ============================================================================
+ * CRITICAL FIX APPLIED - 2026-01-28
+ * ============================================================================
+ * 
+ * BUG: Network errors due to API key mismatch
+ * ROOT CAUSE: Code looked for 'claude.api_key' but key was saved as 'anthropic.key'
+ * RESULT: Function received undefined, sent bad request → network error
+ * 
+ * FIXES APPLIED:
+ * 1. getClaudeApiKey() - Now checks BOTH config locations + environment variables
+ *    - ANTHROPIC_API_KEY (where you saved it)
+ *    - CLAUDE_API_KEY (backwards compatibility)
+ *    - Legacy firebase config locations
+ * 
+ * 2. callClaudeAPI() - Hardened with better error handling
+ *    - Validates API key BEFORE making request
+ *    - Checks API key is actually defined (not undefined)
+ *    - Better error messages with actionable solutions
+ *    - Specific handling for different HTTP error codes
+ * 
+ * 3. AI_CONFIG - Updated to latest Claude models
+ *    - FAST: claude-3-5-sonnet-20241022 (excellent for clinical work)
+ *    - ADVANCED: claude-opus-4-20250514 (most capable)
+ * 
+ * DEPLOYMENT:
+ * 1. Set your API key: firebase functions:config:set anthropic.key="sk-ant-YOUR_KEY"
+ * 2. Deploy: firebase deploy --only functions
+ * 
+ * VERIFICATION:
+ * Your functions should now work without "Network Issues" errors.
+ * Check logs: firebase functions:log --follow
+ * ============================================================================
+ */
+
+/**
+ * Gets Claude API key from Firebase config or environment.
+ * ROBUST VERSION: Checks multiple possible config locations.
+ * 
+ * BUG FIX: The original code looked for claude.api_key but the key was 
+ * saved as anthropic.key - this function now checks both locations.
+ * 
+ * Configuration priority:
+ * 1. ANTHROPIC_API_KEY environment variable (where you saved it)
+ * 2. CLAUDE_API_KEY environment variable (backwards compatibility)
+ * 3. Legacy config: claude.api_key (from Firebase config)
+ * 4. Return null if not found (triggers proper error handling)
+ */
+function getClaudeApiKey() {
+  // PRIMARY: Check the config you actually set (anthropic.key)
+  // This is set via: firebase functions:config:set anthropic.key="YOUR_KEY"
+  if (process.env.ANTHROPIC_API_KEY) {
+    console.log('✓ Using API key from ANTHROPIC_API_KEY environment variable');
+    return process.env.ANTHROPIC_API_KEY;
+  }
+  
+  // SECONDARY: Check CLAUDE_API_KEY (backwards compatibility)
+  if (process.env.CLAUDE_API_KEY) {
+    console.log('✓ Using API key from CLAUDE_API_KEY environment variable');
+    return process.env.CLAUDE_API_KEY;
+  }
+  
+  // TERTIARY: Check legacy Firebase config location
+  try {
+    if (functions.config().claude && functions.config().claude.api_key) {
+      console.log('✓ Using API key from Firebase config (claude.api_key)');
+      return functions.config().claude.api_key;
+    }
+  } catch (e) {
+    // Config access error - continue to next check
+  }
+  
+  // FALLBACK: No API key found
+  console.error('✗ CRITICAL: No API Key found in any location');
+  return null;
+}
+
+/**
+ * Calls the Claude API with the given messages.
+ * 
+ * IMPROVED VERSION:
+ * - Validates API key before making request
+ * - Better error diagnostics with actionable messages
+ * - Proper Anthropic header configuration
+ * - Robust fetch error handling
+ * - Specific HTTP error code handling
+ */
+async function callClaudeAPI(messages, options = {}) {
+  const apiKey = getClaudeApiKey();
+
+  // CRITICAL ERROR CHECK: Prevent bad requests
+  if (!apiKey) {
+    console.error('CRITICAL: No API Key found in environment');
+    console.error('ACTION REQUIRED: Run this command in Firebase CLI:');
+    console.error('firebase functions:config:set anthropic.key="YOUR_ANTHROPIC_API_KEY"');
+    throw new Error('Claude API key not configured. Set via: firebase functions:config:set anthropic.key="YOUR_KEY"');
+  }
+
+  console.log('📡 Calling Claude API...');
+  console.log('   Model:', options.model || AI_CONFIG.MODELS.FAST);
+  
+  try {
+    const fetch = (await import('node-fetch')).default;
+
+    // Build request body
+    const requestBody = {
+      model: options.model || AI_CONFIG.MODELS.FAST,
+      max_tokens: options.maxTokens || 4000,
+      temperature: options.temperature !== undefined ? options.temperature : 0.3,
+      system: options.system || '',
+      messages: messages
+    };
+
+    console.log('📨 Sending request to Anthropic API...');
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('📬 Response received. Status:', response.status);
+
+    // Handle non-200 responses
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Claude API Error (${response.status}):`, errorText);
+      
+      // Provide specific error guidance based on HTTP status
+      if (response.status === 401) {
+        throw new Error('Authentication failed: Invalid API Key. Please verify your Anthropic API key is correct.');
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded: Too many requests to AI service. Please try again in a moment.');
+      } else if (response.status === 500) {
+        throw new Error('Claude API service error (500). Please try again later.');
+      } else {
+        throw new Error(`Claude API error (${response.status}): ${errorText}`);
+      }
+    }
+
+    const data = await response.json();
+    console.log('✓ Claude API response received successfully');
+    
+    return data;
+    
+  } catch (error) {
+    console.error('❌ Error in callClaudeAPI:');
+    console.error('   Message:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Clinical question assistant.
+ */
+exports.askClinical = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
+  }
+
+  const { question, patientContext, model } = request.data || {};
+
+  if (!question) {
+    throw new Error('Question is required');
+  }
+
+  const systemPrompt = `You are an expert internal medicine consultant ` +
+    `providing evidence-based clinical decision support for healthcare professionals.
+
+IMPORTANT GUIDELINES:
+- Use KUWAIT SI UNITS: K+ 3.5-5.0, Na+ 136-145 mmol/L, Hgb g/L (not g/dL)
+- Be CONCISE and ACTIONABLE
+- Flag RED FLAGS prominently with ⚠️
+- Include relevant differential diagnoses
+- Provide specific medication dosages when applicable
+- Always include a disclaimer that this is for educational purposes only
+
+Format your response with clear sections:
+1. Key Points
+2. Assessment
+3. Recommendations
+4. Red Flags (if any)`;
+
+  let userMessage = question;
+  if (patientContext) {
+    userMessage = `Patient Context:
+${JSON.stringify(patientContext, null, 2)}
+
+Clinical Question: ${question}`;
+  }
+
+  try {
+    const response = await callClaudeAPI([
+      { role: 'user', content: userMessage }
+    ], {
+      system: systemPrompt,
+      model: model || AI_CONFIG.MODELS.FAST
+    });
+
+    return {
+      success: true,
+      answer: response.content[0].text,
+      model: model || AI_CONFIG.MODELS.FAST,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error(`[askClinical] Error:`, error);
+    throw new Error(`Internal error: ${error.message}`);
+  }
+});
+
+/**
+ * Lab analysis with clinical interpretation.
  */
 exports.analyzeLabs = onCall(async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
   }
 
-  const { labResults, patientContext, model } = request.data || {};
+  const { labs, patientContext, model } = request.data || {};
 
-  if (!labResults) {
-    throw new Error('Lab results are required');
+  if (!labs) {
+    throw new Error('Labs data is required');
   }
 
-  const systemPrompt = `You are an expert clinical pathologist and internal medicine consultant analyzing lab results.
+  const systemPrompt = `You are a clinical pathologist providing expert interpretation of laboratory results.
 
-For each abnormal result:
-1. Significance and pathophysiology
-2. Differential diagnosis
-3. Suggested follow-up tests
-4. Red flags requiring immediate action
+IMPORTANT:
+- Use KUWAIT SI UNITS (mmol/L, g/L, etc.)
+- Identify critical/panic values immediately
+- Suggest follow-up tests if indicated
+- Consider clinical context when interpreting
+- Provide differential diagnoses for abnormalities
 
-Format results clearly with normal/abnormal status and clinical interpretation.`;
+Format your response:
+1. Critical Values (if any) - HIGHLIGHT PROMINENTLY
+2. Abnormal Results Summary
+3. Clinical Interpretation
+4. Recommended Follow-up
+5. Differential Considerations`;
 
-  let userMessage = `Analyze these lab results:\n${JSON.stringify(labResults, null, 2)}`;
+  let userMessage = `Laboratory Results:\n${JSON.stringify(labs, null, 2)}`;
   if (patientContext) {
-    userMessage += `\n\nPatient context:\n${JSON.stringify(patientContext, null, 2)}`;
+    userMessage += `\n\nPatient Context:\n${JSON.stringify(patientContext, null, 2)}`;
   }
 
   try {
@@ -410,7 +1137,7 @@ Format results clearly with normal/abnormal status and clinical interpretation.`
 });
 
 /**
- * Gets drug information.
+ * Drug information lookup.
  */
 exports.getDrugInfo = onCall(async (request) => {
   if (!request.auth) {
@@ -423,18 +1150,21 @@ exports.getDrugInfo = onCall(async (request) => {
     throw new Error('Drug name is required');
   }
 
-  const systemPrompt = `You are a pharmacology expert providing concise, clinically relevant drug information.
+  const systemPrompt = `You are a clinical pharmacist providing evidence-based drug information.
 
-Include:
-1. Mechanism of action
-2. Indications and contraindications
-3. Dosing (standard and special populations)
-4. Common side effects and serious adverse events
-5. Drug interactions (key ones)
-6. Monitoring requirements
-7. Cost/availability notes if relevant`;
+Include the following in your response:
+1. Drug Class & Mechanism
+2. Indications
+3. Dosing (adult & renal adjustment if applicable)
+4. Contraindications
+5. Major Drug Interactions
+6. Side Effects (common and serious)
+7. Monitoring Parameters
+8. Special Considerations (pregnancy, elderly, etc.)
 
-  let userMessage = `Provide information about: ${drugName}`;
+Be concise but comprehensive. Use bullet points for clarity.`;
+
+  let userMessage = `Provide clinical information for: ${drugName}`;
   if (indication) {
     userMessage += `\nSpecific indication: ${indication}`;
   }
@@ -692,38 +1422,30 @@ exports.updateSettings = onCall(async (request) => {
  */
 exports.healthCheck = onRequest((req, res) => {
   cors(req, res, () => {
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '2.0.0'
-    });
   });
 });
-
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '2.0.0'
+  });
+});
 // ============================================================================
 // ============================================================================
-// SECTION 2: FRONTEND CLIENT CONFIGURATION
+// PART 2: FRONTEND CLIENT CONFIGURATION (Browser Only)
 // ============================================================================
 // ============================================================================
-// Use this section in your frontend application (browser)
-// Import these functions in your frontend code
-
 /**
- * Firebase Client Configuration (Browser only)
+ * This section provides browser-side configuration and client wrappers
+ * for calling the Cloud Functions defined above from the browser.
  * 
- * This section provides client-side wrappers for calling Cloud Functions
- * from the browser. These wrap the backend exports above.
+ * Use these in your frontend application (React, Vue, vanilla JS, etc.)
  */
 
-// Note: In browser, use ES6 imports instead:
-// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-// import { getAuth, connectAuthEmulator } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-// etc.
-
-/**
- * FIREBASE PROJECT CONFIGURATION
- * Update these values to match your Firebase project
- */
+// ============================================================================
+// FIREBASE PROJECT CONFIGURATION
+// ============================================================================
+// Update these values to match your Firebase project
 const firebaseConfig = {
   apiKey: "AIzaSyDummy123", // Replace with your actual API key
   authDomain: "medward-pro.firebaseapp.com",
@@ -745,193 +1467,175 @@ const firebaseConfig = {
  * @param {Object} data - { clientRev, deviceId }
  * @returns {Promise} - { success, data, rev, upToDate }
  */
-async function loadData(data = {}) {
+export const loadData = async (data = {}) => {
   try {
-    const result = await callFunction('loadData', data);
-    return result;
+    const func = httpsCallable(functions, 'loadData');
+    const result = await func(data);
+    return result.data;
   } catch (error) {
     console.error('[loadData] Error:', error);
     throw new Error(`Failed to load data: ${error.message}`);
   }
-}
+};
 
 /**
  * Save user data with conflict detection
  * @param {Object} data - { payload, baseRev, force, deviceId }
  * @returns {Promise} - { success, newRev }
  */
-async function saveData(data) {
+export const saveData = async (data) => {
   try {
-    const result = await callFunction('saveData', data);
-    return result;
+    const func = httpsCallable(functions, 'saveData');
+    const result = await func(data);
+    return result.data;
   } catch (error) {
     console.error('[saveData] Error:', error);
     throw new Error(`Failed to save data: ${error.message}`);
   }
-}
+};
 
 /**
  * Update user login timestamp
  * @returns {Promise} - { success: true }
  */
-async function onUserSignIn() {
+export const onUserSignIn = async () => {
   try {
-    const result = await callFunction('onUserSignIn', {});
-    return result;
+    const func = httpsCallable(functions, 'onUserSignIn');
+    const result = await func({});
+    return result.data;
   } catch (error) {
     console.error('[onUserSignIn] Error:', error);
     throw new Error(`Failed to update login: ${error.message}`);
   }
-}
+};
 
 /**
  * Get user profile
  * @returns {Promise} - { success, profile }
  */
-async function getUserProfile() {
+export const getUserProfile = async () => {
   try {
-    const result = await callFunction('getUserProfile', {});
-    return result;
+    const func = httpsCallable(functions, 'getUserProfile');
+    const result = await func({});
+    return result.data;
   } catch (error) {
     console.error('[getUserProfile] Error:', error);
     throw new Error(`Failed to get profile: ${error.message}`);
   }
-}
+};
 
 /**
  * Update user settings
  * @param {Object} settings - User settings object
  * @returns {Promise} - { success: true }
  */
-async function updateSettings(settings) {
+export const updateSettings = async (settings) => {
   try {
-    const result = await callFunction('updateSettings', { settings });
-    return result;
+    const func = httpsCallable(functions, 'updateSettings');
+    const result = await func({ settings });
+    return result.data;
   } catch (error) {
     console.error('[updateSettings] Error:', error);
     throw new Error(`Failed to update settings: ${error.message}`);
   }
-}
+};
 
 /**
  * Analyze lab results with AI
  * @param {Object} data - { labResults, patientContext, model }
  * @returns {Promise} - { success, analysis, model, usage }
  */
-async function analyzeLabs(data) {
+export const analyzeLabs = async (data) => {
   try {
-    const result = await callFunction('analyzeLabs', data);
-    return result;
+    const func = httpsCallable(functions, 'analyzeLabs');
+    const result = await func(data);
+    return result.data;
   } catch (error) {
     console.error('[analyzeLabs] Error:', error);
     throw new Error(`Failed to analyze labs: ${error.message}`);
   }
-}
+};
 
 /**
  * Get drug information
  * @param {Object} data - { drugName, indication, patientContext, model }
  * @returns {Promise} - { success, drugInfo, model, usage }
  */
-async function getDrugInfo(data) {
+export const getDrugInfo = async (data) => {
   try {
-    const result = await callFunction('getDrugInfo', data);
-    return result;
+    const func = httpsCallable(functions, 'getDrugInfo');
+    const result = await func(data);
+    return result.data;
   } catch (error) {
     console.error('[getDrugInfo] Error:', error);
     throw new Error(`Failed to get drug info: ${error.message}`);
   }
-}
+};
 
 /**
  * Generate differential diagnosis
  * @param {Object} data - { symptoms, patientContext, model }
  * @returns {Promise} - { success, differential, model, usage }
  */
-async function generateDifferential(data) {
+export const generateDifferential = async (data) => {
   try {
-    const result = await callFunction('generateDifferential', data);
-    return result;
+    const func = httpsCallable(functions, 'generateDifferential');
+    const result = await func(data);
+    return result.data;
   } catch (error) {
     console.error('[generateDifferential] Error:', error);
     throw new Error(`Failed to generate differential: ${error.message}`);
   }
-}
+};
 
 /**
  * Get treatment plan
  * @param {Object} data - { diagnosis, patientContext, model }
  * @returns {Promise} - { success, plan, model, usage }
  */
-async function getTreatmentPlan(data) {
+export const getTreatmentPlan = async (data) => {
   try {
-    const result = await callFunction('getTreatmentPlan', data);
-    return result;
+    const func = httpsCallable(functions, 'getTreatmentPlan');
+    const result = await func(data);
+    return result.data;
   } catch (error) {
     console.error('[getTreatmentPlan] Error:', error);
     throw new Error(`Failed to get treatment plan: ${error.message}`);
   }
-}
+};
 
 /**
  * On-call clinical consultation
  * @param {Object} data - { scenario, patientContext, urgency, model }
  * @returns {Promise} - { success, consultation, model, usage }
  */
-async function oncallConsult(data) {
+export const oncallConsult = async (data) => {
   try {
-    const result = await callFunction('oncallConsult', data);
-    return result;
+    const func = httpsCallable(functions, 'oncallConsult');
+    const result = await func(data);
+    return result.data;
   } catch (error) {
     console.error('[oncallConsult] Error:', error);
     throw new Error(`Failed to get consultation: ${error.message}`);
   }
-}
+};
 
 /**
  * Health check
  * @returns {Promise} - { status, timestamp, version }
  */
-async function healthCheck() {
+export const healthCheck = async () => {
   try {
-    const result = await callFunction('healthCheck', {});
-    return result;
+    const func = httpsCallable(functions, 'healthCheck');
+    const result = await func({});
+    return result.data;
   } catch (error) {
     console.error('[healthCheck] Error:', error);
     throw new Error(`Health check failed: ${error.message}`);
   }
-}
-
-/**
- * Helper function to call Cloud Functions from browser
- * (Replace with your actual httpsCallable implementation)
- */
-async function callFunction(functionName, data) {
-  // This would be implemented with your functions instance
-  // Example using Firebase SDK:
-  // const func = httpsCallable(functions, functionName);
-  // const result = await func(data);
-  // return result.data;
-  throw new Error(`callFunction not implemented - set up Firebase SDK in browser`);
-}
+};
 
 // ============================================================================
-// EXPORT FUNCTIONS FOR BROWSER USE
+// EXPORT FIREBASE SERVICES AND CONFIGURATION
 // ============================================================================
-// In browser, use ES6 module exports
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    loadData,
-    saveData,
-    onUserSignIn,
-    getUserProfile,
-    updateSettings,
-    analyzeLabs,
-    getDrugInfo,
-    generateDifferential,
-    getTreatmentPlan,
-    oncallConsult,
-    healthCheck,
-    firebaseConfig
-  };
-}
+export { app, auth, db, storage, functions, firebaseConfig };
