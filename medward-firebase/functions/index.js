@@ -65,9 +65,9 @@ const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 const AI_CONFIG = {
   CACHE: {
-    SHORT: 600,      // 10 min - time-sensitive data
-    MEDIUM: 3600,    // 1 hour - clinical queries
-    LONG: 21600,     // 6 hours - drug info
+    SHORT: 600, // 10 min - time-sensitive data
+    MEDIUM: 3600, // 1 hour - clinical queries
+    LONG: 21600, // 6 hours - drug info
     PERMANENT: 86400 // 24 hours - reference data
   },
   MODELS: {
@@ -146,7 +146,7 @@ exports.onUserCreated = onUserCreatedV2(async (event) => {
     .collection('data').doc('inbox'), { items: [], updatedAt: now });
   batch.set(db.collection('users').doc(userId)
     .collection('data').doc('sessions'),
-    { active: [], tombstones: [], updatedAt: now });
+  { active: [], tombstones: [], updatedAt: now });
 
   try {
     await batch.commit();
@@ -233,7 +233,6 @@ exports.loadData = onCall(async (request) => {
       rev: serverRev,
       updatedAt: serverData.updatedAt
     };
-
   } catch (error) {
     console.error(`[loadData] Error for user ${userId}:`, error);
     throw new Error(`Failed to load data: ${error.message}`);
@@ -293,7 +292,8 @@ exports.saveData = onCall(async (request) => {
           success: false,
           safeguard: true,
           serverPatientCount: serverPatientCount,
-          error: `Safety Block: Would overwrite ${serverPatientCount} patients with empty data. Set confirmWipe=true to proceed.`
+          error: `Safety Block: Would overwrite ${serverPatientCount} patients with empty data. ` +
+            `Set confirmWipe=true to proceed.`
         };
       }
 
@@ -315,7 +315,6 @@ exports.saveData = onCall(async (request) => {
     });
 
     return result;
-
   } catch (error) {
     console.error(`[saveData] Error for user ${userId}:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -361,7 +360,7 @@ exports.moveToTrash = onCall(async (request) => {
       let remainingItems;
 
       if (itemType === 'patient') {
-        remainingItems = (activeData.patients || []).filter(p => {
+        remainingItems = (activeData.patients || []).filter((p) => {
           if (itemIds.includes(p.id)) {
             itemsToTrash.push({
               ...p,
@@ -380,7 +379,7 @@ exports.moveToTrash = onCall(async (request) => {
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
       } else if (itemType === 'unit') {
-        remainingItems = (activeData.units || []).filter(u => {
+        remainingItems = (activeData.units || []).filter((u) => {
           if (itemIds.includes(u.id)) {
             itemsToTrash.push({
               ...u,
@@ -407,7 +406,6 @@ exports.moveToTrash = onCall(async (request) => {
     });
 
     return { success: true, trashedCount: itemIds.length };
-
   } catch (error) {
     console.error(`[moveToTrash] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -432,7 +430,6 @@ exports.getTrash = onCall(async (request) => {
       success: true,
       items: trashDoc.exists ? (trashDoc.data().items || []) : []
     };
-
   } catch (error) {
     console.error(`[getTrash] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -470,10 +467,10 @@ exports.restoreFromTrash = onCall(async (request) => {
       const activeData = dataDoc.data() || { patients: [], units: [], rev: 0 };
 
       const itemsToRestore = [];
-      const remainingTrash = (trashData.items || []).filter(item => {
+      const remainingTrash = (trashData.items || []).filter((item) => {
         if (itemIds.includes(item.id)) {
           // Remove trash metadata
-          const { deletedAt, deletedBy, type, ...cleanItem } = item;
+          const { deletedAt: _deletedAt, deletedBy: _deletedBy, type, ...cleanItem } = item;
           itemsToRestore.push({ item: cleanItem, type });
           return false;
         }
@@ -506,7 +503,6 @@ exports.restoreFromTrash = onCall(async (request) => {
     });
 
     return { success: true, restoredCount: itemIds.length };
-
   } catch (error) {
     console.error(`[restoreFromTrash] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -542,7 +538,7 @@ exports.emptyTrash = onCall(async (request) => {
     const trashData = trashDoc.exists ? trashDoc.data() : { items: [] };
 
     const remainingItems = (trashData.items || []).filter(
-      item => !itemIds.includes(item.id)
+      (item) => !itemIds.includes(item.id)
     );
 
     await trashRef.set({
@@ -554,7 +550,6 @@ exports.emptyTrash = onCall(async (request) => {
       success: true,
       deletedCount: (trashData.items || []).length - remainingItems.length
     };
-
   } catch (error) {
     console.error(`[emptyTrash] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -625,7 +620,6 @@ exports.sendPatient = onCall(async (request) => {
       success: true,
       message: `Patient sent to ${recipientEmail}`
     };
-
   } catch (error) {
     console.error(`[sendPatient] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -652,9 +646,8 @@ exports.checkInbox = onCall(async (request) => {
       success: true,
       items: items,
       count: items.length,
-      pendingCount: items.filter(i => i.status === 'pending').length
+      pendingCount: items.filter((i) => i.status === 'pending').length
     };
-
   } catch (error) {
     console.error(`[checkInbox] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -693,7 +686,7 @@ exports.acceptInboxPatient = onCall(async (request) => {
 
       // Find the patient in inbox
       const patientIndex = (inboxData.items || []).findIndex(
-        item => item.id === patientId
+        (item) => item.id === patientId
       );
 
       if (patientIndex === -1) {
@@ -703,7 +696,7 @@ exports.acceptInboxPatient = onCall(async (request) => {
       const patient = inboxData.items[patientIndex];
 
       // Remove inbox metadata and add to active patients
-      const { sentAt, sentBy, status, ...cleanPatient } = patient;
+      const { sentAt: _sentAt, sentBy, status: _status, ...cleanPatient } = patient;
       cleanPatient.unitId = targetUnitId || cleanPatient.unitId;
       cleanPatient.acceptedAt = new Date().toISOString();
       cleanPatient.acceptedFrom = sentBy;
@@ -726,7 +719,6 @@ exports.acceptInboxPatient = onCall(async (request) => {
     });
 
     return { success: true, message: 'Patient accepted' };
-
   } catch (error) {
     console.error(`[acceptInboxPatient] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -756,7 +748,7 @@ exports.declineInboxPatient = onCall(async (request) => {
     const inboxData = inboxDoc.exists ? inboxDoc.data() : { items: [] };
 
     const updatedItems = (inboxData.items || []).filter(
-      item => item.id !== patientId
+      (item) => item.id !== patientId
     );
 
     await inboxRef.set({
@@ -765,7 +757,6 @@ exports.declineInboxPatient = onCall(async (request) => {
     });
 
     return { success: true, message: 'Patient declined' };
-
   } catch (error) {
     console.error(`[declineInboxPatient] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -791,13 +782,13 @@ async function updateSession(userId, deviceId, deviceInfo, clientRev) {
     const now = Date.now();
 
     // Filter out stale sessions (older than 5 minutes)
-    const activeSessions = (sessionsData.active || []).filter(s => {
+    const activeSessions = (sessionsData.active || []).filter((s) => {
       const lastSeen = new Date(s.lastSeen).getTime();
       return (now - lastSeen) < SESSION_TIMEOUT_MS;
     });
 
     // Update or add current session
-    const sessionIndex = activeSessions.findIndex(s => s.deviceId === deviceId);
+    const sessionIndex = activeSessions.findIndex((s) => s.deviceId === deviceId);
     const sessionData = {
       deviceId,
       deviceInfo: deviceInfo || {},
@@ -849,7 +840,6 @@ exports.heartbeat = onCall(async (request) => {
       revGap,
       activeDevices: await getActiveDeviceCount(userId)
     };
-
   } catch (error) {
     console.error(`[heartbeat] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -868,7 +858,7 @@ async function getActiveDeviceCount(userId) {
   const sessionsData = sessionsDoc.data();
   const now = Date.now();
 
-  return (sessionsData.active || []).filter(s => {
+  return (sessionsData.active || []).filter((s) => {
     const lastSeen = new Date(s.lastSeen).getTime();
     return (now - lastSeen) < SESSION_TIMEOUT_MS;
   }).length;
@@ -939,7 +929,8 @@ exports.askClinical = onCall(async (request) => {
     throw new Error('Question is required');
   }
 
-  const systemPrompt = `You are an expert internal medicine consultant providing evidence-based clinical decision support for healthcare professionals.
+  const systemPrompt = `You are an expert internal medicine consultant ` +
+    `providing evidence-based clinical decision support for healthcare professionals.
 
 IMPORTANT GUIDELINES:
 - Use KUWAIT SI UNITS: K+ 3.5-5.0, Na+ 136-145 mmol/L, Hgb g/L (not g/dL)
@@ -977,7 +968,6 @@ Clinical Question: ${question}`;
       model: model || AI_CONFIG.MODELS.FAST,
       usage: response.usage
     };
-
   } catch (error) {
     console.error(`[askClinical] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -1033,7 +1023,6 @@ Format your response:
       model: model || AI_CONFIG.MODELS.FAST,
       usage: response.usage
     };
-
   } catch (error) {
     console.error(`[analyzeLabs] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -1090,7 +1079,6 @@ Be concise but comprehensive. Use bullet points for clarity.`;
       model: model || AI_CONFIG.MODELS.FAST,
       usage: response.usage
     };
-
   } catch (error) {
     console.error(`[getDrugInfo] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -1144,7 +1132,6 @@ Format:
       model: model || AI_CONFIG.MODELS.BALANCED,
       usage: response.usage
     };
-
   } catch (error) {
     console.error(`[generateDifferential] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -1198,7 +1185,6 @@ Consider patient-specific factors (comorbidities, allergies, etc.) when making r
       model: model || AI_CONFIG.MODELS.BALANCED,
       usage: response.usage
     };
-
   } catch (error) {
     console.error(`[getTreatmentPlan] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -1258,7 +1244,6 @@ Be concise, actionable, and prioritize patient safety.`;
       model: model || AI_CONFIG.MODELS.BALANCED,
       usage: response.usage
     };
-
   } catch (error) {
     console.error(`[oncallConsult] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -1290,7 +1275,6 @@ exports.getUserProfile = onCall(async (request) => {
       success: true,
       profile: userDoc.data()
     };
-
   } catch (error) {
     console.error(`[getUserProfile] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
@@ -1319,7 +1303,6 @@ exports.updateSettings = onCall(async (request) => {
     });
 
     return { success: true };
-
   } catch (error) {
     console.error(`[updateSettings] Error:`, error);
     throw new Error(`Internal error: ${error.message}`);
