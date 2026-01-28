@@ -11,13 +11,18 @@
     "runtime": "nodejs20"
   },
   "hosting": {
-    "public": "..",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
-      "**/.git/**",
-      "**/medward-firebase/**"
+      "**/.git/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
   "emulators": {
