@@ -44,15 +44,13 @@
  */
 
 // ============================================================================
-// FIREBASE FUNCTIONS V2 IMPORTS
+// FIREBASE FUNCTIONS IMPORTS
 // ============================================================================
 const { onCall } = require('firebase-functions/v2/https');
 const { onRequest } = require('firebase-functions/v2/https');
-const { onUserCreated } = require('firebase-functions/v2/identity');
+// NOTE: Auth triggers (onCreate) are NOT available in v2/identity - use v1 API
+const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-
-// Legacy v1 imports for config access
-const functionsV1 = require('firebase-functions');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -95,10 +93,12 @@ const AI_CONFIG = {
  * - /users/{userId}/data/trash - Deleted items
  * - /users/{userId}/data/inbox - Received patient handovers
  * - /users/{userId}/data/sessions - Active device sessions
+ *
+ * NOTE: Auth triggers use v1 API because v2/identity only has blocking functions
+ * (beforeUserCreated), not async onCreate triggers.
  */
-exports.onUserCreated = onUserCreated(async (event) => {
-  // In v2, user data is in event.data
-  const user = event.data;
+exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
+  // v1 auth trigger receives user directly
   console.log(`[Auth] New user created: ${user.uid} (${user.email})`);
 
   const now = admin.firestore.FieldValue.serverTimestamp();
@@ -934,9 +934,9 @@ function getClaudeApiKey() {
   
   // TERTIARY: Check legacy Firebase config location
   try {
-    if (functionsV1.config().claude && functionsV1.config().claude.api_key) {
+    if (functions.config().claude && functions.config().claude.api_key) {
       console.log('✓ Using API key from Firebase config (claude.api_key)');
-      return functionsV1.config().claude.api_key;
+      return functions.config().claude.api_key;
     }
   } catch (e) {
     // Config access error - continue to next check
