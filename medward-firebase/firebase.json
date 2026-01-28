@@ -43,7 +43,7 @@
       "port": 8080
     },
     "storage": {
-      "port": 4000
+      "port": 9199
     },
     "auth": {
       "port": 9099
