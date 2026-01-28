@@ -987,9 +987,6 @@ Clinical Question: ${question}`;
 /**
  * Lab analysis with clinical interpretation.
  */
-// // Force update 2026 to // Force update FINAL.
-exports.analyzeLabs = 
-
 exports.analyzeLabs = onCall(async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
