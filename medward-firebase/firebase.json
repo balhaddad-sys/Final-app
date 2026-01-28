@@ -8,14 +8,22 @@
       "firebase-debug.log",
       "firebase-debug.*.log"
     ],
-    "runtime": "nodejs18"
+    "runtime": "nodejs20"
   },
   "hosting": {
-    "public": "public",
+    "public": "..",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/.git/**",
+      "**/medward-firebase/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
   "emulators": {
