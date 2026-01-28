@@ -10,7 +10,7 @@
     ],
     "runtime": "nodejs20",
     "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" ci"
+      "cd \"$RESOURCE_DIR\" && npm ci"
     ]
   },
   "hosting": {
