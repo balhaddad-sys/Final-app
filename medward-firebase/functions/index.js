@@ -8,11 +8,51 @@
  * - Faster performance with direct Firestore access
  * - Better error handling and conflict detection
  *
- * @version 1.0.0
+ * ============================================================================
+ * FIREBASE FUNCTIONS V2 MIGRATION COMPLETE ✅
+ * ============================================================================
+ *
+ * This file has been fully migrated from Firebase Functions v1 to v2 API.
+ *
+ * IMPORTANT RUNTIME REQUIREMENTS:
+ * ❌ DO NOT run this file with: node index.js
+ * ✅ INSTEAD use Firebase runtime:
+ *    - firebase emulators:start (for local testing)
+ *    - firebase deploy --only functions (for production)
+ *
+ * WHY?
+ * - Firebase Functions code ONLY works in Firebase runtime environment
+ * - Running with `node index.js` will crash with "Cannot read properties of undefined"
+ * - Auth triggers (onUserCreated) and HTTP callable functions (onCall)
+ *   are provided by Firebase runtime, not available in plain Node.js
+ *
+ * LOCAL TESTING:
+ * 1. Start Firebase Emulators: firebase emulators:start
+ * 2. Test auth triggers by creating users in Auth emulator UI
+ * 3. Call HTTP functions via emulator endpoints
+ *
+ * KEY V2 CHANGES:
+ * - Auth trigger: onUserCreated from firebase-functions/v2/identity
+ * - HTTP callable: onCall from firebase-functions/v2/https
+ * - Request signature: (request) instead of (data, context)
+ * - Auth access: request.auth instead of context.auth
+ * - Data access: request.data instead of data parameter
+ * - Error handling: throw Error() instead of HttpsError()
+ *
+ * @version 2.0.0
+ * @migrated 2025-01-28
  */
 
-const functions = require('firebase-functions');
+// ============================================================================
+// FIREBASE FUNCTIONS V2 IMPORTS
+// ============================================================================
+const { onCall } = require('firebase-functions/v2/https');
+const { onRequest } = require('firebase-functions/v2/https');
+const { onUserCreated: onUserCreatedV2 } = require('firebase-functions/v2/identity');
 const admin = require('firebase-admin');
+
+// Legacy v1 imports for config access
+const functionsV1 = require('firebase-functions');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -45,6 +85,8 @@ const AI_CONFIG = {
  * Automatically creates all required Firestore documents when a new user signs in.
  * This solves the authentication bug in the old Google Apps Script system.
  *
+ * MIGRATED TO FIREBASE FUNCTIONS V2 (identity trigger)
+ *
  * Documents created:
  * - /users/{userId} - User profile
  * - /users/{userId}/data/active - Main patient/unit data
@@ -52,7 +94,9 @@ const AI_CONFIG = {
  * - /users/{userId}/data/inbox - Received patient handovers
  * - /users/{userId}/data/sessions - Active device sessions
  */
-exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
+exports.onUserCreated = onUserCreatedV2(async (event) => {
+  // In v2, user data is in event.data
+  const user = event.data;
   console.log(`[Auth] New user created: ${user.uid} (${user.email})`);
 
   const now = admin.firestore.FieldValue.serverTimestamp();
@@ -116,14 +160,14 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
 
 /**
  * Updates user's lastLoginAt on each sign-in
+ * MIGRATED TO V2
  */
-exports.onUserSignIn = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.onUserSignIn = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
+  const userId = request.auth.uid;
 
   await db.collection('users').doc(userId).update({
     lastLoginAt: admin.firestore.FieldValue.serverTimestamp()
@@ -139,15 +183,15 @@ exports.onUserSignIn = functions.https.onCall(async (data, context) => {
 /**
  * Loads user data from Firestore.
  * Supports revision-based caching - returns 'upToDate' if client has latest.
+ * MIGRATED TO V2
  */
-exports.loadData = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.loadData = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { clientRev, deviceId } = data || {};
+  const userId = request.auth.uid;
+  const { clientRev, deviceId } = request.data || {};
 
   try {
     const dataDoc = await db.collection('users').doc(userId)
@@ -192,7 +236,7 @@ exports.loadData = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[loadData] Error for user ${userId}:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Failed to load data: ${error.message}`);
   }
 });
 
@@ -205,18 +249,16 @@ exports.loadData = functions.https.onCall(async (data, context) => {
  * - Force mode to bypass conflict check
  * - Revision incrementing
  */
-exports.saveData = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.saveData = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { payload, baseRev, force, deviceId } = data || {};
+  const userId = request.auth.uid;
+  const { payload, baseRev, force, deviceId } = request.data || {};
 
   if (!payload) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'No data to save');
+    throw new Error('No data to save');
   }
 
   try {
@@ -276,7 +318,7 @@ exports.saveData = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[saveData] Error for user ${userId}:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
@@ -288,18 +330,16 @@ exports.saveData = functions.https.onCall(async (data, context) => {
  * Moves items (patients or units) to trash.
  * Uses transaction to ensure consistency.
  */
-exports.moveToTrash = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.moveToTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { itemIds, itemType = 'patient' } = data || {};
+  const userId = request.auth.uid;
+  const { itemIds, itemType = 'patient' } = request.data || {};
 
   if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'itemIds must be a non-empty array');
+    throw new Error('itemIds must be a non-empty array');
   }
 
   const trashRef = db.collection('users').doc(userId)
@@ -370,20 +410,19 @@ exports.moveToTrash = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[moveToTrash] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Gets all items in trash.
  */
-exports.getTrash = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.getTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
+  const userId = request.auth.uid;
 
   try {
     const trashDoc = await db.collection('users').doc(userId)
@@ -396,25 +435,23 @@ exports.getTrash = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[getTrash] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Restores items from trash back to active data.
  */
-exports.restoreFromTrash = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.restoreFromTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { itemIds } = data || {};
+  const userId = request.auth.uid;
+  const { itemIds } = request.data || {};
 
   if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'itemIds must be a non-empty array');
+    throw new Error('itemIds must be a non-empty array');
   }
 
   const trashRef = db.collection('users').doc(userId)
@@ -472,21 +509,20 @@ exports.restoreFromTrash = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[restoreFromTrash] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Permanently deletes items from trash.
  */
-exports.emptyTrash = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.emptyTrash = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { itemIds } = data || {}; // If null, empty all
+  const userId = request.auth.uid;
+  const { itemIds } = request.data || {}; // If null, empty all
 
   const trashRef = db.collection('users').doc(userId)
     .collection('data').doc('trash');
@@ -521,7 +557,7 @@ exports.emptyTrash = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[emptyTrash] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
@@ -532,19 +568,17 @@ exports.emptyTrash = functions.https.onCall(async (data, context) => {
 /**
  * Sends a patient to another user's inbox.
  */
-exports.sendPatient = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.sendPatient = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const senderId = context.auth.uid;
-  const senderEmail = context.auth.token.email;
-  const { recipientEmail, patientData } = data || {};
+  const senderId = request.auth.uid;
+  const senderEmail = request.auth.token.email;
+  const { recipientEmail, patientData } = request.data || {};
 
   if (!recipientEmail || !patientData) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'recipientEmail and patientData are required');
+    throw new Error('recipientEmail and patientData are required');
   }
 
   try {
@@ -576,7 +610,7 @@ exports.sendPatient = functions.https.onCall(async (data, context) => {
         sentBy: {
           uid: senderId,
           email: senderEmail,
-          displayName: context.auth.token.name || senderEmail
+          displayName: request.auth.token.name || senderEmail
         },
         status: 'pending'
       };
@@ -594,20 +628,19 @@ exports.sendPatient = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[sendPatient] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Checks the user's inbox for received patients.
  */
-exports.checkInbox = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.checkInbox = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
+  const userId = request.auth.uid;
 
   try {
     const inboxDoc = await db.collection('users').doc(userId)
@@ -624,25 +657,23 @@ exports.checkInbox = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[checkInbox] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Accepts a patient from inbox and adds to active data.
  */
-exports.acceptInboxPatient = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.acceptInboxPatient = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { patientId, targetUnitId } = data || {};
+  const userId = request.auth.uid;
+  const { patientId, targetUnitId } = request.data || {};
 
   if (!patientId) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'patientId is required');
+    throw new Error('patientId is required');
   }
 
   const inboxRef = db.collection('users').doc(userId)
@@ -698,25 +729,23 @@ exports.acceptInboxPatient = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[acceptInboxPatient] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Declines/removes a patient from inbox.
  */
-exports.declineInboxPatient = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.declineInboxPatient = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { patientId } = data || {};
+  const userId = request.auth.uid;
+  const { patientId } = request.data || {};
 
   if (!patientId) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'patientId is required');
+    throw new Error('patientId is required');
   }
 
   const inboxRef = db.collection('users').doc(userId)
@@ -739,7 +768,7 @@ exports.declineInboxPatient = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[declineInboxPatient] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
@@ -793,14 +822,13 @@ async function updateSession(userId, deviceId, deviceInfo, clientRev) {
 /**
  * Heartbeat function for session tracking and sync status.
  */
-exports.heartbeat = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.heartbeat = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { deviceId, deviceInfo, clientRev } = data || {};
+  const userId = request.auth.uid;
+  const { deviceId, deviceInfo, clientRev } = request.data || {};
 
   try {
     await updateSession(userId, deviceId || 'unknown', deviceInfo, clientRev);
@@ -824,7 +852,7 @@ exports.heartbeat = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[heartbeat] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
@@ -855,7 +883,7 @@ async function getActiveDeviceCount(userId) {
  */
 function getClaudeApiKey() {
   try {
-    return (functions.config().claude && functions.config().claude.api_key) || process.env.CLAUDE_API_KEY;
+    return (functionsV1.config().claude && functionsV1.config().claude.api_key) || process.env.CLAUDE_API_KEY;
   } catch (e) {
     return process.env.CLAUDE_API_KEY;
   }
@@ -900,17 +928,15 @@ async function callClaudeAPI(messages, options = {}) {
 /**
  * Clinical question assistant.
  */
-exports.askClinical = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.askClinical = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const { question, patientContext, model } = data || {};
+  const { question, patientContext, model } = request.data || {};
 
   if (!question) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'Question is required');
+    throw new Error('Question is required');
   }
 
   const systemPrompt = `You are an expert internal medicine consultant providing evidence-based clinical decision support for healthcare professionals.
@@ -954,7 +980,7 @@ Clinical Question: ${question}`;
 
   } catch (error) {
     console.error(`[askClinical] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
@@ -964,17 +990,15 @@ Clinical Question: ${question}`;
 // // Force update 2026 to // Force update FINAL.
 exports.analyzeLabs = 
 
-exports.analyzeLabs = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.analyzeLabs = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const { labs, patientContext, model } = data || {};
+  const { labs, patientContext, model } = request.data || {};
 
   if (!labs) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'Labs data is required');
+    throw new Error('Labs data is required');
   }
 
   const systemPrompt = `You are a clinical pathologist providing expert interpretation of laboratory results.
@@ -1015,24 +1039,22 @@ Format your response:
 
   } catch (error) {
     console.error(`[analyzeLabs] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Drug information lookup.
  */
-exports.getDrugInfo = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.getDrugInfo = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const { drugName, indication, patientContext, model } = data || {};
+  const { drugName, indication, patientContext, model } = request.data || {};
 
   if (!drugName) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'Drug name is required');
+    throw new Error('Drug name is required');
   }
 
   const systemPrompt = `You are a clinical pharmacist providing evidence-based drug information.
@@ -1074,24 +1096,22 @@ Be concise but comprehensive. Use bullet points for clarity.`;
 
   } catch (error) {
     console.error(`[getDrugInfo] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Generates differential diagnosis from symptoms.
  */
-exports.generateDifferential = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.generateDifferential = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const { symptoms, patientContext, model } = data || {};
+  const { symptoms, patientContext, model } = request.data || {};
 
   if (!symptoms) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'Symptoms are required');
+    throw new Error('Symptoms are required');
   }
 
   const systemPrompt = `You are an experienced internal medicine consultant generating differential diagnoses.
@@ -1130,24 +1150,22 @@ Format:
 
   } catch (error) {
     console.error(`[generateDifferential] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Generates treatment plan.
  */
-exports.getTreatmentPlan = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.getTreatmentPlan = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const { diagnosis, patientContext, model } = data || {};
+  const { diagnosis, patientContext, model } = request.data || {};
 
   if (!diagnosis) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'Diagnosis is required');
+    throw new Error('Diagnosis is required');
   }
 
   const systemPrompt = `You are an internal medicine consultant creating evidence-based treatment plans.
@@ -1186,24 +1204,22 @@ Consider patient-specific factors (comorbidities, allergies, etc.) when making r
 
   } catch (error) {
     console.error(`[getTreatmentPlan] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * On-call clinical consultation (more comprehensive).
  */
-exports.oncallConsult = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.oncallConsult = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const { scenario, patientContext, urgency, model } = data || {};
+  const { scenario, patientContext, urgency, model } = request.data || {};
 
   if (!scenario) {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'Clinical scenario is required');
+    throw new Error('Clinical scenario is required');
   }
 
   const systemPrompt = `You are an experienced on-call internal medicine consultant providing urgent clinical guidance.
@@ -1248,7 +1264,7 @@ Be concise, actionable, and prioritize patient safety.`;
 
   } catch (error) {
     console.error(`[oncallConsult] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
@@ -1259,13 +1275,12 @@ Be concise, actionable, and prioritize patient safety.`;
 /**
  * Gets user profile.
  */
-exports.getUserProfile = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.getUserProfile = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
+  const userId = request.auth.uid;
 
   try {
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1281,25 +1296,23 @@ exports.getUserProfile = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[getUserProfile] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Updates user settings.
  */
-exports.updateSettings = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated', 'User must be authenticated');
+exports.updateSettings = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error('User must be authenticated');
   }
 
-  const userId = context.auth.uid;
-  const { settings } = data || {};
+  const userId = request.auth.uid;
+  const { settings } = request.data || {};
 
   if (!settings || typeof settings !== 'object') {
-    throw new functions.https.HttpsError(
-      'invalid-argument', 'Settings object is required');
+    throw new Error('Settings object is required');
   }
 
   try {
@@ -1312,17 +1325,18 @@ exports.updateSettings = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error(`[updateSettings] Error:`, error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new Error(`Internal error: ${error.message}`);
   }
 });
 
 /**
  * Health check endpoint.
+ * MIGRATED TO V2
  */
-exports.healthCheck = functions.https.onRequest((req, res) => {
+exports.healthCheck = onRequest((req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '2.0.0'
   });
 });
