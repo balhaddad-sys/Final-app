@@ -1,0 +1,8 @@
+# Dependencies
+node_modules/
+package.json
+package-lock.json
+
+# Firebase
+.firebase/
+firebase-debug.log
