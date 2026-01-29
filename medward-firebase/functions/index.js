@@ -328,7 +328,7 @@ exports.saveData = onCall(async (request) => {
           success: false,
           conflict: true,
           serverRev: serverRev,
-          serverData: serverData,
+          serverData: sanitizeFirestoreData(serverData),
           error: 'Data has been modified by another device'
         };
       }
@@ -369,6 +369,9 @@ exports.saveData = onCall(async (request) => {
     return result;
   } catch (error) {
     console.error(`[saveData] Error for user ${userId}:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -478,12 +481,16 @@ exports.getTrash = onCall(async (request) => {
     const trashDoc = await db.collection('users').doc(userId)
       .collection('data').doc('trash').get();
 
+    const items = trashDoc.exists ? (trashDoc.data().items || []) : [];
     return {
       success: true,
-      items: trashDoc.exists ? (trashDoc.data().items || []) : []
+      items: sanitizeFirestoreData(items)
     };
   } catch (error) {
     console.error(`[getTrash] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -604,6 +611,9 @@ exports.emptyTrash = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[emptyTrash] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -887,13 +897,16 @@ exports.heartbeat = onCall(async (request) => {
     return {
       success: true,
       rev: serverRev,
-      updatedAt: serverData.updatedAt,
+      updatedAt: sanitizeFirestoreData(serverData.updatedAt),
       forceFullSync: revGap > 10 || revGap < 0,
       revGap,
       activeDevices: await getActiveDeviceCount(userId)
     };
   } catch (error) {
     console.error(`[heartbeat] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -1121,6 +1134,9 @@ Clinical Question: ${question}`;
     };
   } catch (error) {
     console.error(`[askClinical] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -1176,6 +1192,9 @@ Format your response:
     };
   } catch (error) {
     console.error(`[analyzeLabs] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -1232,6 +1251,9 @@ Be concise but comprehensive. Use bullet points for clarity.`;
     };
   } catch (error) {
     console.error(`[getDrugInfo] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -1285,6 +1307,9 @@ Format:
     };
   } catch (error) {
     console.error(`[generateDifferential] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -1338,6 +1363,9 @@ Consider patient-specific factors (comorbidities, allergies, etc.) when making r
     };
   } catch (error) {
     console.error(`[getTreatmentPlan] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
@@ -1397,6 +1425,9 @@ Be concise, actionable, and prioritize patient safety.`;
     };
   } catch (error) {
     console.error(`[oncallConsult] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
     throw new HttpsError('internal', error.message);
   }
 });
