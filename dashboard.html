@@ -7152,7 +7152,9 @@ function initSyncEngine() {
   
   document.addEventListener('visibilitychange', handleVisibilityChange);
   window.addEventListener('beforeunload', handleBeforeUnload);
-  
+  window.addEventListener('online', handleOnline);
+  window.addEventListener('offline', handleOffline);
+
   console.log('   Device:', sync.deviceId, 'Rev:', sync.clientRev);
   return sync;
 }
