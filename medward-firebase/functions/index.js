@@ -912,42 +912,58 @@ async function getActiveDeviceCount(userId) {
 /**
  * Gets Claude API key from Firebase config or environment.
  * ROBUST VERSION: Checks multiple possible config locations.
- * 
- * BUG FIX: The original code looked for claude.api_key but the key was 
+ *
+ * BUG FIX: The original code looked for claude.api_key but the key was
  * saved as anthropic.key - this function now checks both locations.
- * 
+ *
  * Configuration priority:
- * 1. ANTHROPIC_API_KEY environment variable (where you saved it)
- * 2. CLAUDE_API_KEY environment variable (backwards compatibility)
- * 3. Legacy config: claude.api_key (from Firebase config)
- * 4. Return null if not found (triggers proper error handling)
+ * 1. ANTHROPIC_API_KEY environment variable
+ * 2. CLAUDE_API_KEY environment variable
+ * 3. Firebase config: anthropic.key (set via: firebase functions:config:set anthropic.key="YOUR_KEY")
+ * 4. Firebase config: claude.api_key (legacy)
+ * 5. Return null if not found (triggers proper error handling)
  */
 function getClaudeApiKey() {
-  // PRIMARY: Check the config you actually set (anthropic.key)
-  // This is set via: firebase functions:config:set anthropic.key="YOUR_KEY"
+  // PRIMARY: Check environment variables (Gen2 style)
   if (process.env.ANTHROPIC_API_KEY) {
     console.log('✓ Using API key from ANTHROPIC_API_KEY environment variable');
     return process.env.ANTHROPIC_API_KEY;
   }
-  
-  // SECONDARY: Check CLAUDE_API_KEY (backwards compatibility)
+
   if (process.env.CLAUDE_API_KEY) {
     console.log('✓ Using API key from CLAUDE_API_KEY environment variable');
     return process.env.CLAUDE_API_KEY;
   }
-  
-  // TERTIARY: Check legacy Firebase config location
+
+  // SECONDARY: Check Firebase config (Gen1 style) - anthropic.key
+  // This is set via: firebase functions:config:set anthropic.key="YOUR_KEY"
   try {
-    if (functions.config().claude && functions.config().claude.api_key) {
+    const config = functions.config();
+
+    // Check anthropic.key (most likely location based on deployment guide)
+    if (config.anthropic && config.anthropic.key) {
+      console.log('✓ Using API key from Firebase config (anthropic.key)');
+      return config.anthropic.key;
+    }
+
+    // Check claude.api_key (legacy location)
+    if (config.claude && config.claude.api_key) {
       console.log('✓ Using API key from Firebase config (claude.api_key)');
-      return functions.config().claude.api_key;
+      return config.claude.api_key;
+    }
+
+    // Check claude.key (another possible location)
+    if (config.claude && config.claude.key) {
+      console.log('✓ Using API key from Firebase config (claude.key)');
+      return config.claude.key;
     }
   } catch (e) {
-    // Config access error - continue to next check
+    console.error('Config access error:', e.message);
   }
-  
+
   // FALLBACK: No API key found
   console.error('✗ CRITICAL: No API Key found in any location');
+  console.error('  Checked: ANTHROPIC_API_KEY env, CLAUDE_API_KEY env, anthropic.key config, claude.api_key config');
   return null;
 }
 
@@ -1452,6 +1468,57 @@ exports.healthCheck = onRequest((req, res) => {
     region: 'us-central1',
     method: req.method,
     origin: req.headers.origin || 'none'
+  });
+});
+
+/**
+ * Configuration check endpoint.
+ * Returns diagnostic info about function configuration (no sensitive data).
+ */
+exports.configCheck = onRequest((req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  // Check API key configuration
+  const apiKeyStatus = {
+    ANTHROPIC_API_KEY_env: !!process.env.ANTHROPIC_API_KEY,
+    CLAUDE_API_KEY_env: !!process.env.CLAUDE_API_KEY,
+    anthropic_key_config: false,
+    claude_api_key_config: false,
+    claude_key_config: false
+  };
+
+  try {
+    const config = functions.config();
+    apiKeyStatus.anthropic_key_config = !!(config.anthropic && config.anthropic.key);
+    apiKeyStatus.claude_api_key_config = !!(config.claude && config.claude.api_key);
+    apiKeyStatus.claude_key_config = !!(config.claude && config.claude.key);
+  } catch (e) {
+    apiKeyStatus.configError = e.message;
+  }
+
+  // Test if we can actually get the API key
+  const apiKey = getClaudeApiKey();
+  const hasValidKey = !!(apiKey && apiKey.length > 10);
+
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: '2.0.2',
+    nodeVersion: process.version,
+    apiKeyConfiguration: apiKeyStatus,
+    apiKeyFound: hasValidKey,
+    apiKeyPrefix: hasValidKey ? apiKey.substring(0, 10) + '...' : null,
+    recommendation: hasValidKey
+      ? 'API key is configured correctly'
+      : 'Run: firebase functions:config:set anthropic.key="YOUR_API_KEY" then redeploy'
   });
 });
 
