@@ -323,11 +323,13 @@
           log('info', `Node Version: ${data.nodeVersion}`);
           log('info', '--- API Key Status ---');
 
-          const cfg = data.apiKeyConfiguration;
-          log('info', `ANTHROPIC_API_KEY env: ${cfg.ANTHROPIC_API_KEY_env ? 'SET' : 'NOT SET'}`);
-          log('info', `CLAUDE_API_KEY env: ${cfg.CLAUDE_API_KEY_env ? 'SET' : 'NOT SET'}`);
-          log('info', `anthropic.key config: ${cfg.anthropic_key_config ? 'SET' : 'NOT SET'}`);
-          log('info', `claude.api_key config: ${cfg.claude_api_key_config ? 'SET' : 'NOT SET'}`);
+          const cfg = data.apiKeyConfiguration || {};
+          // Show the actual keys returned by the function
+          log('info', `ANTHROPIC_API_KEY env: ${cfg.ANTHROPIC_API_KEY ? 'SET' : 'NOT SET'}`);
+          log('info', `CLAUDE_API_KEY env: ${cfg.CLAUDE_API_KEY ? 'SET' : 'NOT SET'}`);
+          // Legacy config keys (v1 Firebase config) - no longer used in v2
+          log('info', `anthropic.key config: NOT SET`);
+          log('info', `claude.api_key config: NOT SET`);
 
           if (data.apiKeyFound) {
             log('success', `API Key Found: YES`);

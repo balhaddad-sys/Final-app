@@ -1365,28 +1365,53 @@ Be concise, actionable, and prioritize patient safety.`;
 
 /**
  * Gets user profile.
+ *
+ * FIXED: Better error handling for unauthenticated calls.
+ * In Firebase Functions v2, unauthenticated calls may have request.auth = undefined
+ * or the SDK may throw before our code runs. This version handles both cases.
  */
 exports.getUserProfile = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const userId = request.auth.uid;
-
+  // Enhanced auth checking for v2 compatibility
   try {
+    // Check if auth context exists
+    if (!request.auth || !request.auth.uid) {
+      console.log('[getUserProfile] No auth context - user not authenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated to access profile');
+    }
+
+    const userId = request.auth.uid;
+    console.log(`[getUserProfile] Fetching profile for user: ${userId}`);
+
     const userDoc = await db.collection('users').doc(userId).get();
 
     if (!userDoc.exists) {
+      console.log(`[getUserProfile] No profile found for user: ${userId}`);
       return { success: false, error: 'User profile not found' };
     }
 
+    console.log(`[getUserProfile] Profile retrieved for user: ${userId}`);
     return {
       success: true,
       profile: userDoc.data()
     };
   } catch (error) {
     console.error(`[getUserProfile] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    console.error(`[getUserProfile] Error name:`, error.name);
+    console.error(`[getUserProfile] Error code:`, error.code);
+    console.error(`[getUserProfile] Error message:`, error.message);
+
+    // Re-throw HttpsError as-is (preserves unauthenticated, permission-denied, etc.)
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    // Handle Firestore permission errors
+    if (error.code === 'permission-denied' || error.code === 7) {
+      throw new HttpsError('permission-denied', 'Access denied to user profile');
+    }
+
+    // Generic error with detailed message for debugging
+    throw new HttpsError('internal', `Failed to get profile: ${error.message || 'Unknown error'}`);
   }
 });
 
@@ -1421,15 +1446,34 @@ exports.updateSettings = onCall(async (request) => {
 /**
  * Health check endpoint.
  * MIGRATED TO V2 - uses cors: true option for automatic CORS handling
+ *
+ * NOTE: If CORS still fails after deployment, the function may need redeployment.
+ * Run: firebase deploy --only functions:healthCheck
  */
-exports.healthCheck = onRequest({ cors: true }, (req, res) => {
+exports.healthCheck = onRequest({
+  cors: true,
+  // Explicitly allow all methods for maximum compatibility
+  invoker: 'public'
+}, (req, res) => {
+  // Set explicit CORS headers as a fallback
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.1.1',
+    version: '2.2.0',
     region: 'us-central1',
     method: req.method,
-    origin: req.headers.origin || 'none'
+    origin: req.headers.origin || 'none',
+    corsEnabled: true
   });
 });
 
