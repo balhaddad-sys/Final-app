@@ -13,8 +13,8 @@
  * @version 1.0.0
  */
 
-// Firebase Functions SDK import (CDN)
-import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-functions.js';
+// Firebase Functions SDK import (CDN) - v10.8.0 to match compat SDK
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js';
 import { app, auth, db, doc, onSnapshot } from './firebase.config.js';
 
 // Initialize Firebase Functions

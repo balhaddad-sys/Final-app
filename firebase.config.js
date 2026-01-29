@@ -2,11 +2,14 @@
  * Firebase Configuration for MedWard Pro
  * =======================================
  * CDN-based setup (no npm required)
+ *
+ * IMPORTANT: Uses v10.8.0 to match the compat SDK version in dashboard.html
+ * This ensures both compat and modular SDKs share the same app/auth instance.
  */
 
-// Firebase SDK imports (v12.8.0)
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js';
-import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js';
+// Firebase SDK imports (v10.8.0 - matches compat SDK in dashboard.html)
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js';
 import {
     getFirestore,
     collection,
@@ -22,7 +25,7 @@ import {
     onSnapshot,
     serverTimestamp,
     enableIndexedDbPersistence
-} from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js';
+} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import {
     getAuth,
     signInWithEmailAndPassword,
@@ -37,7 +40,7 @@ import {
     setPersistence,
     browserLocalPersistence,
     browserSessionPersistence
-} from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
+} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -50,9 +53,25 @@ const firebaseConfig = {
     measurementId: "G-LQYE3F4T5C"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// Initialize Firebase - reuse existing app if already initialized (e.g., by compat SDK)
+let app;
+const existingApps = getApps();
+if (existingApps.length > 0) {
+    app = getApp();
+    console.log('[Firebase] Reusing existing app instance (shared with compat SDK)');
+} else {
+    app = initializeApp(firebaseConfig);
+    console.log('[Firebase] Initialized new app instance');
+}
+
+// Get services - these will share state with compat SDK if versions match
+let analytics;
+try {
+    analytics = getAnalytics(app);
+} catch (e) {
+    console.warn('[Firebase] Analytics not available:', e.message);
+    analytics = null;
+}
 const db = getFirestore(app);
 const auth = getAuth(app);
 

@@ -84,9 +84,9 @@ const AI_CONFIG = {
     PERMANENT: 86400 // 24 hours - reference data
   },
   MODELS: {
-    FAST: 'claude-haiku-4-5-20251101',       // ✅ Claude Haiku 4.5 - fast and efficient for clinical work
-    BALANCED: 'claude-haiku-4-5-20251101',   // Same as FAST (recommended for balance)
-    ADVANCED: 'claude-opus-4-5-20251101'     // Claude Opus 4.5 - most capable for complex cases
+    FAST: 'claude-haiku-4-5-20251001',       // ✅ Claude Haiku 4.5 - fast and efficient for clinical work
+    BALANCED: 'claude-haiku-4-5-20251001',   // Same as FAST (recommended for balance)
+    ADVANCED: 'claude-opus-4-5-20251001'     // Claude Opus 4.5 - most capable for complex cases
   },
   DEFAULT_MAX_TOKENS: 4000,
   DEFAULT_TEMPERATURE: 0.3 // Focused, consistent clinical responses
