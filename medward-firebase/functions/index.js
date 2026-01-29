@@ -37,10 +37,10 @@
  * - Request signature: (request) instead of (data, context)
  * - Auth access: request.auth instead of context.auth
  * - Data access: request.data instead of data parameter
- * - Error handling: throw Error() instead of HttpsError()
+ * - Error handling: Use HttpsError for proper error codes to client
  *
- * @version 2.0.0
- * @updated 2025-01-28
+ * @version 2.1.0
+ * @updated 2026-01-29
  */
 
 // ============================================================================
@@ -52,8 +52,7 @@
 // ============================================================================
 // FIREBASE FUNCTIONS IMPORTS
 // ============================================================================
-const { onCall } = require('firebase-functions/v2/https');
-const { onRequest } = require('firebase-functions/v2/https');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 // NOTE: Auth triggers (onCreate) are NOT available in v2/identity - use v1 API
 const functions = require('firebase-functions');
@@ -175,7 +174,7 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
  */
 exports.onUserSignIn = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
@@ -198,7 +197,7 @@ exports.onUserSignIn = onCall(async (request) => {
  */
 exports.loadData = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
@@ -246,7 +245,7 @@ exports.loadData = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[loadData] Error for user ${userId}:`, error);
-    throw new Error(`Failed to load data: ${error.message}`);
+    throw new HttpsError('internal', `Failed to load data: ${error.message}`);
   }
 });
 
@@ -261,14 +260,14 @@ exports.loadData = onCall(async (request) => {
  */
 exports.saveData = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
   const { payload, baseRev, force, deviceId } = request.data || {};
 
   if (!payload) {
-    throw new Error('No data to save');
+    throw new HttpsError('invalid-argument', 'No data to save');
   }
 
   try {
@@ -328,7 +327,7 @@ exports.saveData = onCall(async (request) => {
     return result;
   } catch (error) {
     console.error(`[saveData] Error for user ${userId}:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -342,14 +341,14 @@ exports.saveData = onCall(async (request) => {
  */
 exports.moveToTrash = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
   const { itemIds, itemType = 'patient' } = request.data || {};
 
   if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
-    throw new Error('itemIds must be a non-empty array');
+    throw new HttpsError('invalid-argument', 'itemIds must be a non-empty array');
   }
 
   const trashRef = db.collection('users').doc(userId)
@@ -419,7 +418,7 @@ exports.moveToTrash = onCall(async (request) => {
     return { success: true, trashedCount: itemIds.length };
   } catch (error) {
     console.error(`[moveToTrash] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -428,7 +427,7 @@ exports.moveToTrash = onCall(async (request) => {
  */
 exports.getTrash = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
@@ -443,7 +442,7 @@ exports.getTrash = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[getTrash] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -452,14 +451,14 @@ exports.getTrash = onCall(async (request) => {
  */
 exports.restoreFromTrash = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
   const { itemIds } = request.data || {};
 
   if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
-    throw new Error('itemIds must be a non-empty array');
+    throw new HttpsError('invalid-argument', 'itemIds must be a non-empty array');
   }
 
   const trashRef = db.collection('users').doc(userId)
@@ -516,7 +515,7 @@ exports.restoreFromTrash = onCall(async (request) => {
     return { success: true, restoredCount: itemIds.length };
   } catch (error) {
     console.error(`[restoreFromTrash] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -525,7 +524,7 @@ exports.restoreFromTrash = onCall(async (request) => {
  */
 exports.emptyTrash = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
@@ -563,7 +562,7 @@ exports.emptyTrash = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[emptyTrash] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -576,7 +575,7 @@ exports.emptyTrash = onCall(async (request) => {
  */
 exports.sendPatient = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const senderId = request.auth.uid;
@@ -584,7 +583,7 @@ exports.sendPatient = onCall(async (request) => {
   const { recipientEmail, patientData } = request.data || {};
 
   if (!recipientEmail || !patientData) {
-    throw new Error('recipientEmail and patientData are required');
+    throw new HttpsError('invalid-argument', 'recipientEmail and patientData are required');
   }
 
   try {
@@ -633,7 +632,7 @@ exports.sendPatient = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[sendPatient] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -642,7 +641,7 @@ exports.sendPatient = onCall(async (request) => {
  */
 exports.checkInbox = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
@@ -661,7 +660,7 @@ exports.checkInbox = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[checkInbox] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -670,14 +669,14 @@ exports.checkInbox = onCall(async (request) => {
  */
 exports.acceptInboxPatient = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
   const { patientId, targetUnitId } = request.data || {};
 
   if (!patientId) {
-    throw new Error('patientId is required');
+    throw new HttpsError('invalid-argument', 'patientId is required');
   }
 
   const inboxRef = db.collection('users').doc(userId)
@@ -701,7 +700,7 @@ exports.acceptInboxPatient = onCall(async (request) => {
       );
 
       if (patientIndex === -1) {
-        throw new Error('Patient not found in inbox');
+        throw new HttpsError('not-found', 'Patient not found in inbox');
       }
 
       const patient = inboxData.items[patientIndex];
@@ -732,7 +731,7 @@ exports.acceptInboxPatient = onCall(async (request) => {
     return { success: true, message: 'Patient accepted' };
   } catch (error) {
     console.error(`[acceptInboxPatient] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -741,14 +740,14 @@ exports.acceptInboxPatient = onCall(async (request) => {
  */
 exports.declineInboxPatient = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
   const { patientId } = request.data || {};
 
   if (!patientId) {
-    throw new Error('patientId is required');
+    throw new HttpsError('invalid-argument', 'patientId is required');
   }
 
   const inboxRef = db.collection('users').doc(userId)
@@ -770,7 +769,7 @@ exports.declineInboxPatient = onCall(async (request) => {
     return { success: true, message: 'Patient declined' };
   } catch (error) {
     console.error(`[declineInboxPatient] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -826,7 +825,7 @@ async function updateSession(userId, deviceId, deviceInfo, clientRev) {
  */
 exports.heartbeat = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
@@ -853,7 +852,7 @@ exports.heartbeat = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[heartbeat] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -963,8 +962,8 @@ async function callClaudeAPI(messages, options = {}) {
   if (!apiKey) {
     console.error('CRITICAL: No API Key found in environment');
     console.error('ACTION REQUIRED: Run this command in Firebase CLI:');
-    console.error('firebase functions:config:set anthropic.key="YOUR_ANTHROPIC_API_KEY"');
-    throw new Error('Claude API key not configured. Set via: firebase functions:config:set anthropic.key="YOUR_KEY"');
+    console.error('firebase functions:secrets:set ANTHROPIC_API_KEY');
+    throw new HttpsError('failed-precondition', 'Claude API key not configured. Set via: firebase functions:secrets:set ANTHROPIC_API_KEY');
   }
 
   console.log('📡 Calling Claude API...');
@@ -1030,13 +1029,13 @@ async function callClaudeAPI(messages, options = {}) {
  */
 exports.askClinical = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const { question, patientContext, model } = request.data || {};
 
   if (!question) {
-    throw new Error('Question is required');
+    throw new HttpsError('invalid-argument', 'Question is required');
   }
 
   const systemPrompt = `You are an expert internal medicine consultant ` +
@@ -1080,7 +1079,7 @@ Clinical Question: ${question}`;
     };
   } catch (error) {
     console.error(`[askClinical] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1089,13 +1088,13 @@ Clinical Question: ${question}`;
  */
 exports.analyzeLabs = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const { labs, patientContext, model } = request.data || {};
 
   if (!labs) {
-    throw new Error('Labs data is required');
+    throw new HttpsError('invalid-argument', 'Labs data is required');
   }
 
   const systemPrompt = `You are a clinical pathologist providing expert interpretation of laboratory results.
@@ -1135,7 +1134,7 @@ Format your response:
     };
   } catch (error) {
     console.error(`[analyzeLabs] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1144,13 +1143,13 @@ Format your response:
  */
 exports.getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const { drugName, indication, patientContext, model } = request.data || {};
 
   if (!drugName) {
-    throw new Error('Drug name is required');
+    throw new HttpsError('invalid-argument', 'Drug name is required');
   }
 
   const systemPrompt = `You are a clinical pharmacist providing evidence-based drug information.
@@ -1191,7 +1190,7 @@ Be concise but comprehensive. Use bullet points for clarity.`;
     };
   } catch (error) {
     console.error(`[getDrugInfo] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1200,13 +1199,13 @@ Be concise but comprehensive. Use bullet points for clarity.`;
  */
 exports.generateDifferential = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const { symptoms, patientContext, model } = request.data || {};
 
   if (!symptoms) {
-    throw new Error('Symptoms are required');
+    throw new HttpsError('invalid-argument', 'Symptoms are required');
   }
 
   const systemPrompt = `You are an experienced internal medicine consultant generating differential diagnoses.
@@ -1244,7 +1243,7 @@ Format:
     };
   } catch (error) {
     console.error(`[generateDifferential] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1253,13 +1252,13 @@ Format:
  */
 exports.getTreatmentPlan = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const { diagnosis, patientContext, model } = request.data || {};
 
   if (!diagnosis) {
-    throw new Error('Diagnosis is required');
+    throw new HttpsError('invalid-argument', 'Diagnosis is required');
   }
 
   const systemPrompt = `You are an internal medicine consultant creating evidence-based treatment plans.
@@ -1297,7 +1296,7 @@ Consider patient-specific factors (comorbidities, allergies, etc.) when making r
     };
   } catch (error) {
     console.error(`[getTreatmentPlan] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1306,13 +1305,13 @@ Consider patient-specific factors (comorbidities, allergies, etc.) when making r
  */
 exports.oncallConsult = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const { scenario, patientContext, urgency, model } = request.data || {};
 
   if (!scenario) {
-    throw new Error('Clinical scenario is required');
+    throw new HttpsError('invalid-argument', 'Clinical scenario is required');
   }
 
   const systemPrompt = `You are an experienced on-call internal medicine consultant providing urgent clinical guidance.
@@ -1356,7 +1355,7 @@ Be concise, actionable, and prioritize patient safety.`;
     };
   } catch (error) {
     console.error(`[oncallConsult] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1369,7 +1368,7 @@ Be concise, actionable, and prioritize patient safety.`;
  */
 exports.getUserProfile = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
@@ -1387,7 +1386,7 @@ exports.getUserProfile = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[getUserProfile] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1396,14 +1395,14 @@ exports.getUserProfile = onCall(async (request) => {
  */
 exports.updateSettings = onCall(async (request) => {
   if (!request.auth) {
-    throw new Error('User must be authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const userId = request.auth.uid;
   const { settings } = request.data || {};
 
   if (!settings || typeof settings !== 'object') {
-    throw new Error('Settings object is required');
+    throw new HttpsError('invalid-argument', 'Settings object is required');
   }
 
   try {
@@ -1415,7 +1414,7 @@ exports.updateSettings = onCall(async (request) => {
     return { success: true };
   } catch (error) {
     console.error(`[updateSettings] Error:`, error);
-    throw new Error(`Internal error: ${error.message}`);
+    throw new HttpsError('internal', `Internal error: ${error.message}`);
   }
 });
 
@@ -1443,7 +1442,7 @@ exports.healthCheck = onRequest((req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.0.1',
+    version: '2.1.0',
     region: 'us-central1',
     method: req.method,
     origin: req.headers.origin || 'none'
