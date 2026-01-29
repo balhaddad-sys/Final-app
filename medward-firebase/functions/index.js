@@ -84,9 +84,9 @@ const AI_CONFIG = {
     PERMANENT: 86400 // 24 hours - reference data
   },
   MODELS: {
-    FAST: 'claude-3-5-sonnet-20241022',      // ✅ Latest fast model - excellent for clinical work
-    BALANCED: 'claude-3-5-sonnet-20241022',  // Same as FAST (recommended for balance)
-    ADVANCED: 'claude-opus-4-20250514'       // Most capable - use for complex cases
+    FAST: 'claude-sonnet-4-5-20250929',      // ✅ Claude Sonnet 4.5 - excellent for clinical work
+    BALANCED: 'claude-sonnet-4-5-20250929',  // Same as FAST (recommended for balance)
+    ADVANCED: 'claude-opus-4-5-20251101'     // Claude Opus 4.5 - most capable for complex cases
   },
   DEFAULT_MAX_TOKENS: 4000,
   DEFAULT_TEMPERATURE: 0.3 // Focused, consistent clinical responses
