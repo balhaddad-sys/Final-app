@@ -51,7 +51,13 @@
   </div>
 
   <div class="section">
-    <h2>Step 4: Firebase Callable Functions</h2>
+    <h2>Step 4: API Key Configuration Check</h2>
+    <p style="color: #888; font-size: 12px;">Checks if Claude/Anthropic API key is configured correctly</p>
+    <button onclick="testConfigCheck()">Check API Configuration</button>
+  </div>
+
+  <div class="section">
+    <h2>Step 5: Firebase Callable Functions</h2>
     <p style="color: #888; font-size: 12px;">Tests callable function infrastructure (requires SDK initialized first)</p>
     <button onclick="testGetUserProfile()">Test getUserProfile (callable)</button>
   </div>
@@ -290,7 +296,65 @@
     }
 
     // =========================================================================
-    // Step 4: Callable Functions
+    // Step 4: API Configuration Check
+    // =========================================================================
+    async function testConfigCheck() {
+      const url = 'https://us-central1-medward-pro.cloudfunctions.net/configCheck';
+      log('info', '=== Checking API Key Configuration ===');
+      log('info', `URL: ${url}`);
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const start = Date.now();
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+          signal: controller.signal
+        });
+        const duration = Date.now() - start;
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          log('success', `Config check completed (${duration}ms)`);
+          log('info', `Version: ${data.version}`);
+          log('info', `Node Version: ${data.nodeVersion}`);
+          log('info', '--- API Key Status ---');
+
+          const cfg = data.apiKeyConfiguration;
+          log('info', `ANTHROPIC_API_KEY env: ${cfg.ANTHROPIC_API_KEY_env ? 'SET' : 'NOT SET'}`);
+          log('info', `CLAUDE_API_KEY env: ${cfg.CLAUDE_API_KEY_env ? 'SET' : 'NOT SET'}`);
+          log('info', `anthropic.key config: ${cfg.anthropic_key_config ? 'SET' : 'NOT SET'}`);
+          log('info', `claude.api_key config: ${cfg.claude_api_key_config ? 'SET' : 'NOT SET'}`);
+
+          if (data.apiKeyFound) {
+            log('success', `API Key Found: YES`);
+            log('success', `Key prefix: ${data.apiKeyPrefix}`);
+            log('success', data.recommendation);
+          } else {
+            log('error', `API Key Found: NO`);
+            log('error', data.recommendation);
+            log('warn', 'AI functions will fail without a valid API key');
+          }
+        } else {
+          log('error', `HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          log('error', 'Request timed out - configCheck function may not be deployed');
+        } else if (error.message === 'Failed to fetch') {
+          log('error', 'Failed to fetch - function may not be deployed yet');
+          log('warn', 'Deploy with: firebase deploy --only functions');
+        } else {
+          log('error', `Error: ${error.message}`);
+        }
+      }
+    }
+
+    // =========================================================================
+    // Step 5: Callable Functions
     // =========================================================================
     async function testGetUserProfile() {
       log('info', '=== Testing Callable Function (getUserProfile) ===');
@@ -362,7 +426,11 @@
       await testHealthCheckNoCors();
       await new Promise(r => setTimeout(r, 500));
 
-      // Step 4
+      // Step 4 - API Config Check
+      await testConfigCheck();
+      await new Promise(r => setTimeout(r, 500));
+
+      // Step 5
       await testGetUserProfile();
 
       log('info', '');
