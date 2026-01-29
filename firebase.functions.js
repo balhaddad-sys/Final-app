@@ -554,4 +554,75 @@ export function getDeviceInfo() {
 // Export the functions instance for advanced use cases
 export { functions };
 
+// ============================================================================
+// GLOBAL EXPOSURE FOR NON-MODULE SCRIPTS
+// ============================================================================
+// Expose functions to window for dashboard and other non-module scripts
+// This allows scripts loaded without type="module" to access Firebase functions
+
+window.FirebaseFunctions = {
+  // Core function caller
+  callFunction,
+
+  // Data operations
+  loadData,
+  saveData,
+  listenToData,
+
+  // Trash management
+  moveToTrash,
+  getTrash,
+  restoreFromTrash,
+  emptyTrash,
+  listenToTrash,
+
+  // Patient handover (inbox)
+  sendPatient,
+  checkInbox,
+  acceptInboxPatient,
+  declineInboxPatient,
+  listenToInbox,
+
+  // Session & heartbeat
+  heartbeat,
+  notifySignIn,
+
+  // AI functions
+  askClinical,
+  analyzeLabs,
+  getDrugInfo,
+  generateDifferential,
+  getTreatmentPlan,
+  oncallConsult,
+
+  // Image-based AI functions
+  identifyMedication,
+  analyzeDocument,
+  extractPatients,
+  analyzeLabsEnhanced,
+
+  // User profile & settings
+  getUserProfile,
+  updateSettings,
+
+  // Migration helpers
+  migrateFromAppsScript,
+
+  // Utilities
+  generateDeviceId,
+  getDeviceInfo,
+
+  // Firebase instances
+  functions
+};
+
+// Also expose commonly used functions directly on window for convenience
+window.callFunction = callFunction;
+window.loadData = loadData;
+window.saveData = saveData;
+window.askClinical = askClinical;
+window.analyzeLabs = analyzeLabs;
+window.analyzeLabsEnhanced = analyzeLabsEnhanced;
+
 console.log('[Firebase Functions] Service initialized');
+console.log('[Firebase Functions] Global exposure added: window.FirebaseFunctions');
