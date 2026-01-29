@@ -279,8 +279,7 @@ async function runFullDiagnostic() {
   // 7. Check for redirect result
   log('7. Checking for Google redirect result...', 'info');
   try {
-    const { auth } = await import('./firebase.config.js');
-    const { getRedirectResult } = await import('https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js');
+    const { auth, getRedirectResult } = await import('./firebase.config.js');
     
     const result = await getRedirectResult(auth);
     if (result && result.user) {

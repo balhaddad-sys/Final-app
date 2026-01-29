@@ -675,9 +675,7 @@ body.dark-theme .admin-warning {
 <script type="module">
 import { login, register, signInWithGoogle, handleGoogleRedirect } from './firebase.auth.js';
 import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js';
-import { configureAuthPersistence } from './firebase.config.js';
-import { auth } from './firebase.config.js';
-import { getRedirectResult } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
+import { configureAuthPersistence, auth, getRedirectResult } from './firebase.config.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // MOBILE REDIRECT FLOW - Must run FIRST before anything else
