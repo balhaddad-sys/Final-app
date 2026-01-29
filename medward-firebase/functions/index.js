@@ -1366,43 +1366,75 @@ Be concise, actionable, and prioritize patient safety.`;
 /**
  * Gets user profile.
  *
- * FIXED v2.1: Simplified error handling to avoid instanceof issues in v2.
- * The previous version used try-catch which caught its own HttpsError and then
- * failed the instanceof check due to module loading differences in Firebase v2.
+ * FIXED v2.2: Professional hardening for callable functions.
  *
- * Now follows the same pattern as other functions - direct auth check and throw.
+ * KEY FIXES:
+ * 1. All code wrapped in try-catch to prevent any unhandled exceptions
+ * 2. Auth check returns proper 'unauthenticated' error (not crash → internal)
+ * 3. HttpsError re-thrown properly using httpErrorCode check
+ * 4. Structured logging for server-side diagnostics
+ *
+ * IMPORTANT: In Firebase callable functions, ANY unhandled exception becomes
+ * "internal" error. We must explicitly throw HttpsError for proper error codes.
  */
 exports.getUserProfile = onCall(async (request) => {
-  // Direct auth check - throw immediately if not authenticated
-  if (!request.auth || !request.auth.uid) {
-    console.log('[getUserProfile] No auth context - user not authenticated');
-    throw new HttpsError('unauthenticated', 'User must be authenticated to access profile');
-  }
-
-  const userId = request.auth.uid;
-  console.log(`[getUserProfile] Fetching profile for user: ${userId}`);
+  console.log('[getUserProfile] Function invoked');
 
   try {
+    // =========================================================================
+    // AUTH CHECK - Must return 'unauthenticated', not crash
+    // =========================================================================
+    if (!request.auth) {
+      console.log('[getUserProfile] No auth context - returning unauthenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated to access profile');
+    }
+
+    const userId = request.auth.uid;
+    if (!userId) {
+      console.log('[getUserProfile] Auth exists but no uid - returning unauthenticated');
+      throw new HttpsError('unauthenticated', 'User ID not found in authentication context');
+    }
+
+    console.log(`[getUserProfile] Authenticated user: ${userId}`);
+
+    // =========================================================================
+    // FIRESTORE LOOKUP
+    // =========================================================================
     const userDoc = await db.collection('users').doc(userId).get();
 
     if (!userDoc.exists) {
-      console.log(`[getUserProfile] No profile found for user: ${userId}`);
-      return { success: false, error: 'User profile not found' };
+      console.log(`[getUserProfile] No profile document for user: ${userId}`);
+      // Return success:false instead of throwing - profile just doesn't exist yet
+      return { success: false, error: 'User profile not found', userId };
     }
 
-    console.log(`[getUserProfile] Profile retrieved for user: ${userId}`);
+    console.log(`[getUserProfile] Profile retrieved successfully for: ${userId}`);
     return {
       success: true,
       profile: userDoc.data()
     };
-  } catch (error) {
-    console.error(`[getUserProfile] Firestore error:`, error.message);
 
-    // Handle Firestore permission errors
+  } catch (error) {
+    // =========================================================================
+    // ERROR HANDLING - Re-throw HttpsError, wrap everything else
+    // =========================================================================
+    console.error('[getUserProfile] Error caught:', error.message || error);
+
+    // If it's already an HttpsError, re-throw it as-is
+    // HttpsError has httpErrorCode property (e.g., { canonicalName: 'UNAUTHENTICATED' })
+    if (error.httpErrorCode) {
+      console.log(`[getUserProfile] Re-throwing HttpsError: ${error.code}`);
+      throw error;
+    }
+
+    // Handle Firestore permission errors specifically
     if (error.code === 'permission-denied' || error.code === 7) {
+      console.log('[getUserProfile] Firestore permission denied');
       throw new HttpsError('permission-denied', 'Access denied to user profile');
     }
 
+    // Wrap any other error as internal
+    console.error('[getUserProfile] Unexpected error, wrapping as internal:', error);
     throw new HttpsError('internal', `Failed to get profile: ${error.message || 'Unknown error'}`);
   }
 });
@@ -1461,7 +1493,7 @@ exports.healthCheck = onRequest({
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.2.1',
+    version: '2.2.2',
     region: 'us-central1',
     method: req.method,
     origin: req.headers.origin || 'none',

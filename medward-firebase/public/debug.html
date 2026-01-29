@@ -27,7 +27,7 @@
   </style>
 </head>
 <body>
-  <h1>Firebase Functions Debug Tool v2</h1>
+  <h1>Firebase Functions Debug Tool v2.1</h1>
   <p>Comprehensive testing for Firebase Functions deployment and connectivity</p>
   <p style="color: #888; font-size: 12px;">Note: Some tests may fail due to CORS restrictions - this is expected for external endpoints.</p>
 
@@ -60,6 +60,8 @@
     <h2>Step 5: Firebase Callable Functions</h2>
     <p style="color: #888; font-size: 12px;">Tests callable function infrastructure (requires SDK initialized first)</p>
     <button onclick="testGetUserProfile()">Test getUserProfile (callable)</button>
+    <button onclick="testWithAnonymousAuth()" class="btn-secondary">Sign In Anonymously + Test</button>
+    <button onclick="signOut()" class="btn-danger">Sign Out</button>
   </div>
 
   <div class="section">
@@ -366,12 +368,19 @@
         return;
       }
 
+      // Check current auth state
+      const currentUser = window._firebase.auth?.currentUser;
+      if (currentUser) {
+        log('info', `Currently signed in as: ${currentUser.uid} (${currentUser.isAnonymous ? 'anonymous' : currentUser.email})`);
+      } else {
+        log('info', 'Not signed in - expecting "unauthenticated" response');
+      }
+
       try {
         const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js');
 
         const getUserProfile = httpsCallable(window._firebase.functions, 'getUserProfile');
         log('info', 'Calling getUserProfile...');
-        log('info', 'Note: This will fail with "unauthenticated" if not signed in - that is expected');
 
         const start = Date.now();
         const result = await getUserProfile({});
@@ -382,10 +391,12 @@
         const duration = Date.now();
         if (error.code === 'functions/unauthenticated') {
           log('warn', `Expected error: ${error.code} - ${error.message}`);
-          log('success', 'Callable function infrastructure is working! (Auth required for actual data)');
+          log('success', '✅ Callable function infrastructure is working correctly!');
+          log('info', 'The function properly returned "unauthenticated" for unsigned user');
         } else if (error.code === 'functions/internal') {
-          log('error', `Internal error: ${error.message}`);
-          log('error', 'This usually means the function threw an unhandled exception');
+          log('error', `❌ Internal error: ${error.message}`);
+          log('error', 'This means the function threw an unhandled exception on the server');
+          log('error', 'Check Cloud Logging: resource.labels.function_name="getUserProfile" severity>=ERROR');
         } else if (error.code === 'functions/unavailable') {
           log('error', 'Function unavailable - may not be deployed');
         } else {
@@ -395,6 +406,57 @@
             log('error', `Error details: ${JSON.stringify(error.details)}`);
           }
         }
+      }
+    }
+
+    // Sign in anonymously and then test
+    async function testWithAnonymousAuth() {
+      log('info', '=== Testing with Anonymous Authentication ===');
+
+      if (!window._firebase?.auth) {
+        log('error', 'Firebase SDK not initialized. Click "Initialize Firebase SDK" first.');
+        return;
+      }
+
+      try {
+        const { signInAnonymously } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+
+        log('info', 'Signing in anonymously...');
+        const userCredential = await signInAnonymously(window._firebase.auth);
+        const user = userCredential.user;
+
+        log('success', `Signed in anonymously as: ${user.uid}`);
+        log('info', 'Now testing getUserProfile with authenticated user...');
+
+        // Wait a moment for auth state to propagate
+        await new Promise(r => setTimeout(r, 500));
+
+        // Now test getUserProfile
+        await testGetUserProfile();
+
+      } catch (error) {
+        if (error.code === 'auth/operation-not-allowed') {
+          log('error', 'Anonymous auth is not enabled in Firebase Console');
+          log('warn', 'Enable it: Firebase Console → Authentication → Sign-in method → Anonymous → Enable');
+        } else {
+          log('error', `Auth error: ${error.code} - ${error.message}`);
+        }
+      }
+    }
+
+    // Sign out
+    async function signOut() {
+      if (!window._firebase?.auth) {
+        log('error', 'Firebase SDK not initialized.');
+        return;
+      }
+
+      try {
+        const { signOut: firebaseSignOut } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+        await firebaseSignOut(window._firebase.auth);
+        log('success', 'Signed out successfully');
+      } catch (error) {
+        log('error', `Sign out error: ${error.message}`);
       }
     }
 
