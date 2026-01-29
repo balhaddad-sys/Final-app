@@ -1433,6 +1433,385 @@ Be concise, actionable, and prioritize patient safety.`;
 });
 
 // ============================================================================
+// AI VISION FUNCTIONS (IMAGE-BASED)
+// ============================================================================
+
+/**
+ * Identifies medication from an image using Claude's vision capabilities.
+ */
+exports.identifyMedication = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, additionalInfo } = request.data || {};
+
+  if (!image) {
+    throw new HttpsError('invalid-argument', 'Image is required');
+  }
+
+  const systemPrompt = `You are a clinical pharmacist expert at identifying medications from images.
+
+When analyzing medication images:
+1. Identify the medication name (brand and generic)
+2. Identify the dosage form and strength if visible
+3. Provide key clinical information
+4. Note any warnings or special handling requirements
+5. If you cannot identify the medication with certainty, clearly state that
+
+IMPORTANT: Always recommend verification with a pharmacist for critical decisions.`;
+
+  try {
+    // Parse base64 image - handle data URL format
+    let imageData = image;
+    let mediaType = 'image/jpeg';
+
+    if (image.startsWith('data:')) {
+      const matches = image.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        mediaType = matches[1];
+        imageData = matches[2];
+      }
+    }
+
+    const response = await callClaudeAPI([
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: imageData
+            }
+          },
+          {
+            type: 'text',
+            text: additionalInfo
+              ? `Please identify this medication. Additional context: ${additionalInfo}`
+              : 'Please identify this medication and provide relevant clinical information.'
+          }
+        ]
+      }
+    ], {
+      system: systemPrompt,
+      model: AI_CONFIG.MODELS.FAST
+    });
+
+    return {
+      success: true,
+      identification: response.content[0].text,
+      model: AI_CONFIG.MODELS.FAST,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error(`[identifyMedication] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
+    throw new HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Analyzes a clinical document or image.
+ */
+exports.analyzeDocument = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, documentType, patientContext } = request.data || {};
+
+  if (!image) {
+    throw new HttpsError('invalid-argument', 'Image is required');
+  }
+
+  const systemPrompt = `You are a clinical documentation specialist analyzing medical documents.
+
+Based on the document type and content:
+1. Extract key clinical information
+2. Summarize important findings
+3. Flag any critical values or urgent findings
+4. Organize information in a clinically useful format
+
+Use KUWAIT SI UNITS where applicable.
+Be thorough but concise.`;
+
+  let userPrompt = 'Please analyze this clinical document.';
+  if (documentType) {
+    userPrompt += ` Document type: ${documentType}.`;
+  }
+  if (patientContext) {
+    userPrompt += ` Patient context: ${JSON.stringify(patientContext)}`;
+  }
+
+  try {
+    let imageData = image;
+    let mediaType = 'image/jpeg';
+
+    if (image.startsWith('data:')) {
+      const matches = image.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        mediaType = matches[1];
+        imageData = matches[2];
+      }
+    }
+
+    const response = await callClaudeAPI([
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: imageData
+            }
+          },
+          {
+            type: 'text',
+            text: userPrompt
+          }
+        ]
+      }
+    ], {
+      system: systemPrompt,
+      model: AI_CONFIG.MODELS.FAST
+    });
+
+    return {
+      success: true,
+      analysis: response.content[0].text,
+      model: AI_CONFIG.MODELS.FAST,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error(`[analyzeDocument] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
+    throw new HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Extracts patient information from an image (handover sheet, patient list, etc.).
+ */
+exports.extractPatients = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, format } = request.data || {};
+
+  if (!image) {
+    throw new HttpsError('invalid-argument', 'Image is required');
+  }
+
+  const systemPrompt = `You are a clinical data extraction specialist.
+
+Extract patient information from the provided image and return it in a structured format.
+
+For each patient found, extract:
+- Name (if visible)
+- MRN/ID (if visible)
+- Location/Bed (if visible)
+- Diagnosis/Reason for admission
+- Key clinical notes
+- Any pending tasks or issues
+
+Return the data as a JSON array of patient objects. If you cannot extract certain fields, omit them.
+
+Example format:
+{
+  "patients": [
+    {
+      "name": "Patient Name",
+      "mrn": "12345",
+      "location": "Bed 1",
+      "diagnosis": "Diagnosis",
+      "notes": "Clinical notes"
+    }
+  ],
+  "rawText": "Any additional text that couldn't be structured"
+}`;
+
+  let userPrompt = 'Please extract patient information from this image.';
+  if (format) {
+    userPrompt += ` The document appears to be a ${format}.`;
+  }
+
+  try {
+    let imageData = image;
+    let mediaType = 'image/jpeg';
+
+    if (image.startsWith('data:')) {
+      const matches = image.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        mediaType = matches[1];
+        imageData = matches[2];
+      }
+    }
+
+    const response = await callClaudeAPI([
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: imageData
+            }
+          },
+          {
+            type: 'text',
+            text: userPrompt
+          }
+        ]
+      }
+    ], {
+      system: systemPrompt,
+      model: AI_CONFIG.MODELS.FAST
+    });
+
+    // Try to parse JSON from response
+    const responseText = response.content[0].text;
+    let parsedData = { patients: [], rawText: responseText };
+
+    try {
+      // Look for JSON in the response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsedData = JSON.parse(jsonMatch[0]);
+      }
+    } catch (parseError) {
+      console.log('[extractPatients] Could not parse JSON, returning raw text');
+    }
+
+    return {
+      success: true,
+      patients: parsedData.patients || [],
+      rawText: parsedData.rawText || responseText,
+      count: (parsedData.patients || []).length,
+      model: AI_CONFIG.MODELS.FAST,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error(`[extractPatients] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
+    throw new HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Enhanced lab analysis with image support.
+ * Can analyze either structured lab data or lab result images.
+ */
+exports.analyzeLabsEnhanced = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { image, labs, patientContext, model } = request.data || {};
+
+  if (!image && !labs) {
+    throw new HttpsError('invalid-argument', 'Either image or labs data is required');
+  }
+
+  const systemPrompt = `You are a clinical pathologist providing expert interpretation of laboratory results.
+
+IMPORTANT:
+- Use KUWAIT SI UNITS (mmol/L, g/L, etc.)
+- Identify critical/panic values immediately with ⚠️
+- Suggest follow-up tests if indicated
+- Consider clinical context when interpreting
+- Provide differential diagnoses for abnormalities
+
+Format your response:
+1. Critical Values (if any) - HIGHLIGHT PROMINENTLY
+2. Abnormal Results Summary
+3. Clinical Interpretation
+4. Recommended Follow-up
+5. Differential Considerations`;
+
+  try {
+    let messages;
+
+    if (image) {
+      // Image-based analysis
+      let imageData = image;
+      let mediaType = 'image/jpeg';
+
+      if (image.startsWith('data:')) {
+        const matches = image.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches) {
+          mediaType = matches[1];
+          imageData = matches[2];
+        }
+      }
+
+      let userPrompt = 'Please analyze these laboratory results.';
+      if (patientContext) {
+        userPrompt += `\n\nPatient context: ${JSON.stringify(patientContext)}`;
+      }
+
+      messages = [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: imageData
+              }
+            },
+            {
+              type: 'text',
+              text: userPrompt
+            }
+          ]
+        }
+      ];
+    } else {
+      // Structured data analysis
+      let userMessage = `Laboratory Results:\n${JSON.stringify(labs, null, 2)}`;
+      if (patientContext) {
+        userMessage += `\n\nPatient Context:\n${JSON.stringify(patientContext, null, 2)}`;
+      }
+
+      messages = [{ role: 'user', content: userMessage }];
+    }
+
+    const response = await callClaudeAPI(messages, {
+      system: systemPrompt,
+      model: model || AI_CONFIG.MODELS.FAST
+    });
+
+    return {
+      success: true,
+      analysis: response.content[0].text,
+      model: model || AI_CONFIG.MODELS.FAST,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error(`[analyzeLabsEnhanced] Error:`, error);
+    if (error.httpErrorCode) {
+      throw error;
+    }
+    throw new HttpsError('internal', error.message);
+  }
+});
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
