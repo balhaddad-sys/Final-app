@@ -1366,22 +1366,23 @@ Be concise, actionable, and prioritize patient safety.`;
 /**
  * Gets user profile.
  *
- * FIXED: Better error handling for unauthenticated calls.
- * In Firebase Functions v2, unauthenticated calls may have request.auth = undefined
- * or the SDK may throw before our code runs. This version handles both cases.
+ * FIXED v2.1: Simplified error handling to avoid instanceof issues in v2.
+ * The previous version used try-catch which caught its own HttpsError and then
+ * failed the instanceof check due to module loading differences in Firebase v2.
+ *
+ * Now follows the same pattern as other functions - direct auth check and throw.
  */
 exports.getUserProfile = onCall(async (request) => {
-  // Enhanced auth checking for v2 compatibility
+  // Direct auth check - throw immediately if not authenticated
+  if (!request.auth || !request.auth.uid) {
+    console.log('[getUserProfile] No auth context - user not authenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated to access profile');
+  }
+
+  const userId = request.auth.uid;
+  console.log(`[getUserProfile] Fetching profile for user: ${userId}`);
+
   try {
-    // Check if auth context exists
-    if (!request.auth || !request.auth.uid) {
-      console.log('[getUserProfile] No auth context - user not authenticated');
-      throw new HttpsError('unauthenticated', 'User must be authenticated to access profile');
-    }
-
-    const userId = request.auth.uid;
-    console.log(`[getUserProfile] Fetching profile for user: ${userId}`);
-
     const userDoc = await db.collection('users').doc(userId).get();
 
     if (!userDoc.exists) {
@@ -1395,22 +1396,13 @@ exports.getUserProfile = onCall(async (request) => {
       profile: userDoc.data()
     };
   } catch (error) {
-    console.error(`[getUserProfile] Error:`, error);
-    console.error(`[getUserProfile] Error name:`, error.name);
-    console.error(`[getUserProfile] Error code:`, error.code);
-    console.error(`[getUserProfile] Error message:`, error.message);
-
-    // Re-throw HttpsError as-is (preserves unauthenticated, permission-denied, etc.)
-    if (error instanceof HttpsError) {
-      throw error;
-    }
+    console.error(`[getUserProfile] Firestore error:`, error.message);
 
     // Handle Firestore permission errors
     if (error.code === 'permission-denied' || error.code === 7) {
       throw new HttpsError('permission-denied', 'Access denied to user profile');
     }
 
-    // Generic error with detailed message for debugging
     throw new HttpsError('internal', `Failed to get profile: ${error.message || 'Unknown error'}`);
   }
 });
@@ -1469,7 +1461,7 @@ exports.healthCheck = onRequest({
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.2.0',
+    version: '2.2.1',
     region: 'us-central1',
     method: req.method,
     origin: req.headers.origin || 'none',
