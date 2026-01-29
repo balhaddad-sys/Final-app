@@ -37,10 +37,10 @@
  * - Request signature: (request) instead of (data, context)
  * - Auth access: request.auth instead of context.auth
  * - Data access: request.data instead of data parameter
- * - Error handling: Use HttpsError for proper error codes to client
+ * - Error handling: throw Error() instead of HttpsError()
  *
- * @version 2.1.0
- * @updated 2026-01-29
+ * @version 2.0.0
+ * @updated 2025-01-28
  */
 
 // ============================================================================
@@ -327,7 +327,7 @@ exports.saveData = onCall(async (request) => {
     return result;
   } catch (error) {
     console.error(`[saveData] Error for user ${userId}:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -418,7 +418,7 @@ exports.moveToTrash = onCall(async (request) => {
     return { success: true, trashedCount: itemIds.length };
   } catch (error) {
     console.error(`[moveToTrash] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -442,7 +442,7 @@ exports.getTrash = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[getTrash] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -515,7 +515,7 @@ exports.restoreFromTrash = onCall(async (request) => {
     return { success: true, restoredCount: itemIds.length };
   } catch (error) {
     console.error(`[restoreFromTrash] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -562,7 +562,7 @@ exports.emptyTrash = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[emptyTrash] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -632,7 +632,7 @@ exports.sendPatient = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[sendPatient] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -660,7 +660,7 @@ exports.checkInbox = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[checkInbox] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -731,7 +731,7 @@ exports.acceptInboxPatient = onCall(async (request) => {
     return { success: true, message: 'Patient accepted' };
   } catch (error) {
     console.error(`[acceptInboxPatient] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -769,7 +769,7 @@ exports.declineInboxPatient = onCall(async (request) => {
     return { success: true, message: 'Patient declined' };
   } catch (error) {
     console.error(`[declineInboxPatient] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -852,7 +852,7 @@ exports.heartbeat = onCall(async (request) => {
     };
   } catch (error) {
     console.error(`[heartbeat] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -962,8 +962,8 @@ async function callClaudeAPI(messages, options = {}) {
   if (!apiKey) {
     console.error('CRITICAL: No API Key found in environment');
     console.error('ACTION REQUIRED: Run this command in Firebase CLI:');
-    console.error('firebase functions:secrets:set ANTHROPIC_API_KEY');
-    throw new HttpsError('failed-precondition', 'Claude API key not configured. Set via: firebase functions:secrets:set ANTHROPIC_API_KEY');
+    console.error('firebase functions:config:set anthropic.key="YOUR_ANTHROPIC_API_KEY"');
+    throw new HttpsError('failed-precondition', 'Claude API key not configured. Run: firebase functions:secrets:set ANTHROPIC_API_KEY');
   }
 
   console.log('📡 Calling Claude API...');
@@ -1002,13 +1002,13 @@ async function callClaudeAPI(messages, options = {}) {
       
       // Provide specific error guidance based on HTTP status
       if (response.status === 401) {
-        throw new Error('Authentication failed: Invalid API Key. Please verify your Anthropic API key is correct.');
+        throw new HttpsError('unauthenticated', 'Invalid Anthropic API Key. Please verify your API key is correct.');
       } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded: Too many requests to AI service. Please try again in a moment.');
+        throw new HttpsError('resource-exhausted', 'Rate limit exceeded. Please try again in a moment.');
       } else if (response.status === 500) {
-        throw new Error('Claude API service error (500). Please try again later.');
+        throw new HttpsError('unavailable', 'AI service temporarily unavailable. Please try again later.');
       } else {
-        throw new Error(`Claude API error (${response.status}): ${errorText}`);
+        throw new HttpsError('internal', `AI service error (${response.status}): ${errorText}`);
       }
     }
 
@@ -1079,7 +1079,7 @@ Clinical Question: ${question}`;
     };
   } catch (error) {
     console.error(`[askClinical] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -1134,7 +1134,7 @@ Format your response:
     };
   } catch (error) {
     console.error(`[analyzeLabs] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -1190,7 +1190,7 @@ Be concise but comprehensive. Use bullet points for clarity.`;
     };
   } catch (error) {
     console.error(`[getDrugInfo] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -1243,7 +1243,7 @@ Format:
     };
   } catch (error) {
     console.error(`[generateDifferential] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -1296,7 +1296,7 @@ Consider patient-specific factors (comorbidities, allergies, etc.) when making r
     };
   } catch (error) {
     console.error(`[getTreatmentPlan] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -1355,7 +1355,7 @@ Be concise, actionable, and prioritize patient safety.`;
     };
   } catch (error) {
     console.error(`[oncallConsult] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -1414,35 +1414,19 @@ exports.updateSettings = onCall(async (request) => {
     return { success: true };
   } catch (error) {
     console.error(`[updateSettings] Error:`, error);
-    throw new HttpsError('internal', `Internal error: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
 /**
  * Health check endpoint.
- * MIGRATED TO V2
- *
- * This endpoint is used to verify that Cloud Functions are deployed and accessible.
- * It explicitly handles CORS to ensure cross-origin requests work correctly.
+ * MIGRATED TO V2 - uses cors: true option for automatic CORS handling
  */
-exports.healthCheck = onRequest((req, res) => {
-  // Set CORS headers explicitly for maximum compatibility
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.set('Access-Control-Max-Age', '3600');
-
-  // Handle preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
-  // Return health status
+exports.healthCheck = onRequest({ cors: true }, (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.1.0',
+    version: '2.1.1',
     region: 'us-central1',
     method: req.method,
     origin: req.headers.origin || 'none'
@@ -1453,17 +1437,7 @@ exports.healthCheck = onRequest((req, res) => {
  * Configuration check endpoint.
  * Returns diagnostic info about function configuration (no sensitive data).
  */
-exports.configCheck = onRequest({ secrets: [anthropicApiKey] }, (req, res) => {
-  // Set CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
+exports.configCheck = onRequest({ cors: true, secrets: [anthropicApiKey] }, (req, res) => {
   // Check API key configuration (v2 uses secrets/env vars only)
   const apiKeyStatus = {
     ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
