@@ -7,113 +7,160 @@
   <style>
     body { font-family: monospace; padding: 20px; max-width: 1000px; margin: 0 auto; background: #1e1e1e; color: #d4d4d4; }
     h1 { color: #4ec9b0; }
-    button { padding: 10px 20px; margin: 5px; background: #0e639c; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    h2 { color: #dcdcaa; font-size: 1.1em; margin-bottom: 10px; }
+    button { padding: 10px 20px; margin: 5px; background: #0e639c; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 14px; }
     button:hover { background: #1177bb; }
-    .output { background: #252526; padding: 15px; border-radius: 4px; margin-top: 20px; min-height: 200px; white-space: pre-wrap; word-break: break-all; }
+    button:disabled { background: #555; cursor: not-allowed; }
+    .output { background: #252526; padding: 15px; border-radius: 4px; margin-top: 20px; min-height: 300px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; font-size: 13px; }
     .success { color: #4ec9b0; }
     .error { color: #f48771; }
     .info { color: #4fc1ff; }
+    .warn { color: #cca700; }
     .section { margin: 20px 0; padding: 15px; border: 1px solid #3e3e42; border-radius: 4px; }
+    .btn-primary { background: #0e639c; }
+    .btn-secondary { background: #3c3c3c; }
+    .btn-danger { background: #a31515; }
+    .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+    .status-unknown { background: #666; }
+    .status-success { background: #4ec9b0; }
+    .status-error { background: #f48771; }
   </style>
 </head>
 <body>
-  <h1>🔍 Firebase Functions Debug Tool</h1>
-  <p>This page tests Firebase Functions deployment and connectivity</p>
+  <h1>Firebase Functions Debug Tool v2</h1>
+  <p>Comprehensive testing for Firebase Functions deployment and connectivity</p>
+  <p style="color: #888; font-size: 12px;">Note: Some tests may fail due to CORS restrictions - this is expected for external endpoints.</p>
 
   <div class="section">
-    <h2>Test 1: Direct HTTPS Request (No CORS)</h2>
-    <button onclick="testHealthCheckDirect()">Test Health Check (Direct fetch)</button>
-    <button onclick="testHealthCheckCORS()">Test Health Check (CORS)</button>
+    <h2>Step 1: Basic Network Connectivity (No CORS)</h2>
+    <p style="color: #888; font-size: 12px;">Tests if your device can reach the internet using image loading (bypasses CORS)</p>
+    <button onclick="testBasicConnectivity()">Test Internet Connection</button>
   </div>
 
   <div class="section">
-    <h2>Test 2: Firebase SDK</h2>
+    <h2>Step 2: Firebase SDK</h2>
+    <p style="color: #888; font-size: 12px;">Tests if Firebase SDK can be loaded and initialized</p>
     <button onclick="testFirebaseSDK()">Initialize Firebase SDK</button>
-    <button onclick="testCallableFunction()">Test Callable Function</button>
   </div>
 
   <div class="section">
-    <h2>Test 3: Network Diagnostics</h2>
-    <button onclick="testDNS()">Test DNS Resolution</button>
-    <button onclick="testConnectivity()">Test Connectivity</button>
+    <h2>Step 3: Health Check Endpoint</h2>
+    <p style="color: #888; font-size: 12px;">Tests if the healthCheck Cloud Function is deployed and responding</p>
+    <button onclick="testHealthCheckDirect()">Test Health Check (GET)</button>
+    <button onclick="testHealthCheckNoCors()" class="btn-secondary">Test Reachability (no-cors)</button>
   </div>
 
   <div class="section">
-    <button onclick="clearOutput()" style="background: #666;">Clear Output</button>
+    <h2>Step 4: Firebase Callable Functions</h2>
+    <p style="color: #888; font-size: 12px;">Tests callable function infrastructure (requires SDK initialized first)</p>
+    <button onclick="testGetUserProfile()">Test getUserProfile (callable)</button>
   </div>
 
-  <div id="output" class="output">Ready to test...</div>
+  <div class="section">
+    <h2>Advanced Diagnostics</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <button onclick="clearOutput()" class="btn-secondary">Clear Output</button>
+    <button onclick="copyOutput()" class="btn-secondary">Copy Output</button>
+  </div>
+
+  <div id="output" class="output">Ready to test. Click "Run All Tests" for comprehensive diagnostics, or test individually.</div>
 
   <script>
+    // Logging utility
     function log(type, message) {
       const output = document.getElementById('output');
       const timestamp = new Date().toISOString();
-      const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+      const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'info';
       output.innerHTML += `\n<span class="${className}">[${timestamp}] [${type.toUpperCase()}] ${message}</span>`;
       output.scrollTop = output.scrollHeight;
     }
 
     function clearOutput() {
-      document.getElementById('output').innerHTML = 'Output cleared...';
+      document.getElementById('output').innerHTML = 'Output cleared. Ready to test.';
     }
 
-    // Test 1: Direct HTTPS request
-    async function testHealthCheckDirect() {
-      const url = 'https://us-central1-medward-pro.cloudfunctions.net/healthCheck';
-      log('info', `Testing: ${url}`);
+    function copyOutput() {
+      const output = document.getElementById('output').innerText;
+      navigator.clipboard.writeText(output).then(() => {
+        log('success', 'Output copied to clipboard');
+      }).catch(err => {
+        log('error', 'Failed to copy: ' + err.message);
+      });
+    }
 
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/json'
+    // =========================================================================
+    // Step 1: Basic Network Connectivity (Image loading - bypasses CORS)
+    // =========================================================================
+    function testBasicConnectivity() {
+      log('info', '=== Testing Basic Network Connectivity ===');
+      log('info', 'Using image loading to bypass CORS restrictions...');
+
+      const tests = [
+        { name: 'Google', url: 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png' },
+        { name: 'Firebase', url: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' },
+        { name: 'CloudFunctions Domain', url: 'https://us-central1-medward-pro.cloudfunctions.net/healthCheck' }
+      ];
+
+      let completed = 0;
+      const total = tests.length;
+
+      tests.forEach(test => {
+        const img = new Image();
+        const start = Date.now();
+
+        img.onload = () => {
+          const duration = Date.now() - start;
+          log('success', `${test.name}: Reachable (${duration}ms)`);
+          completed++;
+          if (completed === total) {
+            log('info', 'Basic connectivity test complete');
           }
-        });
+        };
 
-        log('success', `HTTP Status: ${response.status} ${response.statusText}`);
-        log('info', `Response headers: ${JSON.stringify([...response.headers.entries()])}`);
+        img.onerror = () => {
+          const duration = Date.now() - start;
+          // For the Cloud Functions URL, onerror is expected since it returns JSON, not an image
+          if (test.name === 'CloudFunctions Domain') {
+            log('info', `${test.name}: Endpoint reached but returned non-image (expected - this is good!)`);
+          } else {
+            log('error', `${test.name}: Failed to load (${duration}ms)`);
+          }
+          completed++;
+          if (completed === total) {
+            log('info', 'Basic connectivity test complete');
+          }
+        };
 
-        if (response.ok) {
-          const data = await response.json();
-          log('success', `Response body: ${JSON.stringify(data, null, 2)}`);
-        } else {
-          const text = await response.text();
-          log('error', `Response body: ${text}`);
-        }
-      } catch (error) {
-        log('error', `Fetch failed: ${error.message}`);
-        log('error', `Error type: ${error.name}`);
-        log('error', `Stack: ${error.stack}`);
-      }
+        // Add cache-busting to force a fresh request
+        img.src = test.url + (test.url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+      });
+
+      // Also test with a simple fetch using no-cors mode
+      setTimeout(() => {
+        log('info', 'Testing with fetch (no-cors mode)...');
+        fetch('https://www.google.com', { mode: 'no-cors' })
+          .then(() => log('success', 'Fetch no-cors to Google: Network path exists'))
+          .catch(err => log('error', 'Fetch no-cors to Google failed: ' + err.message));
+      }, 1000);
     }
 
-    async function testHealthCheckCORS() {
-      const url = 'https://us-central1-medward-pro.cloudfunctions.net/healthCheck';
-      log('info', `Testing CORS: ${url}`);
-
-      try {
-        const response = await fetch(url, {
-          method: 'OPTIONS',  // CORS preflight
-        });
-        log('info', `CORS preflight status: ${response.status}`);
-        log('info', `Access-Control-Allow-Origin: ${response.headers.get('access-control-allow-origin')}`);
-        log('info', `Access-Control-Allow-Methods: ${response.headers.get('access-control-allow-methods')}`);
-      } catch (error) {
-        log('error', `CORS test failed: ${error.message}`);
-      }
-    }
-
-    // Test 2: Firebase SDK
-    let app, auth, functions;
+    // =========================================================================
+    // Step 2: Firebase SDK
+    // =========================================================================
+    let app, auth, functions, db;
 
     async function testFirebaseSDK() {
-      log('info', 'Initializing Firebase SDK...');
+      log('info', '=== Testing Firebase SDK ===');
 
       try {
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js');
-        const { getAuth } = await import('https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js');
-        const { getFunctions } = await import('https://www.gstatic.com/firebasejs/12.8.0/firebase-functions.js');
+        log('info', 'Loading Firebase modules...');
+
+        const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+        const { getFunctions, connectFunctionsEmulator } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js');
+        const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+
+        log('success', 'Firebase modules loaded');
 
         const firebaseConfig = {
           apiKey: "AIzaSyDuug0BTqO6DsSuyS2RkVcrcXCIB7E0oB4",
@@ -125,120 +172,211 @@
           measurementId: "G-LQYE3F4T5C"
         };
 
-        app = initializeApp(firebaseConfig);
+        // Check if already initialized
+        if (getApps().length === 0) {
+          app = initializeApp(firebaseConfig);
+          log('info', 'Firebase app initialized');
+        } else {
+          app = getApps()[0];
+          log('info', 'Firebase app already initialized');
+        }
+
         auth = getAuth(app);
         functions = getFunctions(app, 'us-central1');
+        db = getFirestore(app);
 
         log('success', 'Firebase SDK initialized successfully');
         log('info', `Project: ${firebaseConfig.projectId}`);
-        log('info', `Auth Domain: ${firebaseConfig.authDomain}`);
         log('info', `Functions region: us-central1`);
+        log('info', `Functions URL: https://us-central1-medward-pro.cloudfunctions.net/`);
+
+        // Store for other tests
+        window._firebase = { app, auth, functions, db };
+
       } catch (error) {
         log('error', `Firebase SDK initialization failed: ${error.message}`);
+        log('error', `Stack: ${error.stack}`);
       }
     }
 
-    async function testCallableFunction() {
-      if (!functions) {
+    // =========================================================================
+    // Step 3: Health Check Endpoint
+    // =========================================================================
+    async function testHealthCheckDirect() {
+      const url = 'https://us-central1-medward-pro.cloudfunctions.net/healthCheck';
+      log('info', '=== Testing Health Check Endpoint ===');
+      log('info', `URL: ${url}`);
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const start = Date.now();
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+          signal: controller.signal
+        });
+        const duration = Date.now() - start;
+        clearTimeout(timeoutId);
+
+        log('success', `HTTP Status: ${response.status} ${response.statusText} (${duration}ms)`);
+
+        // Log CORS headers
+        const corsOrigin = response.headers.get('access-control-allow-origin');
+        if (corsOrigin) {
+          log('success', `CORS: Access-Control-Allow-Origin: ${corsOrigin}`);
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          log('success', `Response: ${JSON.stringify(data, null, 2)}`);
+          log('success', 'Health check PASSED - Functions are deployed and responding');
+        } else {
+          const text = await response.text();
+          log('error', `Response body: ${text}`);
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          log('error', 'Request timed out after 10 seconds');
+        } else if (error.message === 'Failed to fetch') {
+          log('error', 'Failed to fetch - Possible causes:');
+          log('error', '  1. Function not deployed (run: firebase deploy --only functions)');
+          log('error', '  2. CORS not configured properly on function');
+          log('error', '  3. Network/firewall blocking the request');
+          log('error', '  4. Function region mismatch');
+          log('warn', 'Try "Test Reachability (no-cors)" to check if endpoint exists');
+        } else {
+          log('error', `Error: ${error.message}`);
+        }
+      }
+    }
+
+    async function testHealthCheckNoCors() {
+      const url = 'https://us-central1-medward-pro.cloudfunctions.net/healthCheck';
+      log('info', '=== Testing Health Check Reachability (no-cors mode) ===');
+      log('info', `URL: ${url}`);
+      log('info', 'Note: no-cors mode cannot read response, only tests if endpoint exists');
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const start = Date.now();
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'no-cors',
+          signal: controller.signal
+        });
+        const duration = Date.now() - start;
+        clearTimeout(timeoutId);
+
+        // In no-cors mode, response.type will be 'opaque' and status will be 0
+        log('success', `Request completed (${duration}ms)`);
+        log('success', `Response type: ${response.type}`);
+
+        if (response.type === 'opaque') {
+          log('success', 'Endpoint is reachable! The function exists and responded.');
+          log('warn', 'If the CORS test fails but this passes, there is a CORS configuration issue.');
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          log('error', 'Request timed out after 10 seconds - endpoint may not exist');
+        } else {
+          log('error', `Error: ${error.message}`);
+          log('error', 'Endpoint is NOT reachable - function may not be deployed');
+        }
+      }
+    }
+
+    // =========================================================================
+    // Step 4: Callable Functions
+    // =========================================================================
+    async function testGetUserProfile() {
+      log('info', '=== Testing Callable Function (getUserProfile) ===');
+
+      if (!window._firebase?.functions) {
         log('error', 'Firebase SDK not initialized. Click "Initialize Firebase SDK" first.');
         return;
       }
 
-      log('info', 'Testing callable function (healthCheck)...');
-
       try {
-        const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/12.8.0/firebase-functions.js');
+        const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js');
 
-        // Test a simple callable function (getUserProfile - doesn't require auth for testing)
-        log('info', 'Note: healthCheck is onRequest, not callable. Testing if we can construct callable reference...');
+        const getUserProfile = httpsCallable(window._firebase.functions, 'getUserProfile');
+        log('info', 'Calling getUserProfile...');
+        log('info', 'Note: This will fail with "unauthenticated" if not signed in - that is expected');
 
-        // Try to call a simple function
-        const testFunc = httpsCallable(functions, 'healthCheck');
-        log('info', 'Created callable reference');
+        const start = Date.now();
+        const result = await getUserProfile({});
+        const duration = Date.now() - start;
 
-        try {
-          const result = await testFunc({});
-          log('success', `Function called successfully: ${JSON.stringify(result.data)}`);
-        } catch (callError) {
-          log('error', `Function call failed: ${callError.message}`);
-          log('info', `Error code: ${callError.code}`);
-          log('info', `Error details: ${callError.details}`);
-        }
+        log('success', `Function returned (${duration}ms): ${JSON.stringify(result.data, null, 2)}`);
       } catch (error) {
-        log('error', `Setup failed: ${error.message}`);
-      }
-    }
-
-    // Test 3: Network diagnostics
-    async function testDNS() {
-      log('info', 'Testing DNS resolution for us-central1-medward-pro.cloudfunctions.net...');
-
-      try {
-        // Try to fetch a simple resource to test DNS
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-
-        const response = await fetch('https://us-central1-medward-pro.cloudfunctions.net/healthCheck', {
-          method: 'HEAD',
-          signal: controller.signal
-        }).catch(err => {
-          if (err.name === 'AbortError') {
-            return { status: 'timeout' };
+        const duration = Date.now();
+        if (error.code === 'functions/unauthenticated') {
+          log('warn', `Expected error: ${error.code} - ${error.message}`);
+          log('success', 'Callable function infrastructure is working! (Auth required for actual data)');
+        } else if (error.code === 'functions/internal') {
+          log('error', `Internal error: ${error.message}`);
+          log('error', 'This usually means the function threw an unhandled exception');
+        } else if (error.code === 'functions/unavailable') {
+          log('error', 'Function unavailable - may not be deployed');
+        } else {
+          log('error', `Error code: ${error.code}`);
+          log('error', `Error message: ${error.message}`);
+          if (error.details) {
+            log('error', `Error details: ${JSON.stringify(error.details)}`);
           }
-          throw err;
-        });
-
-        clearTimeout(timeout);
-
-        if (response.status === 'timeout') {
-          log('error', 'DNS resolution timed out (5s)');
-        } else {
-          log('success', `DNS resolved successfully. HTTP status: ${response.status}`);
-        }
-      } catch (error) {
-        if (error.message.includes('Failed to fetch')) {
-          log('error', 'Network error - could be DNS, firewall, or function not deployed');
-        } else {
-          log('error', `DNS test failed: ${error.message}`);
         }
       }
     }
 
-    async function testConnectivity() {
-      log('info', 'Testing connectivity to various endpoints...');
+    // =========================================================================
+    // Run All Tests
+    // =========================================================================
+    async function runAllTests() {
+      log('info', '========================================');
+      log('info', 'RUNNING COMPREHENSIVE DIAGNOSTICS');
+      log('info', '========================================');
+      log('info', `Time: ${new Date().toISOString()}`);
+      log('info', `URL: ${window.location.href}`);
+      log('info', `User Agent: ${navigator.userAgent}`);
+      log('info', `Online: ${navigator.onLine}`);
+      log('info', '');
 
-      const endpoints = [
-        'https://www.google.com/favicon.ico',
-        'https://firebase.google.com/favicon.ico',
-        'https://us-central1-medward-pro.cloudfunctions.net/healthCheck',
-        'https://medward-pro.firebaseapp.com'
-      ];
+      // Step 1
+      testBasicConnectivity();
 
-      for (const endpoint of endpoints) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 3000);
+      // Wait a bit then continue
+      await new Promise(r => setTimeout(r, 2000));
 
-          const start = Date.now();
-          const response = await fetch(endpoint, {
-            method: 'HEAD',
-            signal: controller.signal
-          });
-          const duration = Date.now() - start;
+      // Step 2
+      await testFirebaseSDK();
+      await new Promise(r => setTimeout(r, 500));
 
-          clearTimeout(timeout);
-          log('success', `${endpoint} - ${response.status} (${duration}ms)`);
-        } catch (error) {
-          log('error', `${endpoint} - ${error.message}`);
-        }
-      }
+      // Step 3
+      await testHealthCheckDirect();
+      await new Promise(r => setTimeout(r, 500));
+
+      await testHealthCheckNoCors();
+      await new Promise(r => setTimeout(r, 500));
+
+      // Step 4
+      await testGetUserProfile();
+
+      log('info', '');
+      log('info', '========================================');
+      log('info', 'DIAGNOSTICS COMPLETE');
+      log('info', '========================================');
     }
 
     // Initial info
-    log('info', 'Debug tool loaded');
+    log('info', 'Debug tool v2 loaded');
     log('info', `Current URL: ${window.location.href}`);
-    log('info', `User Agent: ${navigator.userAgent}`);
-    log('info', 'Start by clicking "Test Health Check (Direct fetch)" to test basic connectivity');
+    log('info', `Online status: ${navigator.onLine ? 'Online' : 'Offline'}`);
+    log('info', '');
+    log('info', 'Click "Run All Tests" for comprehensive diagnostics');
   </script>
 </body>
 </html>

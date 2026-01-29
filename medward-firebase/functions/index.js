@@ -1427,14 +1427,31 @@ exports.updateSettings = onCall(async (request) => {
 /**
  * Health check endpoint.
  * MIGRATED TO V2
+ *
+ * This endpoint is used to verify that Cloud Functions are deployed and accessible.
+ * It explicitly handles CORS to ensure cross-origin requests work correctly.
  */
 exports.healthCheck = onRequest((req, res) => {
-  cors(req, res, () => {
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '2.0.0'
-    });
+  // Set CORS headers explicitly for maximum compatibility
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Max-Age', '3600');
+
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  // Return health status
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '2.0.1',
+    region: 'us-central1',
+    method: req.method,
+    origin: req.headers.origin || 'none'
   });
 });
 
