@@ -92,6 +92,44 @@ const AI_CONFIG = {
   DEFAULT_TEMPERATURE: 0.3 // Focused, consistent clinical responses
 };
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Sanitizes Firestore data for JSON serialization.
+ * Converts Timestamps to ISO strings and handles other non-serializable types.
+ * @param {Object} data - Raw Firestore document data
+ * @returns {Object} Sanitized data safe for JSON serialization
+ */
+function sanitizeFirestoreData(data) {
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  if (data instanceof admin.firestore.Timestamp) {
+    return data.toDate().toISOString();
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeFirestoreData(item));
+  }
+
+  if (typeof data === 'object') {
+    const sanitized = {};
+    for (const [key, value] of Object.entries(data)) {
+      sanitized[key] = sanitizeFirestoreData(value);
+    }
+    return sanitized;
+  }
+
+  return data;
+}
+
+// ============================================================================
+// AUTH TRIGGERS
+// ============================================================================
+
 /**
  * Auth trigger: Creates user profile and initial data when new user signs up.
  *
@@ -237,14 +275,18 @@ exports.loadData = onCall(async (request) => {
       return { success: true, upToDate: true, rev: serverRev };
     }
 
+    // Sanitize data to ensure proper JSON serialization
+    const sanitizedData = sanitizeFirestoreData(serverData);
+
     return {
       success: true,
-      data: serverData,
+      data: sanitizedData,
       rev: serverRev,
-      updatedAt: serverData.updatedAt
+      updatedAt: sanitizedData.updatedAt
     };
   } catch (error) {
     console.error(`[loadData] Error for user ${userId}:`, error);
+    console.error(`[loadData] Error stack:`, error.stack);
     throw new HttpsError('internal', `Failed to load data: ${error.message}`);
   }
 });
@@ -1366,19 +1408,20 @@ Be concise, actionable, and prioritize patient safety.`;
 /**
  * Gets user profile.
  *
- * FIXED v2.2: Professional hardening for callable functions.
+ * FIXED v2.3: Added data sanitization to prevent serialization errors.
  *
  * KEY FIXES:
  * 1. All code wrapped in try-catch to prevent any unhandled exceptions
  * 2. Auth check returns proper 'unauthenticated' error (not crash → internal)
  * 3. HttpsError re-thrown properly using httpErrorCode check
  * 4. Structured logging for server-side diagnostics
+ * 5. Firestore Timestamps converted to ISO strings before returning
  *
  * IMPORTANT: In Firebase callable functions, ANY unhandled exception becomes
  * "internal" error. We must explicitly throw HttpsError for proper error codes.
  */
 exports.getUserProfile = onCall(async (request) => {
-  console.log('[getUserProfile] Function invoked');
+  console.log('[getUserProfile] Function invoked - v2.3 with sanitization');
 
   try {
     // =========================================================================
@@ -1400,25 +1443,72 @@ exports.getUserProfile = onCall(async (request) => {
     // =========================================================================
     // FIRESTORE LOOKUP
     // =========================================================================
+    console.log(`[getUserProfile] Fetching document: users/${userId}`);
     const userDoc = await db.collection('users').doc(userId).get();
 
     if (!userDoc.exists) {
-      console.log(`[getUserProfile] No profile document for user: ${userId}`);
-      // Return success:false instead of throwing - profile just doesn't exist yet
-      return { success: false, error: 'User profile not found', userId };
+      console.log(`[getUserProfile] No profile document for user: ${userId} - creating one`);
+      // Auto-create profile if it doesn't exist (handles users created before trigger deployment)
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      const newProfile = {
+        uid: userId,
+        email: request.auth.token?.email || null,
+        displayName: request.auth.token?.name || request.auth.token?.email?.split('@')[0] || 'User',
+        photoURL: request.auth.token?.picture || null,
+        createdAt: now,
+        lastLoginAt: now,
+        authProvider: request.auth.token?.firebase?.sign_in_provider || 'unknown',
+        settings: {
+          adminPassword: 'admin123',
+          theme: 'auto',
+          notifications: true,
+          offlineMode: true
+        }
+      };
+
+      await db.collection('users').doc(userId).set(newProfile);
+      console.log(`[getUserProfile] Created new profile for user: ${userId}`);
+
+      // Return sanitized profile (convert serverTimestamp to ISO string)
+      return {
+        success: true,
+        profile: {
+          ...newProfile,
+          createdAt: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString()
+        },
+        isNewProfile: true
+      };
     }
 
-    console.log(`[getUserProfile] Profile retrieved successfully for: ${userId}`);
+    // Sanitize data to ensure it can be serialized properly
+    const rawData = userDoc.data();
+
+    // Edge case: document exists but has no data
+    if (!rawData) {
+      console.log(`[getUserProfile] Profile document exists but has no data for: ${userId}`);
+      return { success: false, error: 'User profile is empty', userId };
+    }
+
+    console.log(`[getUserProfile] Raw data keys: ${Object.keys(rawData).join(', ')}`);
+
+    const sanitizedProfile = sanitizeFirestoreData(rawData);
+    console.log(`[getUserProfile] Profile sanitized successfully for: ${userId}`);
+
     return {
       success: true,
-      profile: userDoc.data()
+      profile: sanitizedProfile
     };
 
   } catch (error) {
     // =========================================================================
     // ERROR HANDLING - Re-throw HttpsError, wrap everything else
     // =========================================================================
-    console.error('[getUserProfile] Error caught:', error.message || error);
+    console.error('[getUserProfile] Error caught:', error);
+    console.error('[getUserProfile] Error name:', error.name);
+    console.error('[getUserProfile] Error message:', error.message);
+    console.error('[getUserProfile] Error code:', error.code);
+    console.error('[getUserProfile] Error stack:', error.stack);
 
     // If it's already an HttpsError, re-throw it as-is
     // HttpsError has httpErrorCode property (e.g., { canonicalName: 'UNAUTHENTICATED' })
@@ -1433,9 +1523,11 @@ exports.getUserProfile = onCall(async (request) => {
       throw new HttpsError('permission-denied', 'Access denied to user profile');
     }
 
-    // Wrap any other error as internal
-    console.error('[getUserProfile] Unexpected error, wrapping as internal:', error);
-    throw new HttpsError('internal', `Failed to get profile: ${error.message || 'Unknown error'}`);
+    // Wrap any other error as internal with detailed message
+    const errorMessage = error.message || 'Unknown error';
+    const errorName = error.name || 'UnknownError';
+    console.error(`[getUserProfile] Unexpected ${errorName}: ${errorMessage}`);
+    throw new HttpsError('internal', `Failed to get profile: ${errorName} - ${errorMessage}`);
   }
 });
 
