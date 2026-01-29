@@ -1010,8 +1010,7 @@ import { logout } from './firebase.auth.js';
 import { getUnitsForUser, createUnit, updateUnit, deleteUnit as firebaseDeleteUnit, getAllUnits } from './firebase.store.js';
 import { subscribeToUnits, onSyncStatusChange } from './firebase.sync.js';
 import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js';
-import { auth } from './firebase.config.js';
-import { getRedirectResult } from 'https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js';
+import { auth, getRedirectResult } from './firebase.config.js';
 
 const BUILD_ID = '2026-01-27.1';  // FIXED: Google redirect handling
 
