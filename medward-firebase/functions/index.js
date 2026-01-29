@@ -54,6 +54,7 @@
 // ============================================================================
 const { onCall } = require('firebase-functions/v2/https');
 const { onRequest } = require('firebase-functions/v2/https');
+const { defineSecret } = require('firebase-functions/params');
 // NOTE: Auth triggers (onCreate) are NOT available in v2/identity - use v1 API
 const functions = require('firebase-functions');
 const cors = require('cors')({
@@ -62,6 +63,10 @@ const cors = require('cors')({
   credentials: true
 });
 const admin = require('firebase-admin');
+
+// Define secrets for v2 functions
+// Set via: firebase functions:secrets:set ANTHROPIC_API_KEY
+const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -910,58 +915,32 @@ async function getActiveDeviceCount(userId) {
  */
 
 /**
- * Gets Claude API key from Firebase config or environment.
- * ROBUST VERSION: Checks multiple possible config locations.
+ * Gets Claude API key from environment variables.
  *
- * BUG FIX: The original code looked for claude.api_key but the key was
- * saved as anthropic.key - this function now checks both locations.
+ * FIREBASE FUNCTIONS V2:
+ * In v2, secrets are set via: firebase functions:secrets:set ANTHROPIC_API_KEY
+ * The secret is then available as process.env.ANTHROPIC_API_KEY when the
+ * function is configured with secrets: [anthropicApiKey]
  *
- * Configuration priority:
- * 1. ANTHROPIC_API_KEY environment variable
- * 2. CLAUDE_API_KEY environment variable
- * 3. Firebase config: anthropic.key (set via: firebase functions:config:set anthropic.key="YOUR_KEY")
- * 4. Firebase config: claude.api_key (legacy)
- * 5. Return null if not found (triggers proper error handling)
+ * Configuration:
+ * 1. Run: firebase functions:secrets:set ANTHROPIC_API_KEY
+ * 2. Enter your API key when prompted
+ * 3. Redeploy: firebase deploy --only functions
  */
 function getClaudeApiKey() {
-  // PRIMARY: Check environment variables (Gen2 style)
+  // Check ANTHROPIC_API_KEY (set via firebase functions:secrets:set)
   if (process.env.ANTHROPIC_API_KEY) {
-    console.log('✓ Using API key from ANTHROPIC_API_KEY environment variable');
+    console.log('✓ Using API key from ANTHROPIC_API_KEY');
     return process.env.ANTHROPIC_API_KEY;
   }
 
+  // Fallback: Check CLAUDE_API_KEY
   if (process.env.CLAUDE_API_KEY) {
-    console.log('✓ Using API key from CLAUDE_API_KEY environment variable');
+    console.log('✓ Using API key from CLAUDE_API_KEY');
     return process.env.CLAUDE_API_KEY;
   }
 
-  // SECONDARY: Check Firebase config (Gen1 style) - anthropic.key
-  // This is set via: firebase functions:config:set anthropic.key="YOUR_KEY"
-  try {
-    const config = functions.config();
-
-    // Check anthropic.key (most likely location based on deployment guide)
-    if (config.anthropic && config.anthropic.key) {
-      console.log('✓ Using API key from Firebase config (anthropic.key)');
-      return config.anthropic.key;
-    }
-
-    // Check claude.api_key (legacy location)
-    if (config.claude && config.claude.api_key) {
-      console.log('✓ Using API key from Firebase config (claude.api_key)');
-      return config.claude.api_key;
-    }
-
-    // Check claude.key (another possible location)
-    if (config.claude && config.claude.key) {
-      console.log('✓ Using API key from Firebase config (claude.key)');
-      return config.claude.key;
-    }
-  } catch (e) {
-    console.error('Config access error:', e.message);
-  }
-
-  // FALLBACK: No API key found
+  // No API key found
   console.error('✗ CRITICAL: No API Key found in any location');
   console.error('  Checked: ANTHROPIC_API_KEY env, CLAUDE_API_KEY env, anthropic.key config, claude.api_key config');
   return null;
@@ -1049,7 +1028,7 @@ async function callClaudeAPI(messages, options = {}) {
 /**
  * Clinical question assistant.
  */
-exports.askClinical = onCall(async (request) => {
+exports.askClinical = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
   }
@@ -1108,7 +1087,7 @@ Clinical Question: ${question}`;
 /**
  * Lab analysis with clinical interpretation.
  */
-exports.analyzeLabs = onCall(async (request) => {
+exports.analyzeLabs = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
   }
@@ -1163,7 +1142,7 @@ Format your response:
 /**
  * Drug information lookup.
  */
-exports.getDrugInfo = onCall(async (request) => {
+exports.getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
   }
@@ -1219,7 +1198,7 @@ Be concise but comprehensive. Use bullet points for clarity.`;
 /**
  * Generates differential diagnosis from symptoms.
  */
-exports.generateDifferential = onCall(async (request) => {
+exports.generateDifferential = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
   }
@@ -1272,7 +1251,7 @@ Format:
 /**
  * Generates treatment plan.
  */
-exports.getTreatmentPlan = onCall(async (request) => {
+exports.getTreatmentPlan = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
   }
@@ -1325,7 +1304,7 @@ Consider patient-specific factors (comorbidities, allergies, etc.) when making r
 /**
  * On-call clinical consultation (more comprehensive).
  */
-exports.oncallConsult = onCall(async (request) => {
+exports.oncallConsult = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new Error('User must be authenticated');
   }
@@ -1475,7 +1454,7 @@ exports.healthCheck = onRequest((req, res) => {
  * Configuration check endpoint.
  * Returns diagnostic info about function configuration (no sensitive data).
  */
-exports.configCheck = onRequest((req, res) => {
+exports.configCheck = onRequest({ secrets: [anthropicApiKey] }, (req, res) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -1486,23 +1465,11 @@ exports.configCheck = onRequest((req, res) => {
     return;
   }
 
-  // Check API key configuration
+  // Check API key configuration (v2 uses secrets/env vars only)
   const apiKeyStatus = {
-    ANTHROPIC_API_KEY_env: !!process.env.ANTHROPIC_API_KEY,
-    CLAUDE_API_KEY_env: !!process.env.CLAUDE_API_KEY,
-    anthropic_key_config: false,
-    claude_api_key_config: false,
-    claude_key_config: false
+    ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
+    CLAUDE_API_KEY: !!process.env.CLAUDE_API_KEY
   };
-
-  try {
-    const config = functions.config();
-    apiKeyStatus.anthropic_key_config = !!(config.anthropic && config.anthropic.key);
-    apiKeyStatus.claude_api_key_config = !!(config.claude && config.claude.api_key);
-    apiKeyStatus.claude_key_config = !!(config.claude && config.claude.key);
-  } catch (e) {
-    apiKeyStatus.configError = e.message;
-  }
 
   // Test if we can actually get the API key
   const apiKey = getClaudeApiKey();
@@ -1511,14 +1478,15 @@ exports.configCheck = onRequest((req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '2.0.2',
+    version: '2.1.0',
+    functionsVersion: 'v2',
     nodeVersion: process.version,
     apiKeyConfiguration: apiKeyStatus,
     apiKeyFound: hasValidKey,
     apiKeyPrefix: hasValidKey ? apiKey.substring(0, 10) + '...' : null,
     recommendation: hasValidKey
       ? 'API key is configured correctly'
-      : 'Run: firebase functions:config:set anthropic.key="YOUR_API_KEY" then redeploy'
+      : 'Run: firebase functions:secrets:set ANTHROPIC_API_KEY then redeploy'
   });
 });
 
