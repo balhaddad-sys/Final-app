@@ -6742,7 +6742,9 @@ const REFS = [
     { title: '💊 Status Epilepticus', content: '<b>1st:</b> Lorazepam 4mg<br><b>2nd:</b> Levetiracetam 60mg/kg' }
 ];
 
-const state = {
+// Make state globally accessible for monitor.js and external scripts
+// Using both window.state and local const maintains compatibility with existing code
+const state = window.state = {
   units: [], settings: {}, patients: [], currentUnit: null, currentUser: null, currentPatient: null,
   selectedUnitId: null, editingUnitId: null, importImage: null, importPatients: [], currentFilter: 'all',
   fluidChart: null, trendChart: null, addDataType: null, isAnalyzingLab: false, isAnalyzingImaging: false,
@@ -20254,15 +20256,15 @@ window.MedWard.savePatient = async function(patient, { correlationId, source } =
   try {
     // Skip adding test patients from monitor to actual patient list
     if (!patient?._monitor) {
-      // Add patient to state
+      // Add patient to state (use window.state for explicit global access)
       const newPatient = {
         id: uid(),
-        unitId: state.currentUnit?.id || null,
+        unitId: window.state?.currentUnit?.id || null,
         ...patient,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      state.patients.push(newPatient);
+      window.state.patients.push(newPatient);
       markDirty();
       renderDashboard();
     }
@@ -20287,10 +20289,10 @@ window.MedWard.deleteTestPatient = async function({ correlationId, source } = {}
 
   const t0 = performance.now();
   try {
-    // Find and remove test patients
-    const before = state.patients.length;
-    state.patients = state.patients.filter(p => !p._monitor);
-    const after = state.patients.length;
+    // Find and remove test patients (use window.state for explicit global access)
+    const before = window.state.patients.length;
+    window.state.patients = window.state.patients.filter(p => !p._monitor);
+    const after = window.state.patients.length;
     const deleted = before - after;
 
     if (deleted > 0) {
@@ -20322,11 +20324,11 @@ if (window.monitor) {
     };
   }
 
-  // Log when app is ready
+  // Log when app is ready (use window.state for explicit global access)
   window.monitor.emit("APP", "SUCCESS", "MedWard dashboard initialized", {
-    unit: state.currentUnit?.name,
-    user: state.currentUser?.name,
-    patients: state.patients?.length || 0
+    unit: window.state?.currentUnit?.name,
+    user: window.state?.currentUser?.name,
+    patients: window.state?.patients?.length || 0
   });
 }
 
