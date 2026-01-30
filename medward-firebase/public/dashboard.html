@@ -14822,15 +14822,15 @@ RESPOND ONLY WITH VALID JSON. No markdown, no explanation.`;
 // MULTI-PAGE LAB ANALYSIS - Master Shifu's Batch Processing Logic
 // ═══════════════════════════════════════════════════════════════════
 async function handleLabUpload(files) {
-  // Guard: Check API URL
-  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) {
-    console.error('API URL not configured:', state.settings.apiUrl);
-    toast('API not configured. Go to Admin → Settings', true);
+  // Guard: Check Firebase is available
+  if (!CONFIG.USE_FIREBASE || !window.analyzeLabsEnhanced) {
+    console.error('Firebase not configured or analyzeLabsEnhanced not available');
+    toast('Firebase not configured. Please refresh the page.', true);
     return;
   }
-  
+
   console.log('🔬 LAB UPLOAD STARTED');
-  console.log('📡 Using API:', state.settings.apiUrl);
+  console.log('📡 Using Firebase Cloud Functions');
 
   // Convert FileList to Array
   const fileArray = Array.isArray(files) ? files : Array.from(files);
@@ -14867,7 +14867,7 @@ async function handleLabUpload(files) {
 
   try {
     console.log(`🔬 Starting enhanced lab extraction (${fileArray.length} pages)...`);
-    console.log('📡 API:', state.settings.apiUrl);
+    console.log('📡 Using Firebase Cloud Functions for lab extraction');
 
     // 2. Compress ALL images in parallel (Master Shifu's Promise.all technique)
     console.log('🗜️ Compressing images in parallel...');
@@ -14920,45 +14920,37 @@ async function handleLabUpload(files) {
     
     console.log('🧠 Patient context length:', patientContext.length, 'chars');
 
-    // 3. Send the STACK to the cloud with context
-    const requestBody = {
-      action: 'analyzeLabsEnhanced',
-      images: rawBase64Images,
-      extractionPrompt: LAB_EXTRACTION_PROMPT,
-      patientContext: patientContext  // Full context for Additive AI
-    };
+    // 3. Send the STACK to Firebase Cloud Functions
+    console.log('📤 Sending request with', validImages.length, 'images + patient context via Firebase');
 
-    console.log('📤 Sending request with', rawBase64Images.length, 'images + patient context');
-    console.log('📤 Request body size:', JSON.stringify(requestBody).length, 'bytes');
-
-    const res = await fetch(state.settings.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(requestBody)
+    // Use Firebase Cloud Functions instead of deprecated fetch to GAS URL
+    // The analyzeLabsEnhanced function now accepts images array and extraction prompt
+    const firebaseResponse = await window.analyzeLabsEnhanced(validImages, {
+      patientContext: patientContext,
+      extractionPrompt: LAB_EXTRACTION_PROMPT
     });
 
-    console.log('📥 Response status:', res.status);
+    console.log('📥 Firebase response:', firebaseResponse);
 
-    // Check if response is HTML (Google Apps Script error page)
-    const contentType = res.headers.get('content-type') || '';
-    console.log('📥 Content-Type:', contentType);
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error('❌ HTTP Error:', res.status, errorText);
-      throw new Error('HTTP ' + res.status + ': ' + errorText.substring(0, 100));
+    // Convert Firebase response to expected format
+    let responseText;
+    if (firebaseResponse.success && firebaseResponse.labData) {
+      // Already structured - wrap in expected format
+      responseText = JSON.stringify({
+        success: true,
+        labData: firebaseResponse.labData,
+        confidence: firebaseResponse.confidence || 0.8
+      });
+    } else if (firebaseResponse.analysis) {
+      // Raw analysis text - needs parsing
+      responseText = firebaseResponse.analysis;
+    } else if (firebaseResponse.error) {
+      throw new Error(firebaseResponse.error);
+    } else {
+      responseText = JSON.stringify(firebaseResponse);
     }
 
-    // Get response as text first
-    const responseText = await res.text();
-    console.log('📥 Response length:', responseText.length);
     console.log('📥 Response preview:', responseText.substring(0, 300));
-    
-    // Check if we got HTML instead of JSON (common GAS error)
-    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
-      console.error('❌ Received HTML instead of JSON - likely a Google Apps Script error');
-      throw new Error('Server returned HTML error page. Check Apps Script deployment.');
-    }
     
     // Robust JSON parser for AI responses
     function robustJSONParse(text) {
