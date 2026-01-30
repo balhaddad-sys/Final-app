@@ -17028,79 +17028,77 @@ window.userImportWardList = async function() {
       return;
     }
 
-    // Ward import feature - show informational message
-    // Note: This feature uses Google Sheets API which requires a different backend implementation
-    showUserImportStatus('⚠️ Ward import from Google Sheets is temporarily unavailable. Please add patients manually or use the AI Extract feature to scan documents.', 'error');
-    console.warn('[Ward Import] This feature requires Google Sheets API access which is not yet implemented in Firebase Cloud Functions.');
-
-    if (btn) {
-      btn.innerHTML = originalHTML || 'Import';
-      btn.disabled = false;
-    }
-    return;
-
-    /* Legacy Google Apps Script implementation - disabled
-    fetch(CONFIG.API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'startWardImport',
-        username: AUTH.user,
-        password: AUTH.pass,
-        idToken: firebaseToken,
-        sheetId: sheetId,
-        sheetName: tabName || '',
-        clearExisting: clearExisting,
-        targetUnitId: state.currentUnit.id,
-        targetUnitName: state.currentUnit.name
-      })
-    }).then(res => res.json()).then(data => {
-      console.log('Import response:', data);
-      if (data.success) {
-        if (data.status === 'completed') {
-          showUserImportStatus(`✅ Imported ${data.result?.added || 0} patients to ${state.currentUnit.name}!`, 'success');
-          toast('✅ Import complete!');
-        }
-      } else {
-        let errorMsg = data.error || 'Import failed';
-        if (errorMsg.toLowerCase().includes('invalid credentials') || errorMsg.toLowerCase().includes('unauthorized') || errorMsg.toLowerCase().includes('authentication')) {
-          errorMsg = 'Authentication failed. Please log out and back in.';
-          console.error('❌ Auth Error - try logging out and back in');
-        }
-        showUserImportStatus(`❌ ${errorMsg}`, 'error');
-      }
-    }).catch(e => {
-      console.error('Import error:', e);
-      showUserImportStatus(`❌ Connection error: ${e.message}`, 'error');
-    });
-    */
-    
-    // Immediate feedback
-    showUserImportStatus(`⏳ Import started to ${state.currentUnit.name}. Patients will appear in ~10 seconds...`, 'success');
+    // Ward import via Firebase Cloud Functions
+    showUserImportStatus(`⏳ Importing patients from sheet to ${state.currentUnit.name}...`, 'info');
     toast(`⏳ Importing to ${state.currentUnit.name}...`);
-    
-    // Reset button immediately
+
+    try {
+      // Fetch and parse the sheet data
+      const response = await fetchSheetData(sheetId, tabName, false);
+
+      if (!response.success || !response.patients || response.patients.length === 0) {
+        showUserImportStatus('⚠️ No patients found in the sheet. Check the sheet format.', 'error');
+        return;
+      }
+
+      const importedPatients = response.patients;
+      console.log(`[Ward Import] Parsed ${importedPatients.length} patients from sheet`);
+
+      // Clear existing patients in this unit if requested
+      if (clearExisting) {
+        state.patients = state.patients.filter(p => p.unitId !== state.currentUnit.id);
+        console.log('[Ward Import] Cleared existing patients in unit');
+      }
+
+      // Assign patients to the current unit and add to state
+      let addedCount = 0;
+      for (const patient of importedPatients) {
+        // Assign to current unit
+        patient.unitId = state.currentUnit.id;
+
+        // Generate unique ID if not present
+        if (!patient.id || state.patients.some(p => p.id === patient.id)) {
+          patient.id = 'import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        }
+
+        // Add patient to state
+        state.patients.push(patient);
+        addedCount++;
+      }
+
+      console.log(`[Ward Import] Added ${addedCount} patients to state`);
+
+      // Save to cloud
+      showUserImportStatus('💾 Saving to cloud...', 'info');
+      await forceSync();
+
+      // Update UI
+      renderPatients();
+      updateStats();
+
+      showUserImportStatus(`✅ Imported ${addedCount} patients to ${state.currentUnit.name}!`, 'success');
+      toast(`✅ Imported ${addedCount} patients!`);
+
+      localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
+        importedAt: new Date().toISOString(),
+        sheetId: sheetId,
+        status: 'completed',
+        addedCount: addedCount,
+        unitId: state.currentUnit.id,
+        unitName: state.currentUnit.name
+      }));
+
+    } catch (importError) {
+      console.error('[Ward Import] Error:', importError);
+      showUserImportStatus(`❌ Import failed: ${importError.message}`, 'error');
+      toast(`❌ Import failed: ${importError.message}`, true);
+    }
+
+    // Reset button
     if (btn) {
       btn.innerHTML = originalHTML || 'Import';
       btn.disabled = false;
     }
-    
-    // ⏳ Delayed refresh (background import will be done)
-    setTimeout(async () => {
-      showUserImportStatus('🔄 Refreshing data...', 'info');
-      await refreshDataFromServer();
-      renderPatients();
-      showUserImportStatus('✅ Data refreshed!', 'success');
-      toast('🔄 Ward list updated');
-    }, 8000);
-    
-    localStorage.setItem(IMPORT_SNAPSHOT_KEY, JSON.stringify({
-      importedAt: new Date().toISOString(),
-      sheetId: sheetId,
-      status: 'started',
-      unitId: state.currentUnit.id,
-      unitName: state.currentUnit.name
-    }));
     
   } catch (e) {
     console.error('User Import error:', e);
@@ -17407,51 +17405,27 @@ function showImportStatus(message, type = 'info') {
   });
 }
 
-// Fetch sheet data via Apps Script backend
+// Fetch sheet data via Firebase Cloud Functions
 async function fetchSheetData(sheetId, tabName, preview = false) {
-  // Use CONFIG.API_URL directly since it's hardcoded
-  const apiUrl = CONFIG.API_URL;
-
-  if (!apiUrl) {
-    throw new Error('API endpoint not configured.');
-  }
-
   console.log('fetchSheetData - sheetId:', sheetId, 'preview:', preview);
 
-  // Get Firebase ID token for authentication
-  const firebaseToken = await window.getFirebaseToken();
-
-  // Debug credential state
-  console.log('🔐 fetchSheetData Auth Debug:');
-  console.log('  - AUTH.user:', AUTH.user || '(not set)');
-  console.log('  - AUTH.pass:', AUTH.pass ? '(set)' : '(not set)');
-  console.log('  - Firebase token:', firebaseToken ? `${firebaseToken.substring(0, 20)}...` : '(not available)');
-
-  if (!firebaseToken && !AUTH.user) {
-    throw new Error('Not authenticated. Please log out and back in.');
+  // Check if Firebase Functions are available
+  if (!window.FirebaseFunctions || !window.FirebaseFunctions.importWardList) {
+    throw new Error('Firebase Functions not loaded. Please refresh the page.');
   }
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({
-      action: 'importWardList',
-      username: AUTH.user,
-      password: AUTH.pass,
-      idToken: firebaseToken,
-      sheetId: sheetId,
-      sheetName: tabName || '',
-      preview: preview // Enable caching for preview
-    })
+  const data = await window.FirebaseFunctions.importWardList({
+    sheetId: sheetId,
+    sheetName: tabName || '',
+    preview: preview
   });
-  
-  const data = await response.json();
+
   console.log('fetchSheetData - response:', data.success, 'cached:', data.cached, 'timing:', data.timing);
-  
+
   if (!data.ok && !data.success) {
     throw new Error(data.error || 'Failed to fetch sheet data');
   }
-  
+
   return data; // Return full response with parsed data, stats, timing
 }
 

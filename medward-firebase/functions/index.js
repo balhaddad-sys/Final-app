@@ -2050,4 +2050,257 @@ exports.configCheck = onRequest({ cors: true, secrets: [anthropicApiKey] }, (req
   });
 });
 
+// ============================================================================
+// GOOGLE SHEETS IMPORT
+// ============================================================================
+
+/**
+ * Import patient data from a Google Sheet.
+ *
+ * Requirements:
+ * - Sheet must be shared as "Anyone with the link can view"
+ * - Sheet should have headers: Name/Patient, MRN, Ward, Diagnosis, etc.
+ *
+ * @param {string} sheetId - Google Sheet ID
+ * @param {string} sheetName - Tab/sheet name (optional, defaults to first sheet)
+ * @param {boolean} preview - If true, returns stats only without importing
+ * @returns {Object} { success, data, stats, cached, timing }
+ */
+exports.importWardList = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { sheetId, sheetName, preview } = request.data || {};
+  const startTime = Date.now();
+
+  if (!sheetId) {
+    throw new HttpsError('invalid-argument', 'Sheet ID is required');
+  }
+
+  try {
+    const fetch = (await import('node-fetch')).default;
+
+    // Build Google Sheets export URL (works for publicly shared sheets)
+    // Format: https://docs.google.com/spreadsheets/d/{ID}/export?format=csv&gid=0
+    let exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+
+    // If sheet name provided, we need to get the gid first
+    // For simplicity, default to gid=0 (first sheet) if no name provided
+    if (!sheetName) {
+      exportUrl += '&gid=0';
+    }
+
+    console.log(`[importWardList] Fetching sheet: ${sheetId}`);
+
+    const response = await fetch(exportUrl, {
+      headers: {
+        'User-Agent': 'MedWard-Pro/1.0'
+      },
+      redirect: 'follow'
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Sheet not found. Check the Sheet ID is correct.');
+      }
+      if (response.status === 403 || response.status === 401) {
+        throw new Error('Access denied. Make sure the sheet is shared as "Anyone with the link can view".');
+      }
+      throw new Error(`Failed to fetch sheet: HTTP ${response.status}`);
+    }
+
+    const csvText = await response.text();
+
+    // Check if we got HTML instead of CSV (common error for private sheets)
+    if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+      throw new Error('Cannot access sheet. Please share it as "Anyone with the link can view".');
+    }
+
+    // Parse CSV
+    const rows = parseCSV(csvText);
+
+    if (rows.length < 2) {
+      throw new Error('Sheet appears empty or has no data rows');
+    }
+
+    // Find header row and parse columns
+    const headerRow = rows[0];
+    const columnIndex = indexSheetColumns(headerRow);
+
+    console.log(`[importWardList] Found columns:`, Object.keys(columnIndex).filter(k => columnIndex[k] >= 0));
+
+    // Parse patient data from rows
+    const patients = [];
+    const wards = new Set();
+    let activeCount = 0;
+    let erCount = 0;
+    let chronicCount = 0;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length === 0) continue;
+
+      const patient = parsePatientRow(row, columnIndex);
+      if (patient && patient.name) {
+        patients.push(patient);
+
+        // Track stats
+        if (patient.ward) wards.add(patient.ward);
+        if (patient.status === 'active' || !patient.status) activeCount++;
+        if (patient.ward === 'ER' || patient.ward === 'ER/Unassigned') erCount++;
+        if (patient.chronic) chronicCount++;
+      }
+    }
+
+    const stats = {
+      total: patients.length,
+      active: activeCount,
+      er: erCount,
+      chronic: chronicCount,
+      wards: Array.from(wards)
+    };
+
+    const timing = {
+      totalMs: Date.now() - startTime
+    };
+
+    console.log(`[importWardList] Parsed ${patients.length} patients in ${timing.totalMs}ms`);
+
+    return {
+      success: true,
+      ok: true,
+      data: preview ? null : patients,
+      patients: preview ? null : patients,
+      stats,
+      timing,
+      cached: false
+    };
+
+  } catch (error) {
+    console.error('[importWardList] Error:', error);
+    throw new HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Parse CSV text into rows array.
+ * Handles quoted fields with commas and newlines.
+ */
+function parseCSV(text) {
+  const rows = [];
+  let currentRow = [];
+  let currentField = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inQuotes) {
+      if (char === '"' && nextChar === '"') {
+        // Escaped quote
+        currentField += '"';
+        i++;
+      } else if (char === '"') {
+        // End of quoted field
+        inQuotes = false;
+      } else {
+        currentField += char;
+      }
+    } else {
+      if (char === '"') {
+        // Start of quoted field
+        inQuotes = true;
+      } else if (char === ',') {
+        // Field separator
+        currentRow.push(currentField.trim());
+        currentField = '';
+      } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
+        // Row separator
+        currentRow.push(currentField.trim());
+        if (currentRow.some(f => f)) {
+          rows.push(currentRow);
+        }
+        currentRow = [];
+        currentField = '';
+        if (char === '\r') i++;
+      } else if (char !== '\r') {
+        currentField += char;
+      }
+    }
+  }
+
+  // Add final field/row
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some(f => f)) {
+      rows.push(currentRow);
+    }
+  }
+
+  return rows;
+}
+
+/**
+ * Index column positions from header row.
+ */
+function indexSheetColumns(headerRow) {
+  const headers = (headerRow || []).map(h =>
+    String(h || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s/]/g, '')
+  );
+
+  const find = (...needles) => {
+    return headers.findIndex(h => needles.some(n => h.includes(n)));
+  };
+
+  return {
+    name: find('name', 'patient'),
+    mrn: find('mrn', 'medical record', 'id', 'file'),
+    ward: find('ward', 'location', 'bed'),
+    diagnosis: find('diagnosis', 'dx', 'problem'),
+    age: find('age'),
+    gender: find('gender', 'sex'),
+    consultant: find('consultant', 'doctor', 'attending', 'physician'),
+    admitDate: find('admit', 'admission', 'date'),
+    notes: find('notes', 'comment', 'remarks'),
+    status: find('status'),
+    chronic: find('chronic', 'longterm', 'long term')
+  };
+}
+
+/**
+ * Parse a row into patient object using column index.
+ */
+function parsePatientRow(row, idx) {
+  const get = (index) => index >= 0 && index < row.length ? row[index]?.trim() : '';
+
+  const name = get(idx.name);
+  if (!name) return null;
+
+  // Parse ward - normalize "Ward 21" format
+  let ward = get(idx.ward);
+  const wardMatch = ward.match(/ward\s*(\d+)/i);
+  if (wardMatch) {
+    ward = `Ward ${wardMatch[1]}`;
+  }
+
+  return {
+    id: 'import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    name: name,
+    mrn: get(idx.mrn) || '',
+    ward: ward || 'ER/Unassigned',
+    diagnosis: get(idx.diagnosis) || '',
+    age: get(idx.age) || '',
+    gender: get(idx.gender) || '',
+    consultant: get(idx.consultant) || '',
+    admitDate: get(idx.admitDate) || '',
+    notes: get(idx.notes) || '',
+    status: get(idx.status) || 'active',
+    chronic: get(idx.chronic)?.toLowerCase() === 'yes' || get(idx.chronic)?.toLowerCase() === 'true',
+    importedAt: new Date().toISOString(),
+    source: 'google-sheets'
+  };
+}
+
 // End of Cloud Functions - Frontend code should be in a separate file (e.g., public/index.html or src/firebase.js)

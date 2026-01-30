@@ -558,6 +558,27 @@ export async function migrateFromAppsScript(oldData) {
 }
 
 // ============================================================================
+// GOOGLE SHEETS IMPORT
+// ============================================================================
+
+/**
+ * Import patient data from a Google Sheet.
+ *
+ * Requirements:
+ * - Sheet must be shared as "Anyone with the link can view"
+ * - Sheet should have headers: Name/Patient, MRN, Ward, Diagnosis, etc.
+ *
+ * @param {Object} options - Import options
+ * @param {string} options.sheetId - Google Sheet ID
+ * @param {string} options.sheetName - Tab/sheet name (optional)
+ * @param {boolean} options.preview - If true, returns stats only
+ * @returns {Promise<Object>} { success, data, stats, timing }
+ */
+export async function importWardList({ sheetId, sheetName, preview = false } = {}) {
+  return callFunction('importWardList', { sheetId, sheetName, preview });
+}
+
+// ============================================================================
 // UTILITY EXPORTS
 // ============================================================================
 
@@ -647,6 +668,9 @@ window.FirebaseFunctions = {
 
   // Migration helpers
   migrateFromAppsScript,
+
+  // Google Sheets import
+  importWardList,
 
   // Utilities
   generateDeviceId,
