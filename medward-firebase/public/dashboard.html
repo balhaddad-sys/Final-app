@@ -8814,15 +8814,32 @@ async function performSync() {
   }
   
   sync.isSyncing = true;
-  
+
   // Compress patch queue to minimize payload
   compressPatchQueue();
-  
+
   // Schedule deferred local save (non-blocking)
   saveLocalDeferred();
-  
-  // Check if we have cloud configured
-  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) {
+
+  // ═══════════════════════════════════════════════════════════════════
+  // FIREBASE MODE: Use Firebase Cloud Functions for syncing
+  // ═══════════════════════════════════════════════════════════════════
+  if (CONFIG.USE_FIREBASE) {
+    // Use the new Firebase-based sync engine instead of legacy fetch
+    sync.isSyncing = false; // flushPatches manages its own sync lock
+    try {
+      await flushPatches();
+      sync.pendingChanges = false;
+      updateSyncStatus('synced', 'Synced via Firebase');
+    } catch (e) {
+      console.error('Firebase sync error:', e);
+      updateSyncStatus('error', 'Sync failed');
+    }
+    return;
+  }
+
+  // Check if we have legacy cloud configured (non-Firebase mode)
+  if (!state.settings.apiUrl) {
     sync.pendingChanges = false;
     sync.isSyncing = false;
     updateSyncStatus('synced', 'Saved locally');
@@ -10563,23 +10580,9 @@ $('medScanInput').onchange = async function() {
     });
     state.medScanImage = base64Image;
     
-    // Strip data URL prefix if present
-    const rawBase64 = base64Image.startsWith('data:') 
-      ? base64Image.split(',')[1] 
-      : base64Image;
-    
-    // Call the API
-    const res = await fetch(state.settings.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'identifyMedication',
-        image: rawBase64
-      })
-    });
-    
-    const data = await res.json();
-    
+    // Call Firebase Cloud Function for medication identification
+    const data = await callCloud('identifyMedication', { image: base64Image });
+
     if (!data.success) {
       throw new Error(data.error || 'Failed to identify medications');
     }
@@ -12603,8 +12606,8 @@ window.openDrugInfo = async function(drugName, medIdx) {
       return;
     }
 
-    // If medical sources didn't return data, try the configured API
-    if (!state.settings.apiUrl) {
+    // If medical sources didn't return data, try Firebase Cloud Function
+    if (!CONFIG.USE_FIREBASE) {
       renderBasicDrugInfo(drugName, med);
       return;
     }
@@ -12619,18 +12622,12 @@ window.openDrugInfo = async function(drugName, medIdx) {
       })) || []
     };
 
-    const res = await fetch(state.settings.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'getDrugInfo',
-        drugName: drugName,
-        patientContext: patientContext,
-        indication: med?.indication || ''
-      })
+    // Use Firebase Cloud Function for drug info
+    const data = await callCloud('getDrugInfo', {
+      drugName: drugName,
+      patientContext: patientContext,
+      indication: med?.indication || ''
     });
-
-    const data = await res.json();
 
     if (data.error) throw new Error(data.error);
 
