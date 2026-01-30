@@ -446,19 +446,59 @@ export async function extractPatients(image, format = null) {
 /**
  * Enhanced lab analysis with image support.
  *
- * @param {string|Object} imageOrLabs - Base64 image or structured lab data
- * @param {Object} patientContext - Patient context (optional)
- * @param {string} model - Model override (optional)
- * @returns {Promise<Object>} { success, analysis, model, usage }
+ * UPDATED: Now supports:
+ * - Single image (string) or multiple images (array)
+ * - Extraction prompt for structured JSON output
+ *
+ * @param {string|string[]|Object} imageOrLabs - Base64 image(s) or structured lab data
+ * @param {Object} options - Options object
+ * @param {Object} options.patientContext - Patient context (optional)
+ * @param {string} options.extractionPrompt - Extraction prompt for structured output (optional)
+ * @param {string} options.model - Model override (optional)
+ * @returns {Promise<Object>} { success, labData|analysis, model, usage }
  */
-export async function analyzeLabsEnhanced(imageOrLabs, patientContext = null, model = null) {
+export async function analyzeLabsEnhanced(imageOrLabs, options = {}) {
+  // Support old signature: analyzeLabsEnhanced(imageOrLabs, patientContext, model)
+  let patientContext, extractionPrompt, model;
+  if (typeof options === 'string' || options === null) {
+    // Old signature used
+    patientContext = options;
+    model = arguments[2] || null;
+    extractionPrompt = null;
+  } else {
+    // New options object
+    patientContext = options.patientContext || null;
+    extractionPrompt = options.extractionPrompt || null;
+    model = options.model || null;
+  }
+
+  // Check if it's an array of images
+  if (Array.isArray(imageOrLabs)) {
+    return callFunction('analyzeLabsEnhanced', {
+      images: imageOrLabs,
+      patientContext,
+      extractionPrompt,
+      model
+    });
+  }
+
+  // Check if single image
   const isImage = typeof imageOrLabs === 'string' &&
     (imageOrLabs.startsWith('data:image') || imageOrLabs.length > 1000);
 
   if (isImage) {
-    return callFunction('analyzeLabsEnhanced', { image: imageOrLabs, patientContext, model });
+    return callFunction('analyzeLabsEnhanced', {
+      image: imageOrLabs,
+      patientContext,
+      extractionPrompt,
+      model
+    });
   } else {
-    return callFunction('analyzeLabsEnhanced', { labs: imageOrLabs, patientContext, model });
+    return callFunction('analyzeLabsEnhanced', {
+      labs: imageOrLabs,
+      patientContext,
+      model
+    });
   }
 }
 

@@ -1713,19 +1713,30 @@ Example format:
 /**
  * Enhanced lab analysis with image support.
  * Can analyze either structured lab data or lab result images.
+ *
+ * UPDATED: Now supports:
+ * - Multiple images via `images` array (for multi-page lab reports)
+ * - Custom extraction prompt via `extractionPrompt` (for structured JSON output)
+ * - Returns structured labData when extractionPrompt is provided
  */
 exports.analyzeLabsEnhanced = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { image, labs, patientContext, model } = request.data || {};
+  const { image, images, labs, patientContext, model, extractionPrompt } = request.data || {};
 
-  if (!image && !labs) {
-    throw new HttpsError('invalid-argument', 'Either image or labs data is required');
+  // Support both single image and images array
+  const imageArray = images || (image ? [image] : []);
+
+  if (imageArray.length === 0 && !labs) {
+    throw new HttpsError('invalid-argument', 'Either image(s) or labs data is required');
   }
 
-  const systemPrompt = `You are a clinical pathologist providing expert interpretation of laboratory results.
+  // Use extraction prompt if provided (for structured JSON output), otherwise interpretation prompt
+  const systemPrompt = extractionPrompt ?
+    'You are a medical laboratory report extraction system. Extract lab values precisely and return valid JSON only.' :
+    `You are a clinical pathologist providing expert interpretation of laboratory results.
 
 IMPORTANT:
 - Use KUWAIT SI UNITS (mmol/L, g/L, etc.)
@@ -1744,43 +1755,42 @@ Format your response:
   try {
     let messages;
 
-    if (image) {
-      // Image-based analysis
-      let imageData = image;
-      let mediaType = 'image/jpeg';
+    if (imageArray.length > 0) {
+      // Image-based analysis (supports multiple images)
+      const content = [];
 
-      if (image.startsWith('data:')) {
-        const matches = image.match(/^data:([^;]+);base64,(.+)$/);
-        if (matches) {
-          mediaType = matches[1];
-          imageData = matches[2];
+      // Add all images to the content array
+      for (const img of imageArray) {
+        let imageData = img;
+        let mediaType = 'image/jpeg';
+
+        if (img.startsWith('data:')) {
+          const matches = img.match(/^data:([^;]+);base64,(.+)$/);
+          if (matches) {
+            mediaType = matches[1];
+            imageData = matches[2];
+          }
         }
+
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: mediaType,
+            data: imageData
+          }
+        });
       }
 
-      let userPrompt = 'Please analyze these laboratory results.';
+      // Add the text prompt
+      let userPrompt = extractionPrompt || 'Please analyze these laboratory results.';
       if (patientContext) {
-        userPrompt += `\n\nPatient context: ${JSON.stringify(patientContext)}`;
+        userPrompt += `\n\nPatient context: ${typeof patientContext === 'string' ? patientContext : JSON.stringify(patientContext)}`;
       }
 
-      messages = [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: imageData
-              }
-            },
-            {
-              type: 'text',
-              text: userPrompt
-            }
-          ]
-        }
-      ];
+      content.push({ type: 'text', text: userPrompt });
+
+      messages = [{ role: 'user', content }];
     } else {
       // Structured data analysis
       let userMessage = `Laboratory Results:\n${JSON.stringify(labs, null, 2)}`;
@@ -1793,13 +1803,38 @@ Format your response:
 
     const response = await callClaudeAPI(messages, {
       system: systemPrompt,
-      model: model || AI_CONFIG.MODELS.FAST
+      model: model || AI_CONFIG.MODELS.BALANCED, // Use balanced model for lab extraction
+      maxTokens: 8000 // Labs can be lengthy
     });
 
+    const responseText = response.content[0].text;
+
+    // If extraction prompt was used, try to parse as JSON
+    if (extractionPrompt) {
+      try {
+        // Try to extract JSON from the response
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return {
+            success: true,
+            labData: parsed.labData || parsed,
+            confidence: parsed.confidence || 0.8,
+            interpretation: parsed.interpretation,
+            model: model || AI_CONFIG.MODELS.BALANCED,
+            usage: response.usage
+          };
+        }
+      } catch (parseError) {
+        console.log('[analyzeLabsEnhanced] JSON parse failed, returning raw text:', parseError.message);
+      }
+    }
+
+    // Return raw analysis text if not extraction mode or parse failed
     return {
       success: true,
-      analysis: response.content[0].text,
-      model: model || AI_CONFIG.MODELS.FAST,
+      analysis: responseText,
+      model: model || AI_CONFIG.MODELS.BALANCED,
       usage: response.usage
     };
   } catch (error) {
