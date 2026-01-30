@@ -5913,13 +5913,14 @@ const Diagnostics = {
       resultDiv.innerHTML = '⏳ Testing Firebase Cloud Functions...';
 
       try {
-        if (!window.FirebaseFunctions) {
+        const fb = await loadFirebaseFunctions();
+        if (!fb) {
           resultDiv.innerHTML = `<div style="color:#fca5a5">❌ Firebase Functions not loaded</div><div style="font-size:10px;margin-top:4px">Try refreshing the page</div>`;
           return;
         }
 
         const startTime = Date.now();
-        const result = await window.FirebaseFunctions.callFunction('healthCheck', {});
+        const result = await fb.callFunction('healthCheck', {});
         const elapsed = Date.now() - startTime;
 
         console.log('🔍 Firebase Test Response:', {
@@ -7302,12 +7303,12 @@ function updateSessionsUI() {
  * Maps legacy action names to Firebase function calls.
  */
 async function callCloudSync(action, extra = {}) {
-  // Check if Firebase Functions are available
-  if (!window.FirebaseFunctions) {
-    throw new Error('Firebase Functions not loaded. Please refresh the page.');
+  // Load Firebase Functions module (waits for module to initialize)
+  const fb = await loadFirebaseFunctions();
+  if (!fb) {
+    throw new Error('Firebase Functions failed to load. Please refresh the page.');
   }
 
-  const fb = window.FirebaseFunctions;
   const deviceId = sync.deviceId || fb.generateDeviceId();
 
   try {
@@ -17118,14 +17119,15 @@ async function refreshDataFromServer() {
   try {
     console.log('🔄 Refreshing data from server...');
 
-    // Use Firebase Cloud Functions
-    if (!window.FirebaseFunctions) {
-      throw new Error('Firebase Functions not loaded');
+    // Load Firebase Functions module
+    const fb = await loadFirebaseFunctions();
+    if (!fb) {
+      throw new Error('Firebase Functions failed to load');
     }
 
-    const data = await window.FirebaseFunctions.loadData({
+    const data = await fb.loadData({
       clientRev: 0,  // Force full reload
-      deviceId: sync.deviceId || window.FirebaseFunctions.generateDeviceId()
+      deviceId: sync.deviceId || fb.generateDeviceId()
     });
 
     console.log('Firebase response:', data.success, 'hasData:', !!data.data);
@@ -17406,12 +17408,13 @@ function showImportStatus(message, type = 'info') {
 async function fetchSheetData(sheetId, tabName, preview = false) {
   console.log('fetchSheetData - sheetId:', sheetId, 'preview:', preview);
 
-  // Check if Firebase Functions are available
-  if (!window.FirebaseFunctions || !window.FirebaseFunctions.importWardList) {
+  // Load Firebase Functions module
+  const fb = await loadFirebaseFunctions();
+  if (!fb || !fb.importWardList) {
     throw new Error('Firebase Functions not loaded. Please refresh the page.');
   }
 
-  const data = await window.FirebaseFunctions.importWardList({
+  const data = await fb.importWardList({
     sheetId: sheetId,
     sheetName: tabName || '',
     preview: preview
