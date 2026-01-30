@@ -8824,14 +8824,23 @@ async function performSync() {
 
   // ═══════════════════════════════════════════════════════════════════
   // FIREBASE MODE: Use Firebase Cloud Functions for syncing
+  // Firebase backend uses full-state saves, not patches
   // ═══════════════════════════════════════════════════════════════════
   if (CONFIG.USE_FIREBASE) {
-    // Use the new Firebase-based sync engine instead of legacy fetch
-    sync.isSyncing = false; // flushPatches manages its own sync lock
+    sync.isSyncing = false; // saveSnapshot manages its own sync lock
     try {
-      await flushPatches();
-      sync.pendingChanges = false;
-      updateSyncStatus('synced', 'Synced via Firebase');
+      // Use saveSnapshot which properly builds full state payload for Firebase
+      const result = await saveSnapshot();
+      if (result.success) {
+        sync.patchQueue = []; // Clear patches since we did a full save
+        sync.pendingChanges = false;
+        updateSyncStatus('synced', 'Synced via Firebase');
+      } else if (result.blocked || result.wipeBlocked) {
+        console.warn('⚠️ Sync blocked:', result);
+        updateSyncStatus('pending', 'Sync blocked');
+      } else {
+        throw new Error(result.error || 'Sync failed');
+      }
     } catch (e) {
       console.error('Firebase sync error:', e);
       updateSyncStatus('error', 'Sync failed');
