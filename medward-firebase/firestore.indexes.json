@@ -31,7 +31,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "members", "arrayConfig": "CONTAINS" },
-        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+        { "fieldPath": "name", "order": "ASCENDING" }
       ]
     }
   ],
