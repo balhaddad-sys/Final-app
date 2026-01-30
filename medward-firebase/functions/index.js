@@ -2124,30 +2124,111 @@ exports.importWardList = onCall(async (request) => {
       throw new Error('Sheet appears empty or has no data rows');
     }
 
-    // Find header row and parse columns
-    const headerRow = rows[0];
+    // ═══════════════════════════════════════════════════════════════════
+    // SMART HEADER DETECTION - Find the actual header row
+    // Handles sheets with title rows, section labels, etc.
+    // ═══════════════════════════════════════════════════════════════════
+    let headerRowIndex = -1;
+    let headerRow = null;
+
+    const headerKeywords = ['patient', 'name', 'diagnosis', 'doctor', 'ward', 'room', 'mrn', 'status'];
+
+    for (let i = 0; i < Math.min(rows.length, 10); i++) {
+      const row = rows[i];
+      if (!row || row.length < 2) continue;
+
+      const rowText = row.map(c => String(c || '').toLowerCase()).join(' ');
+      const matchCount = headerKeywords.filter(kw => rowText.includes(kw)).length;
+
+      // If row contains 2+ header keywords, it's likely the header row
+      if (matchCount >= 2) {
+        headerRowIndex = i;
+        headerRow = row;
+        console.log(`[importWardList] Found header row at index ${i}:`, row);
+        break;
+      }
+    }
+
+    // Fallback to first row if no header detected
+    if (headerRowIndex < 0) {
+      headerRowIndex = 0;
+      headerRow = rows[0];
+      console.log(`[importWardList] No header detected, using row 0:`, headerRow);
+    }
+
     const columnIndex = indexSheetColumns(headerRow);
 
     console.log(`[importWardList] Found columns:`, Object.keys(columnIndex).filter(k => columnIndex[k] >= 0));
 
-    // Parse patient data from rows
+    // ═══════════════════════════════════════════════════════════════════
+    // SMART ROW PARSING - Handle ward headers and section labels
+    // ═══════════════════════════════════════════════════════════════════
     const patients = [];
     const wards = new Set();
     let activeCount = 0;
     let erCount = 0;
     let chronicCount = 0;
+    let currentWard = 'ER/Unassigned';
+    let currentSection = 'active'; // Track if we're in chronic section
 
-    console.log(`[importWardList] Total rows (including header): ${rows.length}`);
-    if (rows.length > 1) {
-      console.log(`[importWardList] First data row sample:`, rows[1]);
-    }
+    console.log(`[importWardList] Total rows: ${rows.length}, starting from row ${headerRowIndex + 1}`);
 
-    for (let i = 1; i < rows.length; i++) {
+    for (let i = headerRowIndex + 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row || row.length === 0) continue;
 
+      const firstCell = String(row[0] || '').trim().toLowerCase();
+      const secondCell = String(row[1] || '').trim();
+
+      // Skip empty rows
+      if (!firstCell && !secondCell) continue;
+
+      // Check if this is a section header like "Male list (active)" or "(Chronic list)"
+      if (firstCell.includes('list') || firstCell.includes('chronic') || firstCell.includes('active')) {
+        if (firstCell.includes('chronic')) {
+          currentSection = 'chronic';
+        } else {
+          currentSection = 'active';
+        }
+        console.log(`[importWardList] Section header detected: "${row[0]}" -> section: ${currentSection}`);
+        continue;
+      }
+
+      // Check if this is a ward header row (e.g., "ward 10", "Ward 20", "ER/Unassigned")
+      const wardMatch = firstCell.match(/^ward\s*(\d+)$/i) ||
+                        firstCell.match(/^(er|icu|ccu|emergency)/i) ||
+                        firstCell === 'er/unassigned';
+      if (wardMatch && !secondCell) {
+        // This is a ward header row
+        if (firstCell.match(/^ward\s*(\d+)$/i)) {
+          currentWard = `Ward ${firstCell.match(/\d+/)[0]}`;
+        } else {
+          currentWard = row[0].trim();
+        }
+        console.log(`[importWardList] Ward header detected: "${row[0]}" -> currentWard: ${currentWard}`);
+        continue;
+      }
+
+      // Check if this looks like a repeat of column headers
+      if (firstCell.includes('room') || firstCell.includes('patient name') ||
+          (firstCell === 'patient' && secondCell.toLowerCase() === 'name')) {
+        console.log(`[importWardList] Skipping repeated header row at ${i}`);
+        continue;
+      }
+
+      // Try to parse as patient row
       const patient = parsePatientRow(row, columnIndex);
       if (patient && patient.name) {
+        // Apply current ward if patient doesn't have one
+        if (!patient.ward || patient.ward === 'ER/Unassigned') {
+          patient.ward = currentWard;
+        }
+
+        // Mark as chronic if in chronic section
+        if (currentSection === 'chronic') {
+          patient.chronic = true;
+        }
+
         patients.push(patient);
 
         // Track stats
@@ -2155,13 +2236,10 @@ exports.importWardList = onCall(async (request) => {
         if (patient.status === 'active' || !patient.status) activeCount++;
         if (patient.ward === 'ER' || patient.ward === 'ER/Unassigned') erCount++;
         if (patient.chronic) chronicCount++;
-      } else if (i <= 3) {
-        // Log first few failed rows for debugging
-        console.log(`[importWardList] Row ${i} skipped - no name found. Row data:`, row);
       }
     }
 
-    console.log(`[importWardList] Successfully parsed ${patients.length} patients from ${rows.length - 1} data rows`);
+    console.log(`[importWardList] Successfully parsed ${patients.length} patients`);
 
     const stats = {
       total: patients.length,
@@ -2254,6 +2332,7 @@ function parseCSV(text) {
 
 /**
  * Index column positions from header row.
+ * Handles various header formats including "Patient name", "Room / Ward", etc.
  */
 function indexSheetColumns(headerRow) {
   const headers = (headerRow || []).map(h =>
@@ -2263,29 +2342,63 @@ function indexSheetColumns(headerRow) {
   console.log('[indexSheetColumns] Raw headers:', headerRow);
   console.log('[indexSheetColumns] Normalized headers:', headers);
 
+  // Find column by checking if header includes any of the needles
   const find = (...needles) => {
     const index = headers.findIndex(h => needles.some(n => h.includes(n)));
     return index;
   };
 
+  // Find column by exact match first, then partial match
+  const findExact = (...needles) => {
+    // Try exact match first
+    let index = headers.findIndex(h => needles.some(n => h === n));
+    if (index >= 0) return index;
+    // Fall back to includes
+    return headers.findIndex(h => needles.some(n => h.includes(n)));
+  };
+
   const columnIndex = {
-    name: find('name', 'patient', 'اسم'),  // Added Arabic for name
-    mrn: find('mrn', 'medical record', 'id', 'file', 'number', 'رقم'),
-    ward: find('ward', 'location', 'bed', 'room', 'unit', 'قسم'),
+    // Name column - "patient name", "name", "patient"
+    name: find('patient name', 'name', 'patient', 'اسم'),
+    // MRN/ID column
+    mrn: find('mrn', 'medical record', 'file no', 'file', 'رقم'),
+    // Room column - separate from ward, for room numbers like "11-1"
+    room: find('room', 'bed'),
+    // Ward/Location - "room / ward", "ward", "location"
+    ward: find('ward', 'location', 'unit', 'قسم'),
+    // Diagnosis
     diagnosis: find('diagnosis', 'dx', 'problem', 'condition', 'تشخيص'),
+    // Age
     age: find('age', 'عمر'),
+    // Gender
     gender: find('gender', 'sex', 'جنس'),
-    consultant: find('consultant', 'doctor', 'attending', 'physician', 'طبيب'),
+    // Doctor/Consultant - "assigned doctor", "consultant", "doctor"
+    consultant: find('doctor', 'consultant', 'attending', 'physician', 'طبيب', 'assigned'),
+    // Admission date
     admitDate: find('admit', 'admission', 'date', 'تاريخ'),
+    // Notes
     notes: find('notes', 'comment', 'remarks', 'ملاحظات'),
+    // Status
     status: find('status', 'حالة'),
+    // Chronic flag
     chronic: find('chronic', 'longterm', 'long term')
   };
 
-  // If no name column found, try first column as fallback
-  if (columnIndex.name < 0 && headers.length > 0) {
-    console.log('[indexSheetColumns] No name column found, using first column as name');
-    columnIndex.name = 0;
+  // If name column not found but there's a "patient name" style header, check again
+  if (columnIndex.name < 0) {
+    // Look for any column with "patient" in it
+    const patientIdx = headers.findIndex(h => h.includes('patient'));
+    if (patientIdx >= 0) {
+      columnIndex.name = patientIdx;
+      console.log('[indexSheetColumns] Found patient column at index', patientIdx);
+    }
+  }
+
+  // If still no name column, use second column (index 1) as fallback
+  // (common format: first column is room/ward, second is name)
+  if (columnIndex.name < 0 && headers.length > 1) {
+    console.log('[indexSheetColumns] No name column found, using column 1 (second column) as name');
+    columnIndex.name = 1;
   }
 
   console.log('[indexSheetColumns] Column mapping:', columnIndex);
@@ -2297,22 +2410,55 @@ function indexSheetColumns(headerRow) {
  * Parse a row into patient object using column index.
  */
 function parsePatientRow(row, idx) {
-  const get = (index) => index >= 0 && index < row.length ? row[index]?.trim() : '';
+  const get = (index) => index >= 0 && index < row.length ? String(row[index] || '').trim() : '';
 
   const name = get(idx.name);
   if (!name) return null;
+
+  // Skip if name looks like a header or section label
+  const nameLower = name.toLowerCase();
+  if (nameLower.includes('patient name') || nameLower.includes('list') ||
+      nameLower === 'name' || nameLower === 'patient') {
+    return null;
+  }
+
+  // Get room number (e.g., "11-1", "12-2", "1")
+  const room = get(idx.room) || get(idx.ward) || '';
 
   // Parse ward - normalize "Ward 21" format
   let ward = get(idx.ward);
   const wardMatch = ward.match(/ward\s*(\d+)/i);
   if (wardMatch) {
     ward = `Ward ${wardMatch[1]}`;
+  } else if (room && !ward) {
+    // If we only have room number but no ward, leave ward empty
+    // (will be filled in by currentWard tracking)
+    ward = '';
+  }
+
+  // Parse status - handle "Non-Chronic", "Chronic", etc.
+  const statusRaw = get(idx.status).toLowerCase();
+  let status = 'active';
+  let chronic = false;
+
+  if (statusRaw.includes('chronic')) {
+    chronic = !statusRaw.includes('non');
+    status = chronic ? 'chronic' : 'active';
+  } else if (statusRaw === 'discharged' || statusRaw === 'transferred') {
+    status = statusRaw;
+  }
+
+  // Also check dedicated chronic column
+  const chronicCol = get(idx.chronic)?.toLowerCase();
+  if (chronicCol === 'yes' || chronicCol === 'true' || chronicCol === 'chronic') {
+    chronic = true;
   }
 
   return {
     id: 'import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
     name: name,
     mrn: get(idx.mrn) || '',
+    room: room,
     ward: ward || 'ER/Unassigned',
     diagnosis: get(idx.diagnosis) || '',
     age: get(idx.age) || '',
@@ -2320,8 +2466,8 @@ function parsePatientRow(row, idx) {
     consultant: get(idx.consultant) || '',
     admitDate: get(idx.admitDate) || '',
     notes: get(idx.notes) || '',
-    status: get(idx.status) || 'active',
-    chronic: get(idx.chronic)?.toLowerCase() === 'yes' || get(idx.chronic)?.toLowerCase() === 'true',
+    status: status,
+    chronic: chronic,
     importedAt: new Date().toISOString(),
     source: 'google-sheets'
   };
