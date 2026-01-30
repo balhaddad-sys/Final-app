@@ -2137,6 +2137,11 @@ exports.importWardList = onCall(async (request) => {
     let erCount = 0;
     let chronicCount = 0;
 
+    console.log(`[importWardList] Total rows (including header): ${rows.length}`);
+    if (rows.length > 1) {
+      console.log(`[importWardList] First data row sample:`, rows[1]);
+    }
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row || row.length === 0) continue;
@@ -2150,8 +2155,13 @@ exports.importWardList = onCall(async (request) => {
         if (patient.status === 'active' || !patient.status) activeCount++;
         if (patient.ward === 'ER' || patient.ward === 'ER/Unassigned') erCount++;
         if (patient.chronic) chronicCount++;
+      } else if (i <= 3) {
+        // Log first few failed rows for debugging
+        console.log(`[importWardList] Row ${i} skipped - no name found. Row data:`, row);
       }
     }
+
+    console.log(`[importWardList] Successfully parsed ${patients.length} patients from ${rows.length - 1} data rows`);
 
     const stats = {
       total: patients.length,
@@ -2250,23 +2260,37 @@ function indexSheetColumns(headerRow) {
     String(h || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s/]/g, '')
   );
 
+  console.log('[indexSheetColumns] Raw headers:', headerRow);
+  console.log('[indexSheetColumns] Normalized headers:', headers);
+
   const find = (...needles) => {
-    return headers.findIndex(h => needles.some(n => h.includes(n)));
+    const index = headers.findIndex(h => needles.some(n => h.includes(n)));
+    return index;
   };
 
-  return {
-    name: find('name', 'patient'),
-    mrn: find('mrn', 'medical record', 'id', 'file'),
-    ward: find('ward', 'location', 'bed'),
-    diagnosis: find('diagnosis', 'dx', 'problem'),
-    age: find('age'),
-    gender: find('gender', 'sex'),
-    consultant: find('consultant', 'doctor', 'attending', 'physician'),
-    admitDate: find('admit', 'admission', 'date'),
-    notes: find('notes', 'comment', 'remarks'),
-    status: find('status'),
+  const columnIndex = {
+    name: find('name', 'patient', 'اسم'),  // Added Arabic for name
+    mrn: find('mrn', 'medical record', 'id', 'file', 'number', 'رقم'),
+    ward: find('ward', 'location', 'bed', 'room', 'unit', 'قسم'),
+    diagnosis: find('diagnosis', 'dx', 'problem', 'condition', 'تشخيص'),
+    age: find('age', 'عمر'),
+    gender: find('gender', 'sex', 'جنس'),
+    consultant: find('consultant', 'doctor', 'attending', 'physician', 'طبيب'),
+    admitDate: find('admit', 'admission', 'date', 'تاريخ'),
+    notes: find('notes', 'comment', 'remarks', 'ملاحظات'),
+    status: find('status', 'حالة'),
     chronic: find('chronic', 'longterm', 'long term')
   };
+
+  // If no name column found, try first column as fallback
+  if (columnIndex.name < 0 && headers.length > 0) {
+    console.log('[indexSheetColumns] No name column found, using first column as name');
+    columnIndex.name = 0;
+  }
+
+  console.log('[indexSheetColumns] Column mapping:', columnIndex);
+
+  return columnIndex;
 }
 
 /**
