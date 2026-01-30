@@ -9571,7 +9571,7 @@ function renderPatients() {
       </div>`;
 
     ps.forEach(p => {
-      const medCount = (p.meds && p.meds.length) || 0;
+      const medCount = (p.medications && p.medications.length) || 0;
 
       // Determine Status Color
       let statusColor = 'var(--primary)';
@@ -14117,8 +14117,11 @@ window.importMedsFromNote = function(noteIdx) {
   });
   
   if (imported > 0) {
+    // Enqueue patch so medications sync to cloud
+    enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
     saveCloud();
     renderProfileMeds();
+    renderPatients(); // Update medication count in patient list
     toast(`✅ ${imported} medication(s) imported`);
   } else {
     toast('All medications already exist', true);
@@ -14160,8 +14163,11 @@ window.importAllMedsFromHistory = function() {
   });
   
   if (imported > 0) {
+    // Enqueue patch so medications sync to cloud
+    enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
     saveCloud();
     renderProfileMeds();
+    renderPatients(); // Update medication count in patient list
     toast(`✅ ${imported} medication(s) imported`);
   } else {
     toast('All medications already exist', true);
