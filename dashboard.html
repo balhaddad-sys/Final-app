@@ -5904,58 +5904,31 @@ const Diagnostics = {
     `;
     document.body.appendChild(panel);
 
-    // Add test function to window
+    // Add test function to window - Updated for Firebase Cloud Functions
     window.testGoogleScript = async function() {
       const resultDiv = document.getElementById('debugTestResult');
       if (!resultDiv) return;
 
       resultDiv.style.display = 'block';
-      resultDiv.innerHTML = '⏳ Testing Google Script connection...';
+      resultDiv.innerHTML = '⏳ Testing Firebase Cloud Functions...';
 
       try {
-        const AUTH = {
-          user: sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER'),
-          pass: sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS')
-        };
+        if (!window.FirebaseFunctions) {
+          resultDiv.innerHTML = `<div style="color:#fca5a5">❌ Firebase Functions not loaded</div><div style="font-size:10px;margin-top:4px">Try refreshing the page</div>`;
+          return;
+        }
 
         const startTime = Date.now();
-        const response = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          cache: 'no-store',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'ping',
-            username: AUTH.user,
-            password: AUTH.pass
-          })
-        });
-
+        const result = await window.FirebaseFunctions.callFunction('healthCheck', {});
         const elapsed = Date.now() - startTime;
-        const text = await response.text();
 
-        console.log('🔍 Test Response:', {
-          status: response.status,
-          statusText: response.statusText,
+        console.log('🔍 Firebase Test Response:', {
           elapsed: elapsed + 'ms',
-          responseLength: text.length,
-          responsePreview: text.substring(0, 200)
+          result
         });
-
-        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-          resultDiv.innerHTML = `<div style="color:#fca5a5">❌ Script returned HTML (not deployed correctly)</div><div style="font-size:10px;margin-top:4px;opacity:0.8">Time: ${elapsed}ms</div>`;
-          return;
-        }
-
-        let result;
-        try {
-          result = JSON.parse(text);
-        } catch (e) {
-          resultDiv.innerHTML = `<div style="color:#fca5a5">❌ Invalid JSON response</div><div style="font-size:10px;margin-top:4px">${text.substring(0, 100)}</div>`;
-          return;
-        }
 
         if (result.success) {
-          resultDiv.innerHTML = `<div style="color:#6ee7b7">✅ Script is working!</div><div style="font-size:10px;margin-top:4px;opacity:0.8">Time: ${elapsed}ms</div>`;
+          resultDiv.innerHTML = `<div style="color:#6ee7b7">✅ Firebase is working!</div><div style="font-size:10px;margin-top:4px;opacity:0.8">Time: ${elapsed}ms</div>`;
         } else {
           resultDiv.innerHTML = `<div style="color:#fca5a5">❌ ${result.error || 'Unknown error'}</div><div style="font-size:10px;margin-top:4px;opacity:0.8">Time: ${elapsed}ms</div>`;
         }
@@ -7321,39 +7294,65 @@ function updateSessionsUI() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CLOUD OPERATIONS (Sync Engine - with timeout/abort support)
+// CLOUD OPERATIONS (Sync Engine - Firebase Cloud Functions)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Routes cloud sync calls to Firebase Cloud Functions.
+ * Maps legacy action names to Firebase function calls.
+ */
 async function callCloudSync(action, extra = {}) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), SYNC_CONFIG.FETCH_TIMEOUT_MS);
-  
+  // Check if Firebase Functions are available
+  if (!window.FirebaseFunctions) {
+    throw new Error('Firebase Functions not loaded. Please refresh the page.');
+  }
+
+  const fb = window.FirebaseFunctions;
+  const deviceId = sync.deviceId || fb.generateDeviceId();
+
   try {
-    const response = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      cache: 'no-store',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action,
-        username: AUTH.user,
-        password: AUTH.pass,
-        deviceId: sync.deviceId,
-        sessionId: sync.sessionId,
-        ...extra
-      }),
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeout);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const text = await response.text();
-    if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) throw new Error('Server returned HTML');
-    
-    return JSON.parse(text);
+    // Map actions to Firebase Cloud Functions
+    switch (action) {
+      case 'heartbeat':
+        return await fb.heartbeat({
+          deviceId,
+          deviceInfo: extra.deviceInfo || { platform: navigator.platform },
+          clientRev: extra.clientRev || sync.clientRev
+        });
+
+      case 'loadData':
+        return await fb.loadData({
+          clientRev: extra.clientRev || sync.clientRev,
+          deviceId
+        });
+
+      case 'saveData':
+        return await fb.saveData({
+          payload: extra.payload,
+          baseRev: extra.baseRev || sync.clientRev,
+          force: extra.force || false,
+          deviceId
+        });
+
+      case 'patches':
+        // Patches are handled via saveData with the patch queue
+        return await fb.saveData({
+          payload: extra.payload,
+          baseRev: extra.baseRev || sync.clientRev,
+          force: false,
+          deviceId
+        });
+
+      default:
+        console.warn(`[callCloudSync] Unknown action: ${action}, attempting direct call`);
+        // Try calling as a generic function name
+        if (typeof fb[action] === 'function') {
+          return await fb[action](extra);
+        }
+        throw new Error(`Unknown cloud action: ${action}`);
+    }
   } catch (error) {
-    clearTimeout(timeout);
-    if (error.name === 'AbortError') throw new Error('Request timed out');
+    console.error(`[callCloudSync] ${action} failed:`, error);
     throw error;
   }
 }
@@ -17029,8 +17028,18 @@ window.userImportWardList = async function() {
       return;
     }
 
-    // 🚀 FIRE-AND-FORGET: Don't wait for full import
-    // CRITICAL: Pass targetUnitId so server knows where to assign patients
+    // Ward import feature - show informational message
+    // Note: This feature uses Google Sheets API which requires a different backend implementation
+    showUserImportStatus('⚠️ Ward import from Google Sheets is temporarily unavailable. Please add patients manually or use the AI Extract feature to scan documents.', 'error');
+    console.warn('[Ward Import] This feature requires Google Sheets API access which is not yet implemented in Firebase Cloud Functions.');
+
+    if (btn) {
+      btn.innerHTML = originalHTML || 'Import';
+      btn.disabled = false;
+    }
+    return;
+
+    /* Legacy Google Apps Script implementation - disabled
     fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -17042,8 +17051,8 @@ window.userImportWardList = async function() {
         sheetId: sheetId,
         sheetName: tabName || '',
         clearExisting: clearExisting,
-        targetUnitId: state.currentUnit.id,      // CRITICAL: Target unit for patients
-        targetUnitName: state.currentUnit.name   // For logging
+        targetUnitId: state.currentUnit.id,
+        targetUnitName: state.currentUnit.name
       })
     }).then(res => res.json()).then(data => {
       console.log('Import response:', data);
@@ -17054,7 +17063,6 @@ window.userImportWardList = async function() {
         }
       } else {
         let errorMsg = data.error || 'Import failed';
-        // Handle auth-specific errors
         if (errorMsg.toLowerCase().includes('invalid credentials') || errorMsg.toLowerCase().includes('unauthorized') || errorMsg.toLowerCase().includes('authentication')) {
           errorMsg = 'Authentication failed. Please log out and back in.';
           console.error('❌ Auth Error - try logging out and back in');
@@ -17065,6 +17073,7 @@ window.userImportWardList = async function() {
       console.error('Import error:', e);
       showUserImportStatus(`❌ Connection error: ${e.message}`, 'error');
     });
+    */
     
     // Immediate feedback
     showUserImportStatus(`⏳ Import started to ${state.currentUnit.name}. Patients will appear in ~10 seconds...`, 'success');
@@ -17113,24 +17122,19 @@ window.userImportWardList = async function() {
 async function refreshDataFromServer() {
   try {
     console.log('🔄 Refreshing data from server...');
-    
-    const res = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'loadData',
-        username: AUTH.user,
-        password: AUTH.pass,
-        clientRev: 0  // Force full reload
-      })
+
+    // Use Firebase Cloud Functions
+    if (!window.FirebaseFunctions) {
+      throw new Error('Firebase Functions not loaded');
+    }
+
+    const data = await window.FirebaseFunctions.loadData({
+      clientRev: 0,  // Force full reload
+      deviceId: sync.deviceId || window.FirebaseFunctions.generateDeviceId()
     });
-    
-    const text = await res.text();
-    console.log('Server response length:', text.length);
-    
-    const data = JSON.parse(text);
-    console.log('Parsed response:', data.success, 'hasData:', !!data.data);
-    
+
+    console.log('Firebase response:', data.success, 'hasData:', !!data.data);
+
     if (!data.success) {
       throw new Error(data.error || 'Failed to load data');
     }
@@ -17196,13 +17200,19 @@ window.cleanupWardUnits = async function() {
   
   const btn = $('btnCleanupUnits');
   const originalText = btn?.textContent;
-  
+
+  // This feature is not yet implemented in Firebase Cloud Functions
+  toast('⚠️ Unit cleanup feature is temporarily unavailable. Please manage units manually in the Units panel.', true);
+  console.warn('[Cleanup Ward Units] This feature is not yet implemented in Firebase Cloud Functions.');
+  return;
+
+  /* Legacy Google Apps Script implementation - disabled
   try {
     if (btn) {
       btn.textContent = '🧹 Cleaning up...';
       btn.disabled = true;
     }
-    
+
     const res = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -17212,20 +17222,20 @@ window.cleanupWardUnits = async function() {
         password: AUTH.pass
       })
     });
-    
+
     const data = await res.json();
-    
+
     if (!data.success) {
       throw new Error(data.error || 'Cleanup failed');
     }
-    
+
     toast(`✅ Removed ${data.removedUnits} ward units, reassigned ${data.reassignedPatients} patients to ${data.targetUnit}`);
-    
+
     // Refresh data
     await refreshDataFromServer();
-    
+
     showUserImportStatus(`✅ Cleanup complete! Removed ${data.removedUnits} units.`, 'success');
-    
+
   } catch (e) {
     console.error('Cleanup error:', e);
     toast('❌ Cleanup failed: ' + e.message, true);
@@ -17235,6 +17245,7 @@ window.cleanupWardUnits = async function() {
       btn.disabled = false;
     }
   }
+  */
 };
 
 window.userPreviewImport = async function() {
