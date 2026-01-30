@@ -14110,13 +14110,13 @@ window.importMedsFromNote = function(noteIdx) {
     toast('No medications to import', true);
     return;
   }
-  
+
   if (!p.medications) p.medications = [];
-  
+
   let imported = 0;
   note.medsExtracted.forEach(med => {
     // Check for duplicates
-    const exists = p.medications.some(m => 
+    const exists = p.medications.some(m =>
       m.name?.toLowerCase() === med.name?.toLowerCase()
     );
     if (!exists && med.name) {
@@ -14133,8 +14133,10 @@ window.importMedsFromNote = function(noteIdx) {
       imported++;
     }
   });
-  
+
   if (imported > 0) {
+    // Queue delta sync patch to persist medications to the medication page
+    enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
     saveCloud();
     renderProfileMeds();
     toast(`✅ ${imported} medication(s) imported`);
@@ -14150,14 +14152,14 @@ window.importAllMedsFromHistory = function() {
     toast('No documents to import from', true);
     return;
   }
-  
+
   if (!p.medications) p.medications = [];
-  
+
   let imported = 0;
   p.clinicalNotes.forEach(note => {
     if (note.medsExtracted?.length) {
       note.medsExtracted.forEach(med => {
-        const exists = p.medications.some(m => 
+        const exists = p.medications.some(m =>
           m.name?.toLowerCase() === med.name?.toLowerCase()
         );
         if (!exists && med.name) {
@@ -14176,8 +14178,10 @@ window.importAllMedsFromHistory = function() {
       });
     }
   });
-  
+
   if (imported > 0) {
+    // Queue delta sync patch to persist medications to the medication page
+    enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
     saveCloud();
     renderProfileMeds();
     toast(`✅ ${imported} medication(s) imported`);
