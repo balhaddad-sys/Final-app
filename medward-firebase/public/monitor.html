@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#dc2626">
+<title>System Monitor | MedWard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-app: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-elevated: #334155;
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --border: #334155;
+  --danger: #dc2626;
+  --warning: #f59e0b;
+  --success: #10b981;
+  --info: #3b82f6;
+  --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  font-size: 1.5rem;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.header-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--info);
+  color: white;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-main);
+}
+
+.btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.stat-value.error { color: var(--danger); }
+.stat-value.warn { color: var(--warning); }
+.stat-value.info { color: var(--info); }
+.stat-value.success { color: var(--success); }
+
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background: var(--info);
+  color: white;
+  border-color: var(--info);
+}
+
+.filter-btn:hover {
+  border-color: var(--info);
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: var(--info);
+}
+
+.log-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 140px 80px 80px 120px 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  transition: background 0.1s;
+}
+
+.log-entry:hover {
+  background: var(--bg-elevated);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-time {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.log-level {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.log-level.error {
+  background: rgba(220, 38, 38, 0.2);
+  color: var(--danger);
+}
+
+.log-level.warn {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.log-level.info {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--info);
+}
+
+.log-type {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.log-msg {
+  color: var(--text-main);
+}
+
+.log-data {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.log-data:hover {
+  color: var(--info);
+}
+
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+}
+
+.test-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.test-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.test-card-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.test-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.modal-content {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-app);
+  padding: 16px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow: auto;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s;
+  z-index: 2000;
+  max-width: 300px;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success { border-color: var(--success); color: var(--success); }
+.toast.error { border-color: var(--danger); color: var(--danger); }
+.toast.info { border-color: var(--info); color: var(--info); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-icon">🔐</div>
+    <div>
+      <div class="header-title">System Monitor</div>
+      <div class="header-subtitle">Real-time diagnostics & logging</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="toggleAutoScroll()">
+      <span id="autoScrollText">Auto-scroll: ON</span>
+    </button>
+    <button class="btn btn-danger" onclick="clearLogs()">Clear Logs</button>
+    <button class="btn btn-primary" onclick="goBack()">← Back</button>
+  </div>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Events</div>
+    <div class="stat-value" id="statTotal">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Errors</div>
+    <div class="stat-value error" id="statError">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Warnings</div>
+    <div class="stat-value warn" id="statWarn">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Info</div>
+    <div class="stat-value info" id="statInfo">0</div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="filter-group">
+    <span style="color: var(--text-muted); font-size: 0.85rem;">Level:</span>
+    <button class="filter-btn active" data-level="all" onclick="setLevelFilter('all')">All</button>
+    <button class="filter-btn" data-level="error" onclick="setLevelFilter('error')">Errors</button>
+    <button class="filter-btn" data-level="warn" onclick="setLevelFilter('warn')">Warnings</button>
+    <button class="filter-btn" data-level="info" onclick="setLevelFilter('info')">Info</button>
+  </div>
+  <div class="filter-group">
+    <span style="color: var(--text-muted); font-size: 0.85rem;">Type:</span>
+    <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">All</button>
+    <button class="filter-btn" data-type="AUTH" onclick="setTypeFilter('AUTH')">Auth</button>
+    <button class="filter-btn" data-type="STORE" onclick="setTypeFilter('STORE')">Store</button>
+    <button class="filter-btn" data-type="NET" onclick="setTypeFilter('NET')">Network</button>
+    <button class="filter-btn" data-type="RUNTIME" onclick="setTypeFilter('RUNTIME')">Runtime</button>
+  </div>
+  <input type="text" class="search-box" id="searchBox" placeholder="Search logs..." oninput="filterLogs()">
+</div>
+
+<!-- Log Stream -->
+<div class="section">
+  <div class="section-title">Live Log Stream</div>
+  <div class="log-container" id="logContainer">
+    <div class="empty-state">
+      <div class="empty-icon">📊</div>
+      <div>No logs yet. System monitoring is active.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Test Section -->
+<div class="section">
+  <div class="section-title">Diagnostic Tests</div>
+  <div class="test-grid">
+    <div class="test-card">
+      <div class="test-card-title">🧪 Synthetic Tests</div>
+      <div class="test-card-desc">Run synthetic log events at all levels</div>
+      <button class="btn btn-primary" onclick="runTests()">Run Tests</button>
+    </div>
+    <div class="test-card">
+      <div class="test-card-title">💾 Storage Health</div>
+      <div class="test-card-desc">Check localStorage, sessionStorage, and quota</div>
+      <button class="btn btn-primary" onclick="checkStorage()">Check Storage</button>
+    </div>
+    <div class="test-card">
+      <div class="test-card-title">📥 Export Logs</div>
+      <div class="test-card-desc">Download all logs as JSON file</div>
+      <button class="btn btn-secondary" onclick="exportLogs()">Export JSON</button>
+    </div>
+    <div class="test-card">
+      <div class="test-card-title">🌐 Network Test</div>
+      <div class="test-card-desc">Test fetch instrumentation with a real request</div>
+      <button class="btn btn-primary" onclick="testNetwork()">Test Network</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalTitle">Log Details</div>
+    <div class="modal-content" id="modalContent"></div>
+    <button class="btn btn-secondary" onclick="closeModal()" style="margin-top: 16px; width: 100%;">Close</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { MW_MONITOR, instrumentAll, runSyntheticTests, checkStorageHealth } from './monitor.core.js';
+
+// ═══════════════════════════════════════════════════════════════════
+// ACCESS CONTROL
+// ═══════════════════════════════════════════════════════════════════
+
+// Check admin access
+const adminKey = sessionStorage.getItem('MW_ADMIN_KEY');
+if (!adminKey || adminKey !== '66778380') {
+  alert('⛔ Access Denied\n\nYou must be logged in through the admin panel to access this page.');
+  window.location.href = 'login.html';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+
+let state = {
+  filters: {
+    level: 'all',
+    type: 'all',
+    search: ''
+  },
+  autoScroll: true
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// INITIALIZE
+// ═══════════════════════════════════════════════════════════════════
+
+console.log('[Monitor] Initializing system monitor...');
+
+// Initialize monitoring
+instrumentAll();
+
+// Subscribe to events
+MW_MONITOR.subscribe((entry) => {
+  renderLogEntry(entry);
+  updateStats();
+
+  if (state.autoScroll) {
+    const container = document.getElementById('logContainer');
+    container.scrollTop = container.scrollHeight;
+  }
+});
+
+// Initial render
+renderAllLogs();
+updateStats();
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════
+
+function renderAllLogs() {
+  const logs = MW_MONITOR.getAll();
+  const container = document.getElementById('logContainer');
+
+  if (logs.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div>No logs yet. System monitoring is active.</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+  logs.forEach(entry => renderLogEntry(entry, false));
+}
+
+function renderLogEntry(entry, append = true) {
+  // Apply filters
+  if (!matchesFilters(entry)) return;
+
+  const container = document.getElementById('logContainer');
+
+  // Remove empty state if present
+  const emptyState = container.querySelector('.empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+
+  const time = new Date(entry.ts).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dataStr = entry.data ? JSON.stringify(entry.data) : '';
+  const dataPreview = dataStr.length > 50 ? dataStr.substring(0, 50) + '...' : dataStr;
+
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = `
+    <div class="log-time">${time}</div>
+    <div class="log-level ${entry.level}">${entry.level}</div>
+    <div class="log-type">${entry.type}</div>
+    <div class="log-msg">${escapeHtml(entry.msg)}</div>
+    <div class="log-data" onclick='showDetail(${JSON.stringify(entry).replace(/'/g, "\\'")})'>${dataPreview || '-'}</div>
+  `;
+
+  if (append) {
+    container.appendChild(el);
+  } else {
+    container.appendChild(el);
+  }
+}
+
+function matchesFilters(entry) {
+  // Level filter
+  if (state.filters.level !== 'all' && entry.level !== state.filters.level) {
+    return false;
+  }
+
+  // Type filter
+  if (state.filters.type !== 'all' && entry.type !== state.filters.type) {
+    return false;
+  }
+
+  // Search filter
+  if (state.filters.search) {
+    const search = state.filters.search.toLowerCase();
+    const msg = entry.msg.toLowerCase();
+    const data = JSON.stringify(entry.data || {}).toLowerCase();
+    if (!msg.includes(search) && !data.includes(search)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function updateStats() {
+  const stats = MW_MONITOR.getStats();
+  document.getElementById('statTotal').textContent = stats.total;
+  document.getElementById('statError').textContent = stats.byLevel.error || 0;
+  document.getElementById('statWarn').textContent = stats.byLevel.warn || 0;
+  document.getElementById('statInfo').textContent = stats.byLevel.info || 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+function setLevelFilter(level) {
+  state.filters.level = level;
+
+  // Update button states
+  document.querySelectorAll('[data-level]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.level === level);
+  });
+
+  filterLogs();
+}
+
+function setTypeFilter(type) {
+  state.filters.type = type;
+
+  // Update button states
+  document.querySelectorAll('[data-type]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === type);
+  });
+
+  filterLogs();
+}
+
+function filterLogs() {
+  state.filters.search = document.getElementById('searchBox').value;
+  renderAllLogs();
+}
+
+function clearLogs() {
+  if (!confirm('Clear all logs?')) return;
+  MW_MONITOR.clear();
+  renderAllLogs();
+  updateStats();
+  toast('Logs cleared', 'info');
+}
+
+function toggleAutoScroll() {
+  state.autoScroll = !state.autoScroll;
+  document.getElementById('autoScrollText').textContent = `Auto-scroll: ${state.autoScroll ? 'ON' : 'OFF'}`;
+  toast(`Auto-scroll ${state.autoScroll ? 'enabled' : 'disabled'}`, 'info');
+}
+
+async function runTests() {
+  toast('Running synthetic tests...', 'info');
+  await runSyntheticTests();
+  toast('Tests complete!', 'success');
+}
+
+async function checkStorage() {
+  toast('Checking storage health...', 'info');
+  const health = await checkStorageHealth();
+  toast('Storage check complete', 'success');
+}
+
+async function testNetwork() {
+  toast('Testing network instrumentation...', 'info');
+  try {
+    await fetch('https://httpbin.org/status/200');
+    toast('Network test successful', 'success');
+  } catch (err) {
+    toast('Network test failed', 'error');
+  }
+}
+
+function exportLogs() {
+  const logs = MW_MONITOR.getAll();
+  const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `medward-logs-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Logs exported', 'success');
+}
+
+function showDetail(entry) {
+  document.getElementById('modalTitle').textContent = `${entry.type} - ${entry.msg}`;
+  document.getElementById('modalContent').textContent = JSON.stringify(entry, null, 2);
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('detailModal').classList.remove('active');
+}
+
+function goBack() {
+  // Clear admin key on exit
+  sessionStorage.removeItem('MW_ADMIN_KEY');
+  window.location.href = 'login.html';
+}
+
+function toast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Expose functions globally
+window.setLevelFilter = setLevelFilter;
+window.setTypeFilter = setTypeFilter;
+window.filterLogs = filterLogs;
+window.clearLogs = clearLogs;
+window.toggleAutoScroll = toggleAutoScroll;
+window.runTests = runTests;
+window.checkStorage = checkStorage;
+window.testNetwork = testNetwork;
+window.exportLogs = exportLogs;
+window.showDetail = showDetail;
+window.closeModal = closeModal;
+window.goBack = goBack;
+
+console.log('[Monitor] Ready');
+</script>
+</body>
+</html>
