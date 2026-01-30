@@ -20333,7 +20333,7 @@ window.MedWard.savePatient = async function(patient, { correlationId, source } =
       };
       window.state.patients.push(newPatient);
       markDirty();
-      renderDashboard();
+      renderPatients();
     }
 
     const ms = Math.round(performance.now() - t0);
@@ -20364,7 +20364,7 @@ window.MedWard.deleteTestPatient = async function({ correlationId, source } = {}
 
     if (deleted > 0) {
       markDirty();
-      renderDashboard();
+      renderPatients();
     }
 
     const ms = Math.round(performance.now() - t0);
