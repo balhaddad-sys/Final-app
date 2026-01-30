@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Patient Handover | MedWard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --primary: #005eb8;
+  --primary-dark: #003087;
+  --primary-light: #e6f0f9;
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --success: #059669;
+  --success-bg: #d1fae5;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+body.dark-theme {
+  --primary: #60a5fa;
+  --primary-dark: #93c5fd;
+  --primary-light: #1e3a5f;
+  --bg-app: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-elevated: #334155;
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --border: #334155;
+  --success-bg: #064e3b;
+  --danger-bg: #7f1d1d;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+.header {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-back {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+.header-title {
+  flex: 1;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.header-action {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.main {
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.mode-tabs {
+  display: flex;
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 10px 4px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.mode-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.mode-tab-icon { display:flex;align-items:center;justify-content:center }
+.mode-tab-icon svg { width:20px;height:20px }
+
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* My Badge Panel */
+.badge-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.badge-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+
+.qr-wrapper {
+  display: inline-block;
+  padding: 16px;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.badge-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.badge-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Scanner Panel */
+.scanner-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.scanner-top {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scanner-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--primary-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.scanner-info h3 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.scanner-info p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.scanner-view {
+  background: #000;
+  aspect-ratio: 1;
+  position: relative;
+}
+
+#qr-reader { width: 100%; height: 100%; }
+#qr-reader video { object-fit: cover !important; }
+
+.scanner-status {
+  padding: 12px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.scanner-status.scanning { background: var(--warning-bg); color: var(--warning); }
+.scanner-status.success { background: var(--success-bg); color: var(--success); }
+.scanner-status.error { background: var(--danger-bg); color: var(--danger); }
+
+/* Inbox Panel */
+.inbox-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.inbox-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inbox-title {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inbox-badge {
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+
+.inbox-refresh {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.inbox-list { padding: 12px; }
+
+.inbox-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.inbox-empty-icon { margin-bottom: 12px; opacity: 0.5; }
+
+.inbox-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  border-left: 4px solid var(--primary);
+}
+
+.inbox-avatar {
+  width: 44px;
+  height: 44px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.inbox-info { flex: 1; min-width: 0; }
+.inbox-name { font-weight: 600; margin-bottom: 2px; }
+.inbox-meta { font-size: 0.75rem; color: var(--text-muted); }
+
+.inbox-accept {
+  padding: 8px 14px;
+  background: var(--success);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+
+}
+
+/* Export List */
+.export-list { padding: 12px; max-height: 65vh; overflow-y: auto; }
+
+.export-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  border-left: 4px solid var(--primary);
+}
+
+.export-avatar {
+  width: 44px;
+  height: 44px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.export-info { flex: 1; min-width: 0; }
+.export-name { font-weight: 600; margin-bottom: 2px; }
+.export-meta { font-size: 0.75rem; color: var(--text-muted); }
+
+.export-btn {
+  padding: 8px 14px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.export-btn:active { opacity: 0.8; }
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* Patient Select Modal - Hidden by default, only shows after QR scan */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none !important;
+  align-items: flex-end;
+  z-index: 1000;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.modal-overlay.active { 
+  display: flex !important; 
+  visibility: visible;
+  opacity: 1;
+}
+
+.modal-sheet {
+  background: var(--bg-surface);
+  width: 100%;
+  max-height: 85vh;
+  border-radius: var(--radius) var(--radius) 0 0;
+  overflow: hidden;
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title { font-weight: 700; font-size: 1.1rem; }
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-elevated);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.recipient-bar {
+  padding: 12px 20px;
+  background: var(--success-bg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recipient-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--success);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.recipient-label { font-size: 0.7rem; color: var(--success); font-weight: 600; }
+.recipient-name { font-weight: 700; }
+
+.patient-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.patient-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.patient-item:hover { border-color: var(--primary); }
+.patient-item.selected { border-color: var(--primary); background: var(--primary-light); }
+
+.patient-avatar {
+  width: 44px;
+  height: 44px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.patient-info { flex: 1; min-width: 0; }
+.patient-name { font-weight: 600; margin-bottom: 2px; }
+.patient-meta { font-size: 0.8rem; color: var(--text-muted); }
+
+.patient-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+}
+
+.patient-item.selected .patient-check {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-footer-btns {
+  display: flex;
+  gap: 10px;
+}
+
+.pdf-btn {
+  flex: 1;
+  padding: 14px;
+  background: var(--bg-elevated);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pdf-btn:not(:disabled):hover { background: var(--primary-light); border-color: var(--primary); }
+
+.send-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text-main);
+  color: var(--bg-surface);
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-weight: 600;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 2000;
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Loading */
+.loading {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.loading.active { display: flex; }
+
+.loading-box {
+  background: var(--bg-surface);
+  padding: 32px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text { color: var(--text-secondary); font-weight: 500; }
+
+/* Not Logged In */
+.not-logged {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.not-logged-icon { margin-bottom: 16px; opacity: 0.5; }
+.not-logged h2 { margin-bottom: 8px; }
+.not-logged p { color: var(--text-muted); margin-bottom: 24px; }
+
+.login-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+<script>
+(function() {
+  const t = localStorage.getItem('MEDWARD_THEME');
+  if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark-theme');
+  }
+})();
+</script>
+
+<header class="header">
+  <a href="index.html" class="header-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+  </a>
+  <div class="header-title">Patient Handover</div>
+  <button class="header-action" onclick="toggleTheme()" id="themeBtn">🌙</button>
+</header>
+
+<main class="main" id="mainContent">
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="receive" onclick="switchMode('receive')">
+      <span class="mode-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
+      My Badge
+    </button>
+    <button class="mode-tab" data-mode="send" onclick="switchMode('send')">
+      <span class="mode-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+      Scan & Send
+    </button>
+    <button class="mode-tab" data-mode="export" onclick="switchMode('export')">
+      <span class="mode-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+      Export
+    </button>
+    <button class="mode-tab" data-mode="inbox" onclick="switchMode('inbox')">
+      <span class="mode-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>
+      Inbox
+    </button>
+  </div>
+
+  <!-- My Badge -->
+  <div class="panel active" id="panelReceive">
+    <div class="badge-card">
+      <div class="badge-label">Your Digital ID Badge</div>
+      <div class="qr-wrapper" id="qrWrapper"></div>
+      <div class="badge-name" id="badgeName">DR. UNKNOWN</div>
+      <div class="badge-hint">Show this QR code to colleagues<br>who want to send you patients</div>
+    </div>
+  </div>
+
+  <!-- Scanner -->
+  <div class="panel" id="panelSend">
+    <div class="scanner-card">
+      <div class="scanner-top">
+        <div class="scanner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <div class="scanner-info">
+          <h3>Scan Recipient Badge</h3>
+          <p>Point camera at colleague's QR</p>
+        </div>
+      </div>
+      <div class="scanner-view">
+        <div id="qr-reader"></div>
+      </div>
+      <div class="scanner-status scanning" id="scanStatus">Scanning...</div>
+    </div>
+  </div>
+
+  <!-- Export Panel -->
+  <div class="panel" id="panelExport">
+    <div class="inbox-card">
+      <div class="inbox-header">
+        <div class="inbox-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="margin-right:6px;vertical-align:middle"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Export PDF</div>
+      </div>
+      <div class="export-list" id="exportList">
+        <div class="inbox-empty">
+          <div class="inbox-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div>No patients to export</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inbox -->
+  <div class="panel" id="panelInbox">
+    <div class="inbox-card">
+      <div class="inbox-header">
+        <div class="inbox-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="margin-right:6px;vertical-align:middle"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Incoming <span class="inbox-badge" id="inboxBadge" style="display:none">0</span></div>
+        <button class="inbox-refresh" onclick="loadInbox()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:4px;vertical-align:middle"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh</button>
+      </div>
+      <div class="inbox-list" id="inboxList">
+        <div class="inbox-empty">
+          <div class="inbox-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+          <div>No incoming patients</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Patient Select Modal -->
+<div class="modal-overlay" id="selectModal">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <div class="modal-title">Select Patient to Send</div>
+      <button class="modal-close" onclick="closeSelect()">✕</button>
+    </div>
+    <div class="recipient-bar">
+      <div class="recipient-avatar" id="recAvatar">??</div>
+      <div>
+        <div class="recipient-label">SENDING TO</div>
+        <div class="recipient-name" id="recName">Unknown</div>
+      </div>
+    </div>
+    <div class="patient-list" id="patientList"></div>
+    <div class="modal-footer">
+      <button class="send-btn" id="sendBtn" disabled onclick="sendPatient()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send Patient
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="loading" id="loading">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Processing...</div>
+  </div>
+</div>
+
+<script>
+// Firebase Cloud Functions - loaded dynamically
+let firebaseFunctions = null;
+async function loadFirebaseFunctions() {
+  if (!firebaseFunctions) {
+    firebaseFunctions = await import('./firebase.functions.js');
+  }
+  return firebaseFunctions;
+}
+
+const AUTH = {
+  user: sessionStorage.getItem('MW_USER') || localStorage.getItem('MW_USER'),
+  pass: sessionStorage.getItem('MW_PASS') || localStorage.getItem('MW_PASS')
+};
+
+let scanner = null;
+let patients = [];
+let selectedId = null;
+let recipient = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  updateThemeIcon();
+  
+  if (!AUTH.user || !AUTH.pass) {
+    showNotLogged();
+    return;
+  }
+  
+  generateBadge();
+  await loadPatients();
+  await loadInbox();
+});
+
+function showNotLogged() {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="not-logged">
+      <div class="not-logged-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h2>Login Required</h2>
+      <p>Please log in to MedWard Pro first</p>
+      <a href="login.html" class="login-link">Go to Login</a>
+    </div>
+  `;
+}
+
+function switchMode(mode) {
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.mode-tab[data-mode="${mode}"]`).classList.add('active');
+  
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+  
+  if (mode === 'send') startScanner();
+  else stopScanner();
+  
+  if (mode === 'export') renderExportList();
+}
+
+function renderExportList() {
+  const list = document.getElementById('exportList');
+  
+  if (!patients.length) {
+    list.innerHTML = `<div class="inbox-empty">
+      <div class="inbox-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div>No patients to export</div>
+    </div>`;
+    return;
+  }
+  
+  list.innerHTML = patients.map((p, idx) => `
+    <div class="export-item">
+      <div class="export-avatar">${initials(p.name)}</div>
+      <div class="export-info">
+        <div class="export-name">${esc(p.name)}</div>
+        <div class="export-meta">${esc(p.ward || 'No ward')} ${p.bed ? '• Bed ' + esc(p.bed) : ''}</div>
+      </div>
+      <button class="export-btn" onclick="exportPatientPDF(${idx})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PDF
+      </button>
+    </div>
+  `).join('');
+}
+
+function exportPatientPDF(idx) {
+  if (idx < 0 || idx >= patients.length) {
+    toast('Patient not found');
+    return;
+  }
+  
+  const pt = patients[idx];
+  generatePatientPDF(pt);
+}
+
+// Standalone PDF generator (no recipient needed)
+// Standalone PDF generator (no recipient needed)
+function generatePatientPDF(pt) {
+  showLoad('Generating PDF...');
+  
+  // Debug: Log FULL patient data structure to find labs
+  console.log('=== PDF DEBUG - FULL PATIENT DATA ===');
+  console.log('All keys:', Object.keys(pt));
+  
+  // Check all possible lab field names
+  const labFields = ['labs', 'labResults', 'laboratory', 'bloodTests', 'bloodWork', 'results', 'investigations', 'labData'];
+  labFields.forEach(field => {
+    if (pt[field]) console.log('Found ' + field + ':', pt[field]);
+  });
+  
+  // Log full patient object (truncated strings)
+  console.log('Full patient:', JSON.stringify(pt, (k, v) => {
+    if (typeof v === 'string' && v.length > 100) return v.substring(0, 100) + '...';
+    return v;
+  }, 2));
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - (margin * 2);
+    let y = margin;
+    
+    // Colors
+    const primary = [0, 94, 184];
+    const dark = [15, 23, 42];
+    const gray = [100, 116, 139];
+    const lightGray = [226, 232, 240];
+    const red = [220, 38, 38];
+    
+    // Timestamp for unique filename
+    const now = new Date();
+    const timestamp = now.getTime();
+    
+    // ═══════════════════════════════════════════════════════════════
+    // HELPER: Check if value has meaningful data
+    // ═══════════════════════════════════════════════════════════════
+    function hasData(val) {
+      if (val === null || val === undefined) return false;
+      if (typeof val === 'string') {
+        const cleaned = val.trim();
+        if (!cleaned || cleaned === '-' || cleaned === 'N/A' || cleaned === 'Pending' || cleaned === 'new') return false;
+        if (cleaned.includes('data:image') || cleaned.includes('base64')) return false;
+        if (cleaned.length > 500 && !cleaned.includes(' ')) return false;
+        return true;
+      }
+      if (Array.isArray(val)) return val.length > 0;
+      if (typeof val === 'object') return Object.keys(val).length > 0;
+      return true;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // HELPER: Clean text
+    // ═══════════════════════════════════════════════════════════════
+    function clean(str) {
+      if (!str) return '';
+      return String(str).replace(/data:image[^,]+,[^\s]+/g, '').replace(/\s+/g, ' ').trim();
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // HELPER: Add section (only if data exists)
+    // ═══════════════════════════════════════════════════════════════
+    function addSection(title, content) {
+      if (!hasData(content)) return false;
+      
+      const text = clean(typeof content === 'object' ? JSON.stringify(content) : String(content));
+      if (!text || text.length < 2) return false;
+      
+      if (y > pageHeight - 40) { doc.addPage(); y = margin; }
+      
+      // Section title
+      doc.setFillColor(...primary);
+      doc.rect(margin, y, 2, 5, 'F');
+      doc.setTextColor(...dark);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(title.toUpperCase(), margin + 5, y + 4);
+      y += 8;
+      
+      // Content
+      doc.setTextColor(...gray);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const lines = doc.splitTextToSize(text, contentWidth - 5);
+      const maxLines = Math.min(lines.length, 20);
+      for (let i = 0; i < maxLines; i++) {
+        if (y > pageHeight - 15) { doc.addPage(); y = margin; }
+        doc.text(lines[i], margin + 5, y);
+        y += 4;
+      }
+      y += 3;
+      return true;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // HEADER - Compact
+    // ═══════════════════════════════════════════════════════════════
+    doc.setFillColor(...primary);
+    doc.rect(0, 0, pageWidth, 22, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('PATIENT SUMMARY', margin, 10);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    doc.text(dateStr + ' | ' + timeStr, pageWidth - margin, 9, { align: 'right' });
+    
+    if (AUTH.user) {
+      doc.text('Dr. ' + AUTH.user.charAt(0).toUpperCase() + AUTH.user.slice(1), pageWidth - margin, 15, { align: 'right' });
+    }
+    
+    y = 28;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // PATIENT INFO BOX
+    // ═══════════════════════════════════════════════════════════════
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(...lightGray);
+    doc.roundedRect(margin, y, contentWidth, 18, 2, 2, 'FD');
+    
+    doc.setTextColor(...dark);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text(pt.name || 'Unknown', margin + 4, y + 7);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...gray);
+    const meta = [];
+    if (pt.mrn || pt.id) meta.push('MRN: ' + (pt.mrn || pt.id));
+    if (pt.ward) meta.push('Ward: ' + pt.ward);
+    if (pt.age) meta.push('Age: ' + pt.age);
+    if (pt.gender) meta.push(pt.gender);
+    doc.text(meta.join('  |  '), margin + 4, y + 13);
+    
+    y += 24;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // PARSE UNIFIED SUMMARY FOR STRUCTURED DATA
+    // ═══════════════════════════════════════════════════════════════
+    const summary = pt.unifiedSummary || pt.summary || pt.clinicalSummary || '';
+    let extracted = { demographics: null, riskFactors: [], presentingComplaint: null, findings: [], currentStatus: null };
+    
+    if (summary && typeof summary === 'string' && summary.length > 50) {
+      // Extract demographics
+      const demoMatch = summary.match(/(\d+)[- ]?(?:year[- ]?old|yo)[^,]*?(?:male|female|man|woman)?/i);
+      if (demoMatch) extracted.demographics = demoMatch[0].trim();
+      
+      // Extract risk factors
+      const riskWords = ['smoking', 'diabetes', 'diabetic', 'hypertension', 'HTN', 'heart disease', 'IHD', 'CAD', 
+        'ischemic', 'hyperlipidemia', 'CKD', 'COPD', 'AF', 'atrial fibrillation'];
+      riskWords.forEach(r => {
+        const regex = new RegExp('(?:heavy\\s+)?(?:' + r + ')', 'gi');
+        const match = summary.match(regex);
+        if (match) match.forEach(m => { if (!extracted.riskFactors.includes(m.trim())) extracted.riskFactors.push(m.trim()); });
+      });
+      
+      // Extract presenting complaint
+      const pcMatch = summary.match(/presenting\s+with\s+([^,\.]+)/i);
+      if (pcMatch) extracted.presentingComplaint = pcMatch[1].trim();
+      
+      // Duration
+      const durMatch = summary.match(/(?:worsening\s+)?(?:over|for)\s+(\d+\s*days?)/i);
+      if (durMatch && extracted.presentingComplaint) extracted.presentingComplaint += ' (' + durMatch[1] + ')';
+      
+      // Current status
+      const statusMatch = summary.match(/(?:currently|vital signs)[:\s]+([^.]+(?:SpO2|BP|HR)[^.]+)/i);
+      if (statusMatch) extracted.currentStatus = statusMatch[1].trim();
+      
+      // Key findings
+      ['pulmonary edema', 'crepitations', 'AKI', 'heart failure', 'decompensated', 'reduced EF', 'bilateral'].forEach(f => {
+        if (summary.toLowerCase().includes(f)) extracted.findings.push(f);
+      });
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CLINICAL SECTIONS - Only show what exists
+    // ═══════════════════════════════════════════════════════════════
+    
+    if (extracted.demographics) addSection('Patient', extracted.demographics);
+    if (extracted.riskFactors.length > 0) addSection('Risk Factors', extracted.riskFactors.join(', '));
+    
+    // Diagnosis (skip if just "Pending")
+    const dx = pt.diagnosis || pt.primaryDiagnosis;
+    if (dx && dx !== 'Pending') addSection('Diagnosis', dx);
+    
+    // Presenting Complaint
+    const pc = extracted.presentingComplaint || pt.presentingComplaint || pt.chiefComplaint;
+    if (hasData(pc)) addSection('Presenting Complaint', pc);
+    
+    if (extracted.findings.length > 0) addSection('Key Findings', extracted.findings.join(', '));
+    if (extracted.currentStatus) addSection('Current Status', extracted.currentStatus);
+    
+    // Standard sections - only if real data exists
+    if (hasData(pt.hopi)) addSection('History', pt.hopi);
+    if (hasData(pt.pmh)) addSection('Past Medical History', pt.pmh);
+    
+    // Medications
+    let medsText = '';
+    if (pt.medications) {
+      if (Array.isArray(pt.medications)) {
+        medsText = pt.medications.map(m => {
+          if (typeof m === 'string') return m;
+          if (typeof m === 'object') return [m.name || m.drug, m.dose, m.frequency, m.route].filter(x=>x).join(' ');
+          return '';
+        }).filter(x=>x).join(', ');
+      } else {
+        medsText = pt.medications;
+      }
+    }
+    if (hasData(medsText)) addSection('Medications', medsText);
+    
+    if (hasData(pt.allergies)) addSection('Allergies', pt.allergies);
+    
+    // ═══════════════════════════════════════════════════════════════
+    // VITALS TABLE - Only if vitals exist
+    // ═══════════════════════════════════════════════════════════════
+    if (pt.vitals && typeof pt.vitals === 'object' && Object.keys(pt.vitals).length > 0) {
+      const v = pt.vitals;
+      const vitalsRows = [];
+      if (v.hr || v.heartRate || v.pulse) vitalsRows.push(['HR', (v.hr || v.heartRate || v.pulse) + ' bpm']);
+      if (v.bp || v.bloodPressure) vitalsRows.push(['BP', v.bp || v.bloodPressure]);
+      if (v.temp || v.temperature) vitalsRows.push(['Temp', (v.temp || v.temperature) + '°C']);
+      if (v.rr || v.respiratoryRate) vitalsRows.push(['RR', (v.rr || v.respiratoryRate) + '/min']);
+      if (v.spo2 || v.o2sat) vitalsRows.push(['SpO2', (v.spo2 || v.o2sat) + '%']);
+      
+      if (vitalsRows.length > 0) {
+        if (y > pageHeight - 50) { doc.addPage(); y = margin; }
+        
+        doc.setFillColor(...primary);
+        doc.rect(margin, y, 2, 5, 'F');
+        doc.setTextColor(...dark);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('VITALS', margin + 5, y + 4);
+        y += 8;
+        
+        doc.autoTable({
+          startY: y,
+          body: vitalsRows,
+          margin: { left: margin, right: margin },
+          styles: { fontSize: 9, cellPadding: 2 },
+          columnStyles: { 0: { fontStyle: 'bold', cellWidth: 25 }, 1: { cellWidth: 40 } },
+          theme: 'plain'
+        });
+        y = doc.lastAutoTable.finalY + 6;
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // LABS TABLE - Using labData.parameters structure from MedWard
+    // ═══════════════════════════════════════════════════════════════
+    
+    // Labs are stored as pt.labData.parameters[]
+    // Each param has: name, unit, range, values: [{value, date, status}, ...]
+    
+    const labParams = pt.labData?.parameters || [];
+    
+    console.log('labData:', pt.labData);
+    console.log('labParams count:', labParams.length);
+    
+    if (labParams.length > 0) {
+      const labRows = [];
+      
+      labParams.forEach(param => {
+        if (!param || !param.name) return;
+        
+        // Get the latest value (first in the values array, sorted newest first)
+        const latest = param.values?.[0];
+        if (!latest) return;
+        
+        const name = param.name || '';
+        const value = latest.value !== undefined ? latest.value : '';
+        const unit = param.unit || '';
+        const range = param.range || '';
+        const status = latest.status || '';
+        
+        // Determine flag (H for high, L for low)
+        let flag = '';
+        if (status === 'high' || status === 'H') flag = 'H';
+        else if (status === 'low' || status === 'L') flag = 'L';
+        else if (status === 'critical') flag = '!';
+        
+        if (name && value !== '') {
+          labRows.push([clean(name), String(value), clean(unit), clean(range), flag]);
+        }
+      });
+      
+      console.log('Lab rows:', labRows.length);
+      
+      if (labRows.length > 0) {
+        if (y > pageHeight - 50) { doc.addPage(); y = margin; }
+        
+        doc.setFillColor(...primary);
+        doc.rect(margin, y, 2, 5, 'F');
+        doc.setTextColor(...dark);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('LABORATORY RESULTS', margin + 5, y + 4);
+        y += 8;
+        
+        doc.autoTable({
+          startY: y,
+          head: [['Test', 'Result', 'Unit', 'Ref', '']],
+          body: labRows,
+          margin: { left: margin, right: margin },
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: primary, textColor: [255,255,255], fontStyle: 'bold' },
+          columnStyles: { 
+            0: { fontStyle: 'bold', cellWidth: 45 },
+            1: { cellWidth: 25, halign: 'right' },
+            2: { cellWidth: 30 },
+            3: { cellWidth: 35 },
+            4: { cellWidth: 15, halign: 'center' }
+          },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          didParseCell: function(data) {
+            // Color abnormal flags and values red
+            if (data.section === 'body' && data.row.raw && Array.isArray(data.row.raw)) {
+              const flag = data.row.raw[4];
+              if (flag) {
+                if (data.column.index === 1 || data.column.index === 4) {
+                  data.cell.styles.textColor = red;
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              }
+            }
+          }
+        });
+        y = doc.lastAutoTable.finalY + 6;
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // PENDING TASKS - Only if tasks exist
+    // ═══════════════════════════════════════════════════════════════
+    const tasks = pt.tasks || pt.plans || pt.todos;
+    if (tasks && Array.isArray(tasks) && tasks.length > 0) {
+      const taskRows = [];
+      
+      tasks.forEach(t => {
+        if (typeof t === 'string') {
+          taskRows.push([clean(t), '', '']);
+        } else if (typeof t === 'object') {
+          const title = t.title || t.name || t.task || t.text || '';
+          const cat = t.category || t.type || '';
+          const pri = t.priority || '';
+          const status = t.status || '';
+          
+          if (title && (!status || status === 'pending' || status === 'incomplete')) {
+            taskRows.push([clean(title), clean(cat), clean(pri)]);
+          }
+        }
+      });
+      
+      if (taskRows.length > 0) {
+        if (y > pageHeight - 50) { doc.addPage(); y = margin; }
+        
+        doc.setFillColor(...primary);
+        doc.rect(margin, y, 2, 5, 'F');
+        doc.setTextColor(...dark);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('PENDING TASKS', margin + 5, y + 4);
+        y += 8;
+        
+        doc.autoTable({
+          startY: y,
+          head: [['Task', 'Category', 'Priority']],
+          body: taskRows,
+          margin: { left: margin, right: margin },
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: primary, textColor: [255,255,255] },
+          columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 35 }, 2: { cellWidth: 25 } },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          didParseCell: function(data) {
+            if (data.section === 'body' && data.column.index === 2) {
+              const val = String(data.cell.raw).toLowerCase();
+              if (val === 'high') data.cell.styles.textColor = red;
+            }
+          }
+        });
+        y = doc.lastAutoTable.finalY + 6;
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CLINICAL SUMMARY - At the end (cleaned)
+    // ═══════════════════════════════════════════════════════════════
+    if (summary && summary.length > 100) {
+      let cleanSummary = summary.replace(/---.*?Disclaimer.*$/is, '').replace(/\*\*/g, '').trim();
+      
+      if (cleanSummary.length > 50) {
+        if (y > pageHeight - 60) { doc.addPage(); y = margin; }
+        
+        doc.setFillColor(...primary);
+        doc.rect(margin, y, 2, 5, 'F');
+        doc.setTextColor(...dark);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('CLINICAL SUMMARY', margin + 5, y + 4);
+        y += 8;
+        
+        doc.setTextColor(...gray);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        const lines = doc.splitTextToSize(cleanSummary, contentWidth - 5);
+        for (let i = 0; i < Math.min(lines.length, 30); i++) {
+          if (y > pageHeight - 15) { doc.addPage(); y = margin; }
+          doc.text(lines[i], margin + 5, y);
+          y += 3.5;
+        }
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // FOOTER
+    // ═══════════════════════════════════════════════════════════════
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setDrawColor(...lightGray);
+      doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+      doc.setTextColor(...gray);
+      doc.setFontSize(7);
+      doc.text('MedWard Pro | Confidential', margin, pageHeight - 8);
+      doc.text('Page ' + i + '/' + totalPages, pageWidth - margin, pageHeight - 8, { align: 'right' });
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // SAVE PDF with unique timestamp filename
+    // ═══════════════════════════════════════════════════════════════
+    const safeName = (pt.name || 'Patient').replace(/[^a-zA-Z0-9]/g, '_');
+    const filename = safeName + '_' + timestamp + '.pdf';
+    
+    doc.save(filename);
+    hideLoad();
+    toast('PDF saved');
+    
+  } catch (e) {
+    hideLoad();
+    console.error('PDF error:', e);
+    toast('Error: ' + e.message);
+  }
+}
+function generateBadge() {
+  document.getElementById('badgeName').textContent = 'DR. ' + AUTH.user.toUpperCase();
+  const wrapper = document.getElementById('qrWrapper');
+  wrapper.innerHTML = '';
+  
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(wrapper, {
+      text: AUTH.user,
+      width: 160,
+      height: 160,
+      colorDark: '#005eb8',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
+}
+
+async function loadPatients() {
+  try {
+    console.log('=== LOADING PATIENTS FROM CACHE ===');
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // CACHE-ONLY LOAD - loading.html already fetched from cloud
+    // ═══════════════════════════════════════════════════════════════════
+    const cached = localStorage.getItem('medward_pro_v12') || localStorage.getItem('MEDWARD_CACHE');
+    
+    if (cached) {
+      const d = JSON.parse(cached);
+      let allPatients = d.patients || [];
+      
+      console.log('📦 Total patients in cache:', allPatients.length);
+      
+      // Filter by current unit if one is selected (with localStorage fallback)
+      const currentUnitId = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
+      console.log('🏥 Current unit ID:', currentUnitId);
+      
+      if (currentUnitId && allPatients.length > 0) {
+        // Show unique unitIds for debugging
+        const unitIds = [...new Set(allPatients.map(p => p.unitId))];
+        console.log('📋 Unit IDs in patients:', unitIds);
+        
+        patients = allPatients.filter(p => p.unitId === currentUnitId);
+        console.log('✅ Patients in current unit:', patients.length);
+        
+        // If no patients match unit filter, show all patients
+        if (patients.length === 0 && allPatients.length > 0) {
+          console.log('⚠️ No patients match unit filter, showing all patients');
+          patients = allPatients;
+        }
+      } else {
+        patients = allPatients;
+        console.log('✅ All patients loaded:', patients.length);
+      }
+      
+      if (patients.length > 0) {
+        toast(patients.length + ' patient(s) ready');
+      }
+    } else {
+      console.log('❌ No cache found');
+      toast('Please refresh the page');
+    }
+  } catch (e) { 
+    console.error('Load error:', e);
+    toast('Error: ' + e.message);
+  }
+}
+
+function startScanner() {
+  if (scanner) return;
+  
+  const status = document.getElementById('scanStatus');
+  status.className = 'scanner-status scanning';
+  status.textContent = 'Scanning...';
+  
+  if (typeof Html5Qrcode === 'undefined') {
+    status.className = 'scanner-status error';
+    status.textContent = 'Scanner unavailable';
+    return;
+  }
+  
+  scanner = new Html5Qrcode('qr-reader');
+  scanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 200, height: 200 } },
+    (text) => {
+      stopScanner();
+      onScan(text);
+    },
+    () => {}
+  ).catch(() => {
+    status.className = 'scanner-status error';
+    status.textContent = 'Camera denied';
+  });
+}
+
+function stopScanner() {
+  if (scanner) {
+    scanner.stop().catch(() => {});
+    scanner = null;
+  }
+}
+
+function onScan(username) {
+  const status = document.getElementById('scanStatus');
+  status.className = 'scanner-status success';
+  status.textContent = 'Found: Dr. ' + username;
+  
+  recipient = username;
+  openSelect(username);
+}
+
+function openSelect(rec) {
+  document.getElementById('recName').textContent = 'Dr. ' + rec;
+  document.getElementById('recAvatar').textContent = rec.substring(0, 2).toUpperCase();
+  
+  const list = document.getElementById('patientList');
+  if (!patients.length) {
+    list.innerHTML = '<div class="inbox-empty"><div class="inbox-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div><div>No patients available</div></div>';
+  } else {
+    list.innerHTML = patients.map((p, idx) => `
+      <div class="patient-item" data-idx="${idx}" onclick="selectPtByIdx(${idx})">
+        <div class="patient-avatar">${initials(p.name)}</div>
+        <div class="patient-info">
+          <div class="patient-name">${esc(p.name)}</div>
+          <div class="patient-meta">${esc(p.ward || 'No ward')}</div>
+        </div>
+        <div class="patient-check">✓</div>
+      </div>
+    `).join('');
+  }
+  
+  selectedId = null;
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('selectModal').classList.add('active');
+}
+
+function closeSelect() {
+  document.getElementById('selectModal').classList.remove('active');
+  selectedId = null;
+  setTimeout(() => {
+    if (document.querySelector('.mode-tab[data-mode="send"]').classList.contains('active')) {
+      startScanner();
+    }
+  }, 300);
+}
+
+function selectPtByIdx(idx) {
+  if (idx >= 0 && idx < patients.length) {
+    selectedId = patients[idx].id;
+    console.log('Selected patient by index:', idx, 'ID:', selectedId);
+    document.querySelectorAll('.patient-item').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function selectPt(id) {
+  selectedId = String(id); // Ensure string type
+  console.log('Selected patient ID:', selectedId);
+  document.querySelectorAll('.patient-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.id === selectedId);
+  });
+  document.getElementById('sendBtn').disabled = false;
+}
+
+async function sendPatient() {
+  if (!selectedId || !recipient) {
+    toast('Please select a patient and recipient');
+    return;
+  }
+  
+  console.log('Looking for patient with ID:', selectedId, 'in', patients.map(p => p.id));
+  
+  // Find patient - handle both string and number IDs
+  const pt = patients.find(p => String(p.id) === String(selectedId));
+  if (!pt) {
+    toast('Patient not found (ID: ' + selectedId + ')');
+    console.error('Patient not found. Available IDs:', patients.map(p => p.id));
+    return;
+  }
+  
+  showLoad('Sending to Dr. ' + recipient + '...');
+  
+  try {
+    console.log('Sending patient:', pt.name, 'to:', recipient);
+    const res = await callAPI('sendPatient', { recipient, patientData: pt });
+    console.log('Send response:', res);
+    hideLoad();
+    
+    if (res.success) {
+      closeSelect();
+      toast('Patient sent to Dr. ' + recipient);
+    } else {
+      toast((res.error || 'Failed to send'));
+      console.error('Send failed:', res.error);
+    }
+  } catch (e) {
+    hideLoad();
+    toast('Network error: ' + e.message);
+    console.error('Send error:', e);
+  }
+}
+
+async function loadInbox() {
+  try {
+    const res = await callAPI('checkInbox');
+    const list = document.getElementById('inboxList');
+    const badge = document.getElementById('inboxBadge');
+    
+    if (res.success && res.inbox?.length) {
+      badge.textContent = res.inbox.length;
+      badge.style.display = 'inline';
+      
+      list.innerHTML = res.inbox.map(p => `
+        <div class="inbox-item">
+          <div class="inbox-avatar">${initials(p.name)}</div>
+          <div class="inbox-info">
+            <div class="inbox-name">${esc(p.name)}</div>
+            <div class="inbox-meta">From: ${p.sharedBy || '?'}</div>
+          </div>
+          <button class="inbox-accept" onclick="acceptPt('${p.id}')">Accept</button>
+        </div>
+      `).join('');
+    } else {
+      badge.style.display = 'none';
+      list.innerHTML = '<div class="inbox-empty"><div class="inbox-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><div>No incoming patients</div></div>';
+    }
+  } catch (e) { console.error(e); }
+}
+
+// ⚡ ATOMIC INBOX ACCEPT - Save to local storage and remove from inbox
+async function acceptPt(id) {
+  showLoad('Accepting...');
+  
+  try {
+    // Single atomic call - server handles everything
+    const result = await callAPI('acceptInboxPatient', { patientId: id });
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Accept failed');
+    }
+    
+    // Update local state and save to local storage
+    if (result.patient) {
+      const newPatient = result.patient;
+      
+      // Add to in-memory patients array
+      patients.push(newPatient);
+      
+      // ═══════════════════════════════════════════════════════════════════
+      // SAVE TO LOCAL STORAGE - Add patient to the ward cache
+      // ═══════════════════════════════════════════════════════════════════
+      try {
+        const cacheKey = localStorage.getItem('medward_pro_v12') ? 'medward_pro_v12' : 'MEDWARD_CACHE';
+        const cached = localStorage.getItem(cacheKey);
+        
+        if (cached) {
+          const data = JSON.parse(cached);
+          
+          // Get current unit ID (with localStorage fallback)
+          const currentUnitId = sessionStorage.getItem('MW_UNIT') || localStorage.getItem('MW_SELECTED_UNIT');
+
+          // Add unit ID to patient if we have one
+          if (currentUnitId) {
+            newPatient.unitId = currentUnitId;
+          }
+          
+          // Add patient to the list if not already present
+          const existingIdx = (data.patients || []).findIndex(p => String(p.id) === String(newPatient.id));
+          if (existingIdx === -1) {
+            data.patients = data.patients || [];
+            data.patients.push(newPatient);
+          } else {
+            // Update existing patient
+            data.patients[existingIdx] = { ...data.patients[existingIdx], ...newPatient };
+          }
+          
+          // Save back to storage
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+          console.log('✅ Patient saved to local storage:', newPatient.name);
+        }
+      } catch (storageErr) {
+        console.error('Storage save error:', storageErr);
+        // Continue anyway - patient is in server
+      }
+    }
+    
+    hideLoad();
+    toast('✓ Patient accepted and saved');
+    
+    // Refresh inbox to remove accepted patient
+    await loadInbox();
+    
+  } catch (e) {
+    hideLoad();
+    console.error('Accept error:', e);
+    toast('✗ ' + (e.message || 'Failed'));
+  }
+}
+
+async function callAPI(action, extra = {}) {
+  console.log('📡 API Call:', action);
+
+  try {
+    // Use Firebase Cloud Functions instead of Google Apps Script
+    const fb = await loadFirebaseFunctions();
+
+    let result;
+    switch (action) {
+      case 'sendPatient':
+        result = await fb.sendPatient(extra.recipient, extra.patientData);
+        break;
+      case 'checkInbox':
+        result = await fb.checkInbox();
+        break;
+      case 'acceptInboxPatient':
+        result = await fb.acceptInboxPatient(extra.patientId, extra.targetUnitId);
+        break;
+      default:
+        console.error('📡 Unknown action:', action);
+        return { success: false, error: 'Unknown action: ' + action };
+    }
+
+    console.log('📡', action, result.success ? '✅' : '❌');
+    return result;
+  } catch (e) {
+    console.error('📡 Error:', e);
+    toast('Error: ' + (e.message || 'Unknown error'));
+    return { success: false, error: e.message || 'Unknown error' };
+  }
+}
+
+function showLoad(t) {
+  document.getElementById('loadingText').textContent = t;
+  document.getElementById('loading').classList.add('active');
+}
+
+function hideLoad() {
+  document.getElementById('loading').classList.remove('active');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function toggleTheme() {
+  const dark = document.body.classList.toggle('dark-theme');
+  localStorage.setItem('MEDWARD_THEME', dark ? 'dark' : 'light');
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  document.getElementById('themeBtn').textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+}
+
+function initials(n) {
+  return n ? n.split(' ').map(x => x[0]).join('').substring(0, 2).toUpperCase() : '??';
+}
+
+function esc(t) {
+  if (!t) return '';
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PDF HANDOVER GENERATION - Uses the common PDF generator
+// ═══════════════════════════════════════════════════════════════════
+
+function generateHandoverPDF() {
+  if (!selectedId) {
+    toast('Please select a patient first');
+    return;
+  }
+  
+  const pt = patients.find(p => String(p.id) === String(selectedId));
+  if (!pt) {
+    toast('Patient not found');
+    return;
+  }
+  
+  // Use the common PDF generator
+  generatePatientPDF(pt);
+}
+</script>
+<script src="medward-tour.js"></script>
+</body>
+</html>

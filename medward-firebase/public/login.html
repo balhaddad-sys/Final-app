@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#005eb8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Cache Control -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Login | MedWard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
+<style>
+:root {
+  --primary: #005eb8;
+  --primary-dark: #003087;
+  --primary-light: #e6f0f9;
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-input: #f1f5f9;
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --success: #059669;
+  --danger: #dc2626;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+body.dark-theme {
+  --primary: #60a5fa;
+  --primary-dark: #93c5fd;
+  --primary-light: #1e3a5f;
+  --bg-app: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-input: #334155;
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --border: #334155;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Header Buttons */
+.header-btns {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  border-color: var(--primary);
+}
+
+.login-container {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  width: 80px;
+  height: 80px;
+  background: var(--primary);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(0, 94, 184, 0.25);
+}
+
+.login-logo svg {
+  width: 44px;
+  height: 44px;
+  stroke: #fff;
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.login-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--text-main);
+}
+
+.login-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.login-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.1);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.checkbox-group input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.checkbox-group label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 94, 184, 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  margin-top: 12px;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.divider span {
+  padding: 0 16px;
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  display: none;
+}
+
+.message.error {
+  display: block;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.message.success {
+  display: block;
+  background: #d1fae5;
+  color: #059669;
+  border: 1px solid #6ee7b7;
+}
+
+body.dark-theme .message.error {
+  background: #7f1d1d;
+  border-color: #991b1b;
+}
+
+body.dark-theme .message.success {
+  background: #064e3b;
+  border-color: #065f46;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 24px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Form States */
+.form-group.error .form-input {
+  border-color: var(--danger);
+}
+
+.form-group .error-text {
+  color: var(--danger);
+  font-size: 0.8rem;
+  margin-top: 6px;
+  display: none;
+}
+
+.form-group.error .error-text {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SETTINGS MODAL STYLES
+   ═══════════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 360px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg-input);
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.modal-body {
+  padding: 0;
+}
+
+.settings-section {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 20px 12px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.settings-row:hover {
+  background: var(--bg-input);
+}
+
+.settings-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-input);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 1.1rem;
+}
+
+.settings-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.settings-value {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-right: 8px;
+}
+
+.settings-arrow {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Admin Access Modal */
+.admin-input-group {
+  padding: 20px;
+}
+
+.admin-input-group .form-input {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.admin-warning {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin: 0 20px 20px;
+  font-size: 0.8rem;
+  color: #92400e;
+}
+
+body.dark-theme .admin-warning {
+  background: #78350f;
+  border-color: #b45309;
+  color: #fcd34d;
+}
+
+.admin-btn {
+  margin: 0 20px 20px;
+  width: calc(100% - 40px);
+  background: #dc2626;
+  border: none;
+}
+
+.admin-btn:hover {
+  background: #b91c1c;
+}
+</style>
+</head>
+<body>
+<script>
+// Apply saved theme immediately
+(function() {
+  const theme = localStorage.getItem('MEDWARD_THEME');
+  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark-theme');
+  }
+})();
+</script>
+
+<!-- Header Buttons -->
+<div class="header-btns">
+  <button class="icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
+  <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+</div>
+
+<div class="login-container">
+  <div class="login-header">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <h1 class="login-title">MedWard Pro</h1>
+    <p class="login-subtitle">Clinical Ward Management System</p>
+  </div>
+
+  <div class="login-card">
+    <div class="message" id="message"></div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="email" placeholder="Enter email" autocomplete="email" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="password" placeholder="Enter password" autocomplete="current-password" required>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="remember" checked>
+        <label for="remember">Keep me logged in</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="loginBtn">
+        <span id="loginText">Sign In</span>
+        <div class="loading-spinner" id="loginSpinner" style="display:none"></div>
+      </button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+
+    <button class="btn btn-secondary" onclick="handleGoogleSignIn()" id="googleSignInBtn" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+        <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.167.282-1.707V4.96H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.042l3.007-2.335z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      <span>Sign in with Google</span>
+    </button>
+
+    <button class="btn btn-secondary" onclick="showRegister()" id="registerToggle">
+      Create New Account
+    </button>
+
+    <!-- Register Form (hidden by default) -->
+    <form id="registerForm" onsubmit="handleRegister(event)" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input type="text" class="form-input" id="regName" placeholder="Your name" autocomplete="name" required minlength="2">
+        <div class="error-text">Name must be at least 2 characters</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="regEmail" placeholder="Your email" autocomplete="email" required>
+        <div class="error-text">Please enter a valid email</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Create Password</label>
+        <input type="password" class="form-input" id="regPassword" placeholder="Create a password (min 6 characters)" autocomplete="new-password" required minlength="6">
+        <div class="error-text">Password must be at least 6 characters</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" class="form-input" id="regConfirm" placeholder="Confirm password" autocomplete="new-password" required>
+        <div class="error-text">Passwords do not match</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="registerBtn">
+        <span id="registerText">Create Account</span>
+        <div class="loading-spinner" id="registerSpinner" style="display:none"></div>
+      </button>
+
+      <button type="button" class="btn btn-secondary" onclick="showLogin()">
+        Back to Login
+      </button>
+    </form>
+  </div>
+
+  <div class="login-footer">
+    v17.5 • Firebase Edition
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SETTINGS MODAL
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Settings</h3>
+      <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="settings-section-title">Appearance</div>
+        <div class="settings-row" onclick="toggleTheme(); updateThemeRow();">
+          <div class="settings-icon">🎨</div>
+          <div class="settings-label">Theme</div>
+          <div class="settings-value" id="themeValue">Light</div>
+          <div class="settings-arrow">→</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">About</div>
+        <div class="settings-row" style="cursor:default">
+          <div class="settings-icon">📱</div>
+          <div class="settings-label">Version</div>
+          <div class="settings-value">v17.5</div>
+        </div>
+        <div class="settings-row" style="cursor:default">
+          <div class="settings-icon">🔥</div>
+          <div class="settings-label">Backend</div>
+          <div class="settings-value" id="apiStatusText">Firebase</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Administration</div>
+        <div class="settings-row" onclick="openAdminModal()">
+          <div class="settings-icon">🔐</div>
+          <div class="settings-label" style="color: var(--danger)">System Monitor</div>
+          <div class="settings-arrow">→</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ADMIN ACCESS MODAL
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🔐 Admin Access</h3>
+      <button class="modal-close" onclick="closeModal('adminModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="admin-warning">
+        ⚠️ <strong>Restricted Access</strong><br>
+        This area requires administrator credentials. Unauthorized access attempts are logged.
+      </div>
+
+      <div class="admin-input-group">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Admin Key</label>
+          <input type="password" class="form-input" id="adminKey" placeholder="Enter admin key" autocomplete="off">
+        </div>
+      </div>
+
+      <button class="btn btn-primary admin-btn" onclick="verifyAdminAccess()">
+        <span id="adminBtnText">Access System Monitor</span>
+        <div class="loading-spinner" id="adminSpinner" style="display:none"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { login, register, signInWithGoogle, handleGoogleRedirect } from './firebase.auth.js';
+import { requireAuth, setLegacyCredentials, safeRedirect } from './auth.guard.js';
+import { configureAuthPersistence, auth, getRedirectResult } from './firebase.config.js';
+
+// ═══════════════════════════════════════════════════════════════════
+// MOBILE REDIRECT FLOW - Must run FIRST before anything else
+// ═══════════════════════════════════════════════════════════════════
+
+(async function() {
+  console.log('[Login] Page loaded');
+
+  // Check if we're returning from a Google redirect
+  const authPending = sessionStorage.getItem('MW_AUTH_PENDING');
+  console.log('[Login] Auth pending flag:', authPending ? 'YES' : 'NO');
+
+  try {
+    console.log('[Login] Calling getRedirectResult...');
+    const result = await getRedirectResult(auth);
+    console.log('[Login] getRedirectResult done:', result ? 'HAS RESULT' : 'null');
+
+    if (result && result.user) {
+      console.log('[Login] SUCCESS! User:', result.user.email);
+
+      // Clear the pending flag since we succeeded
+      sessionStorage.removeItem('MW_AUTH_PENDING');
+
+      // Set legacy credentials for backward compatibility
+      setLegacyCredentials(result.user);
+
+      // Redirect to landing
+      console.log('[Login] Redirecting to landing.html...');
+      window.location.href = 'landing.html';
+      return;  // Stop execution - we're navigating away
+    }
+
+    console.log('[Login] No redirect result');
+
+    // If we had pending auth but no redirect result, wait longer
+    // This handles the case where getRedirectResult fails but auth state exists
+    if (authPending) {
+      console.log('[Login] Had pending auth, checking auth.currentUser...');
+
+      // Wait a moment for Firebase to hydrate
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (auth.currentUser) {
+        console.log('[Login] Found user via currentUser:', auth.currentUser.email);
+        sessionStorage.removeItem('MW_AUTH_PENDING');
+        setLegacyCredentials(auth.currentUser);
+        window.location.href = 'landing.html';
+        return;
+      }
+
+      console.log('[Login] No currentUser found, continuing to requireAuth...');
+    }
+
+  } catch (error) {
+    console.error('[Login] Redirect result error:', error.code, '-', error.message);
+
+    // Don't block on error - continue to normal auth check
+  }
+
+  // Clear pending flag if we get here - it didn't work
+  sessionStorage.removeItem('MW_AUTH_PENDING');
+
+  console.log('[Login] Running requireAuth...');
+
+  // Normal auth check - if user is already logged in, redirect to landing
+  requireAuth({
+    onAuthed: (user) => {
+      console.log('[Login] requireAuth: AUTHED as', user.email);
+      setLegacyCredentials(user);
+      safeRedirect('landing.html');
+    },
+    onUnauthed: () => {
+      console.log('[Login] requireAuth: NOT AUTHED - staying on login page');
+      // User is not authenticated - they should stay on login page
+      // No action needed
+    },
+    // Use longer debounce for mobile
+    nullDebounce: 1500
+  });
+})();
+
+// Theme toggle
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark-theme');
+  localStorage.setItem('MEDWARD_THEME', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+}
+
+function updateThemeRow() {
+  const isDark = document.body.classList.contains('dark-theme');
+  document.getElementById('themeValue').textContent = isDark ? 'Dark' : 'Light';
+}
+
+// Update theme icon on load
+document.getElementById('themeBtn').textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+updateThemeRow();
+
+// Modal functions
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function openSettingsModal() {
+  openModal('settingsModal');
+}
+
+function openAdminModal() {
+  closeModal('settingsModal');
+  document.getElementById('adminKey').value = '';
+  openModal('adminModal');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// ADMIN ACCESS VERIFICATION
+// ═══════════════════════════════════════════════════════════════════
+async function verifyAdminAccess() {
+  const adminKey = document.getElementById('adminKey').value.trim();
+
+  if (!adminKey) {
+    alert('Please enter the admin key');
+    return;
+  }
+
+  // Show loading
+  document.getElementById('adminBtnText').style.display = 'none';
+  document.getElementById('adminSpinner').style.display = 'block';
+
+  // Local verification (works immediately)
+  const VALID_KEYS = ['66778380'];
+
+  // Small delay for UX
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  if (VALID_KEYS.includes(adminKey)) {
+    // Store admin key in session
+    sessionStorage.setItem('MW_ADMIN_KEY', adminKey);
+
+    // Redirect to monitor
+    window.location.href = 'monitor.html';
+  } else {
+    alert('❌ Access Denied\n\nInvalid admin key');
+    document.getElementById('adminBtnText').style.display = 'inline';
+    document.getElementById('adminSpinner').style.display = 'none';
+  }
+}
+
+// Allow Enter key to submit admin form
+document.getElementById('adminKey').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    verifyAdminAccess();
+  }
+});
+
+// Show/hide forms
+function showRegister() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerToggle').style.display = 'none';
+  document.querySelector('.divider').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('message').className = 'message';
+  document.getElementById('message').textContent = '';
+}
+
+function showLogin() {
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerToggle').style.display = 'block';
+  document.querySelector('.divider').style.display = 'flex';
+  document.getElementById('message').className = 'message';
+  document.getElementById('message').textContent = '';
+}
+
+// Show message
+function showMessage(text, isError = true) {
+  const msg = document.getElementById('message');
+  msg.textContent = text;
+  msg.className = 'message ' + (isError ? 'error' : 'success');
+}
+
+// Login handler (Firebase)
+async function handleLogin(e) {
+  e.preventDefault();
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const rememberMe = document.getElementById('remember').checked;
+
+  if (!email || !password) {
+    showMessage('Please enter email and password');
+    return;
+  }
+
+  // Show loading
+  document.getElementById('loginText').style.display = 'none';
+  document.getElementById('loginSpinner').style.display = 'block';
+  document.getElementById('loginBtn').disabled = true;
+
+  try {
+    // Set auth persistence before login
+    await configureAuthPersistence(rememberMe);
+
+    const result = await login(email, password);
+
+    if (result.success && result.user) {
+      showMessage('Login successful! Redirecting...', false);
+      setLegacyCredentials(result.user);
+      safeRedirect('landing.html');
+    } else {
+      showMessage(result.error || 'Invalid email or password');
+      document.getElementById('loginText').style.display = 'inline';
+      document.getElementById('loginSpinner').style.display = 'none';
+      document.getElementById('loginBtn').disabled = false;
+    }
+  } catch (error) {
+    showMessage('Connection error. Please try again.');
+    console.error('Login error:', error);
+    document.getElementById('loginText').style.display = 'inline';
+    document.getElementById('loginSpinner').style.display = 'none';
+    document.getElementById('loginBtn').disabled = false;
+  }
+}
+
+// Make handleLogin available globally
+window.handleLogin = handleLogin;
+
+// ═══════════════════════════════════════════════════════════════════
+// GOOGLE SIGN-IN HANDLER - FIXED VERSION
+// ═══════════════════════════════════════════════════════════════════
+
+async function handleGoogleSignIn() {
+  const btn = document.getElementById('googleSignInBtn');
+  const originalContent = btn.innerHTML;
+  const rememberMe = document.getElementById('remember').checked;
+
+  // Show loading state
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner"></div><span>Signing in...</span>';
+
+  try {
+    // Set auth persistence before attempting sign-in
+    await configureAuthPersistence(rememberMe);
+
+    // Set pending flag BEFORE starting Google sign-in
+    // This tells the landing page and login page that auth should be coming
+    sessionStorage.setItem('MW_AUTH_PENDING', 'true');
+
+    console.log('[Login] Starting Google sign-in...');
+    const result = await signInWithGoogle();
+    console.log('[Login] Google sign-in result:', result);
+
+    if (result.success && result.pending) {
+      // Mobile redirect - page will navigate away to Google
+      // Keep the pending flag - it will be checked when we return
+      console.log('[Login] Redirecting to Google (mobile flow)...');
+      // Keep loading state, page will redirect
+    } else if (result.success && result.user) {
+      // Desktop popup success - redirect immediately
+      console.log('[Login] Google sign-in successful (popup flow)');
+      sessionStorage.removeItem('MW_AUTH_PENDING');  // Clear flag since we succeeded
+      showMessage('Successfully signed in with Google!', false);
+      setLegacyCredentials(result.user);
+      safeRedirect('landing.html');
+    } else if (!result.cancelled) {
+      // Error occurred - clear pending flag
+      sessionStorage.removeItem('MW_AUTH_PENDING');
+      console.error('[Login] Google sign-in failed:', result.error);
+      showMessage(result.error || 'Google sign-in failed');
+      btn.disabled = false;
+      btn.innerHTML = originalContent;
+    } else {
+      // User cancelled - clear pending flag
+      sessionStorage.removeItem('MW_AUTH_PENDING');
+      btn.disabled = false;
+      btn.innerHTML = originalContent;
+    }
+  } catch (error) {
+    // Error - clear pending flag
+    sessionStorage.removeItem('MW_AUTH_PENDING');
+    console.error('[Login] Google sign-in exception:', error);
+    showMessage('Connection error. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = originalContent;
+  }
+}
+
+// Make handleGoogleSignIn available globally
+window.handleGoogleSignIn = handleGoogleSignIn;
+
+// Register handler (Firebase)
+async function handleRegister(e) {
+  e.preventDefault();
+
+  const displayName = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const confirm = document.getElementById('regConfirm').value;
+
+  // Validate
+  if (displayName.length < 2) {
+    document.getElementById('regName').parentElement.classList.add('error');
+    return;
+  } else {
+    document.getElementById('regName').parentElement.classList.remove('error');
+  }
+
+  if (!email || !email.includes('@')) {
+    document.getElementById('regEmail').parentElement.classList.add('error');
+    return;
+  } else {
+    document.getElementById('regEmail').parentElement.classList.remove('error');
+  }
+
+  if (password.length < 6) {
+    document.getElementById('regPassword').parentElement.classList.add('error');
+    return;
+  } else {
+    document.getElementById('regPassword').parentElement.classList.remove('error');
+  }
+
+  if (password !== confirm) {
+    document.getElementById('regConfirm').parentElement.classList.add('error');
+    return;
+  } else {
+    document.getElementById('regConfirm').parentElement.classList.remove('error');
+  }
+
+  // Show loading
+  document.getElementById('registerText').style.display = 'none';
+  document.getElementById('registerSpinner').style.display = 'block';
+  document.getElementById('registerBtn').disabled = true;
+
+  try {
+    const result = await register(email, password, displayName);
+
+    if (result.success && result.user) {
+      showMessage('Account created! Redirecting...', false);
+      setLegacyCredentials(result.user);
+      safeRedirect('landing.html');
+    } else {
+      showMessage(result.error || 'Registration failed');
+      document.getElementById('registerText').style.display = 'inline';
+      document.getElementById('registerSpinner').style.display = 'none';
+      document.getElementById('registerBtn').disabled = false;
+    }
+  } catch (error) {
+    showMessage('Connection error. Please try again.');
+    console.error('Register error:', error);
+    document.getElementById('registerText').style.display = 'inline';
+    document.getElementById('registerSpinner').style.display = 'none';
+    document.getElementById('registerBtn').disabled = false;
+  }
+}
+
+// Make handleRegister available globally
+window.handleRegister = handleRegister;
+
+// Focus email on load
+document.getElementById('email').focus();
+
+// Make all functions available globally for onclick handlers
+window.toggleTheme = toggleTheme;
+window.updateThemeRow = updateThemeRow;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openSettingsModal = openSettingsModal;
+window.openAdminModal = openAdminModal;
+window.verifyAdminAccess = verifyAdminAccess;
+window.showRegister = showRegister;
+window.showLogin = showLogin;
+</script>
+<script src="medward-tour.js"></script>
+</body>
+</html>
