@@ -18888,19 +18888,27 @@ window.exportUnitToPDF = function() {
     // PDF HEADER (green bar like your sheet)
     // ═══════════════════════════════════════════════════════════════════
     
-    let y = 10;
-    
-    // Title bar - soft sage green for calm appearance
-    doc.setFillColor(169, 189, 163); // Soft sage green
-    doc.rect(10, y, 190, 8, 'F');
+    let y = 8;
+
+    // Date header - yellow/gold like the sheet
+    doc.setFillColor(255, 242, 204); // Light yellow/gold
+    doc.rect(10, y, 190, 6, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
-    doc.text(unitName + ' - Active List', 14, y + 5.5);
+    doc.text(dateStr, 105, y + 4, { align: 'center' });
+
+    y += 8;
+
+    // "Male list (active)" header - green like the sheet
+    doc.setFillColor(198, 224, 180); // Light green
+    doc.rect(10, y, 190, 5, 'F');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
-    doc.text(dateStr, 196, y + 5.5, { align: 'right' });
-    
-    y += 10;
+    doc.setTextColor(0, 100, 0);
+    doc.text('Male list (active)', 14, y + 3.5);
+
+    y += 6;
     
     // ═══════════════════════════════════════════════════════════════════
     // ACTIVE LIST TABLE
@@ -18943,69 +18951,58 @@ window.exportUnitToPDF = function() {
       doc.autoTable({
         startY: y,
         head: [[
-          { content: 'Room/Ward', styles: { fillColor: [169, 189, 163] } },
-          { content: 'Patient Name', styles: { fillColor: [169, 189, 163] } },
-          { content: 'Diagnosis', styles: { fillColor: [169, 189, 163] } },
-          { content: 'Assigned Doctor', styles: { fillColor: [169, 189, 163] } },
-          { content: 'Status', styles: { fillColor: [169, 189, 163] } }
+          { content: 'Room / Ward', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Patient name', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Diagnosis', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Assigned Doctor', styles: { fillColor: [198, 224, 180] } },
+          { content: 'Status', styles: { fillColor: [198, 224, 180] } }
         ]],
         body: activeRows.map(r => [r.bed, r.name, r.diagnosis, r.doctor, r.status]),
-        
+
         theme: 'grid',
-        
+
         styles: {
           font: 'helvetica',
-          fontSize: 8,
-          cellPadding: 2,
+          fontSize: 6, // Smaller font to fit on one page
+          cellPadding: 1,
           valign: 'middle',
-          lineColor: [180, 180, 180],
-          lineWidth: 0.2
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1
         },
-        
+
         headStyles: {
-          fillColor: [169, 189, 163], // Soft sage green header
-          textColor: [60, 80, 60],
+          fillColor: [198, 224, 180], // Green header like sheet
+          textColor: [0, 100, 0],
           fontStyle: 'bold',
-          fontSize: 9
+          fontSize: 7
         },
-        
+
         columnStyles: {
-          0: { cellWidth: 22 },  // Room/Ward
-          1: { cellWidth: 35 },  // Name
-          2: { cellWidth: 65 },  // Diagnosis
-          3: { cellWidth: 30 },  // Doctor
-          4: { cellWidth: 25 }   // Status
+          0: { cellWidth: 20 },  // Room/Ward
+          1: { cellWidth: 30 },  // Name
+          2: { cellWidth: 60 },  // Diagnosis
+          3: { cellWidth: 28 },  // Doctor
+          4: { cellWidth: 22 }   // Status
         },
         
-        // Row styling - ward headers and NEW patient highlighting
+        // Row styling - ward headers in green
         didParseCell: function(data) {
           if (data.section === 'body') {
             const rowData = activeRows[data.row.index];
-            
-            // Ward header rows - blue background
+
+            // Ward header rows - green background like sheet
             if (rowData._isWardHeader) {
-              data.cell.styles.fillColor = [108, 142, 168]; // Soft slate blue
-              data.cell.styles.textColor = [255, 255, 255];
+              data.cell.styles.fillColor = [198, 224, 180]; // Green
+              data.cell.styles.textColor = [0, 100, 0];
               data.cell.styles.fontStyle = 'bold';
             }
-            // NEW patients - ORANGE highlight (only NEW, not critical or others)
-            else if (rowData._status === 'new') {
-              data.cell.styles.fillColor = [255, 192, 0]; // Orange
-              data.cell.styles.fontStyle = 'bold';
+            // Regular patient rows - white background
+            else {
+              data.cell.styles.fillColor = [255, 255, 255];
             }
           }
         },
-        
-        // Merge ward header cells
-        didDrawCell: function(data) {
-          if (data.section === 'body') {
-            const rowData = activeRows[data.row.index];
-            if (rowData._isWardHeader && data.column.index === 0) {
-              // Ward headers span all columns visually
-            }
-          }
-        },
-        
+
         margin: { left: 10, right: 10 }
       });
       
@@ -19017,22 +19014,16 @@ window.exportUnitToPDF = function() {
     // ═══════════════════════════════════════════════════════════════════
     
     if (chronicPatients.length > 0) {
-      // Check if we need a new page
-      if (y > 240) {
-        doc.addPage();
-        y = 10;
-      }
-      
-      // Chronic section header - orange like your sheet
-      doc.setFillColor(255, 192, 0); // Orange
-      doc.rect(10, y, 190, 8, 'F');
+      // Chronic section header - blue like the sheet
+      y += 2;
+      doc.setFillColor(180, 198, 231); // Light blue
+      doc.rect(10, y, 190, 5, 'F');
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(0, 0, 0);
-      doc.text('Chronic List', 14, y + 5.5);
-      doc.text(chronicPatients.length + ' patients', 196, y + 5.5, { align: 'right' });
-      
-      y += 10;
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 139);
+      doc.text('(Chronic list)', 14, y + 3.5);
+
+      y += 6;
       
       // Build chronic rows
       const chronicRows = [];
@@ -19068,51 +19059,55 @@ window.exportUnitToPDF = function() {
       doc.autoTable({
         startY: y,
         head: [[
-          { content: 'Room/Ward', styles: { fillColor: [216, 169, 140] } },
-          { content: 'Patient Name', styles: { fillColor: [216, 169, 140] } },
-          { content: 'Diagnosis', styles: { fillColor: [216, 169, 140] } },
-          { content: 'Assigned Doctor', styles: { fillColor: [216, 169, 140] } },
-          { content: 'Status', styles: { fillColor: [216, 169, 140] } }
+          { content: '', styles: { fillColor: [180, 198, 231] } },
+          { content: 'Patient name', styles: { fillColor: [180, 198, 231] } },
+          { content: 'Diagnosis', styles: { fillColor: [180, 198, 231] } },
+          { content: 'Assigned Doctor', styles: { fillColor: [180, 198, 231] } },
+          { content: 'Status', styles: { fillColor: [180, 198, 231] } }
         ]],
         body: chronicRows.map(r => [r.bed, r.name, r.diagnosis, r.doctor, r.status]),
-        
+
         theme: 'grid',
-        
+
         styles: {
           font: 'helvetica',
-          fontSize: 8,
-          cellPadding: 2,
+          fontSize: 6, // Smaller font to fit on one page
+          cellPadding: 1,
           valign: 'middle',
-          lineColor: [180, 180, 180],
-          lineWidth: 0.2
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1
         },
-        
+
         headStyles: {
-          fillColor: [216, 169, 140], // Soft peach header
-          textColor: [80, 60, 50],
+          fillColor: [180, 198, 231], // Blue header like sheet
+          textColor: [0, 0, 139],
           fontStyle: 'bold',
-          fontSize: 9
+          fontSize: 7
         },
-        
+
         columnStyles: {
-          0: { cellWidth: 22 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 65 },
-          3: { cellWidth: 30 },
-          4: { cellWidth: 25 }
+          0: { cellWidth: 20 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 60 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 22 }
         },
-        
-        // Ward header styling
+
+        // Ward header styling - blue
         didParseCell: function(data) {
           if (data.section === 'body') {
             const rowData = chronicRows[data.row.index];
             if (rowData._isWardHeader) {
-              data.cell.styles.fillColor = [255, 192, 0]; // Orange for chronic ward headers
+              data.cell.styles.fillColor = [180, 198, 231]; // Blue for chronic ward headers
+              data.cell.styles.textColor = [0, 0, 139];
               data.cell.styles.fontStyle = 'bold';
+            }
+            else {
+              data.cell.styles.fillColor = [255, 255, 255];
             }
           }
         },
-        
+
         margin: { left: 10, right: 10 }
       });
     }
