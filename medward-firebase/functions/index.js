@@ -1977,14 +1977,22 @@ exports.updateSettings = onCall(async (request) => {
  * This function is publicly callable and does not require authentication.
  */
 exports.healthCheck = onCall(async (request) => {
-  return {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: '2.2.3',
-    region: 'us-central1',
-    authenticated: !!request.auth,
-    userId: request.auth?.uid || null
-  };
+  try {
+    return {
+      success: true,
+      data: {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: '2.2.3',
+        region: 'us-central1',
+        authenticated: !!request.auth,
+        userId: request.auth?.uid || null
+      }
+    };
+  } catch (error) {
+    console.error('[healthCheck] Error:', error);
+    throw new HttpsError('internal', `Health check failed: ${error.message}`);
+  }
 });
 
 /**
