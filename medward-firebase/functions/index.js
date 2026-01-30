@@ -1200,7 +1200,7 @@ Format your response:
 });
 
 /**
- * Drug information lookup.
+ * Drug information lookup - returns structured JSON for frontend rendering.
  */
 exports.getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
@@ -1213,26 +1213,34 @@ exports.getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request) => 
     throw new HttpsError('invalid-argument', 'Drug name is required');
   }
 
-  const systemPrompt = `You are a clinical pharmacist providing evidence-based drug information.
+  const systemPrompt = `You are a clinical pharmacist. Return drug information as a JSON object ONLY - no other text.
 
-Include the following in your response:
-1. Drug Class & Mechanism
-2. Indications
-3. Dosing (adult & renal adjustment if applicable)
-4. Contraindications
-5. Major Drug Interactions
-6. Side Effects (common and serious)
-7. Monitoring Parameters
-8. Special Considerations (pregnancy, elderly, etc.)
+Required JSON structure:
+{
+  "drugClass": "string - drug class name",
+  "mechanism": "string - brief mechanism of action",
+  "dosing": {
+    "adult": "string - typical adult dosing",
+    "renal": "string - renal dose adjustment if applicable, or null"
+  },
+  "interactions": ["array of significant drug interactions - max 5"],
+  "contraindications": ["array of contraindications - max 5"],
+  "sideEffects": {
+    "common": ["array of common side effects - max 5"],
+    "serious": ["array of serious/black box warnings - max 3"]
+  },
+  "clinicalPearls": ["array of 2-3 important clinical tips"],
+  "monitoring": ["array of monitoring parameters - max 4"]
+}
 
-Be concise but comprehensive. Use bullet points for clarity.`;
+IMPORTANT: Return ONLY the JSON object, no markdown, no explanation.`;
 
-  let userMessage = `Provide clinical information for: ${drugName}`;
+  let userMessage = `Provide clinical information JSON for: ${drugName}`;
   if (indication) {
-    userMessage += `\nSpecific indication: ${indication}`;
+    userMessage += `\nIndication: ${indication}`;
   }
   if (patientContext) {
-    userMessage += `\nPatient context: ${JSON.stringify(patientContext)}`;
+    userMessage += `\nPatient: ${patientContext.age || 'unknown'}yo ${patientContext.gender || ''}, CrCl: ${patientContext.crcl || 'unknown'}, Current meds: ${(patientContext.currentMeds || []).join(', ') || 'none listed'}`;
   }
 
   try {
@@ -1243,9 +1251,35 @@ Be concise but comprehensive. Use bullet points for clarity.`;
       model: model || AI_CONFIG.MODELS.FAST
     });
 
+    const responseText = response.content[0].text;
+
+    // Parse JSON from response (handle potential markdown code blocks)
+    let drugInfo;
+    try {
+      // Try to extract JSON if wrapped in code blocks
+      const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/) ||
+                        responseText.match(/(\{[\s\S]*\})/);
+      const jsonStr = jsonMatch ? jsonMatch[1].trim() : responseText.trim();
+      drugInfo = JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.warn('[getDrugInfo] Failed to parse JSON, returning raw text');
+      // Return a basic structure with the raw text as a fallback
+      drugInfo = {
+        drugClass: drugName,
+        mechanism: responseText.substring(0, 200),
+        dosing: { adult: 'See full response', renal: null },
+        interactions: [],
+        contraindications: [],
+        sideEffects: { common: [], serious: [] },
+        clinicalPearls: [responseText.substring(0, 300)],
+        monitoring: [],
+        rawText: responseText
+      };
+    }
+
     return {
       success: true,
-      drugInfo: response.content[0].text,
+      drugInfo: drugInfo,
       model: model || AI_CONFIG.MODELS.FAST,
       usage: response.usage
     };
@@ -1515,7 +1549,7 @@ IMPORTANT: Always recommend verification with a pharmacist for critical decision
 });
 
 /**
- * Analyzes a clinical document or image.
+ * Analyzes a clinical document or image - returns structured JSON for frontend.
  */
 exports.analyzeDocument = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
@@ -1528,20 +1562,45 @@ exports.analyzeDocument = onCall({ secrets: [anthropicApiKey] }, async (request)
     throw new HttpsError('invalid-argument', 'Image is required');
   }
 
-  const systemPrompt = `You are a clinical documentation specialist analyzing medical documents.
+  const systemPrompt = `You are a clinical documentation specialist. Analyze the medical document and return ONLY a JSON object with the extracted information.
 
-Based on the document type and content:
-1. Extract key clinical information
-2. Summarize important findings
-3. Flag any critical values or urgent findings
-4. Organize information in a clinically useful format
+Required JSON structure:
+{
+  "documentType": "string - one of: discharge_summary, progress_note, lab_report, imaging_report, consultation, prescription, other",
+  "date": "string - document date if visible, or null",
+  "findings": {
+    "summary": "string - 2-3 sentence clinical summary of the document"
+  },
+  "patientInfo": {
+    "name": "string or null",
+    "mrn": "string or null",
+    "age": "string or null",
+    "gender": "string or null"
+  },
+  "diagnoses": ["array of diagnoses mentioned"],
+  "medications": [
+    {"name": "string", "dose": "string", "route": "string", "frequency": "string"}
+  ],
+  "labValues": [
+    {"name": "string", "value": "string", "unit": "string", "status": "normal|high|low|critical"}
+  ],
+  "vitals": {
+    "bp": "string or null",
+    "hr": "string or null",
+    "temp": "string or null",
+    "spo2": "string or null",
+    "rr": "string or null"
+  },
+  "planItems": ["array of plan/action items mentioned"],
+  "criticalFindings": ["array of any urgent or critical findings"]
+}
 
 Use KUWAIT SI UNITS where applicable.
-Be thorough but concise.`;
+IMPORTANT: Return ONLY the JSON object, no markdown, no explanation.`;
 
-  let userPrompt = 'Please analyze this clinical document.';
+  let userPrompt = 'Analyze this clinical document and extract structured data as JSON.';
   if (documentType) {
-    userPrompt += ` Document type: ${documentType}.`;
+    userPrompt += ` Expected document type: ${documentType}.`;
   }
   if (patientContext) {
     userPrompt += ` Patient context: ${JSON.stringify(patientContext)}`;
@@ -1557,6 +1616,11 @@ Be thorough but concise.`;
         mediaType = matches[1];
         imageData = matches[2];
       }
+    }
+
+    // Handle PDF documents
+    if (mediaType === 'application/pdf') {
+      mediaType = 'application/pdf';
     }
 
     const response = await callClaudeAPI([
@@ -1582,9 +1646,32 @@ Be thorough but concise.`;
       model: AI_CONFIG.MODELS.FAST
     });
 
+    const responseText = response.content[0].text;
+
+    // Parse JSON from response
+    let parsedData;
+    try {
+      const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/) ||
+                        responseText.match(/(\{[\s\S]*\})/);
+      const jsonStr = jsonMatch ? jsonMatch[1].trim() : responseText.trim();
+      parsedData = JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.warn('[analyzeDocument] Failed to parse JSON, creating basic structure');
+      parsedData = {
+        documentType: documentType || 'other',
+        findings: { summary: responseText.substring(0, 500) },
+        diagnoses: [],
+        medications: [],
+        labValues: [],
+        planItems: [],
+        criticalFindings: []
+      };
+    }
+
     return {
       success: true,
-      analysis: response.content[0].text,
+      ...parsedData,
+      rawAnalysis: responseText,
       model: AI_CONFIG.MODELS.FAST,
       usage: response.usage
     };
