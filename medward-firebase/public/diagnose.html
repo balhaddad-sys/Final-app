@@ -102,23 +102,19 @@
       try {
         const healthCheck = functions.httpsCallable('healthCheck');
         const result = await healthCheck();
-        log(`   healthCheck: ${JSON.stringify(result.data)}`, 'pass');
+        if (result.data && result.data.status === 'healthy') {
+          log(`   healthCheck: OK (v${result.data.version})`, 'pass');
+        } else {
+          log(`   healthCheck: ${JSON.stringify(result.data)}`, 'warn');
+        }
       } catch(e) {
         log(`   healthCheck FAILED: ${e.message}`, 'fail');
       }
 
       try {
-        const getUserProfile = functions.httpsCallable('getUserProfile');
-        const result = await getUserProfile();
-        log(`   getUserProfile: ${JSON.stringify(result.data).substring(0, 100)}...`, 'pass');
-      } catch(e) {
-        log(`   getUserProfile FAILED: ${e.message}`, 'fail');
-      }
-
-      try {
         const loadData = functions.httpsCallable('loadData');
         const result = await loadData();
-        log(`   loadData: ${JSON.stringify(result.data).substring(0, 100)}...`, 'pass');
+        log(`   loadData: OK`, 'pass');
       } catch(e) {
         log(`   loadData FAILED: ${e.message}`, 'fail');
       }

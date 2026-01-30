@@ -1971,36 +1971,20 @@ exports.updateSettings = onCall(async (request) => {
 
 /**
  * Health check endpoint.
- * MIGRATED TO V2 - uses cors: true option for automatic CORS handling
+ * MIGRATED TO V2 - uses onCall for consistent callable function interface
  *
- * NOTE: If CORS still fails after deployment, the function may need redeployment.
- * Run: firebase deploy --only functions:healthCheck
+ * Returns system health status and configuration info.
+ * This function is publicly callable and does not require authentication.
  */
-exports.healthCheck = onRequest({
-  cors: true,
-  // Explicitly allow all methods for maximum compatibility
-  invoker: 'public'
-}, (req, res) => {
-  // Set explicit CORS headers as a fallback
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
-  res.json({
+exports.healthCheck = onCall(async (request) => {
+  return {
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.2.2',
+    version: '2.2.3',
     region: 'us-central1',
-    method: req.method,
-    origin: req.headers.origin || 'none',
-    corsEnabled: true
-  });
+    authenticated: !!request.auth,
+    userId: request.auth?.uid || null
+  };
 });
 
 /**
