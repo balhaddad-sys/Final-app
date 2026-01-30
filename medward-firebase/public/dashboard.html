@@ -9395,33 +9395,30 @@ function getPatient(id) { return state.patients.find(p => p.id == id); }
 
 async function sendFeedback(rating, interpretationType = 'lab') {
   if (!state.currentInteractionId || !state.currentPatient) return;
-  
+
   const p = state.currentPatient;
-  
+
   try {
-    await fetch(state.settings.apiUrl, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'recordFeedback',
-        interactionId: state.currentInteractionId,
-        patientId: p.id,
-        interpretationType,
-        rating,
-        interpretation: p.labData?.interpretation?.summary || '',
-        labValues: p.labData?.parameters?.map(param => ({
-          name: param.name,
-          value: param.values?.[0]?.value,
-          status: param.values?.[0]?.status
-        })) || [],
-        sessionId: state.sessionId
-      })
+    // Use Firebase Cloud Function for feedback
+    await callCloud('recordFeedback', {
+      interactionId: state.currentInteractionId,
+      patientId: p.id,
+      interpretationType,
+      rating,
+      interpretation: p.labData?.interpretation?.summary || '',
+      labValues: p.labData?.parameters?.map(param => ({
+        name: param.name,
+        value: param.values?.[0]?.value,
+        status: param.values?.[0]?.status
+      })) || [],
+      sessionId: state.sessionId
     });
-    
+
     // Update UI
     $$('.feedback-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`.feedback-btn.${rating > 0 ? 'positive' : 'negative'}`)?.classList.add('active');
     document.querySelector('.feedback-sent')?.classList.add('show');
-    
+
     toast(rating > 0 ? 'Thanks! This helps improve accuracy.' : 'Feedback noted. We\'ll improve.');
   } catch (e) {
     console.error('Feedback error:', e);
@@ -10866,26 +10863,17 @@ window.useMedScanResult = function(drugName, strength, frequency, route) {
 
 async function handleMedsUpload(file) {
   if (!file) return;
-  
+
   state.isAnalyzingMeds = true;
   renderProfileMeds();
-  
+
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
-      // Strip data URL prefix
-      const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
-      
-      // Use the document analyzer - it extracts medications from any document type
-      const res = await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ 
-          action: 'analyzeDocument',
-          image: rawBase64
-        })
+      // Use Firebase Cloud Function for document analysis
+      const data = await callCloud('analyzeDocument', {
+        image: imageData
       });
-      const data = await res.json();
-      
+
       state.isAnalyzingMeds = false;
       
       if (!data.success) {
@@ -13991,25 +13979,19 @@ async function handleHistoryUpload(files) {
 async function processHistoryFile(file) {
   return new Promise((resolve) => {
     const isPDF = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf');
-    
+
     if (isPDF) {
       const reader = new FileReader();
       reader.onload = async function(e) {
         try {
           const base64Data = e.target.result;
-          const rawBase64 = base64Data.split(',')[1];
-          
-          const res = await fetch(state.settings.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ 
-              action: 'analyzeDocument', 
-              image: rawBase64,
-              mediaType: 'application/pdf'
-            })
+
+          // Use Firebase Cloud Function for document analysis
+          const data = await callCloud('analyzeDocument', {
+            image: base64Data,
+            documentType: 'pdf'
           });
-          const data = await res.json();
-          
+
           if (data.success) {
             processDocumentResult(data, base64Data);
           }
@@ -14023,18 +14005,11 @@ async function processHistoryFile(file) {
     } else {
       compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
         try {
-          const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
-          
-          const res = await fetch(state.settings.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ 
-              action: 'analyzeDocument', 
-              image: rawBase64
-            })
+          // Use Firebase Cloud Function for document analysis
+          const data = await callCloud('analyzeDocument', {
+            image: imageData
           });
-          const data = await res.json();
-          
+
           if (data.success) {
             processDocumentResult(data, imageData);
           }
@@ -14336,20 +14311,14 @@ INSTRUCTIONS:
 - Do not include disclaimers or headers`;
   
   toast('Synthesizing clinical summary...');
-  
+
   try {
-    const res = await fetch(state.settings.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'askClinical',
-        question: context,
-        patientData: `${p.name}, ${p.age || ''} ${p.gender || ''}`
-      })
+    // Use Firebase Cloud Function for clinical AI
+    const data = await callCloud('askClinical', {
+      question: context,
+      patientData: `${p.name}, ${p.age || ''} ${p.gender || ''}`
     });
-    
-    const data = await res.json();
-    
+
     if (data.success && data.answer) {
       p.unifiedSummary = data.answer;
       saveCloud();
@@ -15580,29 +15549,28 @@ window.triggerImagingUpload = function() {
 async function handleImagingUpload(file) {
   state.isAnalyzingImaging = true;
   renderProfileImaging();
-  
+
   const type = prompt('Enter study type:\n• echo\n• ecg\n• xray\n• ct') || 'xray';
-  
+
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
-      const res = await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'interpret', documentType: type, image: imageData })
+      // Use Firebase Cloud Function for imaging interpretation
+      const data = await callCloud('interpret', {
+        documentType: type,
+        image: imageData
       });
-      const data = await res.json();
-      
+
       state.isAnalyzingImaging = false;
-      
+
       const p = state.currentPatient;
       if (!p.imaging) p.imaging = [];
-      
+
       p.imaging.push({
         date: new Date().toISOString(),
         type: type,
         summary: data.interpretation?.summary || data.interpretation?.impression || data.interpretation?.conclusion || 'Analysis complete'
       });
-      
+
       saveCloud();
       renderProfileImaging();
       toast('Imaging added!');
@@ -18279,19 +18247,15 @@ window.submitUnitRequest = async function() {
     console.log('Email notification skipped:', e);
   }
   
-  // Try to save to cloud if API is configured
-  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
+  // Try to save to cloud if Firebase is configured
+  if (CONFIG.USE_FIREBASE) {
     try {
-      await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'submitUnitRequest', request })
-      });
+      await callCloud('submitUnitRequest', { request });
     } catch (e) {
       console.error('Failed to save request to cloud:', e);
     }
   }
-  
+
   // Also save locally
   if (!state.unitRequests) state.unitRequests = [];
   state.unitRequests.push(request);
@@ -18309,15 +18273,10 @@ window.submitUnitRequest = async function() {
 };
 
 async function loadUnitRequests() {
-  // Load from cloud if possible
-  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
+  // Load from cloud if Firebase is configured
+  if (CONFIG.USE_FIREBASE) {
     try {
-      const res = await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'getUnitRequests' })
-      });
-      const data = await res.json();
+      const data = await callCloud('getUnitRequests', {});
       if (data.success && data.requests) {
         state.unitRequests = data.requests;
       }
@@ -18325,7 +18284,7 @@ async function loadUnitRequests() {
       console.error('Failed to load requests:', e);
     }
   }
-  
+
   renderUnitRequests();
 }
 
@@ -18490,27 +18449,23 @@ window.approveRequest = async function() {
   await saveCloud();
   
   // Also save request update to cloud
-  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
+  if (CONFIG.USE_FIREBASE) {
     try {
-      await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
-      });
+      await callCloud('updateUnitRequest', { request: req });
     } catch (e) {
       console.error('Failed to update request:', e);
     }
   }
-  
+
   saveLocal();
   renderUnitsTable();
   renderUnits();
   renderUnitRequests();
   closeModal('approveRequestModal');
-  
+
   // Send approval email to requester
   sendApprovalEmail(req, unitName, code, icon);
-  
+
   toast(`Unit "${unitName}" created with code ${code}!`);
 };
 
@@ -18630,20 +18585,16 @@ window.rejectRequest = async function() {
   
   req.status = 'rejected';
   req.rejectedAt = new Date().toISOString();
-  
+
   // Save to cloud
-  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
+  if (CONFIG.USE_FIREBASE) {
     try {
-      await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
-      });
+      await callCloud('updateUnitRequest', { request: req });
     } catch (e) {
       console.error('Failed to update request:', e);
     }
   }
-  
+
   // Send rejection email
   sendRejectionEmail(req);
   
@@ -18655,23 +18606,19 @@ window.rejectRequest = async function() {
 
 window.quickRejectRequest = async function(requestId) {
   if (!confirm('Reject this request?')) return;
-  
+
   const req = state.unitRequests?.find(r => r.id === requestId);
   if (!req) return;
-  
+
   req.status = 'rejected';
   req.rejectedAt = new Date().toISOString();
-  
-  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
+
+  if (CONFIG.USE_FIREBASE) {
     try {
-      await fetch(state.settings.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
-      });
+      await callCloud('updateUnitRequest', { request: req });
     } catch (e) {}
   }
-  
+
   saveLocal();
   renderUnitRequests();
   toast('Request rejected');
@@ -18762,48 +18709,21 @@ window.openImport = function() { state.importImage = null; state.importPatients 
 window.resetImport = function() { state.importImage = null; state.importPatients = []; $('importUpload').style.display = 'block'; $('importPreview').style.display = 'none'; $('importLoading').style.display = 'none'; $('importResults').style.display = 'none'; $('importError').style.display = 'none'; $('importConfirmBtn').disabled = true; };
 window.extractPatients = async function() {
   if (!state.importImage) { toast('No image selected', true); return; }
-  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) { toast('API URL not configured. Go to Admin settings.', true); return; }
+  if (!CONFIG.USE_FIREBASE) { toast('Firebase not configured. Go to Admin settings.', true); return; }
 
   $('importPreview').style.display = 'none';
   $('importLoading').style.display = 'block';
   $('importError').style.display = 'none';
 
   console.log('🔄 Extracting patients from image...');
-  console.log('📡 API:', state.settings.apiUrl.substring(0, 50) + '...');
   console.log('🖼️ Image size:', Math.round(state.importImage.length / 1024), 'KB');
 
   try {
-    // Get Firebase ID token for authentication
-    const firebaseToken = await window.getFirebaseToken();
-
-    // Debug credential state
-    console.log('🔐 Auth Debug:');
-    console.log('  - AUTH.user:', AUTH.user || '(not set)');
-    console.log('  - AUTH.pass:', AUTH.pass ? '(set)' : '(not set)');
-    console.log('  - Firebase token:', firebaseToken ? `${firebaseToken.substring(0, 20)}...` : '(not available)');
-
-    // Warn if credentials appear incomplete
-    if (!firebaseToken && !AUTH.user) {
-      console.warn('⚠️ No credentials available - you may need to re-login');
-    }
-
-    const res = await fetch(state.settings.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'extractPatients',
-        image: state.importImage,
-        username: AUTH.user,
-        password: AUTH.pass,
-        idToken: firebaseToken
-      })
+    // Use Firebase Cloud Function for patient extraction
+    const d = await callCloud('extractPatients', {
+      image: state.importImage
     });
 
-    console.log('📥 Response status:', res.status);
-
-    if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + res.statusText);
-
-    const d = await res.json();
     console.log('📦 Response:', d);
 
     $('importLoading').style.display = 'none';
@@ -18821,28 +18741,28 @@ window.extractPatients = async function() {
       console.error('❌ API Error:', d.error);
       return;
     }
-    
+
     if (!d.patients?.length) {
       $('importError').style.display = 'block';
       $('importErrorMsg').textContent = 'No patients found in image. Try a clearer screenshot.';
       return;
     }
-    
+
     state.importPatients = d.patients.map((p, i) => ({
       id: Date.now() + i, name: p.name, ward: smartWard(p.ward), room: p.room || '—',
       diagnosis: p.diagnosis || 'Pending', doctor: p.doctor || state.currentUser?.name || 'Unassigned',
       status: p.status === 'chronic' ? 'chronic' : 'active',
       labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: {}
     }));
-    
+
     $('importResults').style.display = 'block';
     $('importCount').textContent = state.importPatients.length;
     $('importList').innerHTML = state.importPatients.map(p => `<div class="import-item"><div style="flex:1"><b>${esc(p.name)}</b><div style="font-size:0.75rem;color:var(--text-muted)">${esc(p.room)}</div></div><select class="import-ward-select" onchange="state.importPatients.find(x=>x.id=='${p.id}').ward=this.value">${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}</select></div>`).join('');
     $('importConfirmBtn').disabled = false;
-    
+
     console.log('✅ Found', state.importPatients.length, 'patients');
     toast('Found ' + state.importPatients.length + ' patients!');
-    
+
   } catch (e) {
     console.error('❌ Extract error:', e);
     $('importLoading').style.display = 'none';
@@ -20385,52 +20305,6 @@ if (window.monitor) {
   });
 }
 
-// Add "Open Monitor" button to settings or nav
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', addMonitorButton);
-} else {
-  addMonitorButton();
-}
-
-function addMonitorButton() {
-  // Try to find a good place to add the button
-  // This will add a floating action button in the bottom right
-  const btn = document.createElement('button');
-  btn.innerHTML = '📊';
-  btn.title = 'Open System Monitor';
-  btn.style.cssText = `
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: 2px solid rgba(255,255,255,0.2);
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 9999;
-    transition: all 0.3s ease;
-  `;
-
-  btn.addEventListener('mouseenter', () => {
-    btn.style.transform = 'scale(1.1)';
-    btn.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
-  });
-
-  btn.addEventListener('mouseleave', () => {
-    btn.style.transform = 'scale(1)';
-    btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-  });
-
-  btn.addEventListener('click', () => {
-    window.open('monitor.html', '_blank', 'width=1400,height=900');
-  });
-
-  document.body.appendChild(btn);
-}
 </script>
 
 <script src="medward-tour.js"></script>
