@@ -1973,26 +1973,16 @@ exports.updateSettings = onCall(async (request) => {
  * Health check endpoint.
  * MIGRATED TO V2 - uses onCall for consistent callable function interface
  *
- * Returns system health status and configuration info.
- * This function is publicly callable and does not require authentication.
+ * Returns system health status directly (not wrapped in data object).
+ * This matches the expected format for Firebase callable functions.
  */
 exports.healthCheck = onCall(async (request) => {
-  try {
-    return {
-      success: true,
-      data: {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        version: '2.2.3',
-        region: 'us-central1',
-        authenticated: !!request.auth,
-        userId: request.auth?.uid || null
-      }
-    };
-  } catch (error) {
-    console.error('[healthCheck] Error:', error);
-    throw new HttpsError('internal', `Health check failed: ${error.message}`);
-  }
+  return {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '2.0.2',
+    region: 'us-central1'
+  };
 });
 
 /**
