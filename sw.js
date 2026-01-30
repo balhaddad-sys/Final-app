@@ -1,95 +1,64 @@
 importScripts("https://progressier.app/0IpCHZYvGyBKyFwHmGj2/sw.js");
 
 /**
- * MedWard Master - Minimal Service Worker
- * Version: 2.0.0
- * 
- * This service worker ONLY caches static assets.
- * API calls are NEVER intercepted - they go directly to the network.
+ * MedWard Master - Service Worker
+ * Version: 2.1.0
+ *
+ * This service worker clears all caches on startup to ensure fresh content.
+ * Note: localStorage (including "Remember Me" data) is NOT affected by cache deletion.
  */
 
-const CACHE_NAME = 'medward-v2.0.4';
-const STATIC_ASSETS = [
-  '/Final-app/',
-  '/Final-app/index.html',
-  '/Final-app/icons/icon-192.png',
-  '/Final-app/icons/icon-512.png'
-];
+const SW_VERSION = '2.1.0';
 
-// Install - cache static assets
+// Install - skip waiting to activate immediately
 self.addEventListener('install', event => {
-  console.log('[MedWard SW] Installing v2.0.4');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
-      .catch(err => console.log('[MedWard SW] Install failed:', err))
-  );
+  console.log(`[MedWard SW] Installing v${SW_VERSION}`);
+  event.waitUntil(self.skipWaiting());
 });
 
-// Activate - clean old caches
+// Activate - delete ALL caches immediately on startup
 self.addEventListener('activate', event => {
-  console.log('[MedWard SW] Activating v2.0.4');
+  console.log(`[MedWard SW] Activating v${SW_VERSION} - Clearing all caches...`);
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
+      .then(cacheNames => {
+        console.log(`[MedWard SW] Found ${cacheNames.length} cache(s) to delete`);
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            console.log(`[MedWard SW] Deleting cache: ${cacheName}`);
+            return caches.delete(cacheName);
+          })
+        );
+      })
+      .then(() => {
+        console.log('[MedWard SW] All caches cleared successfully');
+        return self.clients.claim();
+      })
+      .catch(err => console.error('[MedWard SW] Cache deletion error:', err))
   );
 });
 
-// Fetch - ONLY cache static assets, NEVER touch API calls
+// Fetch - Network only, no caching (ensures fresh content always)
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  // NEVER intercept these - let them go directly to network
-  if (
-    url.hostname.includes('script.google.com') ||
-    url.hostname.includes('googleapis.com') ||
-    url.hostname.includes('googleusercontent.com') ||
-    url.hostname.includes('cloudfunctions.net') ||  // Firebase Cloud Functions
-    url.hostname.includes('firebaseio.com') ||      // Firebase Realtime Database
-    url.hostname.includes('firestore.googleapis.com') || // Firestore
-    url.hostname.includes('anthropic') ||
-    url.hostname.includes('openai') ||
-    event.request.method !== 'GET'
-  ) {
-    // Don't call event.respondWith - browser handles it
-    return;
-  }
-  
-  // Only cache requests from our own origin
-  if (!url.hostname.includes('balhaddad-sys.github.io')) {
-    return;
-  }
-  
-  // For static assets from our site - cache first, then network
-  event.respondWith(
-    caches.match(event.request)
-      .then(cached => {
-        if (cached) {
-          return cached;
-        }
-        return fetch(event.request)
-          .then(response => {
-            // Only cache successful responses
-            if (response && response.status === 200) {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-            }
-            return response;
-          });
-      })
-      .catch(() => {
-        // If offline and no cache, return a simple error
-        if (event.request.destination === 'document') {
-          return new Response('<html><body><h1>Offline</h1><p>Please check your connection.</p></body></html>', {
-            headers: { 'Content-Type': 'text/html' }
-          });
-        }
-      })
-  );
+  // Let all requests go directly to network without caching
+  // This ensures users always get the latest content
+  return;
 });
 
-console.log('[MedWard SW] Loaded v2.0.4');
+// Listen for messages from the main app to clear caches on demand
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'CLEAR_CACHES') {
+    console.log('[MedWard SW] Received clear cache request');
+    caches.keys().then(cacheNames => {
+      Promise.all(cacheNames.map(name => caches.delete(name)))
+        .then(() => {
+          console.log('[MedWard SW] Caches cleared via message');
+          if (event.ports && event.ports[0]) {
+            event.ports[0].postMessage({ success: true });
+          }
+        });
+    });
+  }
+});
+
+console.log(`[MedWard SW] Loaded v${SW_VERSION}`);
