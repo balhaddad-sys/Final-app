@@ -7289,14 +7289,19 @@ function compressPatchQueue() {
 
 function updateSyncStatus(status, message) {
   sync.status = status;
-  
+
+  // Reset connectivity retry counter on successful connection
+  if (status === 'synced' && typeof resetConnectivityRetry === 'function') {
+    resetConnectivityRetry();
+  }
+
   const el = document.getElementById('syncStatusV2') || document.getElementById('syncStatus');
   const textEl = document.getElementById('syncStatusTextV2') || document.getElementById('syncStatusText');
   const iconEl = document.getElementById('syncIconV2');
-  
+
   const icons = { init: '●', loading: '↻', synced: '✓', syncing: '↻', pending: '●', error: '⚠', offline: '○' };
   const messages = { init: 'Starting...', loading: 'Loading...', synced: 'Synced', syncing: 'Syncing...', pending: 'Saving...', error: 'Sync failed', offline: 'Offline' };
-  
+
   if (el) el.className = 'sync-status-v2 ' + status;
   if (textEl) textEl.textContent = message || messages[status] || status;
   if (iconEl) {
@@ -7928,13 +7933,75 @@ function handleBeforeUnload() {
 }
 
 function handleOnline() {
-  console.log('🌐 Back online');
-  loadFromCloud().catch(() => {});
+  console.log('🌐 Browser reports online');
+  // Verify actual connectivity by attempting cloud sync
+  verifyConnectivity();
 }
 
 function handleOffline() {
-  console.log('📴 Offline');
-  updateSyncStatus('offline');
+  console.log('📴 Browser reports offline (verifying...)');
+  // Don't trust browser immediately - verify actual connectivity
+  // navigator.onLine is unreliable, especially on Firebase Hosting
+  verifyConnectivity();
+}
+
+// Verify actual connectivity by attempting a cloud operation
+async function verifyConnectivity() {
+  try {
+    // Try a lightweight health check or sync
+    const result = await callCloudSync('healthCheck', {});
+    if (result && !result.error) {
+      console.log('✅ Cloud connectivity verified');
+      if (sync.status === 'offline') {
+        updateSyncStatus('synced');
+        // Attempt to sync any pending changes
+        processPatchQueue().catch(() => {});
+      }
+    } else {
+      throw new Error('Health check failed');
+    }
+  } catch (error) {
+    console.log('⚠️ Cloud connectivity check failed:', error.message);
+    // Only mark offline if we actually can't reach the cloud
+    // But still allow local operations
+    if (sync.status !== 'offline') {
+      updateSyncStatus('offline');
+      // Schedule retry
+      scheduleConnectivityRetry();
+    }
+  }
+}
+
+// Retry connectivity check with exponential backoff
+let connectivityRetryTimeout = null;
+let connectivityRetryCount = 0;
+const MAX_CONNECTIVITY_RETRIES = 5;
+
+function scheduleConnectivityRetry() {
+  if (connectivityRetryTimeout) {
+    clearTimeout(connectivityRetryTimeout);
+  }
+
+  if (connectivityRetryCount >= MAX_CONNECTIVITY_RETRIES) {
+    console.log('📴 Max connectivity retries reached, staying offline');
+    return;
+  }
+
+  const delay = Math.min(5000 * Math.pow(2, connectivityRetryCount), 60000);
+  connectivityRetryCount++;
+
+  console.log(`🔄 Scheduling connectivity retry #${connectivityRetryCount} in ${delay/1000}s`);
+  connectivityRetryTimeout = setTimeout(() => {
+    verifyConnectivity();
+  }, delay);
+}
+
+function resetConnectivityRetry() {
+  connectivityRetryCount = 0;
+  if (connectivityRetryTimeout) {
+    clearTimeout(connectivityRetryTimeout);
+    connectivityRetryTimeout = null;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

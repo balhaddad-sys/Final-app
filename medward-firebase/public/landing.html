@@ -1380,19 +1380,26 @@ function toast(msg) {
 function updateSyncStatus(status) {
   const el = document.getElementById('syncStatus');
   const text = document.getElementById('syncText');
-  
+
   el.classList.remove('syncing');
-  
+
+  // Map status from firebase.sync.js to UI text
+  // firebase.sync.js uses: 'connected', 'disconnected', 'syncing'
+  // Also support legacy: 'synced', 'pending', 'offline'
+  const statusMap = {
+    'connected': 'Synced',
+    'synced': 'Synced',
+    'syncing': 'Syncing...',
+    'pending': 'Pending...',
+    'disconnected': 'Offline',
+    'offline': 'Offline'
+  };
+
   if (status === 'syncing') {
     el.classList.add('syncing');
-    text.textContent = 'Syncing...';
-  } else if (status === 'synced') {
-    text.textContent = 'Synced';
-  } else if (status === 'pending') {
-    text.textContent = 'Pending...';
-  } else {
-    text.textContent = 'Offline';
   }
+
+  text.textContent = statusMap[status] || 'Synced';
 }
 
 function toggleTheme() {

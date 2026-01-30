@@ -19,8 +19,8 @@ import { getCurrentUser } from './firebase.auth.js';
 // Active listeners (for cleanup)
 const activeListeners = new Map();
 
-// Sync status
-let syncStatus = 'disconnected';
+// Sync status (start with 'syncing' - neutral state until connectivity is verified)
+let syncStatus = 'syncing';
 let syncStatusListeners = [];
 
 // ============================================
@@ -382,20 +382,22 @@ async function updateFirebaseConnectivity() {
  * FIXED: No longer relies on navigator.onLine which is unreliable
  */
 export function initConnectionMonitor() {
-    // Listen to browser events as hints (not truth)
+    // Listen to browser events as hints - ALWAYS verify with actual Firebase operation
     window.addEventListener('online', async () => {
         console.log('[Sync] Browser reports online - verifying Firebase connectivity...');
         await updateFirebaseConnectivity();
     });
 
-    window.addEventListener('offline', () => {
-        console.log('[Sync] Browser reports offline');
-        firebaseConnected = false;
-        setSyncStatus('disconnected');
+    window.addEventListener('offline', async () => {
+        // IMPORTANT: Don't immediately trust the offline event - verify first!
+        // navigator.onLine is notoriously unreliable, especially on Firebase Hosting
+        console.log('[Sync] Browser reports offline - verifying Firebase connectivity...');
+        await updateFirebaseConnectivity();
     });
 
-    // Start with disconnected state - let Firebase listeners update this
-    setSyncStatus('disconnected');
+    // Start with "syncing" state (neutral) instead of disconnected
+    // The connectivity test will determine actual state
+    setSyncStatus('syncing');
 
     // Perform initial connectivity test
     updateFirebaseConnectivity();
