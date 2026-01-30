@@ -102,10 +102,15 @@
       try {
         const healthCheck = functions.httpsCallable('healthCheck');
         const result = await healthCheck();
-        if (result.data && result.data.status === 'healthy') {
-          log(`   healthCheck: OK (v${result.data.version})`, 'pass');
+        if (result.data && result.data.success && result.data.data) {
+          const healthData = result.data.data;
+          if (healthData.status === 'healthy') {
+            log(`   healthCheck: OK (v${healthData.version})`, 'pass');
+          } else {
+            log(`   healthCheck: ${JSON.stringify(healthData)}`, 'warn');
+          }
         } else {
-          log(`   healthCheck: ${JSON.stringify(result.data)}`, 'warn');
+          log(`   healthCheck: Unexpected response format: ${JSON.stringify(result.data)}`, 'warn');
         }
       } catch(e) {
         log(`   healthCheck FAILED: ${e.message}`, 'fail');
