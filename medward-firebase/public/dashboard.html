@@ -488,8 +488,14 @@ body {
 .ward-suggestion{padding:12px 16px;cursor:pointer;font-size:0.9rem;transition:background 0.2s}
 .ward-suggestion:hover{background:var(--bg-hover);color:var(--primary)}
 /* Patient Card Discharge */
-.patient-card{position:relative}
-.patient-card-actions{position:absolute;top:12px;right:12px;display:flex;gap:6px}
+.patient-card{position:relative;cursor:pointer;transition:all 0.2s}
+.patient-card.selected{box-shadow:0 4px 12px rgba(0,0,0,0.1);border-color:var(--primary)}
+.patient-card-actions{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,var(--bg-surface) 90%,transparent);padding:8px;gap:6px;justify-content:center;align-items:center;border-radius:0 0 var(--radius) var(--radius)}
+.patient-action-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-surface);cursor:pointer;font-size:0.7rem;font-weight:600;transition:all 0.2s;color:var(--text-secondary)}
+.patient-action-btn:hover{border-color:var(--primary);color:var(--primary)}
+.patient-action-btn.enter{background:var(--primary);color:white;border-color:var(--primary)}
+.patient-action-btn.enter:hover{background:var(--primary-dark)}
+.patient-action-btn.delete:hover{border-color:var(--danger);color:var(--danger)}
 .patient-discharge-btn{padding:6px 12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:var(--emerald);font-size:0.7rem;font-weight:600;cursor:pointer;transition:all 0.2s}
 .patient-discharge-btn:hover{background:rgba(16,185,129,0.2);border-color:var(--emerald)}
 .patient-discharge-btn.discharged{background:rgba(107,114,128,0.1);border-color:rgba(107,114,128,0.3);color:var(--text-muted);cursor:default}
@@ -607,6 +613,14 @@ body {
 .unit-card-icon{font-size:2rem;margin-bottom:12px}
 .unit-card-name{font-size:1rem;font-weight:700;margin-bottom:4px}
 .unit-card-desc{color:var(--text-muted);font-size:0.8rem}
+.unit-card.selected{border-color:var(--unit-color,var(--primary));box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+.unit-card.selected::before{transform:scaleX(1)}
+.unit-card-actions{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,var(--bg-surface) 80%,transparent);padding:12px;gap:8px;justify-content:center;align-items:center}
+.unit-action-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-surface);cursor:pointer;font-size:0.75rem;font-weight:600;transition:all 0.2s;color:var(--text-secondary)}
+.unit-action-btn:hover{border-color:var(--primary);color:var(--primary)}
+.unit-action-btn.enter{background:var(--primary);color:white;border-color:var(--primary)}
+.unit-action-btn.enter:hover{background:var(--primary-dark)}
+.unit-action-btn.delete:hover{border-color:var(--danger);color:var(--danger)}
 .fab{position:fixed;width:56px;height:56px;background:var(--bg-surface);border:1px solid var(--border);border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text-secondary);z-index:50;transition:all 0.3s}
 .fab svg{width:24px;height:24px}
 .fab:hover{border-color:var(--primary);color:var(--primary)}
@@ -9431,16 +9445,52 @@ window.sendFeedback = sendFeedback;
 // RENDER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════
 
+// Track selected unit card for two-click behavior
+let selectedUnitCardId = null;
+
 function renderUnits() {
   $('unitsGrid').innerHTML = state.units.map(u => `
-    <div class="unit-card" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
+    <div class="unit-card ${selectedUnitCardId === u.id ? 'selected' : ''}" style="--unit-color:${u.color || '#f59e0b'}" data-id="${u.id}">
       <div class="unit-card-icon">${u.icon || '🏥'}</div>
       <div class="unit-card-name">${esc(u.name)}</div>
       <div class="unit-card-desc">${esc(u.desc || '')}</div>
+      <div class="unit-card-actions" style="display:${selectedUnitCardId === u.id ? 'flex' : 'none'}">
+        <button class="unit-action-btn enter" onclick="event.stopPropagation(); openUnitAccess('${u.id}')" title="Enter Unit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Enter
+        </button>
+        <button class="unit-action-btn edit" onclick="event.stopPropagation(); editUnit('${u.id}')" title="Edit Unit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="unit-action-btn delete" onclick="event.stopPropagation(); deleteUnit('${u.id}')" title="Delete Unit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
     </div>
   `).join('');
-  $$('.unit-card').forEach(c => c.onclick = () => openUnitAccess(c.dataset.id));
+
+  $$('.unit-card').forEach(c => {
+    c.onclick = (e) => {
+      const id = c.dataset.id;
+      if (selectedUnitCardId === id) {
+        // Second click - navigate into unit
+        openUnitAccess(id);
+      } else {
+        // First click - show edit options
+        selectedUnitCardId = id;
+        renderUnits();
+      }
+    };
+  });
 }
+
+// Clear unit selection when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.unit-card') && selectedUnitCardId) {
+    selectedUnitCardId = null;
+    renderUnits();
+  }
+});
 
 function renderUnitsTable() {
   const container = $('unitsTable');
@@ -9499,6 +9549,9 @@ function ensureValidCurrentUnit() {
     if (badge) badge.textContent = state.currentUnit.name;
   }
 }
+
+// Track selected patient card for two-click behavior
+let selectedPatientCardId = null;
 
 function renderPatients() {
   const container = $('patientsList');
@@ -9572,6 +9625,7 @@ function renderPatients() {
 
     ps.forEach(p => {
       const medCount = (p.medications && p.medications.length) || 0;
+      const isSelected = selectedPatientCardId === p.id;
 
       // Determine Status Color
       let statusColor = 'var(--primary)';
@@ -9581,7 +9635,7 @@ function renderPatients() {
       else if (p.ward && p.ward.includes('ICU')) statusColor = 'var(--danger)';
 
       // Create the row using both patient-card (for compatibility) and patient-row classes
-      html += `<div class="patient-card ${p.status}" style="border-left-color:${statusColor}" onclick="openPatientProfile('${p.id}')">
+      html += `<div class="patient-card ${p.status} ${isSelected ? 'selected' : ''}" style="border-left-color:${statusColor}" data-patient-id="${p.id}">
         <div class="p-info">
           <div class="p-name">${esc(p.name)}</div>
           <div class="p-demographics p-details">
@@ -9597,14 +9651,53 @@ function renderPatients() {
             ${esc(ward)}
           </div>
         </div>
+        <div class="patient-card-actions" style="display:${isSelected ? 'flex' : 'none'}">
+          <button class="patient-action-btn enter" onclick="event.stopPropagation(); openPatientProfile('${p.id}')" title="Open Profile">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Open
+          </button>
+          <button class="patient-action-btn edit" onclick="event.stopPropagation(); editPatientById('${p.id}')" title="Edit Patient">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="patient-action-btn delete" onclick="event.stopPropagation(); deletePatientById('${p.id}')" title="Delete Patient">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
       </div>`;
     });
     html += '</div>';
   });
 
   container.innerHTML = html;
+
+  // Add two-click behavior to patient cards
+  $$('.patient-card[data-patient-id]').forEach(card => {
+    card.onclick = (e) => {
+      // Don't handle if clicking on action buttons
+      if (e.target.closest('.patient-card-actions')) return;
+
+      const id = card.dataset.patientId;
+      if (selectedPatientCardId === id) {
+        // Second click - open patient profile
+        openPatientProfile(id);
+      } else {
+        // First click - show edit options
+        selectedPatientCardId = id;
+        renderPatients();
+      }
+    };
+  });
+
   updateStats();
 }
+
+// Clear patient selection when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.patient-card') && selectedPatientCardId) {
+    selectedPatientCardId = null;
+    if ($('patientsList')) renderPatients();
+  }
+});
 
 function updateStats() {
   // Filter patients by current unit
@@ -16705,6 +16798,43 @@ window.deleteCurrentPatient = function() {
   }
   saveCloud();
   closePatientProfile();
+  toast('Patient moved to trash');
+};
+
+// Edit patient by ID (from dashboard card)
+window.editPatientById = function(id) {
+  const p = getPatient(id);
+  if (!p) return;
+  $('patientModalTitle').textContent = 'Edit Patient';
+  $('ptId').value = p.id;
+  $('ptName').value = p.name;
+  $('ptWard').value = p.ward;
+  $('ptRoom').value = p.room || '';
+  $('ptDx').value = p.diagnosis || '';
+  $('ptDoctor').value = p.doctor || '';
+  $('ptStatus').value = p.status;
+  selectedPatientCardId = null; // Clear selection
+  openModal('patientModal');
+};
+
+// Delete patient by ID (from dashboard card)
+window.deletePatientById = function(id) {
+  const patient = getPatient(id);
+  if (!patient) return;
+  if (!confirm(`Delete ${patient.name}? They can be restored from Trash.`)) return;
+
+  // Move to trash instead of permanent delete
+  patient.deletedAt = new Date().toISOString();
+  patient.deletedBy = state.currentUser?.name || 'Unknown';
+  if (!state.trash.patients) state.trash.patients = [];
+  state.trash.patients.push({...patient});
+
+  state.patients = state.patients.filter(p => p.id !== patient.id);
+  // DELTA SYNC: Queue delete patch
+  enqueuePatch('deletePatient', { id: patient.id });
+  saveCloud();
+  selectedPatientCardId = null; // Clear selection
+  renderPatients();
   toast('Patient moved to trash');
 };
 
