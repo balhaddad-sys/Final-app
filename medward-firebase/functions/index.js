@@ -2282,10 +2282,21 @@ exports.importWardList = onCall(async (request) => {
       }
 
       // Check if this is a ward header row (e.g., "ward 10", "Ward 20", "ER/Unassigned")
+      // Ward headers may have empty cells or repeat column headers after them
       const wardMatch = firstCell.match(/^ward\s*(\d+)$/i) ||
                         firstCell.match(/^(er|icu|ccu|emergency)/i) ||
                         firstCell === 'er/unassigned';
-      if (wardMatch && !secondCell) {
+
+      // Check if second cell is empty or looks like a column header
+      const secondCellLower = secondCell.toLowerCase();
+      const isHeaderOrEmpty = !secondCell ||
+                              secondCellLower.includes('patient') ||
+                              secondCellLower.includes('diagnosis') ||
+                              secondCellLower.includes('doctor') ||
+                              secondCellLower.includes('name') ||
+                              secondCellLower.includes('room');
+
+      if (wardMatch && isHeaderOrEmpty) {
         // This is a ward header row
         if (firstCell.match(/^ward\s*(\d+)$/i)) {
           currentWard = `Ward ${firstCell.match(/\d+/)[0]}`;
@@ -2517,10 +2528,18 @@ function parsePatientRow(row, idx) {
   const wardMatch = ward.match(/ward\s*(\d+)/i);
   if (wardMatch) {
     ward = `Ward ${wardMatch[1]}`;
-  } else if (room && !ward) {
-    // If we only have room number but no ward, leave ward empty
-    // (will be filled in by currentWard tracking)
-    ward = '';
+  } else if (ward) {
+    // Check if ward value looks like a room number instead of ward name
+    // Room numbers are typically: just digits, or digits with dashes like "11-1", "1-17"
+    // Ward names contain "ward", "ER", "ICU", etc.
+    const looksLikeRoom = /^[\d\-]+$/.test(ward) ||
+                          (ward.length <= 5 && !ward.toLowerCase().includes('ward') &&
+                           !ward.toLowerCase().includes('er') &&
+                           !ward.toLowerCase().includes('icu'));
+    if (looksLikeRoom) {
+      // This is actually a room number, not a ward name
+      ward = '';
+    }
   }
 
   // Parse status - handle "Non-Chronic", "Chronic", etc.
