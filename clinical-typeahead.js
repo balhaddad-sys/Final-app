@@ -343,6 +343,10 @@ const ClinicalTypeahead = (function() {
   function attach(inputElement) {
     if (!inputElement) return;
 
+    // Prevent double-attach
+    if (inputElement.dataset.typeaheadAttached) return;
+    inputElement.dataset.typeaheadAttached = 'true';
+
     // Input handler
     inputElement.addEventListener('input', function(e) {
       const cursorPos = this.selectionStart;
@@ -378,6 +382,16 @@ const ClinicalTypeahead = (function() {
   }
 
   /**
+   * Try to attach to taskText if it exists
+   */
+  function tryAttach() {
+    const taskText = document.getElementById('taskText');
+    if (taskText && !taskText.dataset.typeaheadAttached) {
+      attach(taskText);
+    }
+  }
+
+  /**
    * Initialize the typeahead system for the task modal
    */
   function init() {
@@ -392,11 +406,23 @@ const ClinicalTypeahead = (function() {
       }
     });
 
+    // Fallback: attach on focus for taskText
+    document.addEventListener('focusin', function(e) {
+      if (e.target && e.target.id === 'taskText') {
+        tryAttach();
+      }
+    });
+
     // Watch for task modal being opened
     const observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
         mutation.addedNodes.forEach(function(node) {
           if (node.nodeType === 1) {
+            // Check if the node itself is taskText
+            if (node.id === 'taskText') {
+              attach(node);
+            }
+            // Check if node contains taskText
             const taskText = node.querySelector ? node.querySelector('#taskText') : null;
             if (taskText) {
               attach(taskText);
