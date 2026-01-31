@@ -5512,11 +5512,56 @@ body.dark-theme .readonly-banner {
 // FIREBASE CLOUD FUNCTIONS - Dynamic Import
 // ═══════════════════════════════════════════════════════════════════════════
 let firebaseFunctions = null;
+let firebaseLoadError = null;
+let firebaseLoadPromise = null;
+
 async function loadFirebaseFunctions() {
-  if (!firebaseFunctions) {
-    firebaseFunctions = await import('./firebase.functions.js');
+  // Return cached module if already loaded
+  if (firebaseFunctions) {
+    return firebaseFunctions;
   }
-  return firebaseFunctions;
+
+  // Return cached error if previous load failed
+  if (firebaseLoadError) {
+    console.error('[Firebase] Previous load failed:', firebaseLoadError.message);
+    throw firebaseLoadError;
+  }
+
+  // If already loading, wait for that promise
+  if (firebaseLoadPromise) {
+    return firebaseLoadPromise;
+  }
+
+  // Start loading
+  firebaseLoadPromise = (async () => {
+    try {
+      console.log('[Firebase] Loading firebase.functions.js module...');
+      const module = await import('./firebase.functions.js');
+
+      // Verify module loaded correctly
+      if (!module) {
+        throw new Error('Module import returned empty');
+      }
+
+      // Check for key exports
+      const exports = ['loadData', 'saveData', 'importWardList', 'callFunction'];
+      const missing = exports.filter(name => typeof module[name] !== 'function');
+      if (missing.length > 0) {
+        console.warn('[Firebase] Missing exports:', missing);
+      }
+
+      console.log('[Firebase] Module loaded successfully');
+      firebaseFunctions = module;
+      return module;
+    } catch (err) {
+      console.error('[Firebase] Failed to load module:', err);
+      firebaseLoadError = new Error(`Firebase module failed to load: ${err.message}`);
+      firebaseLoadPromise = null; // Allow retry
+      throw firebaseLoadError;
+    }
+  })();
+
+  return firebaseLoadPromise;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -17235,9 +17280,16 @@ async function refreshDataFromServer() {
     console.log('🔄 Refreshing data from server...');
 
     // Load Firebase Functions module
-    const fb = await loadFirebaseFunctions();
-    if (!fb) {
-      throw new Error('Firebase Functions failed to load');
+    let fb;
+    try {
+      fb = await loadFirebaseFunctions();
+    } catch (loadErr) {
+      console.error('[refreshDataFromServer] Firebase load failed:', loadErr);
+      throw new Error('Could not connect to server. Please check your internet connection.');
+    }
+
+    if (!fb || !fb.loadData) {
+      throw new Error('Firebase connection failed. Please refresh the page.');
     }
 
     const data = await fb.loadData({
@@ -17524,9 +17576,21 @@ async function fetchSheetData(sheetId, tabName, preview = false) {
   console.log('fetchSheetData - sheetId:', sheetId, 'preview:', preview);
 
   // Load Firebase Functions module
-  const fb = await loadFirebaseFunctions();
-  if (!fb || !fb.importWardList) {
-    throw new Error('Firebase Functions not loaded. Please refresh the page.');
+  let fb;
+  try {
+    fb = await loadFirebaseFunctions();
+  } catch (loadErr) {
+    console.error('[fetchSheetData] Firebase load failed:', loadErr);
+    throw new Error('Could not connect to server. Please check your internet and refresh the page.');
+  }
+
+  if (!fb) {
+    throw new Error('Firebase connection failed. Please refresh the page.');
+  }
+
+  if (!fb.importWardList) {
+    console.error('[fetchSheetData] importWardList not found in module. Available:', Object.keys(fb).join(', '));
+    throw new Error('Import feature not available. Please refresh the page.');
   }
 
   const data = await fb.importWardList({
@@ -19798,9 +19862,14 @@ async function init() {
     console.error('❌ Boot diagnostics failed');
     return;
   }
-  
+
   // Show debug panel if ?debug=1 in URL
   Diagnostics.showDebugPanel();
+
+  // Preload Firebase Functions module in background (don't block boot)
+  loadFirebaseFunctions().catch(err => {
+    console.warn('[init] Firebase preload failed:', err.message, '- will retry on demand');
+  });
   
   // ═══════════════════════════════════════════════════════════════════
   // CACHE-FIRST BOOT: Read from warmed cache (loading.html fetched cloud)
