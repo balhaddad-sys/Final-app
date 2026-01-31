@@ -9532,6 +9532,7 @@ function renderUnits() {
 
   $$('.unit-card').forEach(c => {
     c.onclick = (e) => {
+      e.stopPropagation(); // Prevent document click from clearing selection
       const id = c.dataset.id;
       if (selectedUnitCardId === id) {
         // Second click - navigate into unit
@@ -9735,6 +9736,7 @@ function renderPatients() {
   // Add two-click behavior to patient cards
   $$('.patient-card[data-patient-id]').forEach(card => {
     card.onclick = (e) => {
+      e.stopPropagation(); // Prevent document click from clearing selection
       // Don't handle if clicking on action buttons
       if (e.target.closest('.patient-card-actions')) return;
 
