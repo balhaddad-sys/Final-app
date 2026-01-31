@@ -18987,12 +18987,15 @@ window.exportUnitToPDF = function() {
       // Build active rows grouped by ward
       const activeRows = [];
       let currentWard = null;
-      
+
       activePatients.forEach(p => {
         const ward = p.ward || 'Unassigned';
-        
-        // Add ward header row when ward changes
-        if (ward !== currentWard) {
+
+        // Only add ward header for actual ward names (like "Ward 10", "Ward 21")
+        // Skip headers for room numbers (like "1", "1-15", "6") or very short values
+        const isActualWard = ward.toLowerCase().includes('ward') || ward === 'ER' || ward === 'Unassigned' || ward === 'ER/Unassigned';
+
+        if (isActualWard && ward !== currentWard) {
           activeRows.push({
             _isWardHeader: true,
             _wardName: ward,
@@ -19004,7 +19007,7 @@ window.exportUnitToPDF = function() {
           });
           currentWard = ward;
         }
-        
+
         // Add patient row
         activeRows.push({
           _isWardHeader: false,
@@ -19097,12 +19100,15 @@ window.exportUnitToPDF = function() {
       // Build chronic rows
       const chronicRows = [];
       let currentWard = null;
-      
+
       chronicPatients.forEach(p => {
         const ward = p.ward || 'Unassigned';
-        
-        // Add ward header when ward changes
-        if (ward !== currentWard) {
+
+        // Only add ward header for actual ward names (like "Ward 10", "Ward 21")
+        // Skip headers for room numbers (like "1", "1-15", "6") or very short values
+        const isActualWard = ward.toLowerCase().includes('ward') || ward === 'ER' || ward === 'Unassigned' || ward === 'ER/Unassigned';
+
+        if (isActualWard && ward !== currentWard) {
           chronicRows.push({
             _isWardHeader: true,
             _wardName: ward,
@@ -19114,7 +19120,7 @@ window.exportUnitToPDF = function() {
           });
           currentWard = ward;
         }
-        
+
         chronicRows.push({
           _isWardHeader: false,
           bed: p.bed || p.room || '',
