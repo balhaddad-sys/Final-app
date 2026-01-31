@@ -4251,6 +4251,91 @@ body.dark-theme .readonly-banner {
   font-size: 0.8rem;
 }
 
+/* Clinical Typeahead Styles */
+.clinical-typeahead-dropdown {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 10001;
+}
+
+.clinical-typeahead-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  gap: 10px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+}
+
+.clinical-typeahead-item:last-child {
+  border-bottom: none;
+}
+
+.clinical-typeahead-item:hover,
+.clinical-typeahead-item.selected {
+  background: var(--hover-bg, #f0f7ff);
+}
+
+.clinical-typeahead-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.clinical-typeahead-label {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary, #1e293b);
+  font-weight: 500;
+}
+
+.clinical-typeahead-type {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  background: var(--bg-muted, #f1f5f9);
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .clinical-typeahead-dropdown {
+  background: var(--card-bg, #1e293b);
+  border-color: var(--border-color, #334155);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .clinical-typeahead-item:hover,
+[data-theme="dark"] .clinical-typeahead-item.selected {
+  background: var(--hover-bg, #334155);
+}
+
+[data-theme="dark"] .clinical-typeahead-type {
+  background: var(--bg-muted, #334155);
+  color: var(--text-muted, #94a3b8);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .clinical-typeahead-item {
+    padding: 14px 12px;
+    min-height: 48px;
+  }
+
+  .clinical-typeahead-label {
+    font-size: 0.95rem;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -20560,6 +20645,7 @@ function addMonitorButton() {
 }
 </script>
 
+<script src="clinical-typeahead.js"></script>
 <script src="medward-tour.js"></script>
 </body>
 </html>
