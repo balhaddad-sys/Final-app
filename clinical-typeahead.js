@@ -1,13 +1,24 @@
 /**
  * Clinical Typeahead System for MedWard Pro
  * Provides autocomplete suggestions for clinical tasks
+ * Uses professional SVG icons
  */
 
 const ClinicalTypeahead = (function() {
 
+  // SVG Icons for each task type
+  const SVG_ICONS = {
+    lab: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="typeahead-svg"><path d="M9 3h6v2H9zM10 5v4l-4 8a2 2 0 002 2h8a2 2 0 002-2l-4-8V5"/><path d="M8.5 14h7"/></svg>`,
+    img: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="typeahead-svg"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`,
+    cons: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="typeahead-svg"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+    admin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="typeahead-svg"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>`,
+    proc: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="typeahead-svg"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`,
+    mon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="typeahead-svg"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`
+  };
+
   // Clinical Tasks Database
   const CLINICAL_TASKS = [
-    // LABS (🧪)
+    // LABS
     { label: "CBC (Complete Blood Count)", value: "CBC", type: "lab", keywords: "blood hemoglobin white cells cbc" },
     { label: "U&E (Urea & Electrolytes)", value: "U&E", type: "lab", keywords: "kidney renal potassium sodium uae" },
     { label: "LFT (Liver Function Tests)", value: "LFT", type: "lab", keywords: "liver enzymes alt ast lft" },
@@ -31,7 +42,7 @@ const ClinicalTypeahead = (function() {
     { label: "CRP (C-Reactive Protein)", value: "CRP", type: "lab", keywords: "inflammation infection crp" },
     { label: "Procalcitonin", value: "PCT", type: "lab", keywords: "sepsis infection bacterial" },
 
-    // IMAGING (📷)
+    // IMAGING
     { label: "CXR (Chest X-Ray)", value: "CXR", type: "img", keywords: "chest xray lungs cxr" },
     { label: "CT Head", value: "CT Head", type: "img", keywords: "brain stroke neuro cth" },
     { label: "CT Abdomen/Pelvis", value: "CT AP", type: "img", keywords: "belly pain ctap" },
@@ -48,7 +59,7 @@ const ClinicalTypeahead = (function() {
     { label: "HIDA Scan", value: "HIDA", type: "img", keywords: "gallbladder cholecystitis" },
     { label: "V/Q Scan", value: "V/Q", type: "img", keywords: "pe pulmonary embolism lung" },
 
-    // CONSULTS (👨‍⚕️)
+    // CONSULTS
     { label: "Consult Cardiology", value: "C/S Cardio", type: "cons", keywords: "heart cards" },
     { label: "Consult GI", value: "C/S GI", type: "cons", keywords: "gastro stomach gi" },
     { label: "Consult ID", value: "C/S ID", type: "cons", keywords: "infection antibiotics infectious" },
@@ -68,7 +79,7 @@ const ClinicalTypeahead = (function() {
     { label: "Consult Nutrition", value: "C/S Nutrition", type: "cons", keywords: "diet feeding" },
     { label: "Consult Pharmacy", value: "C/S Pharm", type: "cons", keywords: "medications drugs" },
 
-    // ADMIN (📝)
+    // ADMIN
     { label: "Discharge Summary", value: "D/C Summary", type: "admin", keywords: "discharge home leave dc" },
     { label: "Sick Leave Note", value: "Sick Note", type: "admin", keywords: "work off" },
     { label: "Transfer Summary", value: "Transfer Note", type: "admin", keywords: "move unit icu" },
@@ -82,7 +93,7 @@ const ClinicalTypeahead = (function() {
     { label: "Progress Note", value: "Progress Note", type: "admin", keywords: "daily note" },
     { label: "Procedure Note", value: "Procedure Note", type: "admin", keywords: "document procedure" },
 
-    // PROCEDURES (🏥)
+    // PROCEDURES
     { label: "IV Access", value: "IV Access", type: "proc", keywords: "line peripheral" },
     { label: "Central Line", value: "Central Line", type: "proc", keywords: "cvc central venous" },
     { label: "Arterial Line", value: "A-Line", type: "proc", keywords: "arterial monitoring" },
@@ -94,7 +105,7 @@ const ClinicalTypeahead = (function() {
     { label: "Intubation", value: "Intubate", type: "proc", keywords: "airway vent" },
     { label: "Chest Tube", value: "Chest Tube", type: "proc", keywords: "pneumothorax drain" },
 
-    // MONITORING (📊)
+    // MONITORING
     { label: "Telemetry", value: "Tele", type: "mon", keywords: "cardiac monitoring heart" },
     { label: "Neuro Checks Q1H", value: "Neuro Checks", type: "mon", keywords: "neurological stroke" },
     { label: "Strict I/O", value: "Strict I/O", type: "mon", keywords: "intake output fluids" },
@@ -107,16 +118,6 @@ const ClinicalTypeahead = (function() {
     { label: "Fall Precautions", value: "Fall Precautions", type: "mon", keywords: "safety fall risk" }
   ];
 
-  // Icon mapping for task types
-  const TYPE_ICONS = {
-    lab: "🧪",
-    img: "📷",
-    cons: "👨‍⚕️",
-    admin: "📝",
-    proc: "🏥",
-    mon: "📊"
-  };
-
   // Type labels for display
   const TYPE_LABELS = {
     lab: "Lab",
@@ -125,6 +126,16 @@ const ClinicalTypeahead = (function() {
     admin: "Admin",
     proc: "Procedure",
     mon: "Monitoring"
+  };
+
+  // Type colors for badges
+  const TYPE_COLORS = {
+    lab: '#10b981',
+    img: '#3b82f6',
+    cons: '#8b5cf6',
+    admin: '#64748b',
+    proc: '#f59e0b',
+    mon: '#ef4444'
   };
 
   let activeInput = null;
@@ -155,7 +166,7 @@ const ClinicalTypeahead = (function() {
     const dropdown = document.createElement('div');
     dropdown.id = 'clinicalTypeaheadDropdown';
     dropdown.className = 'clinical-typeahead-dropdown';
-    dropdown.style.display = 'none';
+    dropdown.style.cssText = 'display:none;position:fixed;z-index:99999;';
     document.body.appendChild(dropdown);
 
     return dropdown;
@@ -181,18 +192,26 @@ const ClinicalTypeahead = (function() {
 
     // Position dropdown below input
     const rect = input.getBoundingClientRect();
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = (rect.bottom + 4) + 'px';
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const dropdownHeight = Math.min(suggestions.length * 52, 320);
+
+    // Show above if not enough space below
+    if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+      dropdown.style.top = (rect.top - dropdownHeight - 4) + 'px';
+    } else {
+      dropdown.style.top = (rect.bottom + 4) + 'px';
+    }
+
     dropdown.style.left = rect.left + 'px';
-    dropdown.style.width = rect.width + 'px';
+    dropdown.style.width = Math.max(rect.width, 300) + 'px';
     dropdown.style.display = 'block';
 
-    // Render suggestions
+    // Render suggestions with SVG icons
     dropdown.innerHTML = suggestions.map((task, index) => `
       <div class="clinical-typeahead-item" data-index="${index}" data-value="${task.value}">
-        <span class="clinical-typeahead-icon">${TYPE_ICONS[task.type]}</span>
-        <span class="clinical-typeahead-label">${task.label}</span>
-        <span class="clinical-typeahead-type">${TYPE_LABELS[task.type]}</span>
+        <span class="clinical-typeahead-icon" style="color:${TYPE_COLORS[task.type]}">${SVG_ICONS[task.type]}</span>
+        <span class="clinical-typeahead-label">${highlightMatch(task.label, query)}</span>
+        <span class="clinical-typeahead-type" style="background:${TYPE_COLORS[task.type]}20;color:${TYPE_COLORS[task.type]}">${TYPE_LABELS[task.type]}</span>
       </div>
     `).join('');
 
@@ -206,6 +225,16 @@ const ClinicalTypeahead = (function() {
     });
 
     activeInput = input;
+  }
+
+  /**
+   * Highlight matching text
+   */
+  function highlightMatch(text, query) {
+    const q = query.toLowerCase();
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx === -1) return text;
+    return text.slice(0, idx) + '<mark>' + text.slice(idx, idx + q.length) + '</mark>' + text.slice(idx + q.length);
   }
 
   /**
@@ -441,7 +470,7 @@ const ClinicalTypeahead = (function() {
     attach: attach,
     filterTasks: filterTasks,
     CLINICAL_TASKS: CLINICAL_TASKS,
-    TYPE_ICONS: TYPE_ICONS
+    SVG_ICONS: SVG_ICONS
   };
 
 })();
