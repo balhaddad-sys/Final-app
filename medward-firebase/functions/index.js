@@ -2569,7 +2569,8 @@ function parsePatientRow(row, idx) {
     diagnosis: get(idx.diagnosis) || '',
     age: get(idx.age) || '',
     gender: get(idx.gender) || '',
-    consultant: get(idx.consultant) || '',
+    doctor: get(idx.consultant) || '',  // Map consultant to doctor field
+    consultant: get(idx.consultant) || '',  // Keep consultant for backward compatibility
     admitDate: get(idx.admitDate) || '',
     notes: get(idx.notes) || '',
     status: status,
