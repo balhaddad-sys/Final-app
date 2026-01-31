@@ -7480,6 +7480,37 @@ async function callCloudSync(action, extra = {}) {
 
   const deviceId = sync.deviceId || fb.generateDeviceId();
 
+  // Sanitize data to avoid Firestore limits and invalid data types
+  const sanitizeForFirestore = (data) => {
+    if (data === undefined || data === null) return null;
+    if (typeof data === 'number') {
+      if (Number.isNaN(data) || !Number.isFinite(data)) return null;
+      return data;
+    }
+    if (typeof data === 'string') {
+      // Truncate very large strings (likely base64 images) - Firestore has 1MB doc limit
+      if (data.length > 500000) {
+        console.warn('⚠️ Truncating large string field (likely image)');
+        return '[DATA_TOO_LARGE]';
+      }
+      return data;
+    }
+    if (Array.isArray(data)) {
+      return data.map(item => sanitizeForFirestore(item));
+    }
+    if (typeof data === 'object') {
+      const sanitized = {};
+      for (const key of Object.keys(data)) {
+        // Skip undefined values (Firestore doesn't accept them)
+        if (data[key] !== undefined) {
+          sanitized[key] = sanitizeForFirestore(data[key]);
+        }
+      }
+      return sanitized;
+    }
+    return data;
+  };
+
   try {
     // Map actions to Firebase Cloud Functions
     switch (action) {
@@ -7497,8 +7528,13 @@ async function callCloudSync(action, extra = {}) {
         });
 
       case 'saveData':
+        // Sanitize payload before sending to Firestore
+        const sanitizedPayload = sanitizeForFirestore(extra.payload);
+        if (sanitizedPayload?.settings) {
+          delete sanitizedPayload.settings.apiUrl;
+        }
         return await fb.saveData({
-          payload: extra.payload,
+          payload: sanitizedPayload,
           baseRev: extra.baseRev || sync.clientRev,
           force: extra.force || false,
           deviceId
@@ -7507,15 +7543,18 @@ async function callCloudSync(action, extra = {}) {
       case 'patches':
         // FIX: Build full payload from current state for patch sync
         // The patches have already been applied to state, so we save the complete state
-        const patchPayload = {
+        const patchPayload = sanitizeForFirestore({
           units: state.units,
           patients: state.patients,
           settings: { ...state.settings },
           trash: state.trash,
           unitRequests: state.unitRequests
-        };
+        });
+
         // Remove sensitive settings that shouldn't be synced
-        delete patchPayload.settings.apiUrl;
+        if (patchPayload.settings) {
+          delete patchPayload.settings.apiUrl;
+        }
 
         return await fb.saveData({
           payload: patchPayload,
@@ -8204,22 +8243,62 @@ function saveLocalNow() {
     console.log('⏳ saveLocalNow blocked: Cloud not loaded');
     return;
   }
-  
+
   try {
+    // Strip large data (images, base64) to avoid quota issues
+    const stripLargeData = (patients) => {
+      if (!patients) return [];
+      return patients.map(p => ({
+        ...p,
+        // Keep clinical notes but strip images
+        clinicalNotes: (p.clinicalNotes || []).map(note => ({
+          ...note,
+          image: note.image ? '[IMAGE_STRIPPED]' : undefined
+        })),
+        // Keep imaging metadata but strip large data
+        imaging: (p.imaging || []).map(img => ({
+          ...img,
+          data: img.data ? '[DATA_STRIPPED]' : undefined,
+          image: img.image ? '[IMAGE_STRIPPED]' : undefined
+        }))
+      }));
+    };
+
     const payload = JSON.stringify({
       units: state.units,
       settings: state.settings,
-      patients: state.patients,
+      patients: stripLargeData(state.patients),
       unitRequests: state.unitRequests,
       trash: state.trash,
       rev: sync.clientRev,
       checksum: sync.clientChecksum,
       lastUpdated: new Date().toISOString()
     });
+
     localStorage.setItem(CONFIG.STORAGE_KEY, payload);
     localStorage.setItem(CONFIG.CACHE_KEY, payload);
   } catch (e) {
-    console.warn('⚠️ localStorage save failed:', e);
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      console.warn('⚠️ localStorage quota exceeded, clearing old data...');
+      try {
+        // Clear old cache and try again with minimal data
+        localStorage.removeItem(CONFIG.CACHE_KEY);
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+        // Save minimal essential data only
+        const minimalPayload = JSON.stringify({
+          units: state.units,
+          settings: state.settings,
+          rev: sync.clientRev,
+          lastUpdated: new Date().toISOString()
+        });
+        localStorage.setItem(CONFIG.STORAGE_KEY, minimalPayload);
+        console.log('✅ Saved minimal data after quota clear');
+      } catch (e2) {
+        console.error('❌ localStorage completely full:', e2);
+      }
+    } else {
+      console.warn('⚠️ localStorage save failed:', e);
+    }
   }
 }
 
