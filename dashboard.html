@@ -7505,9 +7505,20 @@ async function callCloudSync(action, extra = {}) {
         });
 
       case 'patches':
-        // Patches are handled via saveData with the patch queue
+        // FIX: Build full payload from current state for patch sync
+        // The patches have already been applied to state, so we save the complete state
+        const patchPayload = {
+          units: state.units,
+          patients: state.patients,
+          settings: { ...state.settings },
+          trash: state.trash,
+          unitRequests: state.unitRequests
+        };
+        // Remove sensitive settings that shouldn't be synced
+        delete patchPayload.settings.apiUrl;
+
         return await fb.saveData({
-          payload: extra.payload,
+          payload: patchPayload,
           baseRev: extra.baseRev || sync.clientRev,
           force: false,
           deviceId
@@ -8782,6 +8793,8 @@ function saveLocalDeferred() {
   }
 }
 
+/* LEGACY saveLocalNow - COMMENTED OUT to prevent overwriting v2.0 version
+// Note: saveLocalNow is now defined in Sync Engine v2.0 (line ~8191)
 function saveLocalNow() {
   // ═══════════════════════════════════════════════════════════════════
   // CLOUD-FIRST: Block local writes during boot stability window
@@ -8790,7 +8803,7 @@ function saveLocalNow() {
     console.log('⏳ saveLocalNow blocked: Boot stability window active');
     return;
   }
-  
+
   try {
     const payload = JSON.stringify({
       units: state.units,
@@ -8807,6 +8820,7 @@ function saveLocalNow() {
     console.warn('⚠️ localStorage save failed:', e);
   }
 }
+*/
 
 // Legacy compatibility
 function saveLocal() {
@@ -8819,9 +8833,11 @@ function saveSessionLite() {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// TIER 3: PATCH QUEUE - Accumulate changes for batched sync
+// TIER 3: PATCH QUEUE - LEGACY (COMMENTED OUT)
+// Note: enqueuePatch is now defined in Sync Engine v2.0 (line ~7361)
 // ───────────────────────────────────────────────────────────────────
 
+/* LEGACY enqueuePatch - COMMENTED OUT to prevent overwriting v2.0 version
 function enqueuePatch(operation, payload) {
   // ═══════════════════════════════════════════════════════════════════
   // CRITICAL GUARD: Block patches until cloud sync completes
@@ -8830,30 +8846,32 @@ function enqueuePatch(operation, payload) {
     console.warn('⛔ enqueuePatch blocked: App is in read-only mode');
     return; // Don't queue anything
   }
-  
+
   // Add to queue with timestamp for ordering
-  sync.patchQueue.push({ 
-    operation, 
+  sync.patchQueue.push({
+    operation,
     payload,
     ts: Date.now()
   });
-  
+
   // Mark dirty and trigger debounced sync
   markDirty();
 }
+*/
 
-// Compress patch queue - remove redundant patches
+/* LEGACY compressPatchQueue - COMMENTED OUT to prevent overwriting v2.0 version
+// Note: compressPatchQueue is now defined in Sync Engine v2.0 (line ~7385)
 function compressPatchQueue() {
   const queue = sync.patchQueue;
   if (queue.length <= 1) return;
-  
+
   const patientPatches = new Map(); // id -> latest patch
   const unitPatches = new Map();
   const otherPatches = [];
-  
+
   for (const patch of queue) {
     const id = patch.payload?.id;
-    
+
     if (patch.operation === 'updatePatient' && id) {
       // Keep only the latest update for each patient
       const existing = patientPatches.get(id);
@@ -8874,7 +8892,7 @@ function compressPatchQueue() {
       otherPatches.push(patch);
     }
   }
-  
+
   // Rebuild queue with compressed patches
   sync.patchQueue = [
     ...patientPatches.values(),
@@ -8882,18 +8900,21 @@ function compressPatchQueue() {
     ...otherPatches
   ];
 }
+*/
 
 // ───────────────────────────────────────────────────────────────────
-// SYNC STATUS UI
+// SYNC STATUS UI - LEGACY (COMMENTED OUT)
+// Note: updateSyncStatus is now defined in Sync Engine v2.0 (line ~7426)
 // ───────────────────────────────────────────────────────────────────
 
+/* LEGACY updateSyncStatus - COMMENTED OUT to prevent overwriting v2.0 version
 function updateSyncStatus(status, message) {
   sync.status = status;
   const el = $('syncStatus');
   const textEl = $('syncStatusText');
-  
+
   if (!el || !textEl) return;
-  
+
   el.className = 'sync-status visible ' + status;
   textEl.textContent = message || {
     synced: 'Synced',
@@ -8901,7 +8922,7 @@ function updateSyncStatus(status, message) {
     syncing: 'Syncing...',
     error: 'Sync failed'
   }[status];
-  
+
   if (status === 'synced') {
     setTimeout(() => {
       if (sync.status === 'synced') {
@@ -8910,11 +8931,14 @@ function updateSyncStatus(status, message) {
     }, 2000);
   }
 }
+*/
 
 // ───────────────────────────────────────────────────────────────────
-// MARK DIRTY - Triggers debounced sync
+// MARK DIRTY - LEGACY (COMMENTED OUT)
+// Note: markDirty is now defined in Sync Engine v2.0 (line ~7999)
 // ───────────────────────────────────────────────────────────────────
 
+/* LEGACY markDirty - COMMENTED OUT to prevent overwriting v2.0 version
 function markDirty() {
   // ═══════════════════════════════════════════════════════════════════
   // CRITICAL GUARD: Block ALL changes until cloud sync completes
@@ -8924,24 +8948,25 @@ function markDirty() {
     console.warn('⛔ markDirty blocked: App is in read-only mode');
     return; // Don't even set pendingChanges
   }
-  
+
   sync.pendingChanges = true;
-  
+
   // Instant feedback
   updateSyncStatus('pending', 'Saving...');
-  
+
   // Save lite meta immediately (non-blocking)
   saveLocalLite();
-  
+
   // Debounce the actual sync (800ms)
   if (sync.syncTimer) {
     clearTimeout(sync.syncTimer);
   }
-  
+
   sync.syncTimer = setTimeout(() => {
     performSync();
   }, 800); // 800ms debounce for batching
 }
+*/
 
 // ───────────────────────────────────────────────────────────────────
 // PERFORM SYNC - Main sync orchestrator
@@ -10347,7 +10372,9 @@ window.savePatientScore = function() {
   } else {
     state.currentPatient.scores.push(scoreEntry);
   }
-  
+
+  // FIX: Queue patch for scores changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, scores: state.currentPatient.scores });
   saveCloud();
   closeModal('scoreCalcModal');
   toast(`${score.name}: ${total} saved!`);
@@ -14207,7 +14234,9 @@ window.addClinicalNote = function() {
     text: text,
     author: state.settings.userName || 'Unknown'
   });
-  
+
+  // FIX: Queue patch for clinical notes changes
+  enqueuePatch('updatePatient', { id: p.id, clinicalNotes: p.clinicalNotes });
   saveCloud();
   renderProfileHistory();
   toast('Note added');
@@ -14346,7 +14375,14 @@ function processDocumentResult(data, fileData) {
   if (data.diagnoses?.length && !p.diagnosis) {
     p.diagnosis = data.diagnoses.join(', ');
   }
-  
+
+  // FIX: Queue patch for patient changes after history analysis
+  enqueuePatch('updatePatient', {
+    id: p.id,
+    clinicalNotes: p.clinicalNotes,
+    name: p.name,
+    diagnosis: p.diagnosis
+  });
   saveCloud();
   state.isAnalyzingHistory = false;
   renderProfileHistory();
@@ -14612,6 +14648,8 @@ INSTRUCTIONS:
     
     if (data.success && data.answer) {
       p.unifiedSummary = data.answer;
+      // FIX: Queue patch for unified summary changes
+      enqueuePatch('updatePatient', { id: p.id, unifiedSummary: p.unifiedSummary });
       saveCloud();
       renderProfileHistory();
       toast('✅ Summary synthesized');
@@ -14627,6 +14665,8 @@ INSTRUCTIONS:
 window.deleteClinicalNote = function(idx) {
   if (!confirm('Delete this note?')) return;
   state.currentPatient.clinicalNotes.splice(idx, 1);
+  // FIX: Queue patch for clinical notes changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, clinicalNotes: state.currentPatient.clinicalNotes });
   saveCloud();
   renderProfileHistory();
   toast('Note deleted');
@@ -15623,6 +15663,9 @@ window.confirmLabExtraction = async function() {
   // Update interpretation
   if (ld.interpretation) p.labData.interpretation = ld.interpretation;
 
+  // FIX: Queue patch for lab data changes before syncing
+  enqueuePatch('updatePatient', { id: p.id, labData: p.labData });
+
   // PERFORMANCE FIX: Non-blocking sync - update UI immediately, sync in background
   forceSync().catch(err => console.error('Background sync failed:', err));
 
@@ -15787,7 +15830,9 @@ async function handleImagingUpload(file) {
         type: type,
         summary: data.interpretation?.summary || data.interpretation?.impression || data.interpretation?.conclusion || 'Analysis complete'
       });
-      
+
+      // FIX: Queue patch for imaging changes
+      enqueuePatch('updatePatient', { id: p.id, imaging: p.imaging });
       saveCloud();
       renderProfileImaging();
       toast('Imaging added!');
@@ -15802,6 +15847,8 @@ async function handleImagingUpload(file) {
 window.deleteImaging = function(idx) {
   if (!confirm('Delete this imaging study?')) return;
   state.currentPatient.imaging.splice(idx, 1);
+  // FIX: Queue patch for imaging changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, imaging: state.currentPatient.imaging });
   saveCloud();
   renderProfileImaging();
   toast('Imaging deleted');
@@ -15810,6 +15857,8 @@ window.deleteImaging = function(idx) {
 window.clearPatientLabs = function() {
   if (!confirm('Delete all lab results for this patient?')) return;
   state.currentPatient.labData = { dates: [], parameters: [] };
+  // FIX: Queue patch for lab data changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, labData: state.currentPatient.labData });
   saveCloud();
   renderProfileLabs();
   toast('Lab data cleared');
@@ -16453,7 +16502,9 @@ window.saveTask = function() {
       scheduleTaskNotification(p, p.tasks[p.tasks.length - 1]);
     }
   }
-  
+
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
   saveCloud();
   closeModal('taskModal');
   renderProfilePlans();
@@ -16462,7 +16513,7 @@ window.saveTask = function() {
 window.addSuggestedTask = function(text, priority, category) {
   const p = state.currentPatient;
   if (!p.tasks) p.tasks = [];
-  
+
   p.tasks.push({
     id: Date.now().toString(),
     text: text,
@@ -16473,7 +16524,9 @@ window.addSuggestedTask = function(text, priority, category) {
     createdBy: state.currentUser || 'Unknown',
     aiSuggested: true
   });
-  
+
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
   saveCloud();
   renderProfilePlans();
   toast('Task added from AI suggestion');
@@ -16483,14 +16536,16 @@ window.toggleTaskComplete = function(taskId) {
   const p = state.currentPatient;
   const task = p.tasks?.find(t => t.id === taskId);
   if (!task) return;
-  
+
   task.completed = !task.completed;
   task.completedAt = task.completed ? new Date().toISOString() : null;
   task.completedBy = task.completed ? (state.currentUser || 'Unknown') : null;
-  
+
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
   saveCloud();
   renderProfilePlans();
-  
+
   if (task.completed) {
     toast('✓ Task completed');
   }
@@ -16503,9 +16558,11 @@ window.editTask = function(taskId) {
 
 window.deleteTask = function(taskId) {
   if (!confirm('Delete this task?')) return;
-  
+
   const p = state.currentPatient;
   p.tasks = p.tasks.filter(t => t.id !== taskId);
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
   saveCloud();
   renderProfilePlans();
   toast('Task deleted');
@@ -16528,8 +16585,10 @@ window.toggleCompletedTasks = function() {
 window.togglePlanNotifications = async function(enabled) {
   const p = state.currentPatient;
   p.notificationsEnabled = enabled;
+  // FIX: Queue patch for notification setting changes
+  enqueuePatch('updatePatient', { id: p.id, notificationsEnabled: p.notificationsEnabled });
   saveCloud();
-  
+
   if (enabled) {
     const permission = await requestNotificationPermission();
     if (permission) {
@@ -16539,6 +16598,8 @@ window.togglePlanNotifications = async function(enabled) {
       toast('Please enable notifications in browser settings', true);
       p.notificationsEnabled = false;
       $('planNotifyToggle').checked = false;
+      // FIX: Queue patch for notification setting changes (reverted)
+      enqueuePatch('updatePatient', { id: p.id, notificationsEnabled: p.notificationsEnabled });
       saveCloud();
     }
   } else {
@@ -16688,6 +16749,8 @@ window.closeCelebration = function() {
 window.deletePlan = function(idx) {
   if (!confirm('Delete?')) return;
   state.currentPatient.plans.splice(idx, 1);
+  // FIX: Queue patch for plans changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, plans: state.currentPatient.plans });
   saveCloud();
   renderProfilePlans();
 };
@@ -16809,8 +16872,10 @@ window.togglePlanItem = function(itemId) {
 window.deletePlanItem = function(itemId) {
   const p = state.currentPatient;
   if (!p.planItems) return;
-  
+
   p.planItems = p.planItems.filter(i => i.id !== itemId);
+  // FIX: Queue patch for planItems changes
+  enqueuePatch('updatePatient', { id: p.id, planItems: p.planItems });
   saveCloud();
   renderProfileOverview();
   toast('Item removed');
@@ -16819,22 +16884,27 @@ window.deletePlanItem = function(itemId) {
 window.saveEditText = function() {
   const type = $('editTextType').value;
   const text = $('editTextArea').value;
-  
+  const p = state.currentPatient;
+
   if (type === 'plan') {
     // Save plan as a note entry for history tracking
-    if (!state.currentPatient.notes) state.currentPatient.notes = [];
-    state.currentPatient.notes.unshift({
+    if (!p.notes) p.notes = [];
+    p.notes.unshift({
       type: 'plan',
       text: text,
       date: new Date().toISOString().split('T')[0],
       timestamp: new Date().toISOString(),
       author: state.currentUser?.name || 'Unknown'
     });
-    state.currentPatient.plan = text;
+    p.plan = text;
+    // FIX: Queue patch for plan and notes changes
+    enqueuePatch('updatePatient', { id: p.id, plan: p.plan, notes: p.notes });
   } else {
-    state.currentPatient[type] = text;
+    p[type] = text;
+    // FIX: Queue patch for dynamic field changes
+    enqueuePatch('updatePatient', { id: p.id, [type]: p[type] });
   }
-  
+
   saveCloud();
   renderPatientProfile();
   closeModal('editTextModal');
@@ -16873,12 +16943,16 @@ window.saveAddData = function() {
     };
     
     p.planItems.unshift(newItem);
+    // FIX: Queue patch for planItems changes
+    enqueuePatch('updatePatient', { id: p.id, planItems: p.planItems });
   } else if (type === 'plan') {
     if (!p.plans) p.plans = [];
     const planContent = $('addPlanContent');
     p.plans.push({ date: now, content: planContent?.value || '' });
+    // FIX: Queue patch for plans changes
+    enqueuePatch('updatePatient', { id: p.id, plans: p.plans });
   }
-  
+
   saveCloud();
   renderPatientProfile();
   closeModal('addDataModal');
@@ -19606,16 +19680,23 @@ window.openDischargeModal = function(patientId, event) {
 window.confirmDischarge = function() {
   const p = getPatient(state.dischargePatientId);
   if (!p) return;
-  
+
   const summary = $('dischargeSummary').value.trim();
   p.status = 'discharged';
   p.dischargeDate = new Date().toISOString();
-  
+
   if (summary) {
     if (!p.plans) p.plans = [];
     p.plans.push({ date: new Date().toISOString(), content: `🏠 DISCHARGE SUMMARY:\n${summary}` });
   }
-  
+
+  // FIX: Queue patch for patient discharge changes
+  enqueuePatch('updatePatient', {
+    id: p.id,
+    status: p.status,
+    dischargeDate: p.dischargeDate,
+    plans: p.plans
+  });
   saveCloud();
   renderPatients();
   closeModal('dischargeModal');
@@ -19763,7 +19844,9 @@ window.saveLabOverride = function() {
     else if (numVal > param.refMax) param.values[valueIdx].status = 'high';
     else param.values[valueIdx].status = 'normal';
   }
-  
+
+  // FIX: Queue patch for lab data changes
+  enqueuePatch('updatePatient', { id: p.id, labData: p.labData });
   saveCloud();
   renderProfileLabs();
   closeModal('labOverrideModal');
