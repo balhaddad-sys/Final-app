@@ -5612,6 +5612,9 @@ body.dark-theme .readonly-banner {
 let firebaseFunctions = null;
 let firebaseLoadError = null;
 let firebaseLoadPromise = null;
+let firebaseReady = false; // Track if Firebase has successfully loaded
+let heartbeatRetryCount = 0;
+const MAX_HEARTBEAT_RETRIES = 3;
 
 async function loadFirebaseFunctions() {
   // Return cached module if already loaded
@@ -5650,11 +5653,14 @@ async function loadFirebaseFunctions() {
 
       console.log('[Firebase] Module loaded successfully');
       firebaseFunctions = module;
+      firebaseReady = true;
+      heartbeatRetryCount = 0; // Reset retry count on success
       return module;
     } catch (err) {
       console.error('[Firebase] Failed to load module:', err);
       firebaseLoadError = new Error(`Firebase module failed to load: ${err.message}`);
       firebaseLoadPromise = null; // Allow retry
+      firebaseReady = false;
       throw firebaseLoadError;
     }
   })();
@@ -7465,11 +7471,11 @@ async function callCloudSync(action, extra = {}) {
     fb = await loadFirebaseFunctions();
   } catch (loadErr) {
     console.error('[callCloudSync] Firebase load failed:', loadErr);
-    throw new Error('Could not connect to server. Please check your internet connection.');
+    throw new Error('Firebase Functions not loaded. Please refresh the page.');
   }
 
   if (!fb) {
-    throw new Error('Firebase Functions failed to load. Please refresh the page.');
+    throw new Error('Firebase Functions not loaded. Please refresh the page.');
   }
 
   const deviceId = sync.deviceId || fb.generateDeviceId();
@@ -8036,7 +8042,10 @@ async function sendHeartbeat() {
     const response = await callCloudSync('heartbeat', {
       deviceInfo: { clientRev: sync.clientRev, platform: navigator.platform }
     });
-    
+
+    // Reset retry count on success
+    heartbeatRetryCount = 0;
+
     if (response.success) {
       // FIX #2: Check for force full sync (revision gap or corruption)
       if (response.forceFullSync) {
@@ -8044,20 +8053,28 @@ async function sendHeartbeat() {
         loadFromCloud(true).catch(() => {});
         return;
       }
-      
+
       // Check if server is ahead
       if (response.rev > sync.clientRev || response.checksum !== sync.clientChecksum) {
         console.log('📡 Server has newer data:', response.rev, 'vs', sync.clientRev);
         loadFromCloud().catch(() => {});
       }
-      
+
       if (response.activeSessions) {
         sync.activeSessions = response.activeSessions;
         updateSessionsUI();
       }
     }
   } catch (error) {
-    console.warn('Heartbeat failed:', error.message);
+    heartbeatRetryCount++;
+
+    // Only log warning if Firebase was previously working or if we've exceeded retries
+    if (firebaseReady || heartbeatRetryCount > MAX_HEARTBEAT_RETRIES) {
+      console.warn('Heartbeat failed:', error.message);
+    } else {
+      // Firebase still loading - log debug level only
+      console.log('[Heartbeat] Waiting for Firebase to load... (attempt', heartbeatRetryCount + '/' + MAX_HEARTBEAT_RETRIES + ')');
+    }
   }
 }
 
