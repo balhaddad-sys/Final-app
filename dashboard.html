@@ -2676,6 +2676,26 @@ body.dark-theme .profile-tab.active{background:rgba(96,165,250,0.15)}
 .priority-chip.selected.low{background:rgba(16,185,129,0.1);border-color:#10b981;color:#10b981}
 .category-chip.selected{background:rgba(59,130,246,0.1);border-color:#3b82f6;color:#3b82f6}
 
+/* Clinical Typeahead Autocomplete */
+.autocomplete-container{position:relative}
+.suggestions-list{
+  position:absolute;top:100%;left:0;right:0;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:0 0 8px 8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  max-height:280px;overflow-y:auto;z-index:1000;display:none
+}
+.suggestions-list.show{display:block}
+.suggestion-item{
+  padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);min-height:44px;
+  -webkit-tap-highlight-color:transparent
+}
+.suggestion-item:last-child{border-bottom:none}
+.suggestion-item:hover,.suggestion-item:active,.suggestion-item.active{background:rgba(59,130,246,0.1)}
+.suggestion-icon{font-size:1rem;flex-shrink:0}
+.suggestion-label{flex:1;font-size:0.85rem;color:var(--text)}
+.suggestion-value{font-size:0.7rem;color:var(--text-muted);padding:2px 6px;background:var(--bg);border-radius:4px}
+
 /* Celebration */
 .celebration-overlay{
   position:fixed;top:0;left:0;right:0;bottom:0;
@@ -16492,6 +16512,41 @@ const ClinicalPlanAI = {
   }
 };
 
+// Clinical Typeahead Data
+const CLINICAL_TASKS = [
+  { label: "CBC (Complete Blood Count)", value: "CBC", type: "lab", keywords: "blood hemoglobin cbc" },
+  { label: "U&E (Urea & Electrolytes)", value: "U&E", type: "lab", keywords: "kidney renal potassium sodium" },
+  { label: "LFT (Liver Function Tests)", value: "LFT", type: "lab", keywords: "liver enzymes" },
+  { label: "Coagulation Profile", value: "Coag", type: "lab", keywords: "inr pt aptt" },
+  { label: "Blood Cultures x2", value: "Blood Cx", type: "lab", keywords: "sepsis fever" },
+  { label: "Troponin", value: "Trop", type: "lab", keywords: "cardiac mi" },
+  { label: "ABG", value: "ABG", type: "lab", keywords: "oxygen acid base" },
+  { label: "CXR (Chest X-Ray)", value: "CXR", type: "img", keywords: "chest lungs xray" },
+  { label: "CT Head", value: "CT Head", type: "img", keywords: "brain stroke" },
+  { label: "CT Abdomen/Pelvis", value: "CT AP", type: "img", keywords: "belly pain" },
+  { label: "US Abdomen", value: "US Abdo", type: "img", keywords: "gallbladder liver" },
+  { label: "Echo (TTE)", value: "Echo", type: "img", keywords: "heart ultrasound" },
+  { label: "Consult Cardiology", value: "C/S Cardio", type: "cons", keywords: "heart" },
+  { label: "Consult GI", value: "C/S GI", type: "cons", keywords: "gastro" },
+  { label: "Consult Neurology", value: "C/S Neuro", type: "cons", keywords: "brain stroke" },
+  { label: "Consult ID", value: "C/S ID", type: "cons", keywords: "infection" },
+  { label: "Discharge Summary", value: "D/C Summary", type: "admin", keywords: "discharge home" },
+  { label: "Sick Note", value: "Sick Note", type: "admin", keywords: "work off" },
+  { label: "Family Meeting", value: "Family Mtg", type: "admin", keywords: "goals care" }
+];
+
+const TYPE_ICONS = { lab: "🧪", img: "📷", cons: "👨‍⚕️", admin: "📝" };
+
+function filterClinicalTasks(query) {
+  if (!query || query.length < 1) return [];
+  const q = query.toLowerCase();
+  return CLINICAL_TASKS.filter(t =>
+    t.label.toLowerCase().includes(q) ||
+    t.value.toLowerCase().includes(q) ||
+    t.keywords.includes(q)
+  ).slice(0, 8);
+}
+
 // Task Management Functions
 window.openTaskModal = function(existingTask = null) {
   state.editingTaskId = existingTask?.id || null;
@@ -16510,8 +16565,11 @@ window.openTaskModal = function(existingTask = null) {
         <div class="modal-body">
           <div class="form-group">
             <label class="form-label">Task Description <span class="required">*</span></label>
-            <textarea id="taskText" class="form-textarea task-textarea" 
-                      placeholder="e.g., Check morning labs, Discuss with cardiology...">${existingTask?.text || ''}</textarea>
+            <div class="autocomplete-container">
+              <textarea id="taskText" class="form-textarea task-textarea"
+                        placeholder="e.g., Check morning labs, Discuss with cardiology...">${existingTask?.text || ''}</textarea>
+              <div class="suggestions-list" id="clinicalSuggestions"></div>
+            </div>
           </div>
           
           <div class="task-form-row">
@@ -16573,7 +16631,50 @@ window.openTaskModal = function(existingTask = null) {
       this.classList.add('selected');
     };
   });
-  
+
+  // Initialize clinical typeahead
+  const taskTextInput = $('taskText');
+  const suggestionsList = $('clinicalSuggestions');
+
+  function renderSuggestions(matches) {
+    if (matches.length === 0) {
+      suggestionsList.classList.remove('show');
+      suggestionsList.innerHTML = '';
+      return;
+    }
+    suggestionsList.innerHTML = matches.map((task, idx) =>
+      `<div class="suggestion-item" data-index="${idx}" data-value="${task.value}">
+        <span class="suggestion-icon">${TYPE_ICONS[task.type] || '📋'}</span>
+        <span class="suggestion-label">${task.label}</span>
+        <span class="suggestion-value">${task.value}</span>
+      </div>`
+    ).join('');
+    suggestionsList.classList.add('show');
+  }
+
+  taskTextInput.oninput = function() {
+    const query = this.value.trim();
+    const matches = filterClinicalTasks(query);
+    renderSuggestions(matches);
+  };
+
+  suggestionsList.onclick = function(e) {
+    const item = e.target.closest('.suggestion-item');
+    if (item) {
+      taskTextInput.value = item.dataset.value;
+      suggestionsList.classList.remove('show');
+      suggestionsList.innerHTML = '';
+      taskTextInput.focus();
+    }
+  };
+
+  // Hide suggestions on click outside
+  document.getElementById('taskModal').addEventListener('click', function(e) {
+    if (!e.target.closest('.autocomplete-container')) {
+      suggestionsList.classList.remove('show');
+    }
+  });
+
   $('taskText').focus();
 };
 
