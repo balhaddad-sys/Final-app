@@ -4255,8 +4255,8 @@ body.dark-theme .readonly-banner {
 .clinical-typeahead-dropdown {
   background: var(--card-bg, #fff);
   border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   max-height: 320px;
   overflow-y: auto;
   z-index: 99999;
@@ -4269,7 +4269,7 @@ body.dark-theme .readonly-banner {
   cursor: pointer;
   transition: background 0.15s ease;
   gap: 12px;
-  min-height: 48px;
+  min-height: 44px;
   border-bottom: 1px solid var(--border-color, #f1f5f9);
 }
 
@@ -4279,21 +4279,17 @@ body.dark-theme .readonly-banner {
 
 .clinical-typeahead-item:hover,
 .clinical-typeahead-item.selected {
-  background: var(--hover-bg, #f0f7ff);
+  background: #f0f7ff;
 }
 
 .clinical-typeahead-icon {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.clinical-typeahead-icon .typeahead-svg {
-  width: 20px;
-  height: 20px;
+  font-size: 1.1rem;
 }
 
 .clinical-typeahead-label {
@@ -4337,15 +4333,19 @@ body.dark-theme .readonly-banner {
   background: rgba(59, 130, 246, 0.3);
 }
 
-/* Mobile responsive */
+/* Mobile responsive - ensure 44px min touch targets */
 @media (max-width: 768px) {
   .clinical-typeahead-item {
     padding: 14px 12px;
-    min-height: 52px;
+    min-height: 44px;
   }
 
   .clinical-typeahead-label {
     font-size: 0.95rem;
+  }
+
+  .clinical-typeahead-icon {
+    font-size: 1.2rem;
   }
 }
 
