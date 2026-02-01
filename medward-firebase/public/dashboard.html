@@ -4251,6 +4251,104 @@ body.dark-theme .readonly-banner {
   font-size: 0.8rem;
 }
 
+/* Clinical Typeahead Styles */
+.clinical-typeahead-dropdown {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 99999;
+}
+
+.clinical-typeahead-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  gap: 12px;
+  min-height: 48px;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+}
+
+.clinical-typeahead-item:last-child {
+  border-bottom: none;
+}
+
+.clinical-typeahead-item:hover,
+.clinical-typeahead-item.selected {
+  background: var(--hover-bg, #f0f7ff);
+}
+
+.clinical-typeahead-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clinical-typeahead-icon .typeahead-svg {
+  width: 20px;
+  height: 20px;
+}
+
+.clinical-typeahead-label {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary, #1e293b);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.clinical-typeahead-label mark {
+  background: rgba(59, 130, 246, 0.2);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.clinical-typeahead-type {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .clinical-typeahead-dropdown {
+  background: var(--card-bg, #1e293b);
+  border-color: var(--border-color, #334155);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .clinical-typeahead-item:hover,
+[data-theme="dark"] .clinical-typeahead-item.selected {
+  background: var(--hover-bg, #334155);
+}
+
+[data-theme="dark"] .clinical-typeahead-label mark {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .clinical-typeahead-item {
+    padding: 14px 12px;
+    min-height: 52px;
+  }
+
+  .clinical-typeahead-label {
+    font-size: 0.95rem;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -5978,14 +6076,13 @@ const Diagnostics = {
       resultDiv.innerHTML = '⏳ Testing Firebase Cloud Functions...';
 
       try {
-        const fb = await loadFirebaseFunctions();
-        if (!fb) {
+        if (!window.FirebaseFunctions) {
           resultDiv.innerHTML = `<div style="color:#fca5a5">❌ Firebase Functions not loaded</div><div style="font-size:10px;margin-top:4px">Try refreshing the page</div>`;
           return;
         }
 
         const startTime = Date.now();
-        const result = await fb.callFunction('healthCheck', {});
+        const result = await window.FirebaseFunctions.callFunction('healthCheck', {});
         const elapsed = Date.now() - startTime;
 
         console.log('🔍 Firebase Test Response:', {
@@ -7383,6 +7480,37 @@ async function callCloudSync(action, extra = {}) {
 
   const deviceId = sync.deviceId || fb.generateDeviceId();
 
+  // Sanitize data to avoid Firestore limits and invalid data types
+  const sanitizeForFirestore = (data) => {
+    if (data === undefined || data === null) return null;
+    if (typeof data === 'number') {
+      if (Number.isNaN(data) || !Number.isFinite(data)) return null;
+      return data;
+    }
+    if (typeof data === 'string') {
+      // Truncate very large strings (likely base64 images) - Firestore has 1MB doc limit
+      if (data.length > 500000) {
+        console.warn('⚠️ Truncating large string field (likely image)');
+        return '[DATA_TOO_LARGE]';
+      }
+      return data;
+    }
+    if (Array.isArray(data)) {
+      return data.map(item => sanitizeForFirestore(item));
+    }
+    if (typeof data === 'object') {
+      const sanitized = {};
+      for (const key of Object.keys(data)) {
+        // Skip undefined values (Firestore doesn't accept them)
+        if (data[key] !== undefined) {
+          sanitized[key] = sanitizeForFirestore(data[key]);
+        }
+      }
+      return sanitized;
+    }
+    return data;
+  };
+
   try {
     // Map actions to Firebase Cloud Functions
     switch (action) {
@@ -7400,17 +7528,36 @@ async function callCloudSync(action, extra = {}) {
         });
 
       case 'saveData':
+        // Sanitize payload before sending to Firestore
+        const sanitizedPayload = sanitizeForFirestore(extra.payload);
+        if (sanitizedPayload?.settings) {
+          delete sanitizedPayload.settings.apiUrl;
+        }
         return await fb.saveData({
-          payload: extra.payload,
+          payload: sanitizedPayload,
           baseRev: extra.baseRev || sync.clientRev,
           force: extra.force || false,
           deviceId
         });
 
       case 'patches':
-        // Patches are handled via saveData with the patch queue
+        // FIX: Build full payload from current state for patch sync
+        // The patches have already been applied to state, so we save the complete state
+        const patchPayload = sanitizeForFirestore({
+          units: state.units,
+          patients: state.patients,
+          settings: { ...state.settings },
+          trash: state.trash,
+          unitRequests: state.unitRequests
+        });
+
+        // Remove sensitive settings that shouldn't be synced
+        if (patchPayload.settings) {
+          delete patchPayload.settings.apiUrl;
+        }
+
         return await fb.saveData({
-          payload: extra.payload,
+          payload: patchPayload,
           baseRev: extra.baseRev || sync.clientRev,
           force: false,
           deviceId
@@ -8096,22 +8243,62 @@ function saveLocalNow() {
     console.log('⏳ saveLocalNow blocked: Cloud not loaded');
     return;
   }
-  
+
   try {
+    // Strip large data (images, base64) to avoid quota issues
+    const stripLargeData = (patients) => {
+      if (!patients) return [];
+      return patients.map(p => ({
+        ...p,
+        // Keep clinical notes but strip images
+        clinicalNotes: (p.clinicalNotes || []).map(note => ({
+          ...note,
+          image: note.image ? '[IMAGE_STRIPPED]' : undefined
+        })),
+        // Keep imaging metadata but strip large data
+        imaging: (p.imaging || []).map(img => ({
+          ...img,
+          data: img.data ? '[DATA_STRIPPED]' : undefined,
+          image: img.image ? '[IMAGE_STRIPPED]' : undefined
+        }))
+      }));
+    };
+
     const payload = JSON.stringify({
       units: state.units,
       settings: state.settings,
-      patients: state.patients,
+      patients: stripLargeData(state.patients),
       unitRequests: state.unitRequests,
       trash: state.trash,
       rev: sync.clientRev,
       checksum: sync.clientChecksum,
       lastUpdated: new Date().toISOString()
     });
+
     localStorage.setItem(CONFIG.STORAGE_KEY, payload);
     localStorage.setItem(CONFIG.CACHE_KEY, payload);
   } catch (e) {
-    console.warn('⚠️ localStorage save failed:', e);
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      console.warn('⚠️ localStorage quota exceeded, clearing old data...');
+      try {
+        // Clear old cache and try again with minimal data
+        localStorage.removeItem(CONFIG.CACHE_KEY);
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+        // Save minimal essential data only
+        const minimalPayload = JSON.stringify({
+          units: state.units,
+          settings: state.settings,
+          rev: sync.clientRev,
+          lastUpdated: new Date().toISOString()
+        });
+        localStorage.setItem(CONFIG.STORAGE_KEY, minimalPayload);
+        console.log('✅ Saved minimal data after quota clear');
+      } catch (e2) {
+        console.error('❌ localStorage completely full:', e2);
+      }
+    } else {
+      console.warn('⚠️ localStorage save failed:', e);
+    }
   }
 }
 
@@ -8685,6 +8872,8 @@ function saveLocalDeferred() {
   }
 }
 
+/* LEGACY saveLocalNow - COMMENTED OUT to prevent overwriting v2.0 version
+// Note: saveLocalNow is now defined in Sync Engine v2.0 (line ~8191)
 function saveLocalNow() {
   // ═══════════════════════════════════════════════════════════════════
   // CLOUD-FIRST: Block local writes during boot stability window
@@ -8693,7 +8882,7 @@ function saveLocalNow() {
     console.log('⏳ saveLocalNow blocked: Boot stability window active');
     return;
   }
-  
+
   try {
     const payload = JSON.stringify({
       units: state.units,
@@ -8710,6 +8899,7 @@ function saveLocalNow() {
     console.warn('⚠️ localStorage save failed:', e);
   }
 }
+*/
 
 // Legacy compatibility
 function saveLocal() {
@@ -8722,9 +8912,11 @@ function saveSessionLite() {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// TIER 3: PATCH QUEUE - Accumulate changes for batched sync
+// TIER 3: PATCH QUEUE - LEGACY (COMMENTED OUT)
+// Note: enqueuePatch is now defined in Sync Engine v2.0 (line ~7361)
 // ───────────────────────────────────────────────────────────────────
 
+/* LEGACY enqueuePatch - COMMENTED OUT to prevent overwriting v2.0 version
 function enqueuePatch(operation, payload) {
   // ═══════════════════════════════════════════════════════════════════
   // CRITICAL GUARD: Block patches until cloud sync completes
@@ -8733,30 +8925,32 @@ function enqueuePatch(operation, payload) {
     console.warn('⛔ enqueuePatch blocked: App is in read-only mode');
     return; // Don't queue anything
   }
-  
+
   // Add to queue with timestamp for ordering
-  sync.patchQueue.push({ 
-    operation, 
+  sync.patchQueue.push({
+    operation,
     payload,
     ts: Date.now()
   });
-  
+
   // Mark dirty and trigger debounced sync
   markDirty();
 }
+*/
 
-// Compress patch queue - remove redundant patches
+/* LEGACY compressPatchQueue - COMMENTED OUT to prevent overwriting v2.0 version
+// Note: compressPatchQueue is now defined in Sync Engine v2.0 (line ~7385)
 function compressPatchQueue() {
   const queue = sync.patchQueue;
   if (queue.length <= 1) return;
-  
+
   const patientPatches = new Map(); // id -> latest patch
   const unitPatches = new Map();
   const otherPatches = [];
-  
+
   for (const patch of queue) {
     const id = patch.payload?.id;
-    
+
     if (patch.operation === 'updatePatient' && id) {
       // Keep only the latest update for each patient
       const existing = patientPatches.get(id);
@@ -8777,7 +8971,7 @@ function compressPatchQueue() {
       otherPatches.push(patch);
     }
   }
-  
+
   // Rebuild queue with compressed patches
   sync.patchQueue = [
     ...patientPatches.values(),
@@ -8785,18 +8979,21 @@ function compressPatchQueue() {
     ...otherPatches
   ];
 }
+*/
 
 // ───────────────────────────────────────────────────────────────────
-// SYNC STATUS UI
+// SYNC STATUS UI - LEGACY (COMMENTED OUT)
+// Note: updateSyncStatus is now defined in Sync Engine v2.0 (line ~7426)
 // ───────────────────────────────────────────────────────────────────
 
+/* LEGACY updateSyncStatus - COMMENTED OUT to prevent overwriting v2.0 version
 function updateSyncStatus(status, message) {
   sync.status = status;
   const el = $('syncStatus');
   const textEl = $('syncStatusText');
-  
+
   if (!el || !textEl) return;
-  
+
   el.className = 'sync-status visible ' + status;
   textEl.textContent = message || {
     synced: 'Synced',
@@ -8804,7 +9001,7 @@ function updateSyncStatus(status, message) {
     syncing: 'Syncing...',
     error: 'Sync failed'
   }[status];
-  
+
   if (status === 'synced') {
     setTimeout(() => {
       if (sync.status === 'synced') {
@@ -8813,11 +9010,14 @@ function updateSyncStatus(status, message) {
     }, 2000);
   }
 }
+*/
 
 // ───────────────────────────────────────────────────────────────────
-// MARK DIRTY - Triggers debounced sync
+// MARK DIRTY - LEGACY (COMMENTED OUT)
+// Note: markDirty is now defined in Sync Engine v2.0 (line ~7999)
 // ───────────────────────────────────────────────────────────────────
 
+/* LEGACY markDirty - COMMENTED OUT to prevent overwriting v2.0 version
 function markDirty() {
   // ═══════════════════════════════════════════════════════════════════
   // CRITICAL GUARD: Block ALL changes until cloud sync completes
@@ -8827,24 +9027,25 @@ function markDirty() {
     console.warn('⛔ markDirty blocked: App is in read-only mode');
     return; // Don't even set pendingChanges
   }
-  
+
   sync.pendingChanges = true;
-  
+
   // Instant feedback
   updateSyncStatus('pending', 'Saving...');
-  
+
   // Save lite meta immediately (non-blocking)
   saveLocalLite();
-  
+
   // Debounce the actual sync (800ms)
   if (sync.syncTimer) {
     clearTimeout(sync.syncTimer);
   }
-  
+
   sync.syncTimer = setTimeout(() => {
     performSync();
   }, 800); // 800ms debounce for batching
 }
+*/
 
 // ───────────────────────────────────────────────────────────────────
 // PERFORM SYNC - Main sync orchestrator
@@ -8898,41 +9099,15 @@ async function performSync() {
   }
   
   sync.isSyncing = true;
-
+  
   // Compress patch queue to minimize payload
   compressPatchQueue();
-
+  
   // Schedule deferred local save (non-blocking)
   saveLocalDeferred();
-
-  // ═══════════════════════════════════════════════════════════════════
-  // FIREBASE MODE: Use Firebase Cloud Functions for syncing
-  // Firebase backend uses full-state saves, not patches
-  // ═══════════════════════════════════════════════════════════════════
-  if (CONFIG.USE_FIREBASE) {
-    sync.isSyncing = false; // saveSnapshot manages its own sync lock
-    try {
-      // Use saveSnapshot which properly builds full state payload for Firebase
-      const result = await saveSnapshot();
-      if (result.success) {
-        sync.patchQueue = []; // Clear patches since we did a full save
-        sync.pendingChanges = false;
-        updateSyncStatus('synced', 'Synced via Firebase');
-      } else if (result.blocked || result.wipeBlocked) {
-        console.warn('⚠️ Sync blocked:', result);
-        updateSyncStatus('pending', 'Sync blocked');
-      } else {
-        throw new Error(result.error || 'Sync failed');
-      }
-    } catch (e) {
-      console.error('Firebase sync error:', e);
-      updateSyncStatus('error', 'Sync failed');
-    }
-    return;
-  }
-
-  // Check if we have legacy cloud configured (non-Firebase mode)
-  if (!state.settings.apiUrl) {
+  
+  // Check if we have cloud configured
+  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) {
     sync.pendingChanges = false;
     sync.isSyncing = false;
     updateSyncStatus('synced', 'Saved locally');
@@ -9478,30 +9653,33 @@ function getPatient(id) { return state.patients.find(p => p.id == id); }
 
 async function sendFeedback(rating, interpretationType = 'lab') {
   if (!state.currentInteractionId || !state.currentPatient) return;
-
+  
   const p = state.currentPatient;
-
+  
   try {
-    // Use Firebase Cloud Function for feedback
-    await callCloud('recordFeedback', {
-      interactionId: state.currentInteractionId,
-      patientId: p.id,
-      interpretationType,
-      rating,
-      interpretation: p.labData?.interpretation?.summary || '',
-      labValues: p.labData?.parameters?.map(param => ({
-        name: param.name,
-        value: param.values?.[0]?.value,
-        status: param.values?.[0]?.status
-      })) || [],
-      sessionId: state.sessionId
+    await fetch(state.settings.apiUrl, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'recordFeedback',
+        interactionId: state.currentInteractionId,
+        patientId: p.id,
+        interpretationType,
+        rating,
+        interpretation: p.labData?.interpretation?.summary || '',
+        labValues: p.labData?.parameters?.map(param => ({
+          name: param.name,
+          value: param.values?.[0]?.value,
+          status: param.values?.[0]?.status
+        })) || [],
+        sessionId: state.sessionId
+      })
     });
-
+    
     // Update UI
     $$('.feedback-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`.feedback-btn.${rating > 0 ? 'positive' : 'negative'}`)?.classList.add('active');
     document.querySelector('.feedback-sent')?.classList.add('show');
-
+    
     toast(rating > 0 ? 'Thanks! This helps improve accuracy.' : 'Feedback noted. We\'ll improve.');
   } catch (e) {
     console.error('Feedback error:', e);
@@ -9694,6 +9872,7 @@ function renderPatients() {
       </div>`;
 
     ps.forEach(p => {
+      // Fix: Use p.medications instead of p.meds for proper count
       const medCount = (p.medications && p.medications.length) || 0;
       const isSelected = selectedPatientCardId === p.id;
 
@@ -10272,8 +10451,10 @@ window.savePatientScore = function() {
   } else {
     state.currentPatient.scores.push(scoreEntry);
   }
-  
-  saveCloud();
+
+  // FIX: Queue patch for scores changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, scores: state.currentPatient.scores });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closeModal('scoreCalcModal');
   toast(`${score.name}: ${total} saved!`);
   
@@ -10751,9 +10932,23 @@ $('medScanInput').onchange = async function() {
     });
     state.medScanImage = base64Image;
     
-    // Call Firebase Cloud Function for medication identification
-    const data = await callCloud('identifyMedication', { image: base64Image });
-
+    // Strip data URL prefix if present
+    const rawBase64 = base64Image.startsWith('data:') 
+      ? base64Image.split(',')[1] 
+      : base64Image;
+    
+    // Call the API
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'identifyMedication',
+        image: rawBase64
+      })
+    });
+    
+    const data = await res.json();
+    
     if (!data.success) {
       throw new Error(data.error || 'Failed to identify medications');
     }
@@ -10996,7 +11191,7 @@ window.addSelectedScannedMeds = function() {
 
   // DELTA SYNC: Queue update patch for patient with scanned medications
   enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileMeds();
   closeModal('medScanModal');
   toast(`✓ ${selected.length} medication(s) added`);
@@ -11027,17 +11222,26 @@ window.useMedScanResult = function(drugName, strength, frequency, route) {
 
 async function handleMedsUpload(file) {
   if (!file) return;
-
+  
   state.isAnalyzingMeds = true;
   renderProfileMeds();
-
+  
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
-      // Use Firebase Cloud Function for document analysis
-      const data = await callCloud('analyzeDocument', {
-        image: imageData
+      // Strip data URL prefix
+      const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
+      
+      // Use the document analyzer - it extracts medications from any document type
+      const res = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ 
+          action: 'analyzeDocument',
+          image: rawBase64
+        })
       });
-
+      const data = await res.json();
+      
       state.isAnalyzingMeds = false;
       
       if (!data.success) {
@@ -11078,7 +11282,7 @@ async function handleMedsUpload(file) {
 
         // DELTA SYNC: Queue update patch for patient with imported medications
         enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-        saveCloud();
+        forceSync().catch(err => console.error('Background sync failed:', err));
         renderProfileMeds();
         toast(`✅ ${added} medication(s) imported` + (meds.length - added > 0 ? ` (${meds.length - added} duplicates skipped)` : ''));
       } else {
@@ -11236,7 +11440,7 @@ window.saveMedication = function() {
 
   // DELTA SYNC: Queue update patch for patient with modified medications
   enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   hideAddMedForm();
   renderProfileMeds();
 };
@@ -11279,7 +11483,7 @@ window.saveMedicationNew = function() {
   state.editingMedIdx = null;
   // DELTA SYNC: Queue update patch for patient with modified medications
   enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closeModal('addMedModal');
   renderProfileMeds();
 };
@@ -11339,7 +11543,7 @@ window.deleteMedication = function(idx) {
   state.currentPatient.medications.splice(idx, 1);
   // DELTA SYNC: Queue update patch for patient with modified medications
   enqueuePatch('updatePatient', { id: state.currentPatient.id, medications: state.currentPatient.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileMeds();
   toast('Medication moved to trash');
 };
@@ -12768,8 +12972,8 @@ window.openDrugInfo = async function(drugName, medIdx) {
       return;
     }
 
-    // If medical sources didn't return data, try Firebase Cloud Function
-    if (!CONFIG.USE_FIREBASE) {
+    // If medical sources didn't return data, try the configured API
+    if (!state.settings.apiUrl) {
       renderBasicDrugInfo(drugName, med);
       return;
     }
@@ -12784,12 +12988,18 @@ window.openDrugInfo = async function(drugName, medIdx) {
       })) || []
     };
 
-    // Use Firebase Cloud Function for drug info
-    const data = await callCloud('getDrugInfo', {
-      drugName: drugName,
-      patientContext: patientContext,
-      indication: med?.indication || ''
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'getDrugInfo',
+        drugName: drugName,
+        patientContext: patientContext,
+        indication: med?.indication || ''
+      })
     });
+
+    const data = await res.json();
 
     if (data.error) throw new Error(data.error);
 
@@ -14103,8 +14313,10 @@ window.addClinicalNote = function() {
     text: text,
     author: state.settings.userName || 'Unknown'
   });
-  
-  saveCloud();
+
+  // FIX: Queue patch for clinical notes changes
+  enqueuePatch('updatePatient', { id: p.id, clinicalNotes: p.clinicalNotes });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileHistory();
   toast('Note added');
 };
@@ -14143,19 +14355,25 @@ async function handleHistoryUpload(files) {
 async function processHistoryFile(file) {
   return new Promise((resolve) => {
     const isPDF = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf');
-
+    
     if (isPDF) {
       const reader = new FileReader();
       reader.onload = async function(e) {
         try {
           const base64Data = e.target.result;
-
-          // Use Firebase Cloud Function for document analysis
-          const data = await callCloud('analyzeDocument', {
-            image: base64Data,
-            documentType: 'pdf'
+          const rawBase64 = base64Data.split(',')[1];
+          
+          const res = await fetch(state.settings.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ 
+              action: 'analyzeDocument', 
+              image: rawBase64,
+              mediaType: 'application/pdf'
+            })
           });
-
+          const data = await res.json();
+          
           if (data.success) {
             processDocumentResult(data, base64Data);
           }
@@ -14169,11 +14387,18 @@ async function processHistoryFile(file) {
     } else {
       compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
         try {
-          // Use Firebase Cloud Function for document analysis
-          const data = await callCloud('analyzeDocument', {
-            image: imageData
+          const rawBase64 = imageData.startsWith('data:') ? imageData.split(',')[1] : imageData;
+          
+          const res = await fetch(state.settings.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ 
+              action: 'analyzeDocument', 
+              image: rawBase64
+            })
           });
-
+          const data = await res.json();
+          
           if (data.success) {
             processDocumentResult(data, imageData);
           }
@@ -14229,8 +14454,15 @@ function processDocumentResult(data, fileData) {
   if (data.diagnoses?.length && !p.diagnosis) {
     p.diagnosis = data.diagnoses.join(', ');
   }
-  
-  saveCloud();
+
+  // FIX: Queue patch for patient changes after history analysis
+  enqueuePatch('updatePatient', {
+    id: p.id,
+    clinicalNotes: p.clinicalNotes,
+    name: p.name,
+    diagnosis: p.diagnosis
+  });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   state.isAnalyzingHistory = false;
   renderProfileHistory();
   
@@ -14256,13 +14488,13 @@ window.importMedsFromNote = function(noteIdx) {
     toast('No medications to import', true);
     return;
   }
-  
+
   if (!p.medications) p.medications = [];
-  
+
   let imported = 0;
   note.medsExtracted.forEach(med => {
     // Check for duplicates
-    const exists = p.medications.some(m => 
+    const exists = p.medications.some(m =>
       m.name?.toLowerCase() === med.name?.toLowerCase()
     );
     if (!exists && med.name) {
@@ -14279,13 +14511,12 @@ window.importMedsFromNote = function(noteIdx) {
       imported++;
     }
   });
-  
+
   if (imported > 0) {
-    // Enqueue patch so medications sync to cloud
+    // Queue delta sync patch to persist medications to the medication page
     enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-    saveCloud();
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderProfileMeds();
-    renderPatients(); // Update medication count in patient list
     toast(`✅ ${imported} medication(s) imported`);
   } else {
     toast('All medications already exist', true);
@@ -14299,14 +14530,14 @@ window.importAllMedsFromHistory = function() {
     toast('No documents to import from', true);
     return;
   }
-  
+
   if (!p.medications) p.medications = [];
-  
+
   let imported = 0;
   p.clinicalNotes.forEach(note => {
     if (note.medsExtracted?.length) {
       note.medsExtracted.forEach(med => {
-        const exists = p.medications.some(m => 
+        const exists = p.medications.some(m =>
           m.name?.toLowerCase() === med.name?.toLowerCase()
         );
         if (!exists && med.name) {
@@ -14325,13 +14556,12 @@ window.importAllMedsFromHistory = function() {
       });
     }
   });
-  
+
   if (imported > 0) {
-    // Enqueue patch so medications sync to cloud
+    // Queue delta sync patch to persist medications to the medication page
     enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-    saveCloud();
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderProfileMeds();
-    renderPatients(); // Update medication count in patient list
     toast(`✅ ${imported} medication(s) imported`);
   } else {
     toast('All medications already exist', true);
@@ -14481,17 +14711,25 @@ INSTRUCTIONS:
 - Do not include disclaimers or headers`;
   
   toast('Synthesizing clinical summary...');
-
+  
   try {
-    // Use Firebase Cloud Function for clinical AI
-    const data = await callCloud('askClinical', {
-      question: context,
-      patientData: `${p.name}, ${p.age || ''} ${p.gender || ''}`
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'askClinical',
+        question: context,
+        patientData: `${p.name}, ${p.age || ''} ${p.gender || ''}`
+      })
     });
-
+    
+    const data = await res.json();
+    
     if (data.success && data.answer) {
       p.unifiedSummary = data.answer;
-      saveCloud();
+      // FIX: Queue patch for unified summary changes
+      enqueuePatch('updatePatient', { id: p.id, unifiedSummary: p.unifiedSummary });
+      forceSync().catch(err => console.error('Background sync failed:', err));
       renderProfileHistory();
       toast('✅ Summary synthesized');
     } else {
@@ -14506,7 +14744,9 @@ INSTRUCTIONS:
 window.deleteClinicalNote = function(idx) {
   if (!confirm('Delete this note?')) return;
   state.currentPatient.clinicalNotes.splice(idx, 1);
-  saveCloud();
+  // FIX: Queue patch for clinical notes changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, clinicalNotes: state.currentPatient.clinicalNotes });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileHistory();
   toast('Note deleted');
 };
@@ -14530,54 +14770,7 @@ window.viewNoteImage = function(idx) {
 
 function renderProfileOverview() {
   const p = state.currentPatient;
-  
-  // Get plan items
-  const planItems = (p.planItems || []).sort((a, b) => {
-    // Sort by: incomplete first, then by priority (high > medium > low), then by date
-    if (a.completed !== b.completed) return a.completed ? 1 : -1;
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
-    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
-    }
-    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-  });
-  
-  const completedCount = planItems.filter(i => i.completed).length;
-  const pendingCount = planItems.filter(i => !i.completed).length;
-  
-  // Build plan items HTML
-  let planItemsHtml = '';
-  if (planItems.length === 0) {
-    planItemsHtml = `
-      <div class="plan-empty">
-        <div class="plan-empty-icon">📋</div>
-        <div class="plan-empty-text">No plan items yet</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddPlanItem()">+ Add First Item</button>
-      </div>
-    `;
-  } else {
-    planItemsHtml = `
-      <div class="plan-items">
-        ${planItems.slice(0, 5).map((item, idx) => `
-          <div class="plan-item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
-            <div class="plan-item-check ${item.completed ? 'completed' : ''}" onclick="togglePlanItem('${item.id}')">
-              ${item.completed ? '✓' : ''}
-            </div>
-            <div class="plan-item-content">
-              <div class="plan-item-text">${esc(item.text)}</div>
-              <div class="plan-item-meta">
-                ${item.priority ? `<span class="plan-item-priority ${item.priority}">${item.priority}</span>` : ''}
-                ${item.assignee ? `<span>👤 ${esc(item.assignee)}</span>` : ''}
-                ${item.dueDate ? `<span>📅 ${item.dueDate}</span>` : ''}
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      ${planItems.length > 5 ? `<div style="text-align:center;padding:8px"><button class="btn btn-ghost btn-sm" onclick="showProfileTab('history')">View all ${planItems.length} items →</button></div>` : ''}
-    `;
-  }
-  
+
   $('profileOverview').innerHTML = `
     <div class="section-card">
       <div class="section-header"><div class="section-title">📋 Diagnosis</div></div>
@@ -14596,35 +14789,7 @@ function renderProfileOverview() {
         </div>
       </div>
     </div>
-    
-    <div class="plan-card">
-      <div class="plan-header">
-        <div class="plan-header-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 11l3 3L22 4"/>
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-          </svg>
-          Management Plan
-        </div>
-        <div class="plan-header-actions">
-          <button class="plan-btn plan-btn-add" onclick="openAddPlanItem()">+ Add</button>
-        </div>
-      </div>
-      <div class="plan-content">
-        ${planItemsHtml}
-      </div>
-      ${planItems.length > 0 ? `
-        <div class="plan-summary">
-          <div class="plan-summary-stat">
-            <span>${pendingCount}</span> pending
-          </div>
-          <div class="plan-summary-stat">
-            <span>${completedCount}</span> completed
-          </div>
-        </div>
-      ` : ''}
-    </div>
-    
+
     <div class="section-card">
       <div class="section-header"><div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:-3px;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>History & Examination</div><button class="btn btn-secondary btn-xs" onclick="openEditText('history', 'History')">Edit</button></div>
       <div class="section-body">
@@ -15577,6 +15742,9 @@ window.confirmLabExtraction = async function() {
   // Update interpretation
   if (ld.interpretation) p.labData.interpretation = ld.interpretation;
 
+  // FIX: Queue patch for lab data changes before syncing
+  enqueuePatch('updatePatient', { id: p.id, labData: p.labData });
+
   // PERFORMANCE FIX: Non-blocking sync - update UI immediately, sync in background
   forceSync().catch(err => console.error('Background sync failed:', err));
 
@@ -15719,29 +15887,32 @@ window.triggerImagingUpload = function() {
 async function handleImagingUpload(file) {
   state.isAnalyzingImaging = true;
   renderProfileImaging();
-
+  
   const type = prompt('Enter study type:\n• echo\n• ecg\n• xray\n• ct') || 'xray';
-
+  
   compress(file, CONFIG.MAX_IMAGE_SIZE, async (imageData) => {
     try {
-      // Use Firebase Cloud Function for imaging interpretation
-      const data = await callCloud('interpret', {
-        documentType: type,
-        image: imageData
+      const res = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'interpret', documentType: type, image: imageData })
       });
-
+      const data = await res.json();
+      
       state.isAnalyzingImaging = false;
-
+      
       const p = state.currentPatient;
       if (!p.imaging) p.imaging = [];
-
+      
       p.imaging.push({
         date: new Date().toISOString(),
         type: type,
         summary: data.interpretation?.summary || data.interpretation?.impression || data.interpretation?.conclusion || 'Analysis complete'
       });
 
-      saveCloud();
+      // FIX: Queue patch for imaging changes
+      enqueuePatch('updatePatient', { id: p.id, imaging: p.imaging });
+      forceSync().catch(err => console.error('Background sync failed:', err));
       renderProfileImaging();
       toast('Imaging added!');
     } catch (e) {
@@ -15755,7 +15926,9 @@ async function handleImagingUpload(file) {
 window.deleteImaging = function(idx) {
   if (!confirm('Delete this imaging study?')) return;
   state.currentPatient.imaging.splice(idx, 1);
-  saveCloud();
+  // FIX: Queue patch for imaging changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, imaging: state.currentPatient.imaging });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileImaging();
   toast('Imaging deleted');
 };
@@ -15763,7 +15936,9 @@ window.deleteImaging = function(idx) {
 window.clearPatientLabs = function() {
   if (!confirm('Delete all lab results for this patient?')) return;
   state.currentPatient.labData = { dates: [], parameters: [] };
-  saveCloud();
+  // FIX: Queue patch for lab data changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, labData: state.currentPatient.labData });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileLabs();
   toast('Lab data cleared');
 };
@@ -15858,13 +16033,29 @@ function renderProfilePlans() {
   // Get AI suggestions based on patient context
   const suggestions = ClinicalPlanAI.getSuggestions(p);
   
+  // SVG icons for Plans section
+  const planIcons = {
+    clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
+    brain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2a4 4 0 014 4c0 1.1-.9 2-2 2h-4c-1.1 0-2-.9-2-2a4 4 0 014-4z"/><path d="M8 8v8a4 4 0 008 0V8"/><path d="M12 8v12"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>',
+    fileText: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+    sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 19l.5 1.5L7 21l-1.5.5L5 23l-.5-1.5L3 21l1.5-.5L5 19z"/><path d="M19 10l.5 1.5L21 12l-1.5.5-.5 1.5-.5-1.5L17 12l1.5-.5.5-1.5z"/></svg>'
+  };
+
   $('profilePlans').innerHTML = `
     <div class="section-card plan-section-card">
       <div class="section-header plan-section-header">
-        <div class="section-title">📋 Clinical Plan</div>
-        <button class="btn btn-primary btn-xs" id="addTaskBtn">+ Add Task</button>
+        <div class="section-title">${planIcons.clipboard} Clinical Plan</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-xs" id="mgmtPlanBtn" style="display:flex;align-items:center;gap:4px">${planIcons.sparkles} Management Plan</button>
+          <button class="btn btn-primary btn-xs" id="addTaskBtn">+ Add Task</button>
+        </div>
       </div>
-      
+
       <!-- Progress Stats -->
       <div class="plan-stats-grid">
         <div class="plan-stat-box">
@@ -15892,18 +16083,18 @@ function renderProfilePlans() {
       
       <!-- Notifications -->
       <div class="plan-notify-bar">
-        <span class="notify-label">🔔 Reminders</span>
+        <span class="notify-label">${planIcons.bell} Reminders</span>
         <label class="toggle-switch">
           <input type="checkbox" id="planNotifyToggle" ${p.notificationsEnabled ? 'checked' : ''}>
           <span class="toggle-track"></span>
         </label>
       </div>
-      
+
       <!-- AI Suggestions -->
       ${suggestions.length > 0 ? `
         <div class="plan-ai-box">
           <div class="plan-ai-header">
-            <span class="ai-badge">🧠 AI Suggestions</span>
+            <span class="ai-badge">${planIcons.brain} AI Suggestions</span>
           </div>
           <div class="plan-ai-list">
             ${suggestions.slice(0, 4).map((s, idx) => `
@@ -15921,7 +16112,7 @@ function renderProfilePlans() {
       <div class="plan-tasks-list">
         ${pendingTasks.length > 0 ? `
           <div class="tasks-group-header">
-            <span>⏳ Pending</span>
+            <span>${planIcons.clock} Pending</span>
             <span class="tasks-count">${pendingTasks.length}</span>
           </div>
           ${pendingTasks.sort((a, b) => {
@@ -15938,33 +16129,33 @@ function renderProfilePlans() {
                 </div>
               </div>
               <div class="task-btns">
-                <button class="task-btn" data-action="edit">✏️</button>
-                <button class="task-btn del" data-action="delete">🗑️</button>
+                <button class="task-btn" data-action="edit">${planIcons.edit}</button>
+                <button class="task-btn del" data-action="delete">${planIcons.trash}</button>
               </div>
             </div>
           `).join('')}
         ` : `
           <div class="plan-empty">
-            <div class="empty-icon">✅</div>
+            <div class="empty-icon">${planIcons.check}</div>
             <div class="empty-text">No pending tasks</div>
           </div>
         `}
         
         ${completedTasks.length > 0 ? `
           <div class="tasks-group-header completed-header" id="completedHeader">
-            <span>✓ Completed</span>
+            <span>${planIcons.check} Completed</span>
             <span class="tasks-count done">${completedTasks.length}</span>
             <span class="expand-arrow">▼</span>
           </div>
           <div class="completed-tasks-list" id="completedTasksList" style="display:none">
             ${completedTasks.map(task => `
               <div class="plan-task-item completed" data-task-id="${task.id}">
-                <div class="task-check-box done" data-action="toggle">✓</div>
+                <div class="task-check-box done" data-action="toggle">${planIcons.check}</div>
                 <div class="task-info">
                   <div class="task-text">${esc(task.text)}</div>
                 </div>
                 <div class="task-btns">
-                  <button class="task-btn del" data-action="delete">🗑️</button>
+                  <button class="task-btn del" data-action="delete">${planIcons.trash}</button>
                 </div>
               </div>
             `).join('')}
@@ -15985,13 +16176,26 @@ function renderProfilePlans() {
 }
 
 function getCategoryIcon(cat) {
-  const icons = { labs: '🔬', imaging: '📷', medication: '💊', consult: '👨‍⚕️', procedure: '🏥', discharge: '🏠', monitoring: '📊', general: '📝' };
-  return icons[cat] || '📝';
+  const icons = {
+    labs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 3h6v5l4 9a2 2 0 01-2 3H7a2 2 0 01-2-3l4-9V3z"/><line x1="9" y1="3" x2="15" y2="3"/></svg>',
+    imaging: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+    medication: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M10.5 20.5L3.5 13.5a4.95 4.95 0 117-7l7 7a4.95 4.95 0 11-7 7z"/><path d="M8.5 8.5l7 7"/></svg>',
+    consult: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    procedure: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><rect x="5" y="3" width="14" height="18" rx="2"/></svg>',
+    discharge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    monitoring: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    general: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
+  };
+  return icons[cat] || icons.general;
 }
 
 function getPriorityDot(pri) {
-  const dots = { high: '🔴 High', medium: '🟡 Med', low: '🟢 Low' };
-  return dots[pri] || '🟡 Med';
+  const dots = {
+    high: '<span style="color:#ef4444">●</span> High',
+    medium: '<span style="color:#f59e0b">●</span> Med',
+    low: '<span style="color:#10b981">●</span> Low'
+  };
+  return dots[pri] || dots.medium;
 }
 
 function initPlanEventHandlers() {
@@ -16000,7 +16204,13 @@ function initPlanEventHandlers() {
   if (addBtn) {
     addBtn.onclick = function() { openTaskModal(); };
   }
-  
+
+  // Management Plan button
+  const mgmtBtn = document.getElementById('mgmtPlanBtn');
+  if (mgmtBtn) {
+    mgmtBtn.onclick = function() { generateManagementPlan(); };
+  }
+
   // Notification toggle
   const notifyToggle = document.getElementById('planNotifyToggle');
   if (notifyToggle) {
@@ -16406,8 +16616,10 @@ window.saveTask = function() {
       scheduleTaskNotification(p, p.tasks[p.tasks.length - 1]);
     }
   }
-  
-  saveCloud();
+
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closeModal('taskModal');
   renderProfilePlans();
 };
@@ -16415,7 +16627,7 @@ window.saveTask = function() {
 window.addSuggestedTask = function(text, priority, category) {
   const p = state.currentPatient;
   if (!p.tasks) p.tasks = [];
-  
+
   p.tasks.push({
     id: Date.now().toString(),
     text: text,
@@ -16426,8 +16638,10 @@ window.addSuggestedTask = function(text, priority, category) {
     createdBy: state.currentUser || 'Unknown',
     aiSuggested: true
   });
-  
-  saveCloud();
+
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
   toast('Task added from AI suggestion');
 };
@@ -16436,14 +16650,16 @@ window.toggleTaskComplete = function(taskId) {
   const p = state.currentPatient;
   const task = p.tasks?.find(t => t.id === taskId);
   if (!task) return;
-  
+
   task.completed = !task.completed;
   task.completedAt = task.completed ? new Date().toISOString() : null;
   task.completedBy = task.completed ? (state.currentUser || 'Unknown') : null;
-  
-  saveCloud();
+
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
-  
+
   if (task.completed) {
     toast('✓ Task completed');
   }
@@ -16454,12 +16670,114 @@ window.editTask = function(taskId) {
   if (task) openTaskModal(task);
 };
 
+// Generate AI Management Plan
+window.generateManagementPlan = async function() {
+  const p = state.currentPatient;
+  if (!p) {
+    toast('No patient selected', true);
+    return;
+  }
+
+  const mgmtBtn = document.getElementById('mgmtPlanBtn');
+  if (mgmtBtn) {
+    mgmtBtn.disabled = true;
+    mgmtBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="spin"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/></svg> Generating...';
+  }
+
+  try {
+    // Build patient context
+    const context = {
+      diagnosis: p.diagnosis || '',
+      history: p.history || '',
+      vitals: p.vitals || {},
+      medications: p.medications || [],
+      labs: p.labData?.parameters?.map(param => ({
+        name: param.name,
+        value: param.values?.[0]?.value,
+        status: param.values?.[0]?.status
+      })) || [],
+      existingTasks: (p.tasks || []).filter(t => !t.completed).map(t => t.text)
+    };
+
+    const prompt = `Based on this patient's clinical data, generate a focused management plan with 3-5 specific actionable tasks.
+
+Patient Context:
+- Diagnosis: ${context.diagnosis || 'Not specified'}
+- History: ${context.history || 'Not available'}
+- Current Vitals: ${JSON.stringify(context.vitals)}
+- Medications: ${context.medications.length ? context.medications.map(m => typeof m === 'string' ? m : m.name).join(', ') : 'None listed'}
+- Key Labs: ${context.labs.length ? context.labs.map(l => \`\${l.name}: \${l.value} (\${l.status || 'normal'})\`).join(', ') : 'Not available'}
+- Existing Tasks: ${context.existingTasks.length ? context.existingTasks.join(', ') : 'None'}
+
+Return a JSON array of tasks. Each task should have: text (string), priority (high/medium/low), category (labs/imaging/consult/procedure/general).
+Only return the JSON array, no other text.`;
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (window.OPENROUTER_API_KEY || localStorage.getItem('OPENROUTER_KEY') || '')
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash-001',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 500
+      })
+    });
+
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    // Parse JSON from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const tasks = JSON.parse(jsonMatch[0]);
+
+      if (Array.isArray(tasks) && tasks.length > 0) {
+        if (!p.tasks) p.tasks = [];
+
+        tasks.forEach(task => {
+          p.tasks.push({
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+            text: task.text,
+            completed: false,
+            priority: task.priority || 'medium',
+            category: task.category || 'general',
+            createdAt: new Date().toISOString(),
+            createdBy: 'AI Management Plan',
+            aiGenerated: true
+          });
+        });
+
+        enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
+        forceSync().catch(err => console.error('Background sync failed:', err));
+        renderProfilePlans();
+        toast(\`✓ Added \${tasks.length} tasks from management plan\`);
+      } else {
+        toast('No tasks generated', true);
+      }
+    } else {
+      toast('Could not parse management plan', true);
+    }
+  } catch (err) {
+    console.error('Management plan error:', err);
+    toast('Failed to generate plan: ' + err.message, true);
+  } finally {
+    if (mgmtBtn) {
+      mgmtBtn.disabled = false;
+      mgmtBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 19l.5 1.5L7 21l-1.5.5L5 23l-.5-1.5L3 21l1.5-.5L5 19z"/><path d="M19 10l.5 1.5L21 12l-1.5.5-.5 1.5-.5-1.5L17 12l1.5-.5.5-1.5z"/></svg> Management Plan';
+    }
+  }
+};
+
 window.deleteTask = function(taskId) {
   if (!confirm('Delete this task?')) return;
-  
+
   const p = state.currentPatient;
   p.tasks = p.tasks.filter(t => t.id !== taskId);
-  saveCloud();
+  // FIX: Queue patch for tasks changes
+  enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
   toast('Task deleted');
 };
@@ -16481,8 +16799,10 @@ window.toggleCompletedTasks = function() {
 window.togglePlanNotifications = async function(enabled) {
   const p = state.currentPatient;
   p.notificationsEnabled = enabled;
-  saveCloud();
-  
+  // FIX: Queue patch for notification setting changes
+  enqueuePatch('updatePatient', { id: p.id, notificationsEnabled: p.notificationsEnabled });
+  forceSync().catch(err => console.error('Background sync failed:', err));
+
   if (enabled) {
     const permission = await requestNotificationPermission();
     if (permission) {
@@ -16492,7 +16812,9 @@ window.togglePlanNotifications = async function(enabled) {
       toast('Please enable notifications in browser settings', true);
       p.notificationsEnabled = false;
       $('planNotifyToggle').checked = false;
-      saveCloud();
+      // FIX: Queue patch for notification setting changes (reverted)
+      enqueuePatch('updatePatient', { id: p.id, notificationsEnabled: p.notificationsEnabled });
+      forceSync().catch(err => console.error('Background sync failed:', err));
     }
   } else {
     toast('Notifications disabled');
@@ -16641,7 +16963,9 @@ window.closeCelebration = function() {
 window.deletePlan = function(idx) {
   if (!confirm('Delete?')) return;
   state.currentPatient.plans.splice(idx, 1);
-  saveCloud();
+  // FIX: Queue patch for plans changes
+  enqueuePatch('updatePatient', { id: state.currentPatient.id, plans: state.currentPatient.plans });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
 };
 
@@ -16752,8 +17076,10 @@ window.togglePlanItem = function(itemId) {
     item.completed = !item.completed;
     item.completedAt = item.completed ? new Date().toISOString() : null;
     item.completedBy = item.completed ? state.currentUser?.name : null;
-    
-    saveCloud();
+
+    // FIX: Queue patch for planItems changes
+    enqueuePatch('updatePatient', { id: p.id, planItems: p.planItems });
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderProfileOverview();
     toast(item.completed ? '✓ Marked complete' : 'Marked incomplete');
   }
@@ -16762,9 +17088,11 @@ window.togglePlanItem = function(itemId) {
 window.deletePlanItem = function(itemId) {
   const p = state.currentPatient;
   if (!p.planItems) return;
-  
+
   p.planItems = p.planItems.filter(i => i.id !== itemId);
-  saveCloud();
+  // FIX: Queue patch for planItems changes
+  enqueuePatch('updatePatient', { id: p.id, planItems: p.planItems });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileOverview();
   toast('Item removed');
 };
@@ -16772,23 +17100,28 @@ window.deletePlanItem = function(itemId) {
 window.saveEditText = function() {
   const type = $('editTextType').value;
   const text = $('editTextArea').value;
-  
+  const p = state.currentPatient;
+
   if (type === 'plan') {
     // Save plan as a note entry for history tracking
-    if (!state.currentPatient.notes) state.currentPatient.notes = [];
-    state.currentPatient.notes.unshift({
+    if (!p.notes) p.notes = [];
+    p.notes.unshift({
       type: 'plan',
       text: text,
       date: new Date().toISOString().split('T')[0],
       timestamp: new Date().toISOString(),
       author: state.currentUser?.name || 'Unknown'
     });
-    state.currentPatient.plan = text;
+    p.plan = text;
+    // FIX: Queue patch for plan and notes changes
+    enqueuePatch('updatePatient', { id: p.id, plan: p.plan, notes: p.notes });
   } else {
-    state.currentPatient[type] = text;
+    p[type] = text;
+    // FIX: Queue patch for dynamic field changes
+    enqueuePatch('updatePatient', { id: p.id, [type]: p[type] });
   }
-  
-  saveCloud();
+
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatientProfile();
   closeModal('editTextModal');
   toast('Saved!');
@@ -16826,13 +17159,17 @@ window.saveAddData = function() {
     };
     
     p.planItems.unshift(newItem);
+    // FIX: Queue patch for planItems changes
+    enqueuePatch('updatePatient', { id: p.id, planItems: p.planItems });
   } else if (type === 'plan') {
     if (!p.plans) p.plans = [];
     const planContent = $('addPlanContent');
     p.plans.push({ date: now, content: planContent?.value || '' });
+    // FIX: Queue patch for plans changes
+    enqueuePatch('updatePatient', { id: p.id, plans: p.plans });
   }
-  
-  saveCloud();
+
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatientProfile();
   closeModal('addDataModal');
   toast('Saved!');
@@ -16867,7 +17204,7 @@ window.deleteCurrentPatient = function() {
   if (patientId) {
     enqueuePatch('deletePatient', { id: patientId });
   }
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closePatientProfile();
   toast('Patient moved to trash');
 };
@@ -16903,7 +17240,7 @@ window.deletePatientById = function(id) {
   state.patients = state.patients.filter(p => p.id !== patient.id);
   // DELTA SYNC: Queue delete patch
   enqueuePatch('deletePatient', { id: patient.id });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   selectedPatientCardId = null; // Clear selection
   renderPatients();
   toast('Patient moved to trash');
@@ -18296,8 +18633,8 @@ window.restorePatient = function(idx) {
   
   // DELTA SYNC: Queue add patch for restored patient
   enqueuePatch('addPatient', patient);
-  
-  saveCloud();
+
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Patient restored!');
 };
@@ -18311,8 +18648,8 @@ window.restoreUnit = function(idx) {
   
   state.units.push(unit);
   state.trash.units.splice(idx, 1);
-  
-  saveCloud();
+
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   renderUnits();
   toast('Unit restored!');
@@ -18332,9 +18669,11 @@ window.restoreMedication = function(idx) {
     
     if (!patient.medications) patient.medications = [];
     patient.medications.push(med);
-    
+
+    // FIX: Queue patch for medications changes
+    enqueuePatch('updatePatient', { id: patient.id, medications: patient.medications });
     state.trash.medications.splice(idx, 1);
-    saveCloud();
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderTrash();
     toast('Medication restored!');
   } else {
@@ -18345,7 +18684,7 @@ window.restoreMedication = function(idx) {
 window.permanentDeletePatient = function(idx) {
   if (!confirm('Permanently delete? This cannot be undone.')) return;
   state.trash.patients.splice(idx, 1);
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Permanently deleted');
 };
@@ -18353,7 +18692,7 @@ window.permanentDeletePatient = function(idx) {
 window.permanentDeleteUnit = function(idx) {
   if (!confirm('Permanently delete? This cannot be undone.')) return;
   state.trash.units.splice(idx, 1);
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Permanently deleted');
 };
@@ -18361,7 +18700,7 @@ window.permanentDeleteUnit = function(idx) {
 window.permanentDeleteMedication = function(idx) {
   if (!confirm('Permanently delete? This cannot be undone.')) return;
   state.trash.medications.splice(idx, 1);
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Permanently deleted');
 };
@@ -18373,9 +18712,9 @@ window.emptyTrash = function() {
     return;
   }
   if (!confirm(`Permanently delete all ${total} items? This cannot be undone.`)) return;
-  
+
   state.trash = { patients: [], units: [], medications: [] };
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Trash emptied');
 };
@@ -18473,15 +18812,19 @@ window.submitUnitRequest = async function() {
     console.log('Email notification skipped:', e);
   }
   
-  // Try to save to cloud if Firebase is configured
-  if (CONFIG.USE_FIREBASE) {
+  // Try to save to cloud if API is configured
+  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
     try {
-      await callCloud('submitUnitRequest', { request });
+      await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'submitUnitRequest', request })
+      });
     } catch (e) {
       console.error('Failed to save request to cloud:', e);
     }
   }
-
+  
   // Also save locally
   if (!state.unitRequests) state.unitRequests = [];
   state.unitRequests.push(request);
@@ -18499,10 +18842,15 @@ window.submitUnitRequest = async function() {
 };
 
 async function loadUnitRequests() {
-  // Load from cloud if Firebase is configured
-  if (CONFIG.USE_FIREBASE) {
+  // Load from cloud if possible
+  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
     try {
-      const data = await callCloud('getUnitRequests', {});
+      const res = await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'getUnitRequests' })
+      });
+      const data = await res.json();
       if (data.success && data.requests) {
         state.unitRequests = data.requests;
       }
@@ -18510,7 +18858,7 @@ async function loadUnitRequests() {
       console.error('Failed to load requests:', e);
     }
   }
-
+  
   renderUnitRequests();
 }
 
@@ -18670,28 +19018,32 @@ window.approveRequest = async function() {
   req.status = 'approved';
   req.assignedCode = code;
   req.approvedAt = new Date().toISOString();
-  
+
   // Save everything
-  await saveCloud();
+  await forceSync();
   
   // Also save request update to cloud
-  if (CONFIG.USE_FIREBASE) {
+  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
     try {
-      await callCloud('updateUnitRequest', { request: req });
+      await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
+      });
     } catch (e) {
       console.error('Failed to update request:', e);
     }
   }
-
+  
   saveLocal();
   renderUnitsTable();
   renderUnits();
   renderUnitRequests();
   closeModal('approveRequestModal');
-
+  
   // Send approval email to requester
   sendApprovalEmail(req, unitName, code, icon);
-
+  
   toast(`Unit "${unitName}" created with code ${code}!`);
 };
 
@@ -18811,16 +19163,20 @@ window.rejectRequest = async function() {
   
   req.status = 'rejected';
   req.rejectedAt = new Date().toISOString();
-
+  
   // Save to cloud
-  if (CONFIG.USE_FIREBASE) {
+  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
     try {
-      await callCloud('updateUnitRequest', { request: req });
+      await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
+      });
     } catch (e) {
       console.error('Failed to update request:', e);
     }
   }
-
+  
   // Send rejection email
   sendRejectionEmail(req);
   
@@ -18832,19 +19188,23 @@ window.rejectRequest = async function() {
 
 window.quickRejectRequest = async function(requestId) {
   if (!confirm('Reject this request?')) return;
-
+  
   const req = state.unitRequests?.find(r => r.id === requestId);
   if (!req) return;
-
+  
   req.status = 'rejected';
   req.rejectedAt = new Date().toISOString();
-
-  if (CONFIG.USE_FIREBASE) {
+  
+  if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
     try {
-      await callCloud('updateUnitRequest', { request: req });
+      await fetch(state.settings.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'updateUnitRequest', request: req })
+      });
     } catch (e) {}
   }
-
+  
   saveLocal();
   renderUnitRequests();
   toast('Request rejected');
@@ -18923,8 +19283,8 @@ window.savePatient = function() {
     console.log('➕ New patient added to unit:', state.currentUnit.name);
     // DELTA SYNC: Queue add patch instead of full snapshot
     enqueuePatch('addPatient', newPatient);
-  } 
-  saveCloud(); 
+  }
+  forceSync().catch(err => console.error('Background sync failed:', err)); 
   renderPatients(); 
   closeModal('patientModal'); 
   toast('Saved!'); 
@@ -18935,21 +19295,48 @@ window.openImport = function() { state.importImage = null; state.importPatients 
 window.resetImport = function() { state.importImage = null; state.importPatients = []; $('importUpload').style.display = 'block'; $('importPreview').style.display = 'none'; $('importLoading').style.display = 'none'; $('importResults').style.display = 'none'; $('importError').style.display = 'none'; $('importConfirmBtn').disabled = true; };
 window.extractPatients = async function() {
   if (!state.importImage) { toast('No image selected', true); return; }
-  if (!CONFIG.USE_FIREBASE) { toast('Firebase not configured. Go to Admin settings.', true); return; }
+  if (!state.settings.apiUrl || !CONFIG.USE_FIREBASE) { toast('API URL not configured. Go to Admin settings.', true); return; }
 
   $('importPreview').style.display = 'none';
   $('importLoading').style.display = 'block';
   $('importError').style.display = 'none';
 
   console.log('🔄 Extracting patients from image...');
+  console.log('📡 API:', state.settings.apiUrl.substring(0, 50) + '...');
   console.log('🖼️ Image size:', Math.round(state.importImage.length / 1024), 'KB');
 
   try {
-    // Use Firebase Cloud Function for patient extraction
-    const d = await callCloud('extractPatients', {
-      image: state.importImage
+    // Get Firebase ID token for authentication
+    const firebaseToken = await window.getFirebaseToken();
+
+    // Debug credential state
+    console.log('🔐 Auth Debug:');
+    console.log('  - AUTH.user:', AUTH.user || '(not set)');
+    console.log('  - AUTH.pass:', AUTH.pass ? '(set)' : '(not set)');
+    console.log('  - Firebase token:', firebaseToken ? `${firebaseToken.substring(0, 20)}...` : '(not available)');
+
+    // Warn if credentials appear incomplete
+    if (!firebaseToken && !AUTH.user) {
+      console.warn('⚠️ No credentials available - you may need to re-login');
+    }
+
+    const res = await fetch(state.settings.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'extractPatients',
+        image: state.importImage,
+        username: AUTH.user,
+        password: AUTH.pass,
+        idToken: firebaseToken
+      })
     });
 
+    console.log('📥 Response status:', res.status);
+
+    if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + res.statusText);
+
+    const d = await res.json();
     console.log('📦 Response:', d);
 
     $('importLoading').style.display = 'none';
@@ -18967,28 +19354,28 @@ window.extractPatients = async function() {
       console.error('❌ API Error:', d.error);
       return;
     }
-
+    
     if (!d.patients?.length) {
       $('importError').style.display = 'block';
       $('importErrorMsg').textContent = 'No patients found in image. Try a clearer screenshot.';
       return;
     }
-
+    
     state.importPatients = d.patients.map((p, i) => ({
       id: Date.now() + i, name: p.name, ward: smartWard(p.ward), room: p.room || '—',
       diagnosis: p.diagnosis || 'Pending', doctor: p.doctor || p.consultant || p.assignedDoctor || state.currentUser?.name || 'Unassigned',
       status: p.status === 'chronic' ? 'chronic' : 'active',
       labData: { dates: [], parameters: [] }, imaging: [], fluids: [], plans: [], history: '', vitals: {}
     }));
-
+    
     $('importResults').style.display = 'block';
     $('importCount').textContent = state.importPatients.length;
     $('importList').innerHTML = state.importPatients.map(p => `<div class="import-item"><div style="flex:1"><b>${esc(p.name)}</b><div style="font-size:0.75rem;color:var(--text-muted)">${esc(p.room)}</div></div><select class="import-ward-select" onchange="state.importPatients.find(x=>x.id=='${p.id}').ward=this.value">${CONFIG.VALID_WARDS.map(w => `<option value="${w}" ${w === p.ward ? 'selected' : ''}>${w}</option>`).join('')}</select></div>`).join('');
     $('importConfirmBtn').disabled = false;
-
+    
     console.log('✅ Found', state.importPatients.length, 'patients');
     toast('Found ' + state.importPatients.length + ' patients!');
-
+    
   } catch (e) {
     console.error('❌ Extract error:', e);
     $('importLoading').style.display = 'none';
@@ -19022,7 +19409,7 @@ window.confirmImport = function() {
   addedPatients.forEach(patient => {
     enqueuePatch('addPatient', patient);
   });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatients();
   closeModal('importModal');
   toast(`Imported ${added} patients to ${state.currentUnit.name}!`);
@@ -19207,7 +19594,7 @@ window.exportUnitToPDF = function() {
           3: { cellWidth: 28 },  // Doctor
           4: { cellWidth: 22 }   // Status
         },
-        
+
         // Row styling - ward headers in green
         didParseCell: function(data) {
           if (data.section === 'body') {
@@ -19511,17 +19898,24 @@ window.openDischargeModal = function(patientId, event) {
 window.confirmDischarge = function() {
   const p = getPatient(state.dischargePatientId);
   if (!p) return;
-  
+
   const summary = $('dischargeSummary').value.trim();
   p.status = 'discharged';
   p.dischargeDate = new Date().toISOString();
-  
+
   if (summary) {
     if (!p.plans) p.plans = [];
     p.plans.push({ date: new Date().toISOString(), content: `🏠 DISCHARGE SUMMARY:\n${summary}` });
   }
-  
-  saveCloud();
+
+  // FIX: Queue patch for patient discharge changes
+  enqueuePatch('updatePatient', {
+    id: p.id,
+    status: p.status,
+    dischargeDate: p.dischargeDate,
+    plans: p.plans
+  });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatients();
   closeModal('dischargeModal');
   toast('Patient discharged');
@@ -19668,8 +20062,10 @@ window.saveLabOverride = function() {
     else if (numVal > param.refMax) param.values[valueIdx].status = 'high';
     else param.values[valueIdx].status = 'normal';
   }
-  
-  saveCloud();
+
+  // FIX: Queue patch for lab data changes
+  enqueuePatch('updatePatient', { id: p.id, labData: p.labData });
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileLabs();
   closeModal('labOverrideModal');
   toast('Lab value updated');
@@ -19894,7 +20290,7 @@ async function init() {
   loadFirebaseFunctions().catch(err => {
     console.warn('[init] Firebase preload failed:', err.message, '- will retry on demand');
   });
-  
+
   // ═══════════════════════════════════════════════════════════════════
   // CACHE-FIRST BOOT: Read from warmed cache (loading.html fetched cloud)
   // ═══════════════════════════════════════════════════════════════════
@@ -20537,8 +20933,55 @@ if (window.monitor) {
   });
 }
 
+// Add "Open Monitor" button to settings or nav
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', addMonitorButton);
+} else {
+  addMonitorButton();
+}
+
+function addMonitorButton() {
+  // Try to find a good place to add the button
+  // This will add a floating action button in the bottom right
+  const btn = document.createElement('button');
+  btn.innerHTML = '📊';
+  btn.title = 'Open System Monitor';
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 2px solid rgba(255,255,255,0.2);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 9999;
+    transition: all 0.3s ease;
+  `;
+
+  btn.addEventListener('mouseenter', () => {
+    btn.style.transform = 'scale(1.1)';
+    btn.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+  });
+
+  btn.addEventListener('mouseleave', () => {
+    btn.style.transform = 'scale(1)';
+    btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+  });
+
+  btn.addEventListener('click', () => {
+    window.open('monitor.html', '_blank', 'width=1400,height=900');
+  });
+
+  document.body.appendChild(btn);
+}
 </script>
 
+<script src="clinical-typeahead.js"></script>
 <script src="medward-tour.js"></script>
 </body>
 </html>
