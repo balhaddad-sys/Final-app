@@ -10454,7 +10454,7 @@ window.savePatientScore = function() {
 
   // FIX: Queue patch for scores changes
   enqueuePatch('updatePatient', { id: state.currentPatient.id, scores: state.currentPatient.scores });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closeModal('scoreCalcModal');
   toast(`${score.name}: ${total} saved!`);
   
@@ -11191,7 +11191,7 @@ window.addSelectedScannedMeds = function() {
 
   // DELTA SYNC: Queue update patch for patient with scanned medications
   enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileMeds();
   closeModal('medScanModal');
   toast(`✓ ${selected.length} medication(s) added`);
@@ -11282,7 +11282,7 @@ async function handleMedsUpload(file) {
 
         // DELTA SYNC: Queue update patch for patient with imported medications
         enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-        saveCloud();
+        forceSync().catch(err => console.error('Background sync failed:', err));
         renderProfileMeds();
         toast(`✅ ${added} medication(s) imported` + (meds.length - added > 0 ? ` (${meds.length - added} duplicates skipped)` : ''));
       } else {
@@ -11440,7 +11440,7 @@ window.saveMedication = function() {
 
   // DELTA SYNC: Queue update patch for patient with modified medications
   enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   hideAddMedForm();
   renderProfileMeds();
 };
@@ -11483,7 +11483,7 @@ window.saveMedicationNew = function() {
   state.editingMedIdx = null;
   // DELTA SYNC: Queue update patch for patient with modified medications
   enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closeModal('addMedModal');
   renderProfileMeds();
 };
@@ -11543,7 +11543,7 @@ window.deleteMedication = function(idx) {
   state.currentPatient.medications.splice(idx, 1);
   // DELTA SYNC: Queue update patch for patient with modified medications
   enqueuePatch('updatePatient', { id: state.currentPatient.id, medications: state.currentPatient.medications });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileMeds();
   toast('Medication moved to trash');
 };
@@ -14316,7 +14316,7 @@ window.addClinicalNote = function() {
 
   // FIX: Queue patch for clinical notes changes
   enqueuePatch('updatePatient', { id: p.id, clinicalNotes: p.clinicalNotes });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileHistory();
   toast('Note added');
 };
@@ -14462,7 +14462,7 @@ function processDocumentResult(data, fileData) {
     name: p.name,
     diagnosis: p.diagnosis
   });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   state.isAnalyzingHistory = false;
   renderProfileHistory();
   
@@ -14515,7 +14515,7 @@ window.importMedsFromNote = function(noteIdx) {
   if (imported > 0) {
     // Queue delta sync patch to persist medications to the medication page
     enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-    saveCloud();
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderProfileMeds();
     toast(`✅ ${imported} medication(s) imported`);
   } else {
@@ -14560,7 +14560,7 @@ window.importAllMedsFromHistory = function() {
   if (imported > 0) {
     // Queue delta sync patch to persist medications to the medication page
     enqueuePatch('updatePatient', { id: p.id, medications: p.medications });
-    saveCloud();
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderProfileMeds();
     toast(`✅ ${imported} medication(s) imported`);
   } else {
@@ -14729,7 +14729,7 @@ INSTRUCTIONS:
       p.unifiedSummary = data.answer;
       // FIX: Queue patch for unified summary changes
       enqueuePatch('updatePatient', { id: p.id, unifiedSummary: p.unifiedSummary });
-      saveCloud();
+      forceSync().catch(err => console.error('Background sync failed:', err));
       renderProfileHistory();
       toast('✅ Summary synthesized');
     } else {
@@ -14746,7 +14746,7 @@ window.deleteClinicalNote = function(idx) {
   state.currentPatient.clinicalNotes.splice(idx, 1);
   // FIX: Queue patch for clinical notes changes
   enqueuePatch('updatePatient', { id: state.currentPatient.id, clinicalNotes: state.currentPatient.clinicalNotes });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileHistory();
   toast('Note deleted');
 };
@@ -15912,7 +15912,7 @@ async function handleImagingUpload(file) {
 
       // FIX: Queue patch for imaging changes
       enqueuePatch('updatePatient', { id: p.id, imaging: p.imaging });
-      saveCloud();
+      forceSync().catch(err => console.error('Background sync failed:', err));
       renderProfileImaging();
       toast('Imaging added!');
     } catch (e) {
@@ -15928,7 +15928,7 @@ window.deleteImaging = function(idx) {
   state.currentPatient.imaging.splice(idx, 1);
   // FIX: Queue patch for imaging changes
   enqueuePatch('updatePatient', { id: state.currentPatient.id, imaging: state.currentPatient.imaging });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileImaging();
   toast('Imaging deleted');
 };
@@ -15938,7 +15938,7 @@ window.clearPatientLabs = function() {
   state.currentPatient.labData = { dates: [], parameters: [] };
   // FIX: Queue patch for lab data changes
   enqueuePatch('updatePatient', { id: state.currentPatient.id, labData: state.currentPatient.labData });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileLabs();
   toast('Lab data cleared');
 };
@@ -16584,7 +16584,7 @@ window.saveTask = function() {
 
   // FIX: Queue patch for tasks changes
   enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closeModal('taskModal');
   renderProfilePlans();
 };
@@ -16606,7 +16606,7 @@ window.addSuggestedTask = function(text, priority, category) {
 
   // FIX: Queue patch for tasks changes
   enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
   toast('Task added from AI suggestion');
 };
@@ -16622,7 +16622,7 @@ window.toggleTaskComplete = function(taskId) {
 
   // FIX: Queue patch for tasks changes
   enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
 
   if (task.completed) {
@@ -16642,7 +16642,7 @@ window.deleteTask = function(taskId) {
   p.tasks = p.tasks.filter(t => t.id !== taskId);
   // FIX: Queue patch for tasks changes
   enqueuePatch('updatePatient', { id: p.id, tasks: p.tasks });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
   toast('Task deleted');
 };
@@ -16666,7 +16666,7 @@ window.togglePlanNotifications = async function(enabled) {
   p.notificationsEnabled = enabled;
   // FIX: Queue patch for notification setting changes
   enqueuePatch('updatePatient', { id: p.id, notificationsEnabled: p.notificationsEnabled });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
 
   if (enabled) {
     const permission = await requestNotificationPermission();
@@ -16679,7 +16679,7 @@ window.togglePlanNotifications = async function(enabled) {
       $('planNotifyToggle').checked = false;
       // FIX: Queue patch for notification setting changes (reverted)
       enqueuePatch('updatePatient', { id: p.id, notificationsEnabled: p.notificationsEnabled });
-      saveCloud();
+      forceSync().catch(err => console.error('Background sync failed:', err));
     }
   } else {
     toast('Notifications disabled');
@@ -16830,7 +16830,7 @@ window.deletePlan = function(idx) {
   state.currentPatient.plans.splice(idx, 1);
   // FIX: Queue patch for plans changes
   enqueuePatch('updatePatient', { id: state.currentPatient.id, plans: state.currentPatient.plans });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfilePlans();
 };
 
@@ -16941,8 +16941,10 @@ window.togglePlanItem = function(itemId) {
     item.completed = !item.completed;
     item.completedAt = item.completed ? new Date().toISOString() : null;
     item.completedBy = item.completed ? state.currentUser?.name : null;
-    
-    saveCloud();
+
+    // FIX: Queue patch for planItems changes
+    enqueuePatch('updatePatient', { id: p.id, planItems: p.planItems });
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderProfileOverview();
     toast(item.completed ? '✓ Marked complete' : 'Marked incomplete');
   }
@@ -16955,7 +16957,7 @@ window.deletePlanItem = function(itemId) {
   p.planItems = p.planItems.filter(i => i.id !== itemId);
   // FIX: Queue patch for planItems changes
   enqueuePatch('updatePatient', { id: p.id, planItems: p.planItems });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileOverview();
   toast('Item removed');
 };
@@ -16984,7 +16986,7 @@ window.saveEditText = function() {
     enqueuePatch('updatePatient', { id: p.id, [type]: p[type] });
   }
 
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatientProfile();
   closeModal('editTextModal');
   toast('Saved!');
@@ -17032,7 +17034,7 @@ window.saveAddData = function() {
     enqueuePatch('updatePatient', { id: p.id, plans: p.plans });
   }
 
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatientProfile();
   closeModal('addDataModal');
   toast('Saved!');
@@ -17067,7 +17069,7 @@ window.deleteCurrentPatient = function() {
   if (patientId) {
     enqueuePatch('deletePatient', { id: patientId });
   }
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   closePatientProfile();
   toast('Patient moved to trash');
 };
@@ -17103,7 +17105,7 @@ window.deletePatientById = function(id) {
   state.patients = state.patients.filter(p => p.id !== patient.id);
   // DELTA SYNC: Queue delete patch
   enqueuePatch('deletePatient', { id: patient.id });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   selectedPatientCardId = null; // Clear selection
   renderPatients();
   toast('Patient moved to trash');
@@ -18496,8 +18498,8 @@ window.restorePatient = function(idx) {
   
   // DELTA SYNC: Queue add patch for restored patient
   enqueuePatch('addPatient', patient);
-  
-  saveCloud();
+
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Patient restored!');
 };
@@ -18511,8 +18513,8 @@ window.restoreUnit = function(idx) {
   
   state.units.push(unit);
   state.trash.units.splice(idx, 1);
-  
-  saveCloud();
+
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   renderUnits();
   toast('Unit restored!');
@@ -18532,9 +18534,11 @@ window.restoreMedication = function(idx) {
     
     if (!patient.medications) patient.medications = [];
     patient.medications.push(med);
-    
+
+    // FIX: Queue patch for medications changes
+    enqueuePatch('updatePatient', { id: patient.id, medications: patient.medications });
     state.trash.medications.splice(idx, 1);
-    saveCloud();
+    forceSync().catch(err => console.error('Background sync failed:', err));
     renderTrash();
     toast('Medication restored!');
   } else {
@@ -18545,7 +18549,7 @@ window.restoreMedication = function(idx) {
 window.permanentDeletePatient = function(idx) {
   if (!confirm('Permanently delete? This cannot be undone.')) return;
   state.trash.patients.splice(idx, 1);
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Permanently deleted');
 };
@@ -18553,7 +18557,7 @@ window.permanentDeletePatient = function(idx) {
 window.permanentDeleteUnit = function(idx) {
   if (!confirm('Permanently delete? This cannot be undone.')) return;
   state.trash.units.splice(idx, 1);
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Permanently deleted');
 };
@@ -18561,7 +18565,7 @@ window.permanentDeleteUnit = function(idx) {
 window.permanentDeleteMedication = function(idx) {
   if (!confirm('Permanently delete? This cannot be undone.')) return;
   state.trash.medications.splice(idx, 1);
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Permanently deleted');
 };
@@ -18573,9 +18577,9 @@ window.emptyTrash = function() {
     return;
   }
   if (!confirm(`Permanently delete all ${total} items? This cannot be undone.`)) return;
-  
+
   state.trash = { patients: [], units: [], medications: [] };
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderTrash();
   toast('Trash emptied');
 };
@@ -18879,9 +18883,9 @@ window.approveRequest = async function() {
   req.status = 'approved';
   req.assignedCode = code;
   req.approvedAt = new Date().toISOString();
-  
+
   // Save everything
-  await saveCloud();
+  await forceSync();
   
   // Also save request update to cloud
   if (state.settings.apiUrl && state.settings.apiUrl !== 'YOUR_API_URL_HERE') {
@@ -19144,8 +19148,8 @@ window.savePatient = function() {
     console.log('➕ New patient added to unit:', state.currentUnit.name);
     // DELTA SYNC: Queue add patch instead of full snapshot
     enqueuePatch('addPatient', newPatient);
-  } 
-  saveCloud(); 
+  }
+  forceSync().catch(err => console.error('Background sync failed:', err)); 
   renderPatients(); 
   closeModal('patientModal'); 
   toast('Saved!'); 
@@ -19270,7 +19274,7 @@ window.confirmImport = function() {
   addedPatients.forEach(patient => {
     enqueuePatch('addPatient', patient);
   });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatients();
   closeModal('importModal');
   toast(`Imported ${added} patients to ${state.currentUnit.name}!`);
@@ -19776,7 +19780,7 @@ window.confirmDischarge = function() {
     dischargeDate: p.dischargeDate,
     plans: p.plans
   });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderPatients();
   closeModal('dischargeModal');
   toast('Patient discharged');
@@ -19926,7 +19930,7 @@ window.saveLabOverride = function() {
 
   // FIX: Queue patch for lab data changes
   enqueuePatch('updatePatient', { id: p.id, labData: p.labData });
-  saveCloud();
+  forceSync().catch(err => console.error('Background sync failed:', err));
   renderProfileLabs();
   closeModal('labOverrideModal');
   toast('Lab value updated');
