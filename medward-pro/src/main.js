@@ -50,6 +50,12 @@ async function bootstrap() {
     trackStep('storage');
     Monitor.log('RUNTIME', 'Storage initialized');
 
+    // 4.5. Clean up old WAL entries to prevent unbounded growth
+    const walCleanup = await Storage.wal.autoCleanup();
+    if (walCleanup.cleared > 0 || walCleanup.enforced > 0) {
+      Monitor.log('RUNTIME', 'WAL cleanup completed', walCleanup);
+    }
+
     // 5. Initialize Data layer (loads cached data)
     await Data.init();
     trackStep('data');
