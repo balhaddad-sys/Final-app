@@ -9896,17 +9896,40 @@ function renderPatients() {
       const medCount = (p.medications && p.medications.length) || 0;
       const isSelected = selectedPatientCardId === p.id;
 
+      // Check for recent changes (within 24 hours)
+      const hasRecentChanges = p.changeHistory && Array.isArray(p.changeHistory) &&
+        p.changeHistory.some(c => c.changedAt >= new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+      // Get recent change summary
+      let changeSummary = '';
+      if (hasRecentChanges) {
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const recentChanges = p.changeHistory.filter(c => c.changedAt >= oneDayAgo);
+        const changeTypes = recentChanges.map(c => c.field);
+        if (changeTypes.includes('status')) changeSummary += '📊 ';
+        if (changeTypes.includes('ward')) changeSummary += '🏥 ';
+        if (changeTypes.includes('room')) changeSummary += '🛏️ ';
+      }
+
       // Determine Status Color
       let statusColor = 'var(--primary)';
       if (p.status === 'critical') statusColor = 'var(--danger)';
-      else if (p.status === 'new') statusColor = 'var(--success)';
+      else if (p.status === 'new') statusColor = '#ff8c00'; // Orange for new patients
       else if (p.status === 'chronic') statusColor = 'var(--purple)';
       else if (p.ward && p.ward.includes('ICU')) statusColor = 'var(--danger)';
 
+      // Background style for new patients (orange) and changed patients (light yellow)
+      let bgStyle = '';
+      if (p.status === 'new') {
+        bgStyle = 'background: linear-gradient(to right, rgba(255, 200, 150, 0.3), transparent);';
+      } else if (hasRecentChanges) {
+        bgStyle = 'background: linear-gradient(to right, rgba(255, 255, 200, 0.5), transparent);';
+      }
+
       // Create the row using both patient-card (for compatibility) and patient-row classes
-      html += `<div class="patient-card ${p.status} ${isSelected ? 'selected' : ''}" style="border-left-color:${statusColor}" data-patient-id="${p.id}">
+      html += `<div class="patient-card ${p.status} ${isSelected ? 'selected' : ''}" style="border-left-color:${statusColor};${bgStyle}" data-patient-id="${p.id}">
         <div class="p-info">
-          <div class="p-name">${esc(p.name)}</div>
+          <div class="p-name">${changeSummary}${esc(p.name)}${p.status === 'new' ? ' <span style="color:#ff8c00;font-size:0.7rem;font-weight:bold;">NEW</span>' : ''}</div>
           <div class="p-demographics p-details">
             <span style="font-family:'JetBrains Mono'">${esc(p.room || p.bed || 'No Bed')}</span> •
             ${p.age || '—'}y ${p.gender || '—'}
@@ -19329,10 +19352,10 @@ window.openAddPatient = function() {
   }
   $('patientModalTitle').textContent = 'Add Patient'; $('ptId').value = ''; $('ptName').value = ''; $('ptWard').value = 'Ward 14'; $('ptRoom').value = ''; $('ptDx').value = ''; $('ptDoctor').value = state.currentUser?.name || ''; $('ptStatus').value = 'new'; openModal('patientModal'); 
 };
-window.savePatient = function() { 
-  const id = $('ptId').value, name = $('ptName').value.trim(); 
-  if (!name) { toast('Name required', true); return; } 
-  
+window.savePatient = function() {
+  const id = $('ptId').value, name = $('ptName').value.trim();
+  if (!name) { toast('Name required', true); return; }
+
   // Auto-select first unit if none selected
   if (!state.currentUnit && state.units.length > 0) {
     state.currentUnit = state.units[0];
@@ -19343,52 +19366,104 @@ window.savePatient = function() {
     sessionStorage.setItem('MW_UNIT_NAME', state.currentUnit.name);
     console.log('⚠️ Auto-selected unit in savePatient:', state.currentUnit.name);
   }
-  
+
   if (!state.currentUnit) { toast('No unit selected', true); return; }
-  
-  const data = { 
-    name, 
-    ward: $('ptWard').value, 
-    room: $('ptRoom').value.trim() || '—', 
-    diagnosis: $('ptDx').value.trim() || 'Pending', 
-    doctor: $('ptDoctor').value.trim() || 'Unassigned', 
-    status: $('ptStatus').value 
-  }; 
-  
-  if (id) { 
-    const i = state.patients.findIndex(p => p.id === parseInt(id)); 
-    if (i !== -1) { 
-      state.patients[i] = { ...state.patients[i], ...data }; 
-      if (state.currentPatient?.id === parseInt(id)) { 
-        state.currentPatient = state.patients[i]; 
-        renderPatientProfile(); 
+
+  const data = {
+    name,
+    ward: $('ptWard').value,
+    room: $('ptRoom').value.trim() || '—',
+    diagnosis: $('ptDx').value.trim() || 'Pending',
+    doctor: $('ptDoctor').value.trim() || 'Unassigned',
+    status: $('ptStatus').value
+  };
+
+  if (id) {
+    const i = state.patients.findIndex(p => p.id === parseInt(id));
+    if (i !== -1) {
+      const oldPatient = state.patients[i];
+
+      // Track changes to key fields (status, ward, room, doctor)
+      const changes = [];
+      const now = new Date().toISOString();
+
+      if (oldPatient.status !== data.status) {
+        changes.push({
+          field: 'status',
+          from: oldPatient.status,
+          to: data.status,
+          changedAt: now
+        });
+      }
+      if (oldPatient.ward !== data.ward) {
+        changes.push({
+          field: 'ward',
+          from: oldPatient.ward,
+          to: data.ward,
+          changedAt: now
+        });
+      }
+      if (oldPatient.room !== data.room) {
+        changes.push({
+          field: 'room',
+          from: oldPatient.room,
+          to: data.room,
+          changedAt: now
+        });
+      }
+      if (oldPatient.doctor !== data.doctor) {
+        changes.push({
+          field: 'doctor',
+          from: oldPatient.doctor,
+          to: data.doctor,
+          changedAt: now
+        });
+      }
+
+      // Initialize changeHistory if not exists
+      const changeHistory = oldPatient.changeHistory || [];
+
+      // Add new changes to history
+      if (changes.length > 0) {
+        changeHistory.push(...changes);
+        console.log('📝 Patient changes recorded:', changes);
+      }
+
+      state.patients[i] = { ...oldPatient, ...data, changeHistory, updatedAt: now };
+      if (state.currentPatient?.id === parseInt(id)) {
+        state.currentPatient = state.patients[i];
+        renderPatientProfile();
       }
       // DELTA SYNC: Queue update patch instead of full snapshot
-      enqueuePatch('updatePatient', { id: parseInt(id), ...data });
-    } 
-  } else { 
-    // NEW PATIENT - Include unitId
-    const newPatient = { 
-      id: Date.now(), 
+      enqueuePatch('updatePatient', { id: parseInt(id), ...data, changeHistory, updatedAt: now });
+    }
+  } else {
+    // NEW PATIENT - Include unitId and createdAt timestamp
+    const now = new Date().toISOString();
+    const newPatient = {
+      id: Date.now(),
       unitId: state.currentUnit.id,  // CRITICAL: Associate patient with current unit
-      ...data, 
-      labData: { dates: [], parameters: [] }, 
-      imaging: [], 
-      fluids: [], 
-      plans: [], 
+      ...data,
+      labData: { dates: [], parameters: [] },
+      imaging: [],
+      fluids: [],
+      plans: [],
       planItems: [],
-      history: '', 
-      vitals: {} 
+      history: '',
+      vitals: {},
+      createdAt: now,
+      updatedAt: now,
+      changeHistory: []  // Initialize empty change history for new patients
     };
-    state.patients.push(newPatient); 
+    state.patients.push(newPatient);
     console.log('➕ New patient added to unit:', state.currentUnit.name);
     // DELTA SYNC: Queue add patch instead of full snapshot
     enqueuePatch('addPatient', newPatient);
   }
-  forceSync().catch(err => console.error('Background sync failed:', err)); 
-  renderPatients(); 
-  closeModal('patientModal'); 
-  toast('Saved!'); 
+  forceSync().catch(err => console.error('Background sync failed:', err));
+  renderPatients();
+  closeModal('patientModal');
+  toast('Saved!');
 };
 
 // Import
@@ -19622,6 +19697,36 @@ window.exportUnitToPDF = function() {
     // ACTIVE LIST TABLE
     // ═══════════════════════════════════════════════════════════════════
     
+    // Helper: Check if patient has recent changes (within 24 hours)
+    const getRecentChanges = (patient) => {
+      if (!patient.changeHistory || !Array.isArray(patient.changeHistory)) return [];
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      return patient.changeHistory.filter(c => c.changedAt >= oneDayAgo);
+    };
+
+    // Helper: Format change indicator for status column
+    const formatStatusWithChanges = (patient) => {
+      const recentChanges = getRecentChanges(patient);
+      let statusText = patient.status === 'new' ? 'New' : (patient.status === 'critical' ? 'Critical' : 'Non-Chronic');
+
+      // Add change indicators
+      const changeIndicators = [];
+      recentChanges.forEach(c => {
+        if (c.field === 'status') {
+          changeIndicators.push(`was: ${c.from}`);
+        } else if (c.field === 'ward') {
+          changeIndicators.push(`from: ${c.from}`);
+        } else if (c.field === 'room') {
+          changeIndicators.push(`moved`);
+        }
+      });
+
+      if (changeIndicators.length > 0) {
+        statusText += ' (' + changeIndicators.join(', ') + ')';
+      }
+      return statusText;
+    };
+
     if (activePatients.length > 0) {
       // Build active rows grouped by ward
       const activeRows = [];
@@ -19647,15 +19752,22 @@ window.exportUnitToPDF = function() {
           currentWard = ward;
         }
 
-        // Add patient row
+        // Check for recent changes
+        const recentChanges = getRecentChanges(p);
+        const hasRecentChanges = recentChanges.length > 0;
+
+        // Add patient row with change tracking
         activeRows.push({
           _isWardHeader: false,
           _status: p.status,
+          _isNew: p.status === 'new',
+          _hasRecentChanges: hasRecentChanges,
+          _recentChanges: recentChanges,
           bed: p.bed || p.room || '',
           name: p.name || '',
           diagnosis: (p.diagnosis || '').substring(0, 60),
           doctor: p.doctor || p.assignedDoctor || '',
-          status: p.status === 'new' ? 'New' : (p.status === 'critical' ? 'Critical' : 'Non-Chronic')
+          status: formatStatusWithChanges(p)
         });
       });
       
@@ -19696,7 +19808,7 @@ window.exportUnitToPDF = function() {
           4: { cellWidth: 22 }   // Status
         },
 
-        // Row styling - ward headers in green
+        // Row styling - ward headers in green, NEW patients in orange, changed patients in light yellow
         didParseCell: function(data) {
           if (data.section === 'body') {
             const rowData = activeRows[data.row.index];
@@ -19706,6 +19818,15 @@ window.exportUnitToPDF = function() {
               data.cell.styles.fillColor = [198, 224, 180]; // Green
               data.cell.styles.textColor = [0, 100, 0];
               data.cell.styles.fontStyle = 'bold';
+            }
+            // NEW patients - orange highlight
+            else if (rowData._isNew) {
+              data.cell.styles.fillColor = [255, 200, 150]; // Orange highlight for new patients
+              data.cell.styles.fontStyle = 'bold';
+            }
+            // Patients with recent changes - light yellow highlight
+            else if (rowData._hasRecentChanges) {
+              data.cell.styles.fillColor = [255, 255, 200]; // Light yellow for changed patients
             }
             // Regular patient rows - white background
             else {
@@ -19736,7 +19857,7 @@ window.exportUnitToPDF = function() {
 
       y += 6;
       
-      // Build chronic rows
+      // Build chronic rows with change tracking
       const chronicRows = [];
       let currentWard = null;
 
@@ -19760,13 +19881,37 @@ window.exportUnitToPDF = function() {
           currentWard = ward;
         }
 
+        // Check for recent changes in chronic patients too
+        const recentChanges = getRecentChanges(p);
+        const hasRecentChanges = recentChanges.length > 0;
+
+        // Format status with change indicators
+        let statusText = 'Chronic';
+        if (hasRecentChanges) {
+          const changeIndicators = [];
+          recentChanges.forEach(c => {
+            if (c.field === 'status') {
+              changeIndicators.push(`was: ${c.from}`);
+            } else if (c.field === 'ward') {
+              changeIndicators.push(`from: ${c.from}`);
+            } else if (c.field === 'room') {
+              changeIndicators.push(`moved`);
+            }
+          });
+          if (changeIndicators.length > 0) {
+            statusText += ' (' + changeIndicators.join(', ') + ')';
+          }
+        }
+
         chronicRows.push({
           _isWardHeader: false,
+          _hasRecentChanges: hasRecentChanges,
+          _recentChanges: recentChanges,
           bed: p.bed || p.room || '',
           name: p.name || '',
           diagnosis: (p.diagnosis || '').substring(0, 60),
           doctor: p.doctor || p.assignedDoctor || '',
-          status: 'Chronic'
+          status: statusText
         });
       });
       
@@ -19807,7 +19952,7 @@ window.exportUnitToPDF = function() {
           4: { cellWidth: 22 }
         },
 
-        // Ward header styling - blue
+        // Ward header styling - blue, changed patients in light yellow
         didParseCell: function(data) {
           if (data.section === 'body') {
             const rowData = chronicRows[data.row.index];
@@ -19815,6 +19960,10 @@ window.exportUnitToPDF = function() {
               data.cell.styles.fillColor = [180, 198, 231]; // Blue for chronic ward headers
               data.cell.styles.textColor = [0, 0, 139];
               data.cell.styles.fontStyle = 'bold';
+            }
+            // Patients with recent changes - light yellow highlight
+            else if (rowData._hasRecentChanges) {
+              data.cell.styles.fillColor = [255, 255, 200]; // Light yellow for changed patients
             }
             else {
               data.cell.styles.fillColor = [255, 255, 255];
@@ -19827,9 +19976,9 @@ window.exportUnitToPDF = function() {
     }
     
     // ═══════════════════════════════════════════════════════════════════
-    // FOOTER ON ALL PAGES
+    // FOOTER ON ALL PAGES WITH LEGEND
     // ═══════════════════════════════════════════════════════════════════
-    
+
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -19839,6 +19988,24 @@ window.exportUnitToPDF = function() {
       doc.text('Generated by MedWard Pro', 10, 290);
       doc.text('Page ' + i + ' of ' + pageCount, 105, 290, { align: 'center' });
       doc.text(dateStr, 200, 290, { align: 'right' });
+
+      // Add color legend on first page only
+      if (i === 1) {
+        const legendY = 283;
+        doc.setFontSize(6);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Legend:', 10, legendY);
+
+        // Orange box for new patients
+        doc.setFillColor(255, 200, 150);
+        doc.rect(27, legendY - 2.5, 4, 3, 'F');
+        doc.text('New Patient', 32, legendY);
+
+        // Yellow box for recent changes
+        doc.setFillColor(255, 255, 200);
+        doc.rect(55, legendY - 2.5, 4, 3, 'F');
+        doc.text('Recent Changes (24h)', 60, legendY);
+      }
     }
     
     // ═══════════════════════════════════════════════════════════════════
