@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#005eb8">
   <title>On-Call Assistant - MedWard Pro</title>
-  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="./styles/base.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
   <div class="page-layout">
     <header class="app-header">
       <div class="header-left">
-        <a href="/landing.html" class="btn btn-icon btn-ghost">
+        <a href="./landing.html" class="btn btn-icon btn-ghost">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 18l-6-6 6-6"/>
           </svg>
@@ -224,9 +224,9 @@
   </style>
 
   <script type="module">
-    import { Toast, Monitor } from '/src/main.js';
-    import { AIService } from '/src/features/ai/ai.service.js';
-    import { AIPrompts } from '/src/features/ai/ai.prompts.js';
+    import { Toast, Monitor } from '../src/main.js';
+    import { AIService } from '../src/features/ai/ai.service.js';
+    import { AIPrompts } from '../src/features/ai/ai.prompts.js';
 
     const scenarios = {
       'chest-pain': {

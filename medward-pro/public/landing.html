@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#005eb8">
   <title>Home - MedWard Pro</title>
-  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="./styles/base.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,27 +49,27 @@
       <section class="quick-links">
         <h2>Quick Access</h2>
         <div class="links-grid">
-          <a href="/handover.html" class="link-card">
+          <a href="./handover.html" class="link-card">
             <div class="link-icon">&#128231;</div>
             <h3>Handover</h3>
             <p>Manage patient handovers</p>
           </a>
-          <a href="/ai_assistant.html" class="link-card">
+          <a href="./ai_assistant.html" class="link-card">
             <div class="link-icon">&#129302;</div>
             <h3>AI Assistant</h3>
             <p>Clinical decision support</p>
           </a>
-          <a href="/antibiotic_guide.html" class="link-card">
+          <a href="./antibiotic_guide.html" class="link-card">
             <div class="link-icon">&#128138;</div>
             <h3>Antibiotic Guide</h3>
             <p>Empiric therapy guidance</p>
           </a>
-          <a href="/oncall_assistant.html" class="link-card">
+          <a href="./oncall_assistant.html" class="link-card">
             <div class="link-icon">&#128222;</div>
             <h3>On-Call Helper</h3>
             <p>Quick reference for on-call</p>
           </a>
-          <a href="/monitor.html" class="link-card">
+          <a href="./monitor.html" class="link-card">
             <div class="link-icon">&#128202;</div>
             <h3>Monitor</h3>
             <p>System logs and status</p>
@@ -263,10 +263,10 @@
   </style>
 
   <script type="module">
-    import { Data, Store, EventBus, Auth, Monitor, Toast } from '/src/main.js';
-    import { UnitService } from '/src/features/units/unit.service.js';
-    import { Modal } from '/src/ui/components/modal.js';
-    import { SyncBadge } from '/src/ui/components/sync-badge.js';
+    import { Data, Store, EventBus, Auth, Monitor, Toast } from '../src/main.js';
+    import { UnitService } from '../src/features/units/unit.service.js';
+    import { Modal } from '../src/ui/components/modal.js';
+    import { SyncBadge } from '../src/ui/components/sync-badge.js';
 
     // Wait for app ready
     document.addEventListener('medward:ready', init);
@@ -309,7 +309,7 @@
       }
 
       container.innerHTML = units.map(unit => `
-        <a href="/dashboard.html?unit=${unit.id}" class="unit-card">
+        <a href="./dashboard.html?unit=${unit.id}" class="unit-card">
           <div class="unit-icon">${unit.icon || '&#127973;'}</div>
           <div class="unit-name">${escapeHtml(unit.name)}</div>
           <div class="unit-stats">
@@ -385,7 +385,7 @@
 
           overlay.querySelector('#logout-btn').addEventListener('click', async () => {
             await Auth.signOut();
-            window.location.href = '/login.html';
+            window.location.href = './login.html';
           });
         }
       });

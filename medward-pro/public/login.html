@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#005eb8">
   <title>Login - MedWard Pro</title>
-  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="./styles/base.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -204,9 +204,9 @@
   </style>
 
   <script type="module">
-    import { Auth } from '/src/services/firebase.auth.js';
-    import { Toast } from '/src/ui/components/toast.js';
-    import { Monitor } from '/src/monitor/monitor.core.js';
+    import { Auth } from '../src/services/firebase.auth.js';
+    import { Toast } from '../src/ui/components/toast.js';
+    import { Monitor } from '../src/monitor/monitor.core.js';
 
     // Initialize
     Monitor.init();
@@ -237,7 +237,7 @@
       const result = await Auth.signIn(email, password);
 
       if (result.success) {
-        window.location.href = '/landing.html';
+        window.location.href = './landing.html';
       } else {
         Toast.error(result.error);
         btn.disabled = false;
@@ -259,7 +259,7 @@
       const result = await Auth.signUp(email, password, name);
 
       if (result.success) {
-        window.location.href = '/landing.html';
+        window.location.href = './landing.html';
       } else {
         Toast.error(result.error);
         btn.disabled = false;
@@ -275,7 +275,7 @@
       const result = await Auth.signInWithGoogle();
 
       if (result.success) {
-        window.location.href = '/landing.html';
+        window.location.href = './landing.html';
       } else {
         Toast.error(result.error);
         btn.disabled = false;

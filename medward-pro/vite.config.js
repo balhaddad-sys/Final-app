@@ -2,11 +2,12 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  root: 'public',
-  publicDir: '../public/assets',
+  // Use project root, not public folder
+  root: '.',
+  publicDir: 'public/assets',
 
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
@@ -49,7 +50,7 @@ export default defineConfig({
 
   server: {
     port: 3000,
-    open: true,
+    open: '/public/index.html',
     cors: true
   },
 
