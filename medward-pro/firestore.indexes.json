@@ -75,13 +75,6 @@
       "collectionGroup": "trash",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "expiresAt", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "trash",
-      "queryScope": "COLLECTION",
-      "fields": [
         { "fieldPath": "deletedBy", "order": "ASCENDING" },
         { "fieldPath": "deletedAt", "order": "DESCENDING" }
       ]
