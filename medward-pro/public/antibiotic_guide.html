@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#005eb8">
+  <title>Antibiotic Guide - MedWard Pro</title>
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-layout">
+    <header class="app-header">
+      <div class="header-left">
+        <a href="/landing.html" class="btn btn-icon btn-ghost">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </a>
+        <h1 class="page-title">Antibiotic Guide</h1>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="container">
+        <div class="guide-intro">
+          <p>Get evidence-based antibiotic recommendations based on infection type and patient factors.</p>
+          <p class="disclaimer">Always follow local guidelines and consider patient-specific factors. Consult ID for complex cases.</p>
+        </div>
+
+        <form id="guidance-form" class="guidance-form">
+          <div class="form-group">
+            <label class="form-label" for="condition">Infection / Condition</label>
+            <input type="text" id="condition" class="form-input" required
+                   placeholder="e.g., Community-acquired pneumonia, UTI, Cellulitis">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="age-group">Age Group</label>
+              <select id="age-group" class="form-input">
+                <option value="adult">Adult</option>
+                <option value="pediatric">Pediatric</option>
+                <option value="neonate">Neonate</option>
+                <option value="elderly">Elderly (65+)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="renal-function">Renal Function</label>
+              <select id="renal-function" class="form-input">
+                <option value="normal">Normal (eGFR >60)</option>
+                <option value="mild">Mild CKD (eGFR 30-60)</option>
+                <option value="moderate">Moderate CKD (eGFR 15-30)</option>
+                <option value="severe">Severe CKD (eGFR <15)</option>
+                <option value="dialysis">Dialysis</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="allergies">Drug Allergies</label>
+            <input type="text" id="allergies" class="form-input"
+                   placeholder="e.g., Penicillin, Sulfa (leave blank if NKDA)">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="mrsa-risk">
+                MRSA Risk Factors
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="severe">
+                Severe / Septic
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-full">Get Recommendations</button>
+        </form>
+
+        <div id="result-container" class="result-container" style="display: none;">
+          <h2>Antibiotic Recommendations</h2>
+          <div id="result-content" class="result-content">
+            <!-- Results will be rendered here -->
+          </div>
+        </div>
+
+        <div class="common-conditions">
+          <h3>Common Conditions</h3>
+          <div class="condition-chips">
+            <button class="chip" data-condition="Community-acquired pneumonia">CAP</button>
+            <button class="chip" data-condition="Hospital-acquired pneumonia">HAP</button>
+            <button class="chip" data-condition="Urinary tract infection">UTI</button>
+            <button class="chip" data-condition="Pyelonephritis">Pyelonephritis</button>
+            <button class="chip" data-condition="Cellulitis">Cellulitis</button>
+            <button class="chip" data-condition="Diabetic foot infection">DFI</button>
+            <button class="chip" data-condition="Intra-abdominal infection">IAI</button>
+            <button class="chip" data-condition="Sepsis of unknown source">Sepsis</button>
+            <button class="chip" data-condition="Meningitis">Meningitis</button>
+            <button class="chip" data-condition="Endocarditis">Endocarditis</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .page-content {
+      padding: var(--space-lg);
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .guide-intro {
+      margin-bottom: var(--space-lg);
+    }
+
+    .disclaimer {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: var(--bg-input);
+      padding: var(--space-md);
+      border-radius: var(--radius-sm);
+    }
+
+    .guidance-form {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+    }
+
+    .result-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+    }
+
+    .result-container h2 {
+      margin-bottom: var(--space-md);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-content {
+      line-height: 1.7;
+    }
+
+    .result-content h3 {
+      margin-top: var(--space-lg);
+      margin-bottom: var(--space-sm);
+      color: var(--primary);
+    }
+
+    .result-content ul {
+      padding-left: var(--space-lg);
+      margin-bottom: var(--space-md);
+    }
+
+    .result-content li {
+      margin-bottom: var(--space-xs);
+    }
+
+    .common-conditions h3 {
+      margin-bottom: var(--space-md);
+    }
+
+    .condition-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .chip {
+      padding: 8px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all var(--transition);
+    }
+
+    .chip:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .loading {
+      text-align: center;
+      padding: var(--space-xl);
+      color: var(--text-muted);
+    }
+  </style>
+
+  <script type="module">
+    import { Toast, Monitor } from '/src/main.js';
+    import { AIService } from '/src/features/ai/ai.service.js';
+
+    document.addEventListener('medward:ready', init);
+
+    function init() {
+      // Form submission
+      document.getElementById('guidance-form').addEventListener('submit', handleSubmit);
+
+      // Condition chips
+      document.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.getElementById('condition').value = chip.dataset.condition;
+        });
+      });
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+
+      const condition = document.getElementById('condition').value.trim();
+      if (!condition) return;
+
+      const factors = {
+        ageGroup: document.getElementById('age-group').value,
+        renalFunction: document.getElementById('renal-function').value,
+        allergies: document.getElementById('allergies').value || 'NKDA',
+        mrsaRisk: document.getElementById('mrsa-risk').checked,
+        severe: document.getElementById('severe').checked
+      };
+
+      const resultContainer = document.getElementById('result-container');
+      const resultContent = document.getElementById('result-content');
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+
+      // Show loading
+      resultContainer.style.display = 'block';
+      resultContent.innerHTML = '<div class="loading">Getting recommendations...</div>';
+      submitBtn.disabled = true;
+
+      try {
+        const result = await AIService.getAntibioticGuidance(condition, factors);
+        resultContent.innerHTML = formatResult(result.answer || result);
+      } catch (error) {
+        resultContent.innerHTML = `<p class="text-danger">Failed to get recommendations. Please try again.</p>`;
+        Monitor.logError('ANTIBIOTIC_GUIDE', error);
+      } finally {
+        submitBtn.disabled = false;
+      }
+
+      // Scroll to result
+      resultContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function formatResult(text) {
+      if (typeof text !== 'string') {
+        text = JSON.stringify(text);
+      }
+
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^# (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
+        .replace(/^- (.*?)$/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    }
+  </script>
+</body>
+</html>

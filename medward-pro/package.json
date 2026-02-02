@@ -1,0 +1,40 @@
+{
+  "name": "medward-pro",
+  "version": "1.0.0",
+  "description": "Hospital-Grade Clinical Ward Management System",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "emulators": "firebase emulators:start",
+    "emulators:export": "firebase emulators:export ./emulator-data",
+    "emulators:import": "firebase emulators:start --import=./emulator-data",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "deploy:indexes": "firebase deploy --only firestore:indexes",
+    "deploy:all": "npm run build && firebase deploy",
+    "lint": "eslint src --ext .js",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "firebase": "^10.8.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "terser": "^5.26.0",
+    "eslint": "^8.56.0",
+    "vitest": "^1.2.0"
+  },
+  "keywords": [
+    "healthcare",
+    "clinical",
+    "ward-management",
+    "offline-first",
+    "firebase"
+  ],
+  "author": "Bader",
+  "license": "MIT"
+}
