@@ -1,15 +1,22 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { rename, readdir, unlink, rmdir } from 'fs/promises';
+import { rename, readdir, unlink, rmdir, cp } from 'fs/promises';
 import { existsSync } from 'fs';
 
-// Plugin to flatten HTML output from dist/public/ to dist/
+// Plugin to flatten HTML output from dist/public/ to dist/ and copy styles
 function flattenHtmlOutput() {
   return {
     name: 'flatten-html-output',
     closeBundle: async () => {
       const publicDir = resolve(__dirname, 'dist/public');
       const distDir = resolve(__dirname, 'dist');
+      const stylesSource = resolve(__dirname, 'public/styles');
+      const stylesDest = resolve(__dirname, 'dist/styles');
+
+      // Copy styles folder
+      if (existsSync(stylesSource)) {
+        await cp(stylesSource, stylesDest, { recursive: true });
+      }
 
       if (existsSync(publicDir)) {
         const files = await readdir(publicDir);
