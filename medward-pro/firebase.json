@@ -10,7 +10,7 @@
     ]
   },
   "hosting": {
-    "public": "dist/public",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -18,8 +18,48 @@
     ],
     "rewrites": [
       {
+        "source": "/",
+        "destination": "/public/index.html"
+      },
+      {
+        "source": "/index.html",
+        "destination": "/public/index.html"
+      },
+      {
+        "source": "/login.html",
+        "destination": "/public/login.html"
+      },
+      {
+        "source": "/landing.html",
+        "destination": "/public/landing.html"
+      },
+      {
+        "source": "/dashboard.html",
+        "destination": "/public/dashboard.html"
+      },
+      {
+        "source": "/handover.html",
+        "destination": "/public/handover.html"
+      },
+      {
+        "source": "/ai_assistant.html",
+        "destination": "/public/ai_assistant.html"
+      },
+      {
+        "source": "/monitor.html",
+        "destination": "/public/monitor.html"
+      },
+      {
+        "source": "/antibiotic_guide.html",
+        "destination": "/public/antibiotic_guide.html"
+      },
+      {
+        "source": "/oncall_assistant.html",
+        "destination": "/public/oncall_assistant.html"
+      },
+      {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/public/index.html"
       }
     ],
     "headers": [
