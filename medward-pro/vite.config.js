@@ -1,10 +1,39 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { rename, readdir, unlink, rmdir } from 'fs/promises';
+import { existsSync } from 'fs';
+
+// Plugin to flatten HTML output from dist/public/ to dist/
+function flattenHtmlOutput() {
+  return {
+    name: 'flatten-html-output',
+    closeBundle: async () => {
+      const publicDir = resolve(__dirname, 'dist/public');
+      const distDir = resolve(__dirname, 'dist');
+
+      if (existsSync(publicDir)) {
+        const files = await readdir(publicDir);
+        for (const file of files) {
+          if (file.endsWith('.html')) {
+            await rename(resolve(publicDir, file), resolve(distDir, file));
+          }
+        }
+        // Remove empty public folder
+        const remaining = await readdir(publicDir);
+        if (remaining.length === 0) {
+          await rmdir(publicDir);
+        }
+      }
+    }
+  };
+}
 
 export default defineConfig({
   // Use project root, not public folder
   root: '.',
   publicDir: 'public/assets',
+
+  plugins: [flattenHtmlOutput()],
 
   build: {
     outDir: 'dist',
