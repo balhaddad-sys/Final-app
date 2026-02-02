@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#005eb8">
+  <title>Handover - MedWard Pro</title>
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-layout">
+    <header class="app-header">
+      <div class="header-left">
+        <a href="/landing.html" class="btn btn-icon btn-ghost">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </a>
+        <h1 class="page-title">Handover</h1>
+      </div>
+      <div class="header-right">
+        <div id="sync-status"></div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="container">
+        <div class="tabs">
+          <button class="tab active" data-tab="inbox">Inbox</button>
+          <button class="tab" data-tab="send">Send Patient</button>
+          <button class="tab" data-tab="report">Generate Report</button>
+        </div>
+
+        <div id="inbox-tab" class="tab-content">
+          <div class="inbox-header">
+            <h2>Incoming Handovers</h2>
+            <button id="refresh-inbox" class="btn btn-secondary btn-sm">Refresh</button>
+          </div>
+          <div id="inbox-list" class="inbox-list">
+            <div class="empty-state">
+              <p>No pending handovers</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="send-tab" class="tab-content" style="display: none;">
+          <h2>Send Patient to Colleague</h2>
+          <form id="send-form">
+            <div class="form-group">
+              <label class="form-label" for="recipient-email">Recipient Email</label>
+              <input type="email" id="recipient-email" class="form-input" required placeholder="colleague@hospital.org">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="patient-select">Select Patient</label>
+              <select id="patient-select" class="form-input" required>
+                <option value="">Select a patient...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="handover-notes">Notes (optional)</label>
+              <textarea id="handover-notes" class="form-input" rows="3" placeholder="Additional information for handover..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send Handover</button>
+          </form>
+        </div>
+
+        <div id="report-tab" class="tab-content" style="display: none;">
+          <h2>Generate Handover Report</h2>
+          <div class="report-options">
+            <label class="checkbox-label">
+              <input type="checkbox" id="include-completed">
+              Include completed tasks
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="include-notes" checked>
+              Include patient notes
+            </label>
+          </div>
+          <div class="patient-selection">
+            <h3>Select Patients</h3>
+            <div id="patient-checkboxes" class="patient-checkboxes">
+              <!-- Patients will be listed here -->
+            </div>
+          </div>
+          <div class="report-actions">
+            <button id="generate-report" class="btn btn-primary">Generate Report</button>
+            <button id="copy-report" class="btn btn-secondary" disabled>Copy to Clipboard</button>
+          </div>
+          <div id="report-preview" class="report-preview" style="display: none;">
+            <h3>Report Preview</h3>
+            <pre id="report-content"></pre>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .page-layout {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    .page-content {
+      flex: 1;
+      padding: var(--space-lg);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tabs {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+      background: var(--bg-input);
+      padding: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-xs);
+      color: var(--text-secondary);
+      transition: all var(--transition);
+    }
+
+    .tab.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+    }
+
+    .inbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .inbox-item {
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .inbox-item-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-sm);
+    }
+
+    .inbox-item-sender {
+      font-weight: 500;
+    }
+
+    .inbox-item-date {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .inbox-item-patient {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: var(--space-xs);
+    }
+
+    .inbox-item-notes {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-md);
+    }
+
+    .inbox-item-actions {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .report-options {
+      margin-bottom: var(--space-lg);
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+      cursor: pointer;
+    }
+
+    .patient-selection {
+      margin-bottom: var(--space-lg);
+    }
+
+    .patient-checkboxes {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-sm);
+    }
+
+    .patient-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      border-radius: var(--radius-xs);
+    }
+
+    .patient-checkbox-item:hover {
+      background: var(--bg-input);
+    }
+
+    .report-actions {
+      display: flex;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .report-preview {
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
+      padding: var(--space-md);
+    }
+
+    .report-preview pre {
+      white-space: pre-wrap;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+
+  <script type="module">
+    import { Data, Store, EventBus, Toast } from '/src/main.js';
+    import { HandoverService } from '/src/features/handover/handover.service.js';
+    import { PatientService } from '/src/features/patients/patient.service.js';
+    import { SyncBadge } from '/src/ui/components/sync-badge.js';
+    import { Modal } from '/src/ui/components/modal.js';
+
+    let selectedPatients = new Set();
+    let currentReport = '';
+
+    document.addEventListener('medward:ready', init);
+
+    function init() {
+      SyncBadge.attach('sync-status');
+
+      // Tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+          document.getElementById(`${tab.dataset.tab}-tab`).style.display = 'block';
+        });
+      });
+
+      // Load inbox
+      loadInbox();
+      document.getElementById('refresh-inbox').addEventListener('click', loadInbox);
+
+      // Populate patient select
+      populatePatientSelect();
+      populatePatientCheckboxes();
+
+      // Send form
+      document.getElementById('send-form').addEventListener('submit', handleSendPatient);
+
+      // Report generation
+      document.getElementById('generate-report').addEventListener('click', generateReport);
+      document.getElementById('copy-report').addEventListener('click', copyReport);
+
+      // Check URL for patient param
+      const params = new URLSearchParams(window.location.search);
+      const patientId = params.get('patient');
+      if (patientId) {
+        document.querySelector('[data-tab="send"]').click();
+        document.getElementById('patient-select').value = patientId;
+      }
+    }
+
+    async function loadInbox() {
+      try {
+        const result = await HandoverService.checkInbox();
+        renderInbox(result.items || []);
+      } catch (error) {
+        Toast.error('Failed to load inbox');
+      }
+    }
+
+    function renderInbox(items) {
+      const container = document.getElementById('inbox-list');
+
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No pending handovers</p></div>';
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="inbox-item" data-id="${item.id}">
+          <div class="inbox-item-header">
+            <span class="inbox-item-sender">From: ${item.senderEmail}</span>
+            <span class="inbox-item-date">${formatDate(item.createdAt)}</span>
+          </div>
+          <div class="inbox-item-patient">${escapeHtml(item.patient?.name)}</div>
+          ${item.notes ? `<div class="inbox-item-notes">${escapeHtml(item.notes)}</div>` : ''}
+          <div class="inbox-item-actions">
+            <button class="btn btn-primary btn-sm" data-action="accept">Accept</button>
+            <button class="btn btn-secondary btn-sm" data-action="decline">Decline</button>
+            <button class="btn btn-ghost btn-sm" data-action="preview">Preview</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Attach handlers
+      container.querySelectorAll('[data-action="accept"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const itemId = e.target.closest('.inbox-item').dataset.id;
+          try {
+            await HandoverService.acceptPatient(itemId, Store.currentUnit?.id);
+            loadInbox();
+          } catch (error) {
+            Toast.error(error.message);
+          }
+        });
+      });
+
+      container.querySelectorAll('[data-action="decline"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const itemId = e.target.closest('.inbox-item').dataset.id;
+          if (await Modal.confirm('Decline this handover?')) {
+            await HandoverService.declinePatient(itemId);
+            loadInbox();
+          }
+        });
+      });
+    }
+
+    function populatePatientSelect() {
+      const select = document.getElementById('patient-select');
+      const patients = PatientService.getActive();
+
+      select.innerHTML = '<option value="">Select a patient...</option>' +
+        patients.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${p.bed || 'No bed'})</option>`).join('');
+    }
+
+    function populatePatientCheckboxes() {
+      const container = document.getElementById('patient-checkboxes');
+      const patients = PatientService.getActive();
+
+      if (patients.length === 0) {
+        container.innerHTML = '<p class="text-muted">No active patients</p>';
+        return;
+      }
+
+      container.innerHTML = patients.map(p => `
+        <label class="patient-checkbox-item">
+          <input type="checkbox" value="${p.id}">
+          <span>${escapeHtml(p.name)} (${p.bed || 'No bed'})</span>
+        </label>
+      `).join('');
+
+      container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            selectedPatients.add(e.target.value);
+          } else {
+            selectedPatients.delete(e.target.value);
+          }
+        });
+      });
+    }
+
+    async function handleSendPatient(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('recipient-email').value;
+      const patientId = document.getElementById('patient-select').value;
+      const notes = document.getElementById('handover-notes').value;
+
+      if (!patientId) {
+        Toast.warning('Please select a patient');
+        return;
+      }
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        await HandoverService.sendPatient(email, patientId, notes);
+        e.target.reset();
+      } catch (error) {
+        Toast.error(error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Handover';
+      }
+    }
+
+    function generateReport() {
+      if (selectedPatients.size === 0) {
+        Toast.warning('Please select at least one patient');
+        return;
+      }
+
+      const options = {
+        includeCompletedTasks: document.getElementById('include-completed').checked,
+        includeNotes: document.getElementById('include-notes').checked
+      };
+
+      currentReport = HandoverService.createReport([...selectedPatients], options);
+
+      document.getElementById('report-content').textContent = currentReport;
+      document.getElementById('report-preview').style.display = 'block';
+      document.getElementById('copy-report').disabled = false;
+    }
+
+    async function copyReport() {
+      const success = await HandoverService.copyReportToClipboard([...selectedPatients], {
+        includeCompletedTasks: document.getElementById('include-completed').checked,
+        includeNotes: document.getElementById('include-notes').checked
+      });
+    }
+
+    function formatDate(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp.seconds ? timestamp.seconds * 1000 : timestamp);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#005eb8">
+  <title>Monitor - MedWard Pro</title>
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-layout">
+    <header class="app-header">
+      <div class="header-left">
+        <a href="/landing.html" class="btn btn-icon btn-ghost">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </a>
+        <h1 class="page-title">System Monitor</h1>
+      </div>
+      <div class="header-right">
+        <button id="export-btn" class="btn btn-secondary btn-sm">Export Logs</button>
+        <button id="clear-btn" class="btn btn-ghost btn-sm">Clear</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="monitor-container">
+        <div class="stats-row" id="stats-row">
+          <!-- Stats will be rendered here -->
+        </div>
+
+        <div class="filters-row">
+          <select id="type-filter" class="form-input filter-input">
+            <option value="">All Types</option>
+            <option value="AUTH">Auth</option>
+            <option value="SYNC">Sync</option>
+            <option value="DATA">Data</option>
+            <option value="RUNTIME">Runtime</option>
+            <option value="CONSOLE">Console</option>
+          </select>
+          <select id="level-filter" class="form-input filter-input">
+            <option value="">All Levels</option>
+            <option value="info">Info</option>
+            <option value="warn">Warning</option>
+            <option value="error">Error</option>
+          </select>
+          <input type="text" id="search-filter" class="form-input filter-input" placeholder="Search logs...">
+        </div>
+
+        <div class="log-list" id="log-list">
+          <!-- Logs will be rendered here -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .page-layout {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .header-right {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    .page-content {
+      flex: 1;
+      overflow: hidden;
+      padding: var(--space-md);
+    }
+
+    .monitor-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-md);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-value.error { color: var(--danger); }
+    .stat-value.warn { color: var(--warning); }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .filters-row {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .filter-input {
+      padding: 8px 12px;
+    }
+
+    .filter-input:first-child,
+    .filter-input:nth-child(2) {
+      width: 150px;
+    }
+
+    .filter-input:last-child {
+      flex: 1;
+    }
+
+    .log-list {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .log-entry {
+      display: flex;
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-entry:hover {
+      background: var(--bg-input);
+    }
+
+    .log-entry.level-error {
+      background: #fef2f2;
+    }
+
+    .log-entry.level-warn {
+      background: #fffbeb;
+    }
+
+    body.dark-theme .log-entry.level-error {
+      background: #450a0a;
+    }
+
+    body.dark-theme .log-entry.level-warn {
+      background: #451a03;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .log-type {
+      width: 80px;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    .log-type.AUTH { color: #7c3aed; }
+    .log-type.SYNC { color: #0891b2; }
+    .log-type.DATA { color: #059669; }
+    .log-type.RUNTIME { color: #6366f1; }
+    .log-type.CONSOLE { color: #64748b; }
+
+    .log-level {
+      width: 50px;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    .log-level.info { color: var(--info); }
+    .log-level.warn { color: var(--warning); }
+    .log-level.error { color: var(--danger); }
+
+    .log-message {
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .log-data {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    .empty-logs {
+      text-align: center;
+      padding: var(--space-xl);
+      color: var(--text-muted);
+    }
+  </style>
+
+  <script type="module">
+    import { Monitor, Storage, Sync, Store } from '/src/main.js';
+    import { Toast } from '/src/ui/components/toast.js';
+
+    let filters = {
+      type: '',
+      level: '',
+      search: ''
+    };
+
+    document.addEventListener('medward:ready', init);
+
+    function init() {
+      renderStats();
+      renderLogs();
+
+      // Subscribe to new events
+      Monitor.subscribe(() => {
+        renderStats();
+        renderLogs();
+      });
+
+      // Filter handlers
+      document.getElementById('type-filter').addEventListener('change', (e) => {
+        filters.type = e.target.value;
+        renderLogs();
+      });
+
+      document.getElementById('level-filter').addEventListener('change', (e) => {
+        filters.level = e.target.value;
+        renderLogs();
+      });
+
+      document.getElementById('search-filter').addEventListener('input', (e) => {
+        filters.search = e.target.value;
+        renderLogs();
+      });
+
+      // Export button
+      document.getElementById('export-btn').addEventListener('click', exportLogs);
+
+      // Clear button
+      document.getElementById('clear-btn').addEventListener('click', () => {
+        if (confirm('Clear all logs?')) {
+          Monitor.clear();
+        }
+      });
+    }
+
+    async function renderStats() {
+      const stats = Monitor.getStats();
+      const walStats = await Storage.wal.getStats();
+
+      document.getElementById('stats-row').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${stats.totalEvents}</div>
+          <div class="stat-label">Total Events</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value error">${stats.byLevel.error}</div>
+          <div class="stat-label">Errors</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value warn">${stats.byLevel.warn}</div>
+          <div class="stat-label">Warnings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${walStats.pending}</div>
+          <div class="stat-label">Pending Sync</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${formatUptime(stats.uptime)}</div>
+          <div class="stat-label">Uptime</div>
+        </div>
+      `;
+    }
+
+    function renderLogs() {
+      const logs = Monitor.getAll(filters);
+      const container = document.getElementById('log-list');
+
+      if (logs.length === 0) {
+        container.innerHTML = '<div class="empty-logs">No logs matching filters</div>';
+        return;
+      }
+
+      container.innerHTML = logs.slice(-500).reverse().map(log => `
+        <div class="log-entry level-${log.level}">
+          <span class="log-time">${formatTime(log.timestamp)}</span>
+          <span class="log-type ${log.type}">${log.type}</span>
+          <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+          <div class="log-message">
+            ${escapeHtml(log.message)}
+            ${log.data ? `<div class="log-data">${escapeHtml(JSON.stringify(log.data))}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function exportLogs() {
+      const data = Monitor.export();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `medward-logs-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      Toast.success('Logs exported');
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function formatUptime(ms) {
+      const seconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+
+      if (hours > 0) return `${hours}h ${minutes % 60}m`;
+      if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+      return `${seconds}s`;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

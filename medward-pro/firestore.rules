@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================================================
+    // HELPER FUNCTIONS
+    // ==========================================================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Get the current user's ID
+    function userId() {
+      return request.auth.uid;
+    }
+
+    // Check if user is a member of the specified unit
+    function isUnitMember(unitId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/units/$(unitId)) &&
+        userId() in get(/databases/$(database)/documents/units/$(unitId)).data.members;
+    }
+
+    // Check if the document belongs to a unit the user is a member of
+    function hasUnitAccess() {
+      return isUnitMember(resource.data.unitId);
+    }
+
+    // Check if the incoming document belongs to a unit the user is a member of
+    function hasIncomingUnitAccess() {
+      return isUnitMember(request.resource.data.unitId);
+    }
+
+    // Validate patient data
+    function isValidPatient() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'unitId']) &&
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 200 &&
+        data.unitId is string;
+    }
+
+    // Validate task data
+    function isValidTask() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['patientId', 'text']) &&
+        data.patientId is string &&
+        data.text is string &&
+        data.text.size() > 0 &&
+        data.text.size() <= 1000;
+    }
+
+    // Validate unit data
+    function isValidUnit() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'members']) &&
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 100 &&
+        data.members is list;
+    }
+
+    // ==========================================================================
+    // COLLECTION RULES
+    // ==========================================================================
+
+    // Users collection - users can only read/write their own document
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false; // Users cannot delete themselves
+    }
+
+    // Units collection
+    match /units/{unitId} {
+      // Any authenticated user can read units they're a member of
+      allow read: if isAuthenticated() &&
+        (resource == null || userId() in resource.data.members);
+
+      // Any authenticated user can create a unit (they become the creator)
+      allow create: if isAuthenticated() &&
+        isValidUnit() &&
+        userId() in request.resource.data.members;
+
+      // Only members can update a unit
+      allow update: if isAuthenticated() &&
+        userId() in resource.data.members &&
+        isValidUnit() &&
+        // Cannot remove yourself if you're the last member
+        request.resource.data.members.size() > 0;
+
+      // Only delete if you're the last member
+      allow delete: if isAuthenticated() &&
+        userId() in resource.data.members &&
+        resource.data.members.size() == 1;
+    }
+
+    // Patients collection
+    match /patients/{patientId} {
+      // Read: must be a member of the patient's unit
+      allow read: if isAuthenticated() && hasUnitAccess();
+
+      // Create: must be a member of the target unit
+      allow create: if isAuthenticated() &&
+        hasIncomingUnitAccess() &&
+        isValidPatient();
+
+      // Update: must be a member of the patient's unit
+      allow update: if isAuthenticated() &&
+        hasUnitAccess() &&
+        isValidPatient() &&
+        // Cannot change unitId (use handover instead)
+        request.resource.data.unitId == resource.data.unitId;
+
+      // Delete: must be a member of the patient's unit
+      // Soft delete only - set deleted flag
+      allow delete: if false; // Use soft delete via update
+    }
+
+    // Tasks collection
+    match /tasks/{taskId} {
+      // Helper to get the patient's unitId
+      function getPatientUnitId() {
+        return get(/databases/$(database)/documents/patients/$(resource.data.patientId)).data.unitId;
+      }
+
+      function getIncomingPatientUnitId() {
+        return get(/databases/$(database)/documents/patients/$(request.resource.data.patientId)).data.unitId;
+      }
+
+      // Read: must be a member of the patient's unit
+      allow read: if isAuthenticated() && isUnitMember(getPatientUnitId());
+
+      // Create: must be a member of the patient's unit
+      allow create: if isAuthenticated() &&
+        isUnitMember(getIncomingPatientUnitId()) &&
+        isValidTask();
+
+      // Update: must be a member of the patient's unit
+      allow update: if isAuthenticated() &&
+        isUnitMember(getPatientUnitId()) &&
+        isValidTask() &&
+        // Cannot change patientId
+        request.resource.data.patientId == resource.data.patientId;
+
+      // Delete: soft delete only
+      allow delete: if false;
+    }
+
+    // Trash collection - managed by Cloud Functions
+    match /trash/{trashId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only Cloud Functions can write
+    }
+
+    // Handovers collection
+    match /handovers/{handoverId} {
+      // Read: sender or recipient can read
+      allow read: if isAuthenticated() &&
+        (resource.data.senderId == userId() || resource.data.recipientId == userId());
+
+      // Create/Update/Delete: managed by Cloud Functions
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Audit log - append only, managed by Cloud Functions
+    match /audit/{auditId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Deny access to any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

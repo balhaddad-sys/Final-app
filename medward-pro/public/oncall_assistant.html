@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#005eb8">
+  <title>On-Call Assistant - MedWard Pro</title>
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-layout">
+    <header class="app-header">
+      <div class="header-left">
+        <a href="/landing.html" class="btn btn-icon btn-ghost">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </a>
+        <h1 class="page-title">On-Call Assistant</h1>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="container">
+        <p class="intro">Quick guidance for common on-call scenarios. Select a scenario or describe your situation.</p>
+
+        <div class="scenarios-grid">
+          <button class="scenario-card" data-scenario="chest-pain">
+            <div class="scenario-icon">&#10084;&#65039;</div>
+            <h3>Chest Pain</h3>
+            <p>Acute chest pain assessment</p>
+          </button>
+          <button class="scenario-card" data-scenario="hypotension">
+            <div class="scenario-icon">&#128200;</div>
+            <h3>Hypotension</h3>
+            <p>Low blood pressure management</p>
+          </button>
+          <button class="scenario-card" data-scenario="tachycardia">
+            <div class="scenario-icon">&#128147;</div>
+            <h3>Tachycardia</h3>
+            <p>Fast heart rate evaluation</p>
+          </button>
+          <button class="scenario-card" data-scenario="dyspnea">
+            <div class="scenario-icon">&#128168;</div>
+            <h3>Dyspnea</h3>
+            <p>Acute shortness of breath</p>
+          </button>
+          <button class="scenario-card" data-scenario="altered-mental">
+            <div class="scenario-icon">&#129504;</div>
+            <h3>Altered Mental Status</h3>
+            <p>Confusion or decreased consciousness</p>
+          </button>
+          <button class="scenario-card" data-scenario="fever">
+            <div class="scenario-icon">&#127777;&#65039;</div>
+            <h3>Fever</h3>
+            <p>New fever workup</p>
+          </button>
+          <button class="scenario-card" data-scenario="hypoglycemia">
+            <div class="scenario-icon">&#127852;</div>
+            <h3>Hypoglycemia</h3>
+            <p>Low blood sugar management</p>
+          </button>
+          <button class="scenario-card" data-scenario="fall">
+            <div class="scenario-icon">&#9888;&#65039;</div>
+            <h3>Patient Fall</h3>
+            <p>Fall assessment protocol</p>
+          </button>
+        </div>
+
+        <div class="custom-query">
+          <h3>Or describe your situation</h3>
+          <form id="query-form">
+            <textarea id="custom-query" class="form-input" rows="3"
+                      placeholder="Describe the clinical scenario you need help with..."></textarea>
+            <button type="submit" class="btn btn-primary">Get Guidance</button>
+          </form>
+        </div>
+
+        <div id="result-panel" class="result-panel" style="display: none;">
+          <div class="result-header">
+            <h2 id="result-title">Guidance</h2>
+            <button id="close-result" class="btn btn-icon btn-ghost">&times;</button>
+          </div>
+          <div id="result-content" class="result-content">
+            <!-- Result will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .page-content {
+      padding: var(--space-lg);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .intro {
+      margin-bottom: var(--space-lg);
+      color: var(--text-secondary);
+    }
+
+    .scenarios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .scenario-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-md);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .scenario-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .scenario-icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-sm);
+    }
+
+    .scenario-card h3 {
+      font-size: 1rem;
+      margin-bottom: var(--space-xs);
+    }
+
+    .scenario-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .custom-query {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+    }
+
+    .custom-query h3 {
+      margin-bottom: var(--space-md);
+    }
+
+    .custom-query form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .result-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      background: var(--primary);
+      color: white;
+    }
+
+    .result-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .result-header .btn-ghost {
+      color: white;
+      font-size: 1.5rem;
+    }
+
+    .result-content {
+      padding: var(--space-lg);
+      line-height: 1.7;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .result-content h3 {
+      margin-top: var(--space-lg);
+      margin-bottom: var(--space-sm);
+      color: var(--primary);
+    }
+
+    .result-content h3:first-child {
+      margin-top: 0;
+    }
+
+    .result-content ul, .result-content ol {
+      padding-left: var(--space-lg);
+      margin-bottom: var(--space-md);
+    }
+
+    .result-content li {
+      margin-bottom: var(--space-xs);
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: var(--space-xl);
+      color: var(--text-muted);
+    }
+  </style>
+
+  <script type="module">
+    import { Toast, Monitor } from '/src/main.js';
+    import { AIService } from '/src/features/ai/ai.service.js';
+    import { AIPrompts } from '/src/features/ai/ai.prompts.js';
+
+    const scenarios = {
+      'chest-pain': {
+        title: 'Chest Pain Assessment',
+        query: AIPrompts.scenarios.chestPain.prompt
+      },
+      'hypotension': {
+        title: 'Hypotension Management',
+        query: `On-call guidance for acute hypotension:
+
+1. Immediate assessment steps
+2. Common causes to consider
+3. Initial interventions
+4. When to escalate to ICU
+5. Documentation requirements`
+      },
+      'tachycardia': {
+        title: 'Tachycardia Evaluation',
+        query: `On-call guidance for new-onset tachycardia:
+
+1. Immediate assessment (stable vs unstable)
+2. Differential by type (narrow vs wide complex)
+3. Initial management steps
+4. When to call cardiology
+5. Common reversible causes`
+      },
+      'dyspnea': {
+        title: 'Acute Dyspnea',
+        query: `On-call guidance for acute dyspnea:
+
+1. Immediate bedside assessment
+2. Key differentials (cardiac vs pulmonary)
+3. Initial workup (ABG, CXR, BNP, troponin)
+4. Empiric treatment while awaiting results
+5. Escalation criteria`
+      },
+      'altered-mental': {
+        title: 'Altered Mental Status',
+        query: `On-call guidance for altered mental status:
+
+1. Immediate safety and assessment
+2. AEIOU-TIPS differential
+3. Priority workup
+4. Common reversible causes to check
+5. When to image, when to LP`
+      },
+      'fever': {
+        title: 'Fever Workup',
+        query: `On-call guidance for new fever in hospitalized patient:
+
+1. Assessment approach
+2. Source identification
+3. Culture and lab workup
+4. Empiric antibiotic decision
+5. Isolation considerations`
+      },
+      'hypoglycemia': {
+        title: 'Hypoglycemia Management',
+        query: AIPrompts.scenarios.hyperkalemia.prompt.replace('hyperkalemia', 'hypoglycemia')
+      },
+      'fall': {
+        title: 'Patient Fall Assessment',
+        query: `On-call guidance for patient fall:
+
+1. Immediate assessment steps
+2. When to image (CT head criteria)
+3. Documentation requirements
+4. Anticoagulation reversal consideration
+5. Prevention of recurrence`
+      }
+    };
+
+    document.addEventListener('medward:ready', init);
+
+    function init() {
+      // Scenario cards
+      document.querySelectorAll('.scenario-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const scenario = scenarios[card.dataset.scenario];
+          if (scenario) {
+            getGuidance(scenario.query, scenario.title);
+          }
+        });
+      });
+
+      // Custom query form
+      document.getElementById('query-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const query = document.getElementById('custom-query').value.trim();
+        if (query) {
+          getGuidance(`On-call query: ${query}
+
+Provide practical guidance for a junior doctor covering overnight including:
+1. Immediate actions
+2. Urgency assessment
+3. Who to call if needed
+4. Documentation points
+5. Safety netting advice`, 'On-Call Guidance');
+        }
+      });
+
+      // Close result
+      document.getElementById('close-result').addEventListener('click', () => {
+        document.getElementById('result-panel').style.display = 'none';
+      });
+    }
+
+    async function getGuidance(query, title) {
+      const resultPanel = document.getElementById('result-panel');
+      const resultTitle = document.getElementById('result-title');
+      const resultContent = document.getElementById('result-content');
+
+      // Show panel with loading
+      resultPanel.style.display = 'block';
+      resultTitle.textContent = title;
+      resultContent.innerHTML = '<div class="loading-spinner">Getting guidance...</div>';
+
+      // Scroll to result
+      resultPanel.scrollIntoView({ behavior: 'smooth' });
+
+      try {
+        const result = await AIService.askClinical(query);
+        resultContent.innerHTML = formatResult(result.answer) +
+          `<p class="text-muted" style="margin-top: var(--space-lg); font-size: 0.85rem;">
+            ${result.disclaimer || 'This guidance is for educational purposes. Always use clinical judgment.'}
+          </p>`;
+      } catch (error) {
+        resultContent.innerHTML = `<p class="text-danger">Failed to get guidance. Please try again.</p>`;
+        Monitor.logError('ONCALL_GUIDANCE', error);
+      }
+    }
+
+    function formatResult(text) {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^# (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
+        .replace(/^- (.*?)$/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    }
+  </script>
+</body>
+</html>

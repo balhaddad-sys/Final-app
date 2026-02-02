@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#005eb8">
+  <title>AI Assistant - MedWard Pro</title>
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-layout">
+    <header class="app-header">
+      <div class="header-left">
+        <a href="/landing.html" class="btn btn-icon btn-ghost">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </a>
+        <h1 class="page-title">AI Clinical Assistant</h1>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="ai-container">
+        <div class="ai-sidebar">
+          <h3>Quick Prompts</h3>
+          <div class="quick-prompts" id="quick-prompts">
+            <!-- Prompts will be loaded here -->
+          </div>
+        </div>
+
+        <div class="ai-main">
+          <div class="chat-messages" id="chat-messages">
+            <div class="welcome-message">
+              <div class="ai-icon">&#129302;</div>
+              <h2>Clinical Decision Support</h2>
+              <p>Ask me about differential diagnosis, treatment approaches, drug information, or clinical guidelines.</p>
+              <p class="disclaimer">This AI provides educational guidance only. Always use clinical judgment and consult specialists for complex cases.</p>
+            </div>
+          </div>
+
+          <form class="chat-input" id="chat-form">
+            <textarea id="question-input" class="form-input" placeholder="Ask a clinical question..." rows="2"></textarea>
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .page-layout {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    .page-content {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .ai-container {
+      display: flex;
+      height: 100%;
+    }
+
+    .ai-sidebar {
+      width: 280px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      padding: var(--space-md);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .ai-sidebar h3 {
+      margin-bottom: var(--space-md);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .quick-prompts {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .quick-prompt {
+      padding: var(--space-sm) var(--space-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .quick-prompt:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .ai-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-lg);
+    }
+
+    .welcome-message {
+      text-align: center;
+      padding: var(--space-xl);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .ai-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .welcome-message h2 {
+      margin-bottom: var(--space-sm);
+    }
+
+    .disclaimer {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: var(--bg-input);
+      padding: var(--space-md);
+      border-radius: var(--radius-sm);
+      margin-top: var(--space-lg);
+    }
+
+    .message {
+      margin-bottom: var(--space-lg);
+      max-width: 800px;
+    }
+
+    .message.user {
+      margin-left: auto;
+    }
+
+    .message-content {
+      padding: var(--space-md);
+      border-radius: var(--radius);
+    }
+
+    .message.user .message-content {
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant .message-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    .message.user .message-label {
+      text-align: right;
+    }
+
+    .message-text {
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .message-text h1, .message-text h2, .message-text h3,
+    .message-text h4, .message-text h5, .message-text h6 {
+      margin-top: var(--space-md);
+      margin-bottom: var(--space-sm);
+    }
+
+    .message-text ul, .message-text ol {
+      padding-left: var(--space-lg);
+      margin-bottom: var(--space-md);
+    }
+
+    .message-text strong {
+      font-weight: 600;
+    }
+
+    .message-disclaimer {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: var(--space-md);
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-input {
+      display: flex;
+      gap: var(--space-sm);
+      padding: var(--space-md);
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-input textarea {
+      flex: 1;
+      resize: none;
+    }
+
+    .chat-input .btn {
+      align-self: flex-end;
+    }
+
+    .loading-indicator {
+      display: flex;
+      gap: var(--space-xs);
+      padding: var(--space-md);
+    }
+
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: loadingBounce 1.4s infinite ease-in-out both;
+    }
+
+    .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes loadingBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    @media (max-width: 768px) {
+      .ai-sidebar {
+        display: none;
+      }
+    }
+  </style>
+
+  <script type="module">
+    import { Toast, Monitor } from '/src/main.js';
+    import { AIService } from '/src/features/ai/ai.service.js';
+    import { AIPrompts } from '/src/features/ai/ai.prompts.js';
+
+    document.addEventListener('medward:ready', init);
+
+    function init() {
+      // Load quick prompts
+      loadQuickPrompts();
+
+      // Form submission
+      document.getElementById('chat-form').addEventListener('submit', handleSubmit);
+
+      // Enter to submit (shift+enter for newline)
+      document.getElementById('question-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+        }
+      });
+    }
+
+    function loadQuickPrompts() {
+      const container = document.getElementById('quick-prompts');
+      const prompts = AIService.getCommonPrompts();
+
+      container.innerHTML = prompts.map(p => `
+        <button class="quick-prompt" data-prompt="${escapeAttr(p.question)}">
+          ${escapeHtml(p.question.substring(0, 50))}${p.question.length > 50 ? '...' : ''}
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.quick-prompt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('question-input').value = btn.dataset.prompt;
+          document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+        });
+      });
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+
+      const input = document.getElementById('question-input');
+      const question = input.value.trim();
+
+      if (!question) return;
+
+      // Clear welcome message
+      const welcome = document.querySelector('.welcome-message');
+      if (welcome) welcome.remove();
+
+      // Add user message
+      addMessage(question, 'user');
+      input.value = '';
+
+      // Show loading
+      const loadingId = showLoading();
+
+      // Disable form
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+
+      try {
+        const result = await AIService.askClinical(question);
+        removeLoading(loadingId);
+        addMessage(result.answer, 'assistant', result.disclaimer);
+      } catch (error) {
+        removeLoading(loadingId);
+        Toast.error('Failed to get response. Please try again.');
+        Monitor.logError('AI_QUERY_FAIL', error);
+      } finally {
+        submitBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    function addMessage(text, type, disclaimer = null) {
+      const container = document.getElementById('chat-messages');
+
+      const message = document.createElement('div');
+      message.className = `message ${type}`;
+      message.innerHTML = `
+        <div class="message-label">${type === 'user' ? 'You' : 'AI Assistant'}</div>
+        <div class="message-content">
+          <div class="message-text">${type === 'assistant' ? formatMarkdown(text) : escapeHtml(text)}</div>
+          ${disclaimer ? `<div class="message-disclaimer">${escapeHtml(disclaimer)}</div>` : ''}
+        </div>
+      `;
+
+      container.appendChild(message);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showLoading() {
+      const container = document.getElementById('chat-messages');
+      const id = `loading-${Date.now()}`;
+
+      const loading = document.createElement('div');
+      loading.className = 'message assistant';
+      loading.id = id;
+      loading.innerHTML = `
+        <div class="message-label">AI Assistant</div>
+        <div class="message-content">
+          <div class="loading-indicator">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(loading);
+      container.scrollTop = container.scrollHeight;
+
+      return id;
+    }
+
+    function removeLoading(id) {
+      document.getElementById(id)?.remove();
+    }
+
+    function formatMarkdown(text) {
+      // Basic markdown formatting
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+        .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
+        .replace(/^- (.*?)$/gm, '<li>$1</li>')
+        .replace(/\n/g, '<br>');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function escapeAttr(text) {
+      return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+  </script>
+</body>
+</html>
