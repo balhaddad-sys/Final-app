@@ -1,4 +1,4 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
 
@@ -9,7 +9,7 @@ const db = admin.firestore();
 // DATA OPERATIONS
 // =============================================================================
 
-export const loadData = onCall(async (request) => {
+export const loadData = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -63,7 +63,7 @@ export const loadData = onCall(async (request) => {
   }
 });
 
-export const saveData = onCall(async (request) => {
+export const saveData = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -108,7 +108,7 @@ export const saveData = onCall(async (request) => {
   }
 });
 
-export const moveToTrash = onCall(async (request) => {
+export const moveToTrash = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -151,7 +151,7 @@ export const moveToTrash = onCall(async (request) => {
   }
 });
 
-export const restoreFromTrash = onCall(async (request) => {
+export const restoreFromTrash = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -190,7 +190,7 @@ export const restoreFromTrash = onCall(async (request) => {
 // HANDOVER OPERATIONS
 // =============================================================================
 
-export const sendPatient = onCall(async (request) => {
+export const sendPatient = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -243,7 +243,7 @@ export const sendPatient = onCall(async (request) => {
   }
 });
 
-export const checkInbox = onCall(async (request) => {
+export const checkInbox = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -262,7 +262,7 @@ export const checkInbox = onCall(async (request) => {
   }
 });
 
-export const acceptInboxPatient = onCall(async (request) => {
+export const acceptInboxPatient = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -332,7 +332,7 @@ export const acceptInboxPatient = onCall(async (request) => {
   }
 });
 
-export const declineInboxPatient = onCall(async (request) => {
+export const declineInboxPatient = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -369,7 +369,7 @@ export const declineInboxPatient = onCall(async (request) => {
 // AI OPERATIONS
 // =============================================================================
 
-export const askClinical = onCall(async (request) => {
+export const askClinical = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -388,7 +388,7 @@ export const askClinical = onCall(async (request) => {
   };
 });
 
-export const getDrugInfo = onCall(async (request) => {
+export const getDrugInfo = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -423,7 +423,7 @@ export const cleanupTrash = onSchedule('every 24 hours', async () => {
     .get();
 
   const batch = db.batch();
-  expiredSnap.docs.forEach(doc => batch.delete(doc.ref));
+  expiredSnap.docs.forEach((doc: admin.firestore.QueryDocumentSnapshot) => batch.delete(doc.ref));
 
   if (expiredSnap.docs.length > 0) {
     await batch.commit();
