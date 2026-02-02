@@ -903,15 +903,26 @@
       return;
     }
 
-    // Get the driver function (handle both old and new versions)
+    // Get the driver function (handle different driver.js versions and bundle formats)
     let driverFunction;
     if (typeof window.driver === 'function') {
       // Old version: window.driver is directly a function
       driverFunction = window.driver;
-    } else if (typeof window.driver === 'object' && window.driver !== null && typeof window.driver.driver === 'function') {
-      // New version: window.driver is an object with a driver method
-      driverFunction = window.driver.driver;
-    } else {
+    } else if (typeof window.driver === 'object' && window.driver !== null) {
+      // New version: check various possible export patterns
+      if (typeof window.driver.driver === 'function') {
+        // Pattern: window.driver.driver (some UMD builds)
+        driverFunction = window.driver.driver;
+      } else if (window.driver.js && typeof window.driver.js.driver === 'function') {
+        // Pattern: window.driver.js.driver (IIFE build of driver.js v1.x)
+        driverFunction = window.driver.js.driver;
+      } else if (typeof window.driver.js === 'function') {
+        // Pattern: window.driver.js (alternate IIFE format)
+        driverFunction = window.driver.js;
+      }
+    }
+
+    if (!driverFunction) {
       console.error('❌ window.driver exists but is not usable. Type:', typeof window.driver, 'Value:', window.driver);
       alert('Tour system error. Driver.js is not properly initialized.');
       return;
@@ -1228,10 +1239,16 @@
         alert('Tour system is loading... Please try again in a moment.');
         return;
       }
-      // Check if driver is available (either as function or object with driver method)
-      const isDriverAvailable =
-        (typeof window.driver === 'function') ||
-        (typeof window.driver === 'object' && window.driver !== null && typeof window.driver.driver === 'function');
+      // Check if driver is available (handle different driver.js versions and bundle formats)
+      let isDriverAvailable = false;
+      if (typeof window.driver === 'function') {
+        isDriverAvailable = true;
+      } else if (typeof window.driver === 'object' && window.driver !== null) {
+        isDriverAvailable =
+          (typeof window.driver.driver === 'function') ||
+          (window.driver.js && typeof window.driver.js.driver === 'function') ||
+          (typeof window.driver.js === 'function');
+      }
 
       if (!isDriverAvailable) {
         alert('Tour system error. Please refresh the page and try again.');
@@ -1249,10 +1266,18 @@
   // ═══════════════════════════════════════════════════════════════════════════
 
   function waitForDriver(callback, maxAttempts = 20, attempt = 0) {
-    // Check if driver exists (can be either a function or an object with driver property)
-    const isDriverAvailable =
-      (typeof window.driver === 'function') ||
-      (typeof window.driver === 'object' && window.driver !== null && typeof window.driver.driver === 'function');
+    // Check if driver exists (handle different driver.js versions and bundle formats)
+    let isDriverAvailable = false;
+
+    if (typeof window.driver === 'function') {
+      isDriverAvailable = true;
+    } else if (typeof window.driver === 'object' && window.driver !== null) {
+      // Check various possible export patterns
+      isDriverAvailable =
+        (typeof window.driver.driver === 'function') ||
+        (window.driver.js && typeof window.driver.js.driver === 'function') ||
+        (typeof window.driver.js === 'function');
+    }
 
     if (isDriverAvailable) {
       console.log('✅ Driver.js loaded successfully (type:', typeof window.driver + ')');
