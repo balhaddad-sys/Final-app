@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#005eb8">
   <title>Dashboard - MedWard Pro</title>
-  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="./styles/base.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
   <div class="dashboard-layout">
     <header class="app-header">
       <div class="header-left">
-        <a href="/landing.html" class="btn btn-icon btn-ghost">
+        <a href="./landing.html" class="btn btn-icon btn-ghost">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 18l-6-6 6-6"/>
           </svg>
@@ -279,16 +279,16 @@
   </style>
 
   <script type="module">
-    import { Data, Store, EventBus, Monitor, Toast } from '/src/main.js';
-    import { PatientService } from '/src/features/patients/patient.service.js';
-    import { PatientUI } from '/src/features/patients/patient.ui.js';
-    import { TaskService } from '/src/features/tasks/task.service.js';
-    import { UnitService } from '/src/features/units/unit.service.js';
-    import { Sync } from '/src/services/firebase.sync.js';
-    import { KeyedListRenderer } from '/src/ui/list-renderer.js';
-    import { Modal } from '/src/ui/components/modal.js';
-    import { SyncBadge } from '/src/ui/components/sync-badge.js';
-    import { ClinicalTypeahead } from '/src/features/tasks/clinical-typeahead.js';
+    import { Data, Store, EventBus, Monitor, Toast } from '../src/main.js';
+    import { PatientService } from '../src/features/patients/patient.service.js';
+    import { PatientUI } from '../src/features/patients/patient.ui.js';
+    import { TaskService } from '../src/features/tasks/task.service.js';
+    import { UnitService } from '../src/features/units/unit.service.js';
+    import { Sync } from '../src/services/firebase.sync.js';
+    import { KeyedListRenderer } from '../src/ui/list-renderer.js';
+    import { Modal } from '../src/ui/components/modal.js';
+    import { SyncBadge } from '../src/ui/components/sync-badge.js';
+    import { ClinicalTypeahead } from '../src/features/tasks/clinical-typeahead.js';
 
     let patientListRenderer;
     let currentPatient = null;
@@ -301,7 +301,7 @@
       const unitId = params.get('unit');
 
       if (!unitId) {
-        window.location.href = '/landing.html';
+        window.location.href = './landing.html';
         return;
       }
 
@@ -505,7 +505,7 @@
 
           overlay.querySelector('[data-action="handover"]').addEventListener('click', () => {
             Modal.closeAll();
-            window.location.href = `/handover.html?patient=${patient.id}`;
+            window.location.href = `./handover.html?patient=${patient.id}`;
           });
 
           overlay.querySelector('[data-action="delete"]').addEventListener('click', async () => {
