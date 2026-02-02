@@ -43,7 +43,7 @@ export const Config = {
 
   // Check if using emulators
   get useEmulators() {
-    return import.meta.env?.VITE_USE_EMULATORS === 'true' || import.meta.env?.DEV;
+    return import.meta.env?.VITE_USE_EMULATORS === 'true';
   },
 
   // Check if in development mode
@@ -59,7 +59,8 @@ export const Config = {
       projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || '',
       storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || '',
       messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-      appId: import.meta.env?.VITE_FIREBASE_APP_ID || ''
+      appId: import.meta.env?.VITE_FIREBASE_APP_ID || '',
+      measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || ''
     };
   }
 };
