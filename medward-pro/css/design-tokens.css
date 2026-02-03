@@ -1,0 +1,139 @@
+:root {
+  /* === PRESTIGIOUS COLOR PALETTE === */
+  /* Primary: Medical Trust Blue */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary: #1d4ed8;
+
+  /* Neutrals: Slate (blue-tinted grays for sophistication) */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  /* Semantic: Clinical Status Colors */
+  --success: #059669;       /* Emerald - Stable/Good */
+  --success-light: #d1fae5;
+  --warning: #d97706;       /* Amber - Attention needed */
+  --warning-light: #fef3c7;
+  --danger: #dc2626;        /* Red - Critical ONLY */
+  --danger-light: #fee2e2;
+  --info: #0891b2;          /* Cyan - Informational */
+  --info-light: #cffafe;
+
+  /* === LIGHT THEME (Default) === */
+  --bg-app: var(--slate-100);
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-input: var(--slate-50);
+
+  --text-primary: var(--slate-900);
+  --text-secondary: var(--slate-600);
+  --text-muted: var(--slate-400);
+  --text-inverse: #ffffff;
+
+  --border-default: var(--slate-200);
+  --border-subtle: var(--slate-100);
+
+  /* === TYPOGRAPHY === */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-serif: 'Merriweather', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Type Scale */
+  --text-xs: 0.75rem;      /* 12px - metadata */
+  --text-sm: 0.875rem;     /* 14px - labels */
+  --text-base: 1rem;       /* 16px - body */
+  --text-lg: 1.125rem;     /* 18px - emphasis */
+  --text-xl: 1.25rem;      /* 20px - section headers */
+  --text-2xl: 1.5rem;      /* 24px - page titles */
+  --text-3xl: 1.875rem;    /* 30px - major headings */
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* === SPACING === */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+
+  /* === BORDERS & RADII === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* === SHADOWS (Depth System) === */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* === TRANSITIONS === */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* === Z-INDEX SCALE === */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  /* === LAYOUT === */
+  --header-height: 56px;
+  --bottom-nav-height: 64px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* === DARK THEME === */
+body.dark-theme {
+  --bg-app: var(--slate-950);
+  --bg-surface: var(--slate-900);
+  --bg-elevated: var(--slate-800);
+  --bg-input: var(--slate-800);
+
+  --text-primary: var(--slate-50);
+  --text-secondary: var(--slate-300);
+  --text-muted: var(--slate-500);
+
+  --border-default: var(--slate-700);
+  --border-subtle: var(--slate-800);
+
+  /* Adjust shadows for dark mode */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+}
