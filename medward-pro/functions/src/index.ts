@@ -1,6 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { beforeUserCreated } from 'firebase-functions/v2/identity';
 import * as admin from 'firebase-admin';
 
 admin.initializeApp();
@@ -10,34 +9,7 @@ const db = admin.firestore();
 // USER MANAGEMENT
 // =============================================================================
 
-// Automatically create user profile document when a new user signs up
-export const createUserProfile = beforeUserCreated(async (event) => {
-  const user = event.data;
-
-  if (!user) return;
-
-  try {
-    await db.collection('users').doc(user.uid).set({
-      uid: user.uid,
-      email: user.email || '',
-      displayName: user.displayName || user.email?.split('@')[0] || 'User',
-      photoURL: user.photoURL || '',
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      settings: {
-        theme: 'light',
-        notifications: true
-      }
-    });
-
-    console.log(`Created user profile for: ${user.uid}`);
-  } catch (error) {
-    console.error('Error creating user profile:', error);
-    // Don't block user creation if profile creation fails
-  }
-});
-
-// Get or create user profile (for existing users without profiles)
+// Get or create user profile (called after login to ensure user doc exists)
 export const ensureUserProfile = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
@@ -52,7 +24,7 @@ export const ensureUserProfile = onCall(async (request) => {
     const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
-      // Create profile for existing auth user
+      // Create profile for user
       await userRef.set({
         uid: userId,
         email: userEmail,
