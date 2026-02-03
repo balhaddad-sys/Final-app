@@ -22,15 +22,15 @@ class ThemeManager {
       this.setTheme(this.mediaQuery.matches ? 'dark' : 'light');
 
       // Listen for system preference changes
-      this.mediaQuery.addEventListener('change', (e) => {
-        if (!Storage.meta.get('theme')) {
+      this.mediaQuery.addEventListener('change', async (e) => {
+        if (!(await Storage.meta.get('theme'))) {
           this.setTheme(e.matches ? 'dark' : 'light');
         }
       });
     }
   }
 
-  setTheme(theme) {
+  async setTheme(theme) {
     this.currentTheme = theme;
 
     if (theme === 'dark') {
@@ -48,7 +48,7 @@ class ThemeManager {
     }
 
     // Save preference
-    Storage.meta.set('theme', theme);
+    await Storage.meta.set('theme', theme);
 
     EventBus.emit('theme:changed', theme);
   }
