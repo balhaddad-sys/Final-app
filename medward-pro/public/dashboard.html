@@ -289,16 +289,16 @@
   </style>
 
   <script type="module">
-    import { Data, Store, EventBus, Monitor, Toast } from './src/main.js';
-    import { PatientService } from './src/features/patients/patient.service.js';
-    import { PatientUI } from './src/features/patients/patient.ui.js';
-    import { TaskService } from './src/features/tasks/task.service.js';
-    import { UnitService } from './src/features/units/unit.service.js';
-    import { Sync } from './src/services/firebase.sync.js';
-    import { KeyedListRenderer } from './src/ui/list-renderer.js';
-    import { Modal } from './src/ui/components/modal.js';
-    import { SyncBadge } from './src/ui/components/sync-badge.js';
-    import { ClinicalTypeahead } from './src/features/tasks/clinical-typeahead.js';
+    import { Data, Store, EventBus, Monitor, Toast } from '../src/main.js';
+    import { PatientService } from '../src/features/patients/patient.service.js';
+    import { PatientUI } from '../src/features/patients/patient.ui.js';
+    import { TaskService } from '../src/features/tasks/task.service.js';
+    import { UnitService } from '../src/features/units/unit.service.js';
+    import { Sync } from '../src/services/firebase.sync.js';
+    import { KeyedListRenderer } from '../src/ui/list-renderer.js';
+    import { Modal } from '../src/ui/components/modal.js';
+    import { SyncBadge } from '../src/ui/components/sync-badge.js';
+    import { ClinicalTypeahead } from '../src/features/tasks/clinical-typeahead.js';
 
     let patientListRenderer;
     let currentPatient = null;
