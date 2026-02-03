@@ -1048,3 +1048,235 @@
   color: var(--text-muted);
   margin-top: var(--space-8);
 }
+
+/* ============================================
+   RESPONSIVE: SMALL MOBILE FIX (<=480px)
+   ============================================ */
+@media (max-width: 480px) {
+  /* Stack info grid to 1 column on tiny screens */
+  .patient-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-actions {
+    flex-direction: column;
+  }
+
+  .patient-actions .btn {
+    width: 100%;
+  }
+
+  .receive-actions {
+    flex-direction: column;
+  }
+
+  .receive-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   RESPONSIVE: TABLET (>=768px)
+   ============================================ */
+@media (min-width: 768px) {
+  /* Login card centered with more padding */
+  .login-card {
+    padding: var(--space-10);
+  }
+
+  /* Units grid wider */
+  .units-grid {
+    max-width: 800px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  /* Dashboard content constrained */
+  .page-dashboard {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .dashboard-header {
+    padding: var(--space-6) var(--space-6) 0;
+  }
+
+  .patient-list-container {
+    padding: 0 var(--space-6) var(--space-6);
+  }
+
+  /* Patient detail wider */
+  .page-patient-detail {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-6);
+  }
+
+  .patient-info-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Handover constrained */
+  .page-handover {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .handover-actions {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* AI chat constrained */
+  .page-ai {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .ai-message {
+    max-width: 75%;
+  }
+
+  /* Settings constrained */
+  .page-settings {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-6);
+  }
+
+  /* QR code larger on tablet */
+  .qr-image {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE: DESKTOP (>=1024px)
+   ============================================ */
+@media (min-width: 1024px) {
+  /* All pages offset for sidebar */
+  .page-login,
+  .page-units,
+  .page-dashboard,
+  .page-patient-detail,
+  .page-handover,
+  .page-ai,
+  .page-settings {
+    margin-left: var(--sidebar-width);
+  }
+
+  /* Dashboard wider with 2-column patient list */
+  .page-dashboard {
+    max-width: none;
+    padding: 0 var(--space-6);
+  }
+
+  .dashboard-header {
+    padding: var(--space-6) 0 0;
+    position: relative;
+    top: auto;
+  }
+
+  .patient-list-container {
+    padding: 0 0 var(--space-6);
+  }
+
+  .patient-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+
+  /* Patient detail uses wider grid */
+  .page-patient-detail {
+    max-width: 960px;
+    padding: var(--space-8);
+  }
+
+  .patient-info-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+  }
+
+  /* Tasks in 2-column grid */
+  .task-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+
+  /* Handover wider */
+  .page-handover {
+    max-width: 960px;
+    padding-bottom: var(--space-6);
+  }
+
+  .handover-actions {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    max-width: none;
+    border-top: none;
+    padding: var(--space-4) 0;
+  }
+
+  /* AI chat wider */
+  .page-ai {
+    max-width: 960px;
+    height: calc(100dvh);
+    padding-bottom: 0;
+  }
+
+  .ai-message {
+    max-width: 65%;
+  }
+
+  /* Settings wider */
+  .page-settings {
+    max-width: 720px;
+    padding: var(--space-8);
+  }
+
+  /* Units grid wider on desktop */
+  .units-grid {
+    max-width: 960px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .page-units {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* ============================================
+   RESPONSIVE: WIDE DESKTOP (>=1440px)
+   ============================================ */
+@media (min-width: 1440px) {
+  .patient-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .patient-info-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .task-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .page-patient-detail {
+    max-width: 1100px;
+  }
+
+  .page-ai {
+    max-width: 1100px;
+  }
+}
