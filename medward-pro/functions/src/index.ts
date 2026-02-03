@@ -1,6 +1,11 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
+import Anthropic from '@anthropic-ai/sdk';
+
+// Define the API key as a Firebase secret
+const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -411,45 +416,200 @@ export const declineInboxPatient = onCall(async (request) => {
 // AI OPERATIONS
 // =============================================================================
 
-export const askClinical = onCall(async (request) => {
+const CLINICAL_SYSTEM_PROMPT = `You are a clinical decision support assistant for hospital physicians in Kuwait.
+Use Kuwait SI units throughout (mmol/L, μmol/L, g/L, etc.).
+
+You provide evidence-based clinical guidance for:
+- Differential diagnosis
+- Treatment approaches and management plans
+- Lab interpretation with delta analysis
+- Drug information with renal/hepatic dosing adjustments
+- On-call consultation support
+- Clinical guidelines and protocols
+
+Structure your responses with clear headers and bullet points.
+Always highlight red flags and time-critical actions first.
+This is for educational support only - always remind clinicians to use their own judgment.`;
+
+const DRUG_SYSTEM_PROMPT = `You are a clinical pharmacology specialist. Use Kuwait SI units.
+
+Provide comprehensive drug information:
+1. **Indication** - Approved and common off-label uses
+2. **Dosing** - Standard adult dose, renal adjustment (eGFR/CrCl), hepatic adjustment (Child-Pugh), elderly considerations
+3. **Contraindications** - Absolute and relative
+4. **Interactions** - Major drug and food interactions
+5. **Monitoring** - Parameters and frequency
+6. **Adverse Effects** - Common (>10%) and serious (black box warnings)
+
+Be concise but thorough. Focus on practical clinical information.`;
+
+const ANTIBIOTIC_SYSTEM_PROMPT = `You are an infectious disease specialist providing empiric antibiotic guidance.
+Use Kuwait SI units and follow local antibiograms where relevant.
+
+For each condition provide:
+1. **First-line empiric therapy** with doses
+2. **Alternative agents** for allergies (penicillin, cephalosporin)
+3. **Duration of therapy**
+4. **De-escalation guidance** based on culture results
+5. **Special considerations** - renal dosing, obesity, pregnancy
+6. **Red flags** requiring broader coverage or ID consultation
+
+Always specify when to obtain cultures before starting antibiotics.`;
+
+/**
+ * Helper: create Anthropic client using the secret
+ */
+function getAnthropicClient(): Anthropic {
+  const apiKey = anthropicApiKey.value();
+  if (!apiKey) {
+    throw new HttpsError('failed-precondition', 'AI service not configured. ANTHROPIC_API_KEY secret is missing.');
+  }
+  return new Anthropic({ apiKey });
+}
+
+/**
+ * Helper: call Claude API with error handling
+ */
+async function callClaude(
+  systemPrompt: string,
+  userMessage: string,
+  model: string = 'claude-sonnet-4-20250514',
+  maxTokens: number = 2048
+): Promise<{ answer: string; usage: { input: number; output: number } }> {
+  const client = getAnthropicClient();
+
+  try {
+    const response = await client.messages.create({
+      model,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }]
+    });
+
+    const textBlock = response.content.find((b: any) => b.type === 'text');
+    const answer = textBlock ? (textBlock as any).text : 'No response generated.';
+
+    return {
+      answer,
+      usage: {
+        input: response.usage.input_tokens,
+        output: response.usage.output_tokens
+      }
+    };
+  } catch (error: any) {
+    console.error('Claude API error:', error);
+
+    if (error.status === 429) {
+      throw new HttpsError('resource-exhausted', 'AI rate limit reached. Please wait before trying again.');
+    }
+    if (error.status === 401) {
+      throw new HttpsError('failed-precondition', 'AI service authentication failed. Check API key configuration.');
+    }
+    throw new HttpsError('internal', 'AI service temporarily unavailable.');
+  }
+}
+
+export const askClinical = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
 
-  const { question } = request.data;
+  const { question, context, systemPrompt, model } = request.data;
 
   if (!question || typeof question !== 'string') {
     throw new HttpsError('invalid-argument', 'Question is required');
   }
 
-  // Return mock response (AI integration can be added later)
+  if (question.length > 10000) {
+    throw new HttpsError('invalid-argument', 'Question too long (max 10000 characters)');
+  }
+
+  // Use custom system prompt if provided (from the unified AI service with RAG/RLHF),
+  // otherwise use the default clinical prompt
+  const system = systemPrompt || CLINICAL_SYSTEM_PROMPT;
+
+  // Build user message with optional context
+  let userMessage = question;
+  if (context && typeof context === 'object') {
+    const contextParts: string[] = [];
+    if (context.diagnosis) contextParts.push(`Diagnosis: ${context.diagnosis}`);
+    if (context.status) contextParts.push(`Status: ${context.status}`);
+    if (context.notes) contextParts.push(`Notes: ${context.notes}`);
+    if (contextParts.length > 0) {
+      userMessage = `Patient Context:\n${contextParts.join('\n')}\n\nQuestion: ${question}`;
+    }
+  }
+
+  const result = await callClaude(system, userMessage, model || 'claude-sonnet-4-20250514');
+
   return {
-    answer: generateMockClinicalResponse(question),
-    disclaimer: 'This is educational guidance only. Always use clinical judgment.',
-    source: 'mock'
+    answer: result.answer,
+    disclaimer: 'This is educational guidance only. Always use clinical judgment and consult specialists for complex cases.',
+    usage: result.usage,
+    source: 'claude'
   };
 });
 
-export const getDrugInfo = onCall(async (request) => {
+export const getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
 
-  const { drugName } = request.data;
+  const { drugName, indication } = request.data;
 
   if (!drugName || typeof drugName !== 'string') {
     throw new HttpsError('invalid-argument', 'Drug name is required');
   }
 
+  let userMessage = `Provide clinical information for: ${drugName}`;
+  if (indication) {
+    userMessage += `\nIndication: ${indication}`;
+  }
+
+  const result = await callClaude(DRUG_SYSTEM_PROMPT, userMessage);
+
   return {
     name: drugName,
-    info: {
-      class: 'See BNF for classification',
-      indications: 'See BNF for indications',
-      dosing: 'See BNF for dosing information'
-    },
-    disclaimer: 'Always verify drug information in the current BNF.',
-    source: 'placeholder'
+    answer: result.answer,
+    disclaimer: 'Always verify drug information in the current BNF/formulary.',
+    usage: result.usage,
+    source: 'claude'
+  };
+});
+
+export const getAntibioticGuidance = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { condition, patientFactors } = request.data;
+
+  if (!condition || typeof condition !== 'string') {
+    throw new HttpsError('invalid-argument', 'Condition is required');
+  }
+
+  let userMessage = `Provide empiric antibiotic guidance for: ${condition}`;
+  if (patientFactors && typeof patientFactors === 'object') {
+    const factors: string[] = [];
+    if (patientFactors.allergies) factors.push(`Allergies: ${patientFactors.allergies}`);
+    if (patientFactors.renalFunction) factors.push(`Renal function: ${patientFactors.renalFunction}`);
+    if (patientFactors.hepaticFunction) factors.push(`Hepatic function: ${patientFactors.hepaticFunction}`);
+    if (patientFactors.weight) factors.push(`Weight: ${patientFactors.weight} kg`);
+    if (patientFactors.age) factors.push(`Age: ${patientFactors.age}`);
+    if (patientFactors.pregnant) factors.push(`Pregnant: yes`);
+    if (factors.length > 0) {
+      userMessage += `\n\nPatient factors:\n${factors.join('\n')}`;
+    }
+  }
+
+  const result = await callClaude(ANTIBIOTIC_SYSTEM_PROMPT, userMessage);
+
+  return {
+    condition,
+    answer: result.answer,
+    disclaimer: 'Always follow local antibiograms and consult ID for complex infections.',
+    usage: result.usage,
+    source: 'claude'
   };
 });
 
@@ -485,16 +645,3 @@ function chunkArray<T>(array: T[], size: number): T[][] {
   return chunks;
 }
 
-function generateMockClinicalResponse(question: string): string {
-  const lowerQ = question.toLowerCase();
-
-  if (lowerQ.includes('chest pain')) {
-    return `### Chest Pain Assessment\n\n**Immediate Actions:**\n1. ECG within 10 minutes\n2. IV access, oxygen if SpO2 <94%\n3. Cardiac monitoring\n\n**Key Differentials:**\n- ACS (STEMI/NSTEMI/UA)\n- PE\n- Aortic dissection`;
-  }
-
-  if (lowerQ.includes('sepsis')) {
-    return `### Sepsis Management (Sepsis-6)\n\n**Within 1 Hour:**\n1. Oxygen - Target SpO2 >94%\n2. Blood cultures - Before antibiotics\n3. IV antibiotics - Broad spectrum\n4. IV fluids - 30ml/kg if hypotensive\n5. Lactate - Measure and repeat\n6. Urine output - Catheterize`;
-  }
-
-  return `### Clinical Guidance\n\nThis question requires clinical assessment. Please consult local guidelines and senior colleagues for specific advice.`;
-}
