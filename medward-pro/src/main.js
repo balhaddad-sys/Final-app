@@ -156,8 +156,11 @@ async function bootstrap() {
     }));
 
   } catch (error) {
+    const lastStep = bootSteps.length > 0 ? bootSteps[bootSteps.length - 1].name : 'init';
     console.error('[FATAL] Bootstrap failed:', error);
-    Monitor.logError('BOOTSTRAP_FAIL', error);
+    console.error('[FATAL] Last completed step:', lastStep);
+    console.error('[FATAL] Error details:', { name: error.name, message: error.message, stack: error.stack });
+    Monitor.logError('BOOTSTRAP_FAIL', error, { lastStep, bootSteps });
 
     // Show fatal error UI
     document.body.innerHTML = `
@@ -166,6 +169,7 @@ async function bootstrap() {
           <h1>Application Error</h1>
           <p>MedWard Pro failed to start.</p>
           <p class="error-message">${error.message}</p>
+          <p class="error-step">Failed after: ${lastStep}</p>
           <div class="fatal-error-actions">
             <button onclick="location.reload()" class="btn btn-primary">Reload</button>
             <button onclick="localStorage.clear(); indexedDB.deleteDatabase('MedWardPro'); location.reload()" class="btn btn-secondary">
