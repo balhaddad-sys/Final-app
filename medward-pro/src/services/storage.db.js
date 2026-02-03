@@ -4,21 +4,41 @@
 const DB_NAME = 'MedWardPro';
 const DB_VERSION = 1;
 
+// Helper to create descriptive "not initialized" errors
+function notInitializedError(operation) {
+  const error = new Error(
+    `Database not initialized. Cannot perform "${operation}". ` +
+    'This usually means: 1) The app is still loading, 2) IndexedDB init failed, or ' +
+    '3) Code ran before await Storage.init(). Use "await window.MW.ready()" before DB operations.'
+  );
+  error.code = 'DB_NOT_INITIALIZED';
+  return error;
+}
+
 export const StorageDB = {
   db: null,
+  _initPromise: null, // Track initialization state
+  _initError: null,   // Store init error for better diagnostics
 
   async init() {
-    // Check if IndexedDB is available
-    if (!window.indexedDB) {
-      throw new Error('IndexedDB not supported in this browser');
+    // Return existing promise if already initializing/initialized
+    if (this._initPromise) {
+      return this._initPromise;
     }
 
-    return new Promise((resolve, reject) => {
+    // Check if IndexedDB is available
+    if (!window.indexedDB) {
+      this._initError = new Error('IndexedDB not supported in this browser');
+      throw this._initError;
+    }
+
+    this._initPromise = new Promise((resolve, reject) => {
       let request;
       try {
         request = indexedDB.open(DB_NAME, DB_VERSION);
       } catch (e) {
-        reject(new Error(`Failed to open database: ${e.message}`));
+        this._initError = new Error(`Failed to open database: ${e.message}`);
+        reject(this._initError);
         return;
       }
 
@@ -77,27 +97,42 @@ export const StorageDB = {
 
       request.onsuccess = (event) => {
         this.db = event.target.result;
+        this._initError = null; // Clear any previous error
         console.log('[StorageDB] Initialized successfully');
         resolve(this.db);
       };
 
       request.onerror = (event) => {
         console.error('[StorageDB] Failed to initialize:', event.target.error);
-        reject(new Error(`Database error: ${event.target.error?.message || 'Unknown error'}`));
+        this._initError = new Error(`Database error: ${event.target.error?.message || 'Unknown error'}`);
+        reject(this._initError);
       };
 
       request.onblocked = () => {
         console.warn('[StorageDB] Database blocked - close other tabs');
-        reject(new Error('Database blocked - please close other tabs using this app'));
+        this._initError = new Error('Database blocked - please close other tabs using this app');
+        reject(this._initError);
       };
     });
+
+    return this._initPromise;
+  },
+
+  // Get initialization status for debugging
+  getInitStatus() {
+    return {
+      isInitialized: this.db !== null,
+      hasError: this._initError !== null,
+      error: this._initError?.message || null,
+      isInitializing: this._initPromise !== null && this.db === null
+    };
   },
 
   // Generic transaction helper
   async _tx(storeName, mode, callback) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`_tx(${storeName})`));
         return;
       }
 
@@ -121,7 +156,7 @@ export const StorageDB = {
   async get(storeName, key) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`get(${storeName})`));
         return;
       }
 
@@ -135,7 +170,7 @@ export const StorageDB = {
   async put(storeName, item) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`put(${storeName})`));
         return;
       }
 
@@ -149,7 +184,7 @@ export const StorageDB = {
   async delete(storeName, key) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`delete(${storeName})`));
         return;
       }
 
@@ -163,7 +198,7 @@ export const StorageDB = {
   async getAll(storeName) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`getAll(${storeName})`));
         return;
       }
 
@@ -177,7 +212,7 @@ export const StorageDB = {
   async getByIndex(storeName, indexName, value) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`getByIndex(${storeName}, ${indexName})`));
         return;
       }
 
@@ -192,7 +227,7 @@ export const StorageDB = {
   async clear(storeName) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`clear(${storeName})`));
         return;
       }
 
@@ -206,7 +241,7 @@ export const StorageDB = {
   async count(storeName) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`count(${storeName})`));
         return;
       }
 
@@ -221,7 +256,7 @@ export const StorageDB = {
   async putMany(storeName, items) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`putMany(${storeName})`));
         return;
       }
 
@@ -238,7 +273,7 @@ export const StorageDB = {
   async deleteMany(storeName, keys) {
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        reject(new Error('Database not initialized'));
+        reject(notInitializedError(`deleteMany(${storeName})`));
         return;
       }
 
