@@ -201,6 +201,39 @@ p { margin-bottom: var(--space-md); }
   border-radius: 50%;
 }
 
+/* === BACK BUTTON === */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+.back-btn:hover {
+  background: var(--bg-input);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.back-btn:active {
+  transform: scale(0.97);
+}
+
+.back-btn svg {
+  flex-shrink: 0;
+}
+
 .btn-sm {
   padding: 8px 14px;
   font-size: 0.85rem;
