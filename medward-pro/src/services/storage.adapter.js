@@ -96,6 +96,53 @@ export const Storage = {
 
     async clear() {
       return StorageDB.clear('wal');
+    },
+
+    // Enforce max WAL size to prevent unbounded growth
+    async enforceMaxSize(maxEntries = 1000) {
+      const all = await StorageDB.getAll('wal');
+
+      if (all.length <= maxEntries) {
+        return 0;
+      }
+
+      // Sort by timestamp, oldest first
+      all.sort((a, b) => a.timestamp - b.timestamp);
+
+      // Delete oldest synced entries first, then oldest failed, keeping pending
+      const toDelete = [];
+      const pending = all.filter(r => r.status === 'pending');
+      const synced = all.filter(r => r.status === 'synced');
+      const failed = all.filter(r => r.status === 'failed_fatal');
+
+      // Delete synced first (they're already in cloud)
+      let excess = all.length - maxEntries;
+      for (const record of synced) {
+        if (excess <= 0) break;
+        toDelete.push(record.id);
+        excess--;
+      }
+
+      // Then delete old failed entries
+      for (const record of failed) {
+        if (excess <= 0) break;
+        toDelete.push(record.id);
+        excess--;
+      }
+
+      if (toDelete.length > 0) {
+        await StorageDB.deleteMany('wal', toDelete);
+        console.log(`[WAL] Cleaned up ${toDelete.length} entries to enforce max size`);
+      }
+
+      return toDelete.length;
+    },
+
+    // Auto-cleanup: clear synced entries older than 24h and enforce max size
+    async autoCleanup() {
+      const cleared = await this.clearSynced(24 * 60 * 60 * 1000);
+      const enforced = await this.enforceMaxSize(1000);
+      return { cleared, enforced };
     }
   },
 

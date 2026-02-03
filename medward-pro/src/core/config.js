@@ -13,6 +13,7 @@ export const Config = {
 
   // WAL settings
   WAL_CLEANUP_AGE: 24 * 60 * 60 * 1000, // 24 hours
+  MAX_WAL_ENTRIES: 1000, // Maximum WAL entries before cleanup
 
   // UI settings
   TOAST_DURATION: 4000,
