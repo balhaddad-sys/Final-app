@@ -1,137 +1,245 @@
 /**
  * AI Service - Claude API Integration
+ * Handles clinical queries with structured output format
+ * Implements de-identification and source citation
  */
 import { Store } from '../core/store.js';
-import { EventBus, Events } from '../core/events.js';
-import { CloudFunctions } from './firebase.functions.js';
+import { EventBus } from '../core/events.js';
 
-const MAX_CONTEXT_MESSAGES = 20;
+const API_ENDPOINT = 'https://your-firebase-function.cloudfunctions.net/askClinical';
 
-let _conversationHistory = [];
+// Output sections clinicians want
+const OUTPUT_SECTIONS = [
+  'assessment',
+  'red_flags',
+  'immediate_actions',
+  'differential',
+  'workup',
+  'treatment',
+  'dosing',
+  'references'
+];
 
-export const AIService = {
+export const AI = {
   /**
-   * Send a message to the AI assistant
+   * Send clinical query to AI
+   * @param {string} question - The clinical question
+   * @param {object} context - Optional patient context (will be de-identified)
+   * @param {object} options - Additional options
    */
-  async sendMessage(userMessage) {
-    // Add user message to history
-    _conversationHistory.push({
-      role: 'user',
-      content: userMessage,
-      timestamp: Date.now()
-    });
+  async askClinical(question, context = null, options = {}) {
+    const startTime = Date.now();
 
-    // Trim history if too long
-    if (_conversationHistory.length > MAX_CONTEXT_MESSAGES) {
-      _conversationHistory = _conversationHistory.slice(-MAX_CONTEXT_MESSAGES);
-    }
+    // De-identify context if provided
+    const safeContext = context ? this._deidentify(context) : null;
+
+    // Build request
+    const request = {
+      question,
+      context: safeContext,
+      outputFormat: 'structured',
+      sections: options.sections || OUTPUT_SECTIONS,
+      locale: options.locale || 'KW', // Kuwait for SI units
+      timestamp: Date.now()
+    };
+
+    // Log for audit (without PHI)
+    this._logQuery(question, !!context);
 
     try {
-      // Build context from current patient data
-      const context = this._buildContext();
-
-      // Call cloud function
-      const result = await CloudFunctions.askAI(userMessage, {
-        history: _conversationHistory.slice(-10),
-        ...context
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this._getAuthToken()}`
+        },
+        body: JSON.stringify(request)
       });
 
-      if (result.success) {
-        const assistantMessage = {
-          role: 'assistant',
-          content: result.data.response || result.data.message || 'I apologize, I could not generate a response.',
-          timestamp: Date.now()
-        };
-
-        _conversationHistory.push(assistantMessage);
-        return assistantMessage;
-      } else {
-        throw new Error(result.error || 'AI request failed');
+      if (!response.ok) {
+        throw new Error(`AI request failed: ${response.status}`);
       }
+
+      const data = await response.json();
+
+      // Parse structured response
+      const result = this._parseStructuredResponse(data);
+
+      // Track latency
+      result.latencyMs = Date.now() - startTime;
+
+      return result;
+
     } catch (error) {
-      console.error('[AIService] Error:', error);
+      console.error('[AI] Query failed:', error);
+      EventBus.emit('toast:show', { type: 'error', message: 'AI service unavailable' });
+      throw error;
+    }
+  },
 
-      const errorMessage = {
-        role: 'assistant',
-        content: 'I apologize, I encountered an error. Please try again.',
-        timestamp: Date.now(),
-        isError: true
+  /**
+   * Analyze lab results
+   */
+  async analyzeLabs(labs, patientContext = null) {
+    // Format labs for analysis
+    const labSummary = this._formatLabs(labs);
+
+    const question = `Analyze these lab results and provide clinical interpretation:\n${labSummary}`;
+
+    return this.askClinical(question, patientContext, {
+      sections: ['assessment', 'red_flags', 'immediate_actions', 'workup', 'references']
+    });
+  },
+
+  /**
+   * Get drug information
+   */
+  async getDrugInfo(drugName, indication = null, patientContext = null) {
+    let question = `Provide clinical information for ${drugName}`;
+    if (indication) {
+      question += ` for ${indication}`;
+    }
+
+    // Include renal/hepatic context if available
+    if (patientContext?.labs?.creatinine || patientContext?.labs?.egfr) {
+      question += `. Patient has GFR/creatinine values that may affect dosing.`;
+    }
+
+    return this.askClinical(question, patientContext, {
+      sections: ['assessment', 'dosing', 'red_flags', 'references']
+    });
+  },
+
+  /**
+   * On-call consultation
+   */
+  async oncallConsult(scenario, urgency = 'routine') {
+    const question = `On-call consultation request (${urgency}):\n${scenario}`;
+
+    const sections = urgency === 'urgent' || urgency === 'critical'
+      ? ['red_flags', 'immediate_actions', 'assessment', 'workup', 'treatment']
+      : OUTPUT_SECTIONS;
+
+    return this.askClinical(question, null, { sections });
+  },
+
+  /**
+   * De-identify patient context
+   * Removes: name, MRN, DOB, specific dates
+   * Keeps: age, sex, relevant clinical data
+   */
+  _deidentify(context) {
+    const safe = {};
+
+    // Demographics (de-identified)
+    if (context.age) safe.age = context.age;
+    if (context.sex) safe.sex = context.sex;
+    if (context.weight) safe.weight = context.weight;
+
+    // Clinical data (safe to include)
+    if (context.diagnosis) safe.diagnosis = context.diagnosis;
+    if (context.labs) safe.labs = context.labs;
+    if (context.vitals) safe.vitals = context.vitals;
+    if (context.medications) safe.medications = context.medications;
+    if (context.allergies) safe.allergies = context.allergies;
+    if (context.comorbidities) safe.comorbidities = context.comorbidities;
+
+    // Explicitly exclude PHI
+    // name, mrn, dob, address, phone - never included
+
+    return safe;
+  },
+
+  /**
+   * Parse AI response into structured sections
+   */
+  _parseStructuredResponse(data) {
+    const result = {
+      raw: data.answer || data.response || '',
+      sections: {},
+      confidence: data.confidence || null,
+      sources: data.sources || [],
+      model: data.model || 'unknown',
+      disclaimer: 'This is AI-generated clinical decision support. Always verify with current guidelines and clinical judgment.'
+    };
+
+    // If response is already structured
+    if (data.structured) {
+      result.sections = data.structured;
+      return result;
+    }
+
+    // Parse markdown sections from raw response
+    const sectionRegex = /##\s*([\w\s]+)\n([\s\S]*?)(?=##|$)/gi;
+    let match;
+
+    while ((match = sectionRegex.exec(result.raw)) !== null) {
+      const sectionName = match[1].toLowerCase().trim().replace(/\s+/g, '_');
+      const sectionContent = match[2].trim();
+
+      if (OUTPUT_SECTIONS.includes(sectionName)) {
+        result.sections[sectionName] = this._parseSection(sectionContent);
+      }
+    }
+
+    return result;
+  },
+
+  /**
+   * Parse individual section content
+   */
+  _parseSection(content) {
+    // Check if it's a list
+    const lines = content.split('\n').filter(l => l.trim());
+    const isList = lines.every(l => l.trim().startsWith('-') || l.trim().startsWith('•'));
+
+    if (isList) {
+      return {
+        type: 'list',
+        items: lines.map(l => l.replace(/^[-•]\s*/, '').trim())
       };
-
-      _conversationHistory.push(errorMessage);
-      return errorMessage;
     }
+
+    return {
+      type: 'text',
+      content: content
+    };
   },
 
   /**
-   * Build context from current app state
+   * Format labs for AI consumption
    */
-  _buildContext() {
-    const currentPatient = Store.currentPatient;
-    const currentUnit = Store.currentUnit;
-
-    const context = {};
-
-    if (currentUnit) {
-      context.unitName = currentUnit.name;
+  _formatLabs(labs) {
+    if (Array.isArray(labs)) {
+      return labs.map(l => `${l.name}: ${l.value} ${l.unit || ''} ${l.flag || ''}`).join('\n');
     }
 
-    if (currentPatient) {
-      context.patient = {
-        name: currentPatient.name,
-        diagnosis: currentPatient.diagnosis,
-        status: currentPatient.status,
-        bed: currentPatient.bed,
-        notes: currentPatient.notes
-      };
-
-      // Include patient tasks
-      const tasks = Store.select('tasks', t => t.patientId === currentPatient.id);
-      context.tasks = tasks.map(t => ({
-        text: t.text,
-        completed: t.completed,
-        category: t.category,
-        priority: t.priority
-      }));
-    }
-
-    return context;
+    return Object.entries(labs)
+      .map(([key, val]) => `${key}: ${val}`)
+      .join('\n');
   },
 
   /**
-   * Get conversation history
+   * Log query for audit (without sensitive data)
    */
-  getHistory() {
-    return [..._conversationHistory];
+  _logQuery(question, hasContext) {
+    // This would typically go to your audit service
+    console.log('[AI Audit]', {
+      timestamp: Date.now(),
+      userId: Store.get('user')?.uid,
+      queryLength: question.length,
+      hasPatientContext: hasContext,
+      // Do NOT log the actual question or context
+    });
   },
 
   /**
-   * Clear conversation
+   * Get auth token for API
    */
-  clearHistory() {
-    _conversationHistory = [];
-  },
-
-  /**
-   * Get suggested prompts for the current context
-   */
-  getSuggestions() {
-    const currentPatient = Store.currentPatient;
-
-    if (currentPatient) {
-      return [
-        `Summarize ${currentPatient.name}'s current status`,
-        `What labs should I order for ${currentPatient.diagnosis || 'this patient'}?`,
-        'Generate a handover note for this patient',
-        'What are the key things to monitor overnight?'
-      ];
-    }
-
-    return [
-      'Help me prepare for ward rounds',
-      'What are common antibiotic guidelines?',
-      'How should I prioritize my patient list?',
-      'Generate a shift handover summary'
-    ];
+  async _getAuthToken() {
+    const { auth } = await import('./firebase.config.js');
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not authenticated');
+    return user.getIdToken();
   }
 };

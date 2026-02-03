@@ -23,6 +23,12 @@ import { renderHandover } from '../ui/pages/handover.js';
 import { renderAIAssistant } from '../ui/pages/ai-assistant.js';
 import { renderSettings } from '../ui/pages/settings.js';
 
+// Advanced features
+import { Privacy } from '../utils/privacy.js';
+import { Theme } from '../utils/theme.js';
+import { Audit } from '../services/audit.service.js';
+import { initTaskTypeaheads } from '../ui/components/task-typeahead.js';
+
 // Boot guard
 let _bootResolve;
 let _bootReject;
@@ -67,11 +73,14 @@ async function bootstrap() {
     initToasts();
     initModals();
 
-    // 3. Apply saved theme
-    const savedTheme = await Storage.meta.get('theme');
-    if (savedTheme === 'dark') {
-      document.body.classList.add('dark-theme');
-    }
+    // 3. Initialize theme (with auto dark mode)
+    await Theme.init();
+
+    // 3b. Initialize privacy protection
+    Privacy.init();
+
+    // 3c. Log session start for audit
+    Audit.log(Audit.actions.AUTH_LOGIN, 'session', null).catch(() => {});
 
     // 4. Clean up old WAL entries
     try {
@@ -162,6 +171,9 @@ function setupRoutes() {
     }
     showBottomNav();
     renderDashboard(appContainer);
+
+    // Initialize typeahead after render
+    setTimeout(() => initTaskTypeaheads(), 0);
   });
 
   Router.register('/patients/:id', (params) => {

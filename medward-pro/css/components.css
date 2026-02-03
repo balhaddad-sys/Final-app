@@ -579,3 +579,255 @@ body.dark-theme .skeleton {
 .toggle.active::after {
   transform: translateX(20px);
 }
+
+/* === GLASSMORPHISM CARDS === */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Specular highlight on top edge */
+.glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: var(--glass-highlight);
+  pointer-events: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Noise texture overlay for premium feel */
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--noise-texture);
+  opacity: 0.03;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Glass card content needs z-index to sit above pseudo-elements */
+.glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Glass modal variant */
+.modal.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
+/* Glass header */
+.glass-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* === TABULAR FIGURES FOR CLINICAL DATA === */
+.clinical-value,
+.lab-value,
+.vital-value,
+.mrn,
+.bed-number {
+  font-family: var(--font-tabular);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Monospace for specific codes */
+.icd-code,
+.drug-code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* === LUMINANCE LAYERING (No borders, depth via shade) === */
+.surface-1 {
+  background: var(--bg-app);
+}
+
+.surface-2 {
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.surface-3 {
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+}
+
+/* Remove borders, use shadows for depth */
+.card-borderless {
+  border: none;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    var(--shadow-sm);
+}
+
+body.dark-theme .card-borderless {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    var(--shadow-sm);
+}
+
+/* === PRIVACY BLUR === */
+.privacy-blur-active .patient-name,
+.privacy-blur-active .patient-mrn,
+.privacy-blur-active .patient-diagnosis,
+.privacy-blur-active .clinical-value,
+.privacy-blur-active .lab-value,
+.privacy-blur-active [data-sensitive] {
+  filter: blur(8px);
+  user-select: none;
+  transition: filter 0.3s ease;
+}
+
+/* Unlock indicator */
+.privacy-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.privacy-blur-active .privacy-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.privacy-unlock-prompt {
+  background: var(--bg-surface);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  max-width: 300px;
+}
+
+.privacy-unlock-prompt h3 {
+  margin-bottom: var(--space-2);
+}
+
+.privacy-unlock-prompt p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+/* === TYPEAHEAD === */
+.typeahead-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.typeahead-categories {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.typeahead-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.chip-sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.typeahead-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-dropdown);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all var(--transition-fast);
+}
+
+.typeahead-dropdown.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(4px);
+}
+
+.typeahead-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.typeahead-item:hover,
+.typeahead-item.selected {
+  background: var(--slate-100);
+}
+
+body.dark-theme .typeahead-item:hover,
+body.dark-theme .typeahead-item.selected {
+  background: var(--slate-800);
+}
+
+.typeahead-item.urgent {
+  border-left: 3px solid var(--danger);
+}
+
+.typeahead-item-text {
+  flex: 1;
+}
+
+.typeahead-item-text mark {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.typeahead-item-category {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.typeahead-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
