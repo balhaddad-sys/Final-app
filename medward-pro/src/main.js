@@ -51,9 +51,14 @@ async function bootstrap() {
     Monitor.log('RUNTIME', 'Storage initialized');
 
     // 4.5. Clean up old WAL entries to prevent unbounded growth
-    const walCleanup = await Storage.wal.autoCleanup();
-    if (walCleanup.cleared > 0 || walCleanup.enforced > 0) {
-      Monitor.log('RUNTIME', 'WAL cleanup completed', walCleanup);
+    // Wrapped in try-catch so cleanup failure doesn't crash the app
+    try {
+      const walCleanup = await Storage.wal.autoCleanup();
+      if (walCleanup.cleared > 0 || walCleanup.enforced > 0) {
+        Monitor.log('RUNTIME', 'WAL cleanup completed', walCleanup);
+      }
+    } catch (walError) {
+      Monitor.log('RUNTIME', 'WAL cleanup skipped (non-fatal)', { error: walError.message }, 'warn');
     }
 
     // 5. Initialize Data layer (loads cached data)

@@ -8,8 +8,19 @@ export const StorageDB = {
   db: null,
 
   async init() {
+    // Check if IndexedDB is available
+    if (!window.indexedDB) {
+      throw new Error('IndexedDB not supported in this browser');
+    }
+
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      let request;
+      try {
+        request = indexedDB.open(DB_NAME, DB_VERSION);
+      } catch (e) {
+        reject(new Error(`Failed to open database: ${e.message}`));
+        return;
+      }
 
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
@@ -72,7 +83,12 @@ export const StorageDB = {
 
       request.onerror = (event) => {
         console.error('[StorageDB] Failed to initialize:', event.target.error);
-        reject(event.target.error);
+        reject(new Error(`Database error: ${event.target.error?.message || 'Unknown error'}`));
+      };
+
+      request.onblocked = () => {
+        console.warn('[StorageDB] Database blocked - close other tabs');
+        reject(new Error('Database blocked - please close other tabs using this app'));
       };
     });
   },
