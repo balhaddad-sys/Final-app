@@ -4,6 +4,7 @@
 const DB_NAME = 'MedWardPro';
 const DB_VERSION = 1;
 
+<<<<<<< Updated upstream
 // Helper to create descriptive "not initialized" errors
 function notInitializedError(operation) {
   const error = new Error(
@@ -19,6 +20,12 @@ export const StorageDB = {
   db: null,
   _initPromise: null, // Track initialization state
   _initError: null,   // Store init error for better diagnostics
+=======
+let _db = null;
+
+export const StorageDB = {
+  get db() { return _db; },
+>>>>>>> Stashed changes
 
   async init() {
     // Return existing promise if already initializing/initialized
@@ -96,10 +103,14 @@ export const StorageDB = {
       };
 
       request.onsuccess = (event) => {
+<<<<<<< Updated upstream
         this.db = event.target.result;
         this._initError = null; // Clear any previous error
+=======
+        _db = event.target.result;
+>>>>>>> Stashed changes
         console.log('[StorageDB] Initialized successfully');
-        resolve(this.db);
+        resolve(_db);
       };
 
       request.onerror = (event) => {
@@ -131,12 +142,17 @@ export const StorageDB = {
   // Generic transaction helper
   async _tx(storeName, mode, callback) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`_tx(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, mode);
+      const tx = _db.transaction(storeName, mode);
       const store = tx.objectStore(storeName);
 
       let result;
@@ -155,12 +171,17 @@ export const StorageDB = {
   // CRUD operations
   async get(storeName, key) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`get(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readonly');
+      const tx = _db.transaction(storeName, 'readonly');
       const request = tx.objectStore(storeName).get(key);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -169,12 +190,17 @@ export const StorageDB = {
 
   async put(storeName, item) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`put(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readwrite');
+      const tx = _db.transaction(storeName, 'readwrite');
       const request = tx.objectStore(storeName).put(item);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -183,12 +209,17 @@ export const StorageDB = {
 
   async delete(storeName, key) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`delete(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readwrite');
+      const tx = _db.transaction(storeName, 'readwrite');
       const request = tx.objectStore(storeName).delete(key);
       request.onsuccess = () => resolve(true);
       request.onerror = () => reject(request.error);
@@ -197,12 +228,17 @@ export const StorageDB = {
 
   async getAll(storeName) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`getAll(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readonly');
+      const tx = _db.transaction(storeName, 'readonly');
       const request = tx.objectStore(storeName).getAll();
       request.onsuccess = () => resolve(request.result || []);
       request.onerror = () => reject(request.error);
@@ -211,12 +247,17 @@ export const StorageDB = {
 
   async getByIndex(storeName, indexName, value) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`getByIndex(${storeName}, ${indexName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readonly');
+      const tx = _db.transaction(storeName, 'readonly');
       const index = tx.objectStore(storeName).index(indexName);
       const request = index.getAll(value);
       request.onsuccess = () => resolve(request.result || []);
@@ -226,12 +267,17 @@ export const StorageDB = {
 
   async clear(storeName) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`clear(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readwrite');
+      const tx = _db.transaction(storeName, 'readwrite');
       const request = tx.objectStore(storeName).clear();
       request.onsuccess = () => resolve(true);
       request.onerror = () => reject(request.error);
@@ -240,12 +286,17 @@ export const StorageDB = {
 
   async count(storeName) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`count(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readonly');
+      const tx = _db.transaction(storeName, 'readonly');
       const request = tx.objectStore(storeName).count();
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -255,12 +306,17 @@ export const StorageDB = {
   // Batch operations
   async putMany(storeName, items) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`putMany(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readwrite');
+      const tx = _db.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);
 
       items.forEach(item => store.put(item));
@@ -272,12 +328,17 @@ export const StorageDB = {
 
   async deleteMany(storeName, keys) {
     return new Promise((resolve, reject) => {
+<<<<<<< Updated upstream
       if (!this.db) {
         reject(notInitializedError(`deleteMany(${storeName})`));
+=======
+      if (!_db) {
+        reject(new Error('Database not initialized'));
+>>>>>>> Stashed changes
         return;
       }
 
-      const tx = this.db.transaction(storeName, 'readwrite');
+      const tx = _db.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);
 
       keys.forEach(key => store.delete(key));
@@ -289,14 +350,14 @@ export const StorageDB = {
 
   // Check if database is ready
   isReady() {
-    return this.db !== null;
+    return _db !== null;
   },
 
   // Close database connection
   close() {
-    if (this.db) {
-      this.db.close();
-      this.db = null;
+    if (_db) {
+      _db.close();
+      _db = null;
     }
   }
 };
