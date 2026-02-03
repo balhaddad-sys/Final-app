@@ -1,60 +1,87 @@
 /**
- * AI Assistant Chat Interface
+ * AI Assistant Page
+ * Chat interface with structured clinical output
  */
-import { AIService } from '../../services/ai.service.js';
-import { EventBus, Events } from '../../core/events.js';
+import { AI } from '../../services/ai.service.js';
+import { Store } from '../../core/store.js';
+import { EventBus } from '../../core/events.js';
 
 let messagesContainer = null;
+let inputElement = null;
+let isLoading = false;
 
 export function renderAIAssistant(container) {
   container.innerHTML = `
     <div class="page-ai">
-      <header class="ai-header">
-        <h1>AI Assistant</h1>
-        <p>Clinical decision support</p>
+      <header class="ai-header glass-header">
+        <h2>AI Clinical Assistant</h2>
+        <div class="ai-context-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" id="include-context" />
+            <span>Include patient context</span>
+          </label>
+        </div>
       </header>
 
-      <div class="ai-messages" id="ai-messages">
-        <!-- Messages render here -->
+      <div class="ai-disclaimer">
+        <span class="disclaimer-icon">⚠️</span>
+        <span>AI-generated suggestions. Always verify with clinical judgment and current guidelines.</span>
       </div>
 
-      <div class="ai-input-container">
-        <textarea
-          class="ai-input"
-          id="ai-input"
-          placeholder="Ask a clinical question..."
-          rows="1"
-        ></textarea>
-        <button class="ai-send-btn" id="ai-send" aria-label="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
-      </div>
+      <main class="ai-messages" id="ai-messages">
+        <!-- Messages render here -->
+        <div class="ai-welcome">
+          <div class="ai-welcome-icon">🩺</div>
+          <h3>Clinical Decision Support</h3>
+          <p>Ask clinical questions, analyze labs, or get drug information.</p>
+
+          <div class="ai-suggestions">
+            <button class="btn btn-secondary" data-prompt="What are the causes of acute kidney injury?">
+              AKI Causes
+            </button>
+            <button class="btn btn-secondary" data-prompt="Interpret elevated troponin levels">
+              Troponin Interpretation
+            </button>
+            <button class="btn btn-secondary" data-prompt="Antibiotic coverage for community-acquired pneumonia">
+              CAP Antibiotics
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <footer class="ai-input-area">
+        <div class="ai-input-wrapper">
+          <textarea
+            class="input ai-input"
+            id="ai-input"
+            placeholder="Ask a clinical question..."
+            rows="1"
+          ></textarea>
+          <button class="btn btn-primary btn-icon ai-send" id="ai-send" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </footer>
     </div>
   `;
 
   messagesContainer = container.querySelector('#ai-messages');
-  const input = container.querySelector('#ai-input');
-  const sendBtn = container.querySelector('#ai-send');
-
-  // Render existing history
-  renderMessages();
-
-  // Show suggestions if no history
-  if (AIService.getHistory().length === 0) {
-    renderSuggestions();
-  }
+  inputElement = container.querySelector('#ai-input');
+  const sendButton = container.querySelector('#ai-send');
+  const contextToggle = container.querySelector('#include-context');
 
   // Auto-resize textarea
-  input?.addEventListener('input', () => {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  inputElement.addEventListener('input', () => {
+    inputElement.style.height = 'auto';
+    inputElement.style.height = Math.min(inputElement.scrollHeight, 120) + 'px';
+    sendButton.disabled = !inputElement.value.trim();
   });
 
-  // Send on Enter (not Shift+Enter)
-  input?.addEventListener('keydown', (e) => {
+  // Send on Enter (Shift+Enter for newline)
+  inputElement.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -62,134 +89,181 @@ export function renderAIAssistant(container) {
   });
 
   // Send button
-  sendBtn?.addEventListener('click', sendMessage);
+  sendButton.addEventListener('click', sendMessage);
+
+  // Suggestion buttons
+  container.querySelectorAll('[data-prompt]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      inputElement.value = btn.dataset.prompt;
+      inputElement.dispatchEvent(new Event('input'));
+      sendMessage();
+    });
+  });
 
   async function sendMessage() {
-    const text = input?.value?.trim();
-    if (!text) return;
+    const question = inputElement.value.trim();
+    if (!question || isLoading) return;
 
-    // Clear input
-    input.value = '';
-    input.style.height = 'auto';
+    // Clear welcome if first message
+    const welcome = messagesContainer.querySelector('.ai-welcome');
+    if (welcome) welcome.remove();
 
     // Add user message
-    addMessageToUI('user', text);
+    appendMessage('user', question);
 
-    // Show typing indicator
-    showTyping();
+    // Clear input
+    inputElement.value = '';
+    inputElement.style.height = 'auto';
+    sendButton.disabled = true;
 
-    // Disable input while processing
-    input.disabled = true;
-    sendBtn.disabled = true;
+    // Get patient context if enabled
+    const includeContext = contextToggle.checked;
+    const context = includeContext ? getPatientContext() : null;
+
+    // Show loading
+    const loadingId = appendMessage('assistant', null, true);
+    isLoading = true;
 
     try {
-      const response = await AIService.sendMessage(text);
-      hideTyping();
-      addMessageToUI('assistant', response.content);
+      const response = await AI.askClinical(question, context);
+
+      // Replace loading with response
+      updateMessage(loadingId, response);
+
     } catch (error) {
-      hideTyping();
-      addMessageToUI('assistant', 'Sorry, I encountered an error. Please try again.', true);
+      updateMessage(loadingId, {
+        sections: {
+          error: {
+            type: 'text',
+            content: 'Sorry, I encountered an error processing your request. Please try again.'
+          }
+        }
+      });
     } finally {
-      input.disabled = false;
-      sendBtn.disabled = false;
-      input.focus();
+      isLoading = false;
     }
   }
 }
 
-function renderMessages() {
-  if (!messagesContainer) return;
+function appendMessage(role, content, isLoadingMsg = false) {
+  const id = 'msg-' + Date.now();
+  const msg = document.createElement('div');
+  msg.className = `ai-message ai-message-${role}`;
+  msg.id = id;
 
-  const history = AIService.getHistory();
+  if (role === 'user') {
+    msg.innerHTML = `
+      <div class="ai-message-content">
+        <p>${escapeHtml(content)}</p>
+      </div>
+    `;
+  } else if (isLoadingMsg) {
+    msg.innerHTML = `
+      <div class="ai-message-content">
+        <div class="ai-loading">
+          <span class="ai-loading-dot"></span>
+          <span class="ai-loading-dot"></span>
+          <span class="ai-loading-dot"></span>
+        </div>
+      </div>
+    `;
+  }
 
-  history.forEach(msg => {
-    addMessageToUI(msg.role, msg.content, msg.isError);
-  });
+  messagesContainer.appendChild(msg);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  return id;
 }
 
-function renderSuggestions() {
-  if (!messagesContainer) return;
+function updateMessage(id, response) {
+  const msg = document.getElementById(id);
+  if (!msg) return;
 
-  const suggestions = AIService.getSuggestions();
+  const content = msg.querySelector('.ai-message-content');
+  content.innerHTML = renderStructuredResponse(response);
 
-  const welcomeEl = document.createElement('div');
-  welcomeEl.className = 'ai-welcome';
-  welcomeEl.style.cssText = 'text-align: center; padding: var(--space-8) var(--space-4);';
-
-  welcomeEl.innerHTML = `
-    <div style="font-size: 2rem; margin-bottom: var(--space-4);">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5">
-        <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z"></path>
-      </svg>
-    </div>
-    <h3 style="margin-bottom: var(--space-2);">Clinical AI Assistant</h3>
-    <p style="color: var(--text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-6);">
-      Ask questions about your patients, get clinical suggestions, or generate handover notes.
-    </p>
-    <div style="display: flex; flex-direction: column; gap: var(--space-2); max-width: 300px; margin: 0 auto;">
-      ${suggestions.map(s => `
-        <button class="btn btn-secondary btn-sm suggestion-btn" style="text-align: left; white-space: normal; line-height: var(--leading-normal);">
-          ${escapeHtml(s)}
-        </button>
-      `).join('')}
-    </div>
-  `;
-
-  // Click suggestion to send
-  welcomeEl.querySelectorAll('.suggestion-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById('ai-input');
-      if (input) {
-        input.value = btn.textContent.trim();
-        welcomeEl.remove();
-        // Trigger send
-        document.getElementById('ai-send')?.click();
-      }
-    });
-  });
-
-  messagesContainer.appendChild(welcomeEl);
-}
-
-function addMessageToUI(role, content, isError = false) {
-  if (!messagesContainer) return;
-
-  // Remove welcome/suggestions if present
-  const welcome = messagesContainer.querySelector('.ai-welcome');
-  if (welcome) welcome.remove();
-
-  const msgEl = document.createElement('div');
-  msgEl.className = `ai-message ai-message-${role}`;
-  if (isError) msgEl.style.borderLeft = '3px solid var(--danger)';
-
-  msgEl.textContent = content;
-
-  messagesContainer.appendChild(msgEl);
+  // Scroll to bottom
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-function showTyping() {
-  if (!messagesContainer) return;
+function renderStructuredResponse(response) {
+  const sections = response.sections || {};
 
-  const typing = document.createElement('div');
-  typing.className = 'ai-message ai-message-assistant ai-message-typing';
-  typing.id = 'ai-typing';
-  typing.innerHTML = `
-    <div class="ai-typing-dot"></div>
-    <div class="ai-typing-dot"></div>
-    <div class="ai-typing-dot"></div>
+  let html = '<div class="ai-structured-response">';
+
+  // Render each section
+  const sectionLabels = {
+    assessment: '📋 Assessment',
+    red_flags: '🚨 Red Flags',
+    immediate_actions: '⚡ Immediate Actions',
+    differential: '🔍 Differential Diagnosis',
+    workup: '🔬 Workup',
+    treatment: '💊 Treatment',
+    dosing: '📊 Dosing',
+    references: '📚 References',
+    error: '❌ Error'
+  };
+
+  for (const [key, section] of Object.entries(sections)) {
+    const label = sectionLabels[key] || key;
+    const isRedFlag = key === 'red_flags' || key === 'immediate_actions';
+
+    html += `
+      <div class="ai-section ${isRedFlag ? 'ai-section-urgent' : ''}">
+        <h4 class="ai-section-title">${label}</h4>
+        <div class="ai-section-content">
+          ${renderSectionContent(section)}
+        </div>
+      </div>
+    `;
+  }
+
+  // Disclaimer
+  html += `
+    <div class="ai-response-footer">
+      <span class="ai-disclaimer-small">
+        ${response.disclaimer || 'Verify with clinical judgment'}
+      </span>
+      ${response.latencyMs ? `<span class="ai-latency">${response.latencyMs}ms</span>` : ''}
+    </div>
   `;
 
-  messagesContainer.appendChild(typing);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  html += '</div>';
+
+  return html;
 }
 
-function hideTyping() {
-  document.getElementById('ai-typing')?.remove();
+function renderSectionContent(section) {
+  if (!section) return '';
+
+  if (section.type === 'list') {
+    return `
+      <ul class="ai-list">
+        ${section.items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+      </ul>
+    `;
+  }
+
+  return `<p>${escapeHtml(section.content || section)}</p>`;
+}
+
+function getPatientContext() {
+  const patient = Store.currentPatient;
+  if (!patient) return null;
+
+  // Only include clinical data, not PHI
+  return {
+    age: patient.age,
+    sex: patient.sex,
+    diagnosis: patient.diagnosis,
+    labs: patient.labs,
+    vitals: patient.vitals,
+    medications: patient.medications,
+    allergies: patient.allergies
+  };
 }
 
 function escapeHtml(text) {
-  if (!text) return '';
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
