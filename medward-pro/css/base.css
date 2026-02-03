@@ -188,3 +188,26 @@ body.dark-theme ::-webkit-scrollbar-thumb {
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
+
+/* === RESPONSIVE: TABLET (>=768px) === */
+@media (min-width: 768px) {
+  .app-container {
+    padding-bottom: 0;
+  }
+}
+
+/* === RESPONSIVE: DESKTOP (>=1024px) === */
+@media (min-width: 1024px) {
+  .app-container {
+    display: flex;
+    min-height: 100dvh;
+    padding-bottom: 0;
+  }
+
+  .app-main-content {
+    flex: 1;
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    width: 100%;
+  }
+}

@@ -116,6 +116,8 @@
   --header-height: 56px;
   --bottom-nav-height: 64px;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --sidebar-width: 240px;
+  --content-max-width: 1200px;
 
   /* === GLASSMORPHISM 2.0 === */
 
