@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8">
+  <title>MedWard Pro - Clinical Ward Management</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/design-tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <style>
+    .landing-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: var(--space-8);
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary-50) 0%, var(--bg-app) 100%);
+    }
+
+    .landing-logo {
+      margin-bottom: var(--space-6);
+    }
+
+    .landing-title {
+      font-size: var(--text-3xl);
+      color: var(--primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .landing-subtitle {
+      color: var(--text-secondary);
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-8);
+    }
+
+    .landing-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-4);
+      max-width: 600px;
+      margin-bottom: var(--space-8);
+      text-align: left;
+    }
+
+    .landing-feature {
+      background: var(--bg-surface);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .landing-feature h3 {
+      font-size: var(--text-sm);
+      margin-bottom: var(--space-1);
+    }
+
+    .landing-feature p {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+    }
+
+    .landing-cta {
+      display: flex;
+      gap: var(--space-3);
+    }
+  </style>
+</head>
+<body>
+  <div class="landing-page">
+    <div class="landing-logo">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+      </svg>
+    </div>
+
+    <h1 class="landing-title">MedWard Pro</h1>
+    <p class="landing-subtitle">Clinical Ward Management</p>
+
+    <div class="landing-features">
+      <div class="landing-feature">
+        <h3>Offline-First</h3>
+        <p>Works without internet. Syncs when connected.</p>
+      </div>
+      <div class="landing-feature">
+        <h3>Real-Time Sync</h3>
+        <p>Collaborate with your team in real-time.</p>
+      </div>
+      <div class="landing-feature">
+        <h3>AI Assistant</h3>
+        <p>Clinical decision support at your fingertips.</p>
+      </div>
+      <div class="landing-feature">
+        <h3>Handover Ready</h3>
+        <p>Generate handover notes in one tap.</p>
+      </div>
+    </div>
+
+    <div class="landing-cta">
+      <a href="app.html" class="btn btn-primary btn-lg">Open App</a>
+    </div>
+  </div>
+</body>
+</html>

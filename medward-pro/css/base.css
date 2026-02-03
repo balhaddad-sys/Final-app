@@ -1,0 +1,190 @@
+/* === RESET === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background: var(--bg-app);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === TYPOGRAPHY === */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+/* Patient names use serif for authority */
+.patient-name {
+  font-family: var(--font-serif);
+  font-weight: var(--font-semibold);
+}
+
+/* Clinical data uses tabular figures */
+.clinical-value {
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* === UTILITY CLASSES === */
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+
+.font-medium { font-weight: var(--font-medium); }
+.font-semibold { font-weight: var(--font-semibold); }
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* === FOCUS STATES (Accessibility) === */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* === SCROLLBAR STYLING === */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: var(--radius-full);
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb {
+  background: var(--slate-600);
+}
+
+/* === SAFE AREAS (iOS) === */
+.safe-area-bottom {
+  padding-bottom: calc(var(--space-4) + var(--safe-area-bottom));
+}
+
+/* === APP CONTAINER === */
+.app-container {
+  min-height: 100dvh;
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+}
+
+/* === FATAL ERROR SCREEN === */
+.fatal-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--space-6);
+  background: var(--bg-app);
+}
+
+.fatal-error-content {
+  max-width: 480px;
+  text-align: center;
+}
+
+.fatal-error-content h1 {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.fatal-error-content p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.error-details {
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  text-align: left;
+}
+
+.error-message {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  word-break: break-all;
+}
+
+.error-step {
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+}
+
+.error-category {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-2);
+}
+
+.fatal-error-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.error-debug {
+  text-align: left;
+  margin-bottom: var(--space-4);
+}
+
+.error-debug summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.error-debug pre {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--bg-surface);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin-top: var(--space-2);
+}
+
+.error-help {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
