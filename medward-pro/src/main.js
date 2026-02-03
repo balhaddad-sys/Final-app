@@ -15,6 +15,53 @@ import { Toast } from './ui/components/toast.js';
 import { SyncBadge } from './ui/components/sync-badge.js';
 import { Theme } from './ui/theme.js';
 import { Config } from './core/config.js';
+import { auth } from './services/firebase.config.js';
+
+// ========================================
+// EARLY AUTH CHECK
+// Runs BEFORE bootstrap to ensure unauthenticated users
+// are redirected immediately, even if bootstrap fails
+// ========================================
+import { onAuthStateChanged } from 'firebase/auth';
+
+const PUBLIC_PAGES = ['login', 'index'];
+
+function isPublicPage() {
+  const path = window.location.pathname;
+  return PUBLIC_PAGES.some(p => path.includes(p)) || path === '/' || path === '';
+}
+
+// Set up early auth listener that runs independently of bootstrap
+// This ensures redirect happens even if bootstrap fails
+let _earlyAuthResolved = false;
+if (!isPublicPage()) {
+  const unsubscribeEarlyAuth = onAuthStateChanged(auth, (user) => {
+    if (_earlyAuthResolved) return; // Only run once
+    _earlyAuthResolved = true;
+    unsubscribeEarlyAuth();
+
+    if (!user) {
+      console.log('[AUTH] Early check: No authenticated user, redirecting to login');
+      window.location.href = '/login.html';
+    }
+  });
+}
+
+// Synchronous check for cases where auth state is already known
+function checkAuthAndRedirect() {
+  // If we're on a public page, no need to check
+  if (isPublicPage()) {
+    return;
+  }
+
+  // If auth state already resolved with no user, redirect
+  // (This catches the case where the async listener already fired)
+  if (_earlyAuthResolved && !auth.currentUser) {
+    console.log('[AUTH] No authenticated user, redirecting to login');
+    window.location.href = '/login.html';
+    return;
+  }
+}
 
 // Track boot progress
 const bootSteps = [];
@@ -94,6 +141,10 @@ async function bootstrap() {
   Monitor.mark('boot-start');
 
   try {
+    // 0. Early auth check - redirect unauthenticated users immediately
+    // This catches users who navigate directly to protected pages
+    checkAuthAndRedirect();
+
     // 1. Initialize Monitor first (for error capture)
     Monitor.init();
     trackStep('monitor');
@@ -240,6 +291,14 @@ async function bootstrap() {
 
     // Reject Boot Guard promise so any waiting code knows boot failed
     _bootReject(error);
+
+    // If user is not authenticated and not on a public page, redirect to login
+    // Don't show them error details for protected pages
+    if (!isPublicPage() && !auth.currentUser) {
+      console.log('[AUTH] Bootstrap failed and user not authenticated, redirecting to login');
+      window.location.href = '/login.html';
+      return;
+    }
 
     // Determine error category for better user guidance
     const errorCategory = categorizeBootError(error, lastStep);
