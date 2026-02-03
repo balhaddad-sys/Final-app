@@ -21,6 +21,8 @@ import { renderUnits } from '../ui/pages/units.js';
 import { renderPatientDetail } from '../ui/pages/patient-detail.js';
 import { renderHandover } from '../ui/pages/handover.js';
 import { renderAIAssistant } from '../ui/pages/ai-assistant.js';
+import { renderAntibioticGuide } from '../ui/pages/antibiotic-guide.js';
+import { renderOncallAssistant } from '../ui/pages/oncall-assistant.js';
 import { renderSettings } from '../ui/pages/settings.js';
 
 // Advanced features
@@ -195,6 +197,18 @@ function setupRoutes() {
     if (!requireAuth()) return;
     showBottomNav();
     renderAIAssistant(appContainer);
+  });
+
+  Router.register('/antibiotic-guide', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderAntibioticGuide(appContainer);
+  });
+
+  Router.register('/oncall', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderOncallAssistant(appContainer);
   });
 
   Router.register('/settings', () => {

@@ -1,12 +1,17 @@
 /**
- * AI Service - Claude API Integration
+ * AI Service - Firebase Cloud Functions Integration
  * Handles clinical queries with structured output format
  * Implements de-identification and source citation
  */
+import { functions } from './firebase.config.js';
+import { httpsCallable } from 'firebase/functions';
 import { Store } from '../core/store.js';
 import { EventBus } from '../core/events.js';
 
-const API_ENDPOINT = 'https://your-firebase-function.cloudfunctions.net/askClinical';
+// Firebase callable functions
+const askClinicalFn = httpsCallable(functions, 'askClinical');
+const getDrugInfoFn = httpsCallable(functions, 'getDrugInfo');
+const getAntibioticGuidanceFn = httpsCallable(functions, 'getAntibioticGuidance');
 
 // Output sections clinicians want
 const OUTPUT_SECTIONS = [
@@ -33,81 +38,106 @@ export const AI = {
     // De-identify context if provided
     const safeContext = context ? this._deidentify(context) : null;
 
-    // Build request
-    const request = {
-      question,
-      context: safeContext,
-      outputFormat: 'structured',
-      sections: options.sections || OUTPUT_SECTIONS,
-      locale: options.locale || 'KW', // Kuwait for SI units
-      timestamp: Date.now()
-    };
-
     // Log for audit (without PHI)
     this._logQuery(question, !!context);
 
     try {
-      const response = await fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await this._getAuthToken()}`
-        },
-        body: JSON.stringify(request)
+      const result = await askClinicalFn({
+        question,
+        context: safeContext
       });
 
-      if (!response.ok) {
-        throw new Error(`AI request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = result.data;
 
       // Parse structured response
-      const result = this._parseStructuredResponse(data);
+      const parsed = this._parseStructuredResponse(data);
+      parsed.latencyMs = Date.now() - startTime;
 
-      // Track latency
-      result.latencyMs = Date.now() - startTime;
-
-      return result;
+      return parsed;
 
     } catch (error) {
       console.error('[AI] Query failed:', error);
-      EventBus.emit('toast:show', { type: 'error', message: 'AI service unavailable' });
-      throw error;
+
+      // Return structured error for display
+      const errorMsg = error?.message || 'AI service unavailable';
+      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured')) {
+        return {
+          sections: {
+            error: { type: 'text', content: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase.' }
+          },
+          disclaimer: 'Service configuration required'
+        };
+      }
+      if (error?.code === 'functions/unauthenticated') {
+        return {
+          sections: {
+            error: { type: 'text', content: 'You must be logged in to use the AI Assistant.' }
+          },
+          disclaimer: 'Authentication required'
+        };
+      }
+
+      return {
+        sections: {
+          error: { type: 'text', content: `Error: ${errorMsg}. Please try again.` }
+        },
+        disclaimer: 'Service error'
+      };
     }
-  },
-
-  /**
-   * Analyze lab results
-   */
-  async analyzeLabs(labs, patientContext = null) {
-    // Format labs for analysis
-    const labSummary = this._formatLabs(labs);
-
-    const question = `Analyze these lab results and provide clinical interpretation:\n${labSummary}`;
-
-    return this.askClinical(question, patientContext, {
-      sections: ['assessment', 'red_flags', 'immediate_actions', 'workup', 'references']
-    });
   },
 
   /**
    * Get drug information
    */
   async getDrugInfo(drugName, indication = null, patientContext = null) {
-    let question = `Provide clinical information for ${drugName}`;
-    if (indication) {
-      question += ` for ${indication}`;
-    }
+    const startTime = Date.now();
 
-    // Include renal/hepatic context if available
-    if (patientContext?.labs?.creatinine || patientContext?.labs?.egfr) {
-      question += `. Patient has GFR/creatinine values that may affect dosing.`;
-    }
+    try {
+      const result = await getDrugInfoFn({
+        drugName,
+        indication: indication || undefined
+      });
 
-    return this.askClinical(question, patientContext, {
-      sections: ['assessment', 'dosing', 'red_flags', 'references']
-    });
+      const parsed = this._parseStructuredResponse(result.data);
+      parsed.latencyMs = Date.now() - startTime;
+      return parsed;
+
+    } catch (error) {
+      console.error('[AI] Drug info failed:', error);
+      return {
+        sections: {
+          error: { type: 'text', content: `Failed to get drug information: ${error.message}` }
+        },
+        disclaimer: 'Service error'
+      };
+    }
+  },
+
+  /**
+   * Get antibiotic guidance
+   */
+  async getAntibioticGuidance(condition, factors = {}) {
+    const startTime = Date.now();
+
+    try {
+      const result = await getAntibioticGuidanceFn({
+        condition,
+        patientFactors: factors
+      });
+
+      const parsed = this._parseStructuredResponse(result.data);
+      parsed.latencyMs = Date.now() - startTime;
+      return parsed;
+
+    } catch (error) {
+      console.error('[AI] Antibiotic guidance failed:', error);
+      return {
+        sections: {
+          error: { type: 'text', content: `Failed to get antibiotic guidance: ${error.message}` }
+        },
+        disclaimer: 'Service error'
+      };
+    }
   },
 
   /**
@@ -115,38 +145,23 @@ export const AI = {
    */
   async oncallConsult(scenario, urgency = 'routine') {
     const question = `On-call consultation request (${urgency}):\n${scenario}`;
-
-    const sections = urgency === 'urgent' || urgency === 'critical'
-      ? ['red_flags', 'immediate_actions', 'assessment', 'workup', 'treatment']
-      : OUTPUT_SECTIONS;
-
-    return this.askClinical(question, null, { sections });
+    return this.askClinical(question);
   },
 
   /**
    * De-identify patient context
-   * Removes: name, MRN, DOB, specific dates
-   * Keeps: age, sex, relevant clinical data
    */
   _deidentify(context) {
     const safe = {};
-
-    // Demographics (de-identified)
     if (context.age) safe.age = context.age;
     if (context.sex) safe.sex = context.sex;
     if (context.weight) safe.weight = context.weight;
-
-    // Clinical data (safe to include)
     if (context.diagnosis) safe.diagnosis = context.diagnosis;
     if (context.labs) safe.labs = context.labs;
     if (context.vitals) safe.vitals = context.vitals;
     if (context.medications) safe.medications = context.medications;
     if (context.allergies) safe.allergies = context.allergies;
     if (context.comorbidities) safe.comorbidities = context.comorbidities;
-
-    // Explicitly exclude PHI
-    // name, mrn, dob, address, phone - never included
-
     return safe;
   },
 
@@ -160,7 +175,7 @@ export const AI = {
       confidence: data.confidence || null,
       sources: data.sources || [],
       model: data.model || 'unknown',
-      disclaimer: 'This is AI-generated clinical decision support. Always verify with current guidelines and clinical judgment.'
+      disclaimer: data.disclaimer || 'This is AI-generated clinical decision support. Always verify with current guidelines and clinical judgment.'
     };
 
     // If response is already structured
@@ -182,6 +197,14 @@ export const AI = {
       }
     }
 
+    // If no sections parsed, create one from the raw text
+    if (Object.keys(result.sections).length === 0 && result.raw) {
+      result.sections.assessment = {
+        type: 'text',
+        content: result.raw
+      };
+    }
+
     return result;
   },
 
@@ -189,14 +212,13 @@ export const AI = {
    * Parse individual section content
    */
   _parseSection(content) {
-    // Check if it's a list
     const lines = content.split('\n').filter(l => l.trim());
-    const isList = lines.every(l => l.trim().startsWith('-') || l.trim().startsWith('•'));
+    const isList = lines.every(l => l.trim().startsWith('-') || l.trim().startsWith('*') || /^\d+\./.test(l.trim()));
 
     if (isList) {
       return {
         type: 'list',
-        items: lines.map(l => l.replace(/^[-•]\s*/, '').trim())
+        items: lines.map(l => l.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim())
       };
     }
 
@@ -207,39 +229,14 @@ export const AI = {
   },
 
   /**
-   * Format labs for AI consumption
-   */
-  _formatLabs(labs) {
-    if (Array.isArray(labs)) {
-      return labs.map(l => `${l.name}: ${l.value} ${l.unit || ''} ${l.flag || ''}`).join('\n');
-    }
-
-    return Object.entries(labs)
-      .map(([key, val]) => `${key}: ${val}`)
-      .join('\n');
-  },
-
-  /**
    * Log query for audit (without sensitive data)
    */
   _logQuery(question, hasContext) {
-    // This would typically go to your audit service
     console.log('[AI Audit]', {
       timestamp: Date.now(),
       userId: Store.get('user')?.uid,
       queryLength: question.length,
       hasPatientContext: hasContext,
-      // Do NOT log the actual question or context
     });
-  },
-
-  /**
-   * Get auth token for API
-   */
-  async _getAuthToken() {
-    const { auth } = await import('./firebase.config.js');
-    const user = auth.currentUser;
-    if (!user) throw new Error('Not authenticated');
-    return user.getIdToken();
   }
 };
