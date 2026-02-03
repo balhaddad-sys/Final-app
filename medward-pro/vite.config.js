@@ -12,7 +12,15 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        app: resolve(__dirname, 'app.html')
+        app: resolve(__dirname, 'app.html'),
+        landing: resolve(__dirname, 'landing.html'),
+        login: resolve(__dirname, 'login.html'),
+        dashboard: resolve(__dirname, 'dashboard.html'),
+        ai_assistant: resolve(__dirname, 'ai_assistant.html'),
+        antibiotic_guide: resolve(__dirname, 'antibiotic_guide.html'),
+        oncall_assistant: resolve(__dirname, 'oncall_assistant.html'),
+        handover: resolve(__dirname, 'handover.html'),
+        monitor: resolve(__dirname, 'monitor.html')
       },
       output: {
         manualChunks: {

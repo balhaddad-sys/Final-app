@@ -2,7 +2,7 @@
 // Application entry point
 
 // Import base CSS so Vite includes it in the build
-import '../public/styles/base.css';
+import '../styles/base.css';
 
 import { Storage } from './services/storage.adapter.js';
 import { Sync } from './services/firebase.sync.js';
