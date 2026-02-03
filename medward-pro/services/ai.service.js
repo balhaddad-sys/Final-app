@@ -13,6 +13,17 @@ const askClinicalFn = httpsCallable(functions, 'askClinical');
 const getDrugInfoFn = httpsCallable(functions, 'getDrugInfo');
 const getAntibioticGuidanceFn = httpsCallable(functions, 'getAntibioticGuidance');
 
+// Check if Firebase is properly configured
+function _isFirebaseConfigured() {
+  try {
+    const app = functions.app;
+    const projectId = app.options?.projectId;
+    return projectId && projectId !== '' && !projectId.startsWith('YOUR_');
+  } catch {
+    return false;
+  }
+}
+
 // Output sections clinicians want
 const OUTPUT_SECTIONS = [
   'assessment',
@@ -40,6 +51,15 @@ export const AI = {
 
     // Log for audit (without PHI)
     this._logQuery(question, !!context);
+
+    if (!_isFirebaseConfigured()) {
+      return {
+        sections: {
+          error: { type: 'text', content: 'Firebase is not configured. Set VITE_FIREBASE_* environment variables in your .env file and redeploy.' }
+        },
+        disclaimer: 'Service not configured'
+      };
+    }
 
     try {
       const result = await askClinicalFn({
