@@ -103,18 +103,18 @@ async function bootstrap() {
       isDev: Config.isDev
     });
 
-    // 2. Initialize theme
-    await Theme.init();
-    trackStep('theme');
-
-    // 3. Initialize Toast system
-    Toast.init();
-    trackStep('toast');
-
-    // 4. Initialize local storage (IndexedDB)
+    // 2. Initialize local storage (IndexedDB) - MUST be before Theme
     await Storage.init();
     trackStep('storage');
     Monitor.log('RUNTIME', 'Storage initialized');
+
+    // 3. Initialize theme (requires Storage for preference)
+    await Theme.init();
+    trackStep('theme');
+
+    // 4. Initialize Toast system
+    Toast.init();
+    trackStep('toast');
 
     // 4.5. Clean up old WAL entries to prevent unbounded growth
     // Wrapped in try-catch so cleanup failure doesn't crash the app
