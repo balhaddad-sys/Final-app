@@ -271,6 +271,54 @@ export const CloudFunctions = {
   },
 
   // ========================================
+  // DIFFERENTIAL DIAGNOSIS
+  // ========================================
+
+  async generateDifferential(symptoms) {
+    try {
+      const fn = getFunction('oncall_generateDifferential');
+      const result = await fn({ symptoms });
+      Monitor.log('FUNCTIONS', 'Differential diagnosis generated');
+      return result.data;
+    } catch (error) {
+      Monitor.logError('FUNC_DIFFERENTIAL', error);
+      throw error;
+    }
+  },
+
+  // ========================================
+  // ELECTROLYTE CORRECTION VERIFICATION
+  // ========================================
+
+  async verifyElectrolyteCorrection(scenario, electrolyte = null) {
+    try {
+      const fn = getFunction('oncall_verifyElectrolyteCorrection');
+      const result = await fn({ scenario, electrolyte });
+      Monitor.log('FUNCTIONS', 'Electrolyte correction verified');
+      return result.data;
+    } catch (error) {
+      Monitor.logError('FUNC_ELECTROLYTE', error);
+      throw error;
+    }
+  },
+
+  // ========================================
+  // LAB SCANNER (STRUCTURED EXTRACTION)
+  // ========================================
+
+  async scanLabReport(images, context = null) {
+    try {
+      const fn = getFunction('medward_scanLabReport');
+      const result = await fn({ images, context });
+      Monitor.log('FUNCTIONS', 'Lab report scanned');
+      return result.data;
+    } catch (error) {
+      Monitor.logError('FUNC_SCAN_LAB', error);
+      throw error;
+    }
+  },
+
+  // ========================================
   // ADMIN OPERATIONS
   // ========================================
 
