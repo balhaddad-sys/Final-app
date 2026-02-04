@@ -69,18 +69,29 @@ exports.medward_getDrugInfo = onCall(
         message: prompt
       });
 
-      const drugInfo = extractJsonStrict(response);
-
-      logger.info("medward_getDrugInfo", {
+      logger.info("medward_getDrugInfo claude response", {
         uid,
         ms: Date.now() - t0,
-        cached: false,
-        drug: drugName
+        drug: drugName,
+        responseLength: response?.length || 0
       });
+
+      // Try to extract structured JSON; fall back to raw text
+      let drugInfo = null;
+      try {
+        drugInfo = extractJsonStrict(response);
+      } catch (parseErr) {
+        logger.warn("medward_getDrugInfo JSON parse failed, returning raw text", {
+          uid,
+          drug: drugName,
+          parseError: parseErr.message
+        });
+      }
 
       const result = {
         success: true,
-        drugInfo,
+        drugInfo: drugInfo || null,
+        answer: drugInfo ? null : response,
         timestamp: new Date().toISOString()
       };
 
@@ -91,7 +102,7 @@ exports.medward_getDrugInfo = onCall(
       logger.error("medward_getDrugInfo failed", {
         uid,
         drug: drugName,
-        error: error.message?.slice(0, 200)
+        error: error.message?.slice(0, 300)
       });
       throw new HttpsError("internal", "Failed to retrieve drug information.");
     }
