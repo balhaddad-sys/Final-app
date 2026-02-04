@@ -47,6 +47,9 @@ export function PatientCard(patient) {
           </div>
         </div>
         <div class="patient-card-right">
+          <button class="patient-scan-btn" data-scan-patient="${escapeHtml(patient.name)}" title="Scan Lab Report">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          </button>
           ${taskCount > 0 ? `
             <span class="badge badge-count">${taskCount}</span>
           ` : ''}
@@ -61,6 +64,18 @@ export function PatientCard(patient) {
       ` : ''}
     </div>
   `;
+
+  // Scan button handler - navigate to lab scanner with patient context
+  const scanBtn = card.querySelector('.patient-scan-btn');
+  if (scanBtn) {
+    scanBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Dynamic import to avoid circular deps
+      import('../pages/lab-scanner.js').then(({ triggerPatientLabScan }) => {
+        triggerPatientLabScan(patient.name);
+      });
+    });
+  }
 
   // Click handler
   card.addEventListener('click', () => {

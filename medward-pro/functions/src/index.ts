@@ -613,6 +613,127 @@ export const getAntibioticGuidance = onCall({ secrets: [anthropicApiKey] }, asyn
   };
 });
 
+/**
+ * Helper: call Claude API with image (vision) support
+ */
+async function callClaudeWithImage(
+  systemPrompt: string,
+  base64Image: string,
+  mediaType: string = 'image/jpeg',
+  textPrompt: string = '',
+  model: string = 'claude-haiku-4-5-20251001',
+  maxTokens: number = 1536
+): Promise<{ answer: string; usage: { input: number; output: number } }> {
+  const client = getAnthropicClient();
+
+  try {
+    const content: any[] = [
+      {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: base64Image
+        }
+      }
+    ];
+
+    if (textPrompt) {
+      content.push({ type: 'text', text: textPrompt });
+    }
+
+    const response = await client.messages.create({
+      model,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: 'user', content }]
+    });
+
+    const textBlock = response.content.find((b: any) => b.type === 'text');
+    const answer = textBlock ? (textBlock as any).text : 'No response generated.';
+
+    return {
+      answer,
+      usage: {
+        input: response.usage.input_tokens,
+        output: response.usage.output_tokens
+      }
+    };
+  } catch (error: any) {
+    console.error('Claude Vision API error:', error);
+
+    if (error.status === 429) {
+      throw new HttpsError('resource-exhausted', 'AI rate limit reached. Please wait before trying again.');
+    }
+    if (error.status === 401) {
+      throw new HttpsError('failed-precondition', 'AI service authentication failed. Check API key configuration.');
+    }
+    throw new HttpsError('internal', 'AI vision service temporarily unavailable.');
+  }
+}
+
+const LAB_ANALYSIS_PROMPT = `ROLE: Expert Medical OCR & Clinical Pathologist Assistant.
+TASK: Extract and analyze all lab values from this image.
+Use Kuwait SI units (mmol/L, μmol/L, g/L, etc.) throughout.
+
+STRICT OUTPUT FORMATTING RULES:
+1. Do NOT chat. Do NOT add preamble. Start directly with the table.
+2. VISUAL ANALYSIS: Look for 'High', 'Low', 'Critical', 'H', 'L', 'HH', 'LL' markers.
+3. Use a standard Markdown table.
+
+REQUIRED COLUMNS:
+| Test | Value | Units | Ref Range | Flag |
+
+FLAGGING LOGIC:
+- If value is flagged 'H', 'High', or 'HH' -> use 🚨 HIGH
+- If value is flagged 'L', 'Low', or 'LL' -> use 📉 LOW
+- If value is flagged critical -> use ⚠️ CRITICAL
+- If normal -> use ✅ Normal
+
+After the table, add:
+### Clinical Interpretation
+[Concise analysis of abnormal values and their clinical significance. Group related abnormalities. Suggest likely differentials if pattern is clear.]`;
+
+export const analyzeLabReport = onCall({ secrets: [anthropicApiKey] }, async (request: CallableRequest) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { imageBase64, mediaType, patientContext } = request.data;
+
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    throw new HttpsError('invalid-argument', 'Image data is required');
+  }
+
+  // Validate media type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const imgType = mediaType && allowedTypes.includes(mediaType) ? mediaType : 'image/jpeg';
+
+  // Add patient context to the prompt if provided
+  let textPrompt = '';
+  if (patientContext && typeof patientContext === 'string') {
+    textPrompt = `Patient context: ${patientContext}\n\nAnalyze the lab report in this image.`;
+  } else {
+    textPrompt = 'Analyze the lab report in this image.';
+  }
+
+  const result = await callClaudeWithImage(
+    LAB_ANALYSIS_PROMPT,
+    imageBase64,
+    imgType,
+    textPrompt,
+    'claude-haiku-4-5-20251001',
+    1536
+  );
+
+  return {
+    answer: result.answer,
+    disclaimer: 'AI-extracted lab values. Always verify against the original report.',
+    usage: result.usage,
+    source: 'claude-vision'
+  };
+});
+
 // =============================================================================
 // HANDOVER AI SUMMARY
 // =============================================================================

@@ -12,6 +12,7 @@ import { EventBus } from '../core/events.js';
 const askClinicalFn = httpsCallable(functions, 'askClinical');
 const getDrugInfoFn = httpsCallable(functions, 'getDrugInfo');
 const getAntibioticGuidanceFn = httpsCallable(functions, 'getAntibioticGuidance');
+const analyzeLabReportFn = httpsCallable(functions, 'analyzeLabReport');
 
 // Output sections clinicians want
 const OUTPUT_SECTIONS = [
@@ -147,6 +148,58 @@ export const AI = {
           error: { type: 'text', content: `Failed to get antibiotic guidance: ${error.message}` }
         },
         disclaimer: 'Service error'
+      };
+    }
+  },
+
+  /**
+   * Analyze lab report image using Claude Vision
+   * @param {string} base64Image - Base64-encoded image data (without data URL prefix)
+   * @param {string} mediaType - MIME type of the image
+   * @param {string} patientContext - Optional patient context string
+   */
+  async analyzeLabReport(base64Image, mediaType = 'image/jpeg', patientContext = null) {
+    const startTime = Date.now();
+
+    try {
+      const result = await analyzeLabReportFn({
+        imageBase64: base64Image,
+        mediaType,
+        patientContext: patientContext || undefined
+      });
+
+      const data = result.data;
+      return {
+        raw: data.answer || '',
+        disclaimer: data.disclaimer || 'AI-extracted lab values. Always verify against the original report.',
+        latencyMs: Date.now() - startTime,
+        source: data.source || 'claude-vision'
+      };
+
+    } catch (error) {
+      console.error('[AI] Lab analysis failed:', error);
+      const errorMsg = error?.message || 'Lab analysis service unavailable';
+      const errorCode = error?.code || '';
+
+      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorCode === 'functions/failed-precondition') {
+        return {
+          raw: '',
+          error: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions.',
+          disclaimer: 'Service configuration required'
+        };
+      }
+      if (errorCode === 'functions/unauthenticated') {
+        return {
+          raw: '',
+          error: 'You must be logged in to use the Lab Scanner.',
+          disclaimer: 'Authentication required'
+        };
+      }
+
+      return {
+        raw: '',
+        error: `Error: ${errorMsg}`,
+        disclaimer: 'Check browser console for details'
       };
     }
   },

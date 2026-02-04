@@ -924,6 +924,319 @@ body.dark-theme .handover-patient-card {
   color: var(--text-secondary);
 }
 
+/* === PAGE: LAB SCANNER === */
+.page-lab-scanner {
+  padding: var(--space-4);
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + var(--space-4));
+}
+
+.lab-scanner-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.scanner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Scanner Buttons */
+.btn-scanner {
+  background-color: #0f172a;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border: none;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-scanner:active {
+  transform: scale(0.98) translateY(1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  border-bottom-width: 1px;
+}
+
+.btn-scanner--secondary {
+  background-color: var(--slate-600);
+}
+
+body.dark-theme .btn-scanner {
+  background-color: var(--primary-700);
+  border-bottom-color: rgba(0, 0, 0, 0.4);
+}
+
+body.dark-theme .btn-scanner--secondary {
+  background-color: var(--slate-700);
+}
+
+.scanner-context-area {
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
+}
+
+body.dark-theme .scanner-context-area {
+  background: var(--slate-900);
+  border-color: var(--slate-700);
+  border-bottom-color: var(--slate-600);
+}
+
+.scanner-preview {
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
+}
+
+.scanner-preview img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--slate-100);
+}
+
+body.dark-theme .scanner-preview {
+  background: var(--slate-900);
+  border-color: var(--slate-700);
+  border-bottom-color: var(--slate-600);
+}
+
+body.dark-theme .scanner-preview img {
+  background: var(--slate-800);
+  border-color: var(--slate-600);
+}
+
+/* Scanning Loader */
+.scanning-loader {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.scan-line {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent 0%, #0ea5e9 45%, #ffffff 50%, #0ea5e9 55%, transparent 100%);
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.6);
+  animation: rapid-scan 0.6s infinite linear;
+  margin-bottom: 20px;
+  border-radius: 2px;
+}
+
+.scanning-loader p {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  margin: 0;
+  animation: text-pulse 0.6s infinite alternate;
+}
+
+@keyframes rapid-scan {
+  0% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }
+  50% { opacity: 1; transform: translateX(0%) scaleX(1); }
+  100% { transform: translateX(100%) scaleX(0.5); opacity: 0; }
+}
+
+@keyframes text-pulse {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+/* Lab Report Table */
+.lab-report-output table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 15px 0;
+  font-family: var(--font-sans);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.lab-report-output thead tr {
+  background-color: #f8fafc;
+  border-bottom: 2px solid var(--border-default);
+}
+
+.lab-report-output th {
+  padding: 12px 8px;
+  text-align: left;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.lab-report-output td {
+  padding: 14px 8px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+/* Col 1: Test Name */
+.lab-report-output td:nth-child(1) {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.9rem;
+  width: 28%;
+}
+
+/* Col 2: Value (Hero) */
+.lab-report-output td:nth-child(2) {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Col 3: Units */
+.lab-report-output td:nth-child(3) {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Col 4: Ref Range */
+.lab-report-output td:nth-child(4) {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: monospace;
+  background-color: #fcfcfc;
+}
+
+/* Col 5: Flag */
+.lab-report-output td:nth-child(5) {
+  font-weight: 700;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.lab-report-output tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.lab-section-title {
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 800;
+  border-left: 4px solid var(--primary);
+  padding-left: 10px;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.lab-list-item {
+  padding-left: 16px;
+  position: relative;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.lab-list-item::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  width: 5px;
+  height: 5px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+/* Lab Table Dark Mode */
+body.dark-theme .lab-report-output table {
+  border-color: var(--slate-700);
+}
+
+body.dark-theme .lab-report-output thead tr {
+  background-color: var(--slate-800);
+}
+
+body.dark-theme .lab-report-output th {
+  color: var(--slate-400);
+}
+
+body.dark-theme .lab-report-output td {
+  border-bottom-color: var(--slate-800);
+}
+
+body.dark-theme .lab-report-output td:nth-child(1),
+body.dark-theme .lab-report-output td:nth-child(2) {
+  color: var(--slate-100);
+}
+
+body.dark-theme .lab-report-output td:nth-child(3) {
+  color: var(--slate-500);
+}
+
+body.dark-theme .lab-report-output td:nth-child(4) {
+  color: var(--slate-400);
+  background-color: var(--slate-850, rgba(30, 41, 59, 0.5));
+}
+
+body.dark-theme .lab-report-output tbody tr:nth-child(even) {
+  background-color: var(--slate-850, rgba(30, 41, 59, 0.3));
+}
+
+/* Patient card scan button */
+.patient-scan-btn {
+  background-color: var(--slate-100);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.patient-scan-btn:active {
+  background-color: var(--slate-200);
+  transform: scale(0.95);
+}
+
+.patient-scan-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+body.dark-theme .patient-scan-btn {
+  background-color: var(--slate-800);
+  border-color: var(--slate-600);
+  color: var(--slate-300);
+}
+
+body.dark-theme .patient-scan-btn:active {
+  background-color: var(--slate-700);
+}
+
 /* === PAGE: AI ASSISTANT === */
 .page-ai {
   display: flex;

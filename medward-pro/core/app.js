@@ -24,6 +24,7 @@ import { renderAIAssistant } from '../ui/pages/ai-assistant.js';
 import { renderAntibioticGuide } from '../ui/pages/antibiotic-guide.js';
 import { renderOncallAssistant } from '../ui/pages/oncall-assistant.js';
 import { renderSettings } from '../ui/pages/settings.js';
+import { renderLabScanner } from '../ui/pages/lab-scanner.js';
 
 // Advanced features
 import { Privacy } from '../utils/privacy.js';
@@ -209,6 +210,12 @@ function setupRoutes() {
     if (!requireAuth()) return;
     showBottomNav();
     renderOncallAssistant(appContainer);
+  });
+
+  Router.register('/lab-scanner', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderLabScanner(appContainer);
   });
 
   Router.register('/settings', () => {
