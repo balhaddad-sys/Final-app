@@ -23,13 +23,13 @@ export const CloudFunctions = {
    * Generate handover report
    */
   async generateHandoverReport(unitId, patients) {
-    return this.call('generateHandoverReport', { unitId, patients });
+    return this.call('medward_generateHandoverSummary', { unitId, patients });
   },
 
   /**
    * AI Assistant query
    */
   async askAI(message, context = {}) {
-    return this.call('askAI', { message, context });
+    return this.call('medward_askClinical', { message, context });
   }
 };

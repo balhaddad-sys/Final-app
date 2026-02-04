@@ -173,7 +173,7 @@ export const CloudFunctions = {
     }
 
     try {
-      const fn = getFunction('askClinical');
+      const fn = getFunction('medward_askClinical');
       const result = await fn({ question, context, systemPrompt, model });
       Monitor.log('FUNCTIONS', 'AI query completed');
       return result.data;
@@ -208,7 +208,7 @@ export const CloudFunctions = {
       throw err;
     }
     try {
-      const fn = getFunction('analyzeLabImage');
+      const fn = getFunction('medward_analyzeLabImage');
       const result = await fn({ imageBase64, mediaType, patientName });
       Monitor.log('FUNCTIONS', 'Lab image analysis completed');
       return result.data;
@@ -226,7 +226,7 @@ export const CloudFunctions = {
       throw err;
     }
     try {
-      const fn = getFunction('getDrugInfo');
+      const fn = getFunction('medward_getDrugInfo');
       const result = await fn({ drugName, indication });
       Monitor.log('FUNCTIONS', `Drug info retrieved: ${drugName}`);
       return result.data;
@@ -238,7 +238,7 @@ export const CloudFunctions = {
 
   async generateHandoverSummary(patientId) {
     try {
-      const fn = getFunction('generateHandoverSummary');
+      const fn = getFunction('medward_generateHandoverSummary');
       const result = await fn({ patientId });
       Monitor.log('FUNCTIONS', 'Handover summary generated');
       return result.data;
@@ -260,7 +260,7 @@ export const CloudFunctions = {
       throw err;
     }
     try {
-      const fn = getFunction('getAntibioticGuidance');
+      const fn = getFunction('medward_getAntibioticGuidance');
       const result = await fn({ condition, patientFactors });
       Monitor.log('FUNCTIONS', `Antibiotic guidance: ${condition}`);
       return result.data;
