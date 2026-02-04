@@ -10,9 +10,9 @@ import { Store } from '../core/store.js';
 import { EventBus } from '../core/events.js';
 
 // Firebase callable functions
-const askClinicalFn = httpsCallable(functions, 'askClinical');
-const getDrugInfoFn = httpsCallable(functions, 'getDrugInfo');
-const getAntibioticGuidanceFn = httpsCallable(functions, 'getAntibioticGuidance');
+const askClinicalFn = httpsCallable(functions, 'medward_askClinical');
+const getDrugInfoFn = httpsCallable(functions, 'medward_getDrugInfo');
+const getAntibioticGuidanceFn = httpsCallable(functions, 'medward_getAntibioticGuidance');
 
 // Auth readiness guard - wait for Firebase auth state to resolve before
 // making function calls. Without this, calls fire before onAuthStateChanged
