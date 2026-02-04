@@ -63,11 +63,17 @@ export function renderOncallAssistant(container) {
           </div>
         </div>
 
-        <div id="oncall-result" class="oncall-result" style="display: none;">
-          <h3>On-Call Guidance</h3>
-          <div id="oncall-result-content"></div>
-        </div>
       </main>
+    </div>
+
+    <!-- Slide-up result panel -->
+    <div class="result-panel-backdrop" id="oncall-panel-backdrop"></div>
+    <div class="result-panel" id="oncall-result-panel">
+      <div class="panel-header">
+        <h3>On-Call Guidance</h3>
+        <button class="panel-close-btn" id="oncall-panel-close">&times;</button>
+      </div>
+      <div class="panel-content" id="oncall-result-content"></div>
     </div>
   `;
 
@@ -105,17 +111,37 @@ export function renderOncallAssistant(container) {
       if (input) submitQuery(input, selectedUrgency);
     }
   });
+
+  // Panel close handlers
+  document.getElementById('oncall-panel-close').addEventListener('click', hideResultPanel);
+  document.getElementById('oncall-panel-backdrop').addEventListener('click', hideResultPanel);
+}
+
+function showResultPanel() {
+  const panel = document.getElementById('oncall-result-panel');
+  const backdrop = document.getElementById('oncall-panel-backdrop');
+  if (panel) panel.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideResultPanel() {
+  const panel = document.getElementById('oncall-result-panel');
+  const backdrop = document.getElementById('oncall-panel-backdrop');
+  if (panel) panel.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 async function submitQuery(scenario, urgency) {
   if (isLoading) return;
 
-  const resultContainer = document.getElementById('oncall-result');
   const resultContent = document.getElementById('oncall-result-content');
   const submitBtn = document.getElementById('oncall-submit');
 
-  resultContainer.style.display = 'block';
-  resultContent.innerHTML = '<div class="ai-loading-block"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  // Show panel with loading state
+  resultContent.innerHTML = '<div class="panel-loading"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  showResultPanel();
   submitBtn.disabled = true;
   isLoading = true;
 
@@ -128,8 +154,6 @@ async function submitQuery(scenario, urgency) {
     submitBtn.disabled = false;
     isLoading = false;
   }
-
-  resultContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderResult(result) {

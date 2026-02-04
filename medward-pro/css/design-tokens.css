@@ -91,12 +91,12 @@
   --radius-xl: 10px;
   --radius-full: 9999px;
 
-  /* === SHADOWS (Subtle Clinical) === */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12);
+  /* === SHADOWS (Solid State Deep) === */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 6px 16px rgba(0, 0, 0, 0.14);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.18);
 
   /* === TRANSITIONS === */
   --transition-fast: 150ms ease;

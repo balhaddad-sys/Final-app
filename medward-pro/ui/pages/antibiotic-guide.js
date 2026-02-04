@@ -95,11 +95,17 @@ export function renderAntibioticGuide(container) {
           </div>
         </div>
 
-        <div id="abx-result" class="antibiotic-result" style="display: none;">
-          <h3>Antibiotic Recommendations</h3>
-          <div id="abx-result-content"></div>
-        </div>
       </main>
+    </div>
+
+    <!-- Slide-up result panel -->
+    <div class="result-panel-backdrop" id="abx-panel-backdrop"></div>
+    <div class="result-panel" id="abx-result-panel">
+      <div class="panel-header">
+        <h3>Antibiotic Recommendations</h3>
+        <button class="panel-close-btn" id="abx-panel-close">&times;</button>
+      </div>
+      <div class="panel-content" id="abx-result-content"></div>
     </div>
   `;
 
@@ -112,6 +118,26 @@ export function renderAntibioticGuide(container) {
 
   // Form submission
   document.getElementById('guidance-form').addEventListener('submit', handleSubmit);
+
+  // Panel close handlers
+  document.getElementById('abx-panel-close').addEventListener('click', hideResultPanel);
+  document.getElementById('abx-panel-backdrop').addEventListener('click', hideResultPanel);
+}
+
+function showResultPanel() {
+  const panel = document.getElementById('abx-result-panel');
+  const backdrop = document.getElementById('abx-panel-backdrop');
+  if (panel) panel.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideResultPanel() {
+  const panel = document.getElementById('abx-result-panel');
+  const backdrop = document.getElementById('abx-panel-backdrop');
+  if (panel) panel.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 async function handleSubmit(e) {
@@ -129,12 +155,12 @@ async function handleSubmit(e) {
     severe: document.getElementById('abx-severe').checked
   };
 
-  const resultContainer = document.getElementById('abx-result');
   const resultContent = document.getElementById('abx-result-content');
   const submitBtn = document.getElementById('abx-submit');
 
-  resultContainer.style.display = 'block';
-  resultContent.innerHTML = '<div class="ai-loading-block"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  // Show panel with loading state
+  resultContent.innerHTML = '<div class="panel-loading"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  showResultPanel();
   submitBtn.disabled = true;
   isLoading = true;
 
@@ -147,8 +173,6 @@ async function handleSubmit(e) {
     submitBtn.disabled = false;
     isLoading = false;
   }
-
-  resultContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderResult(result) {

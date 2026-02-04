@@ -16,7 +16,8 @@
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   border: 1px solid var(--border-default);
-  box-shadow: var(--shadow-md);
+  border-bottom: 4px solid var(--slate-300);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 body.dark-theme .login-card {
@@ -127,6 +128,7 @@ body.dark-theme .login-card {
   background: var(--bg-surface);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
   cursor: pointer;
   transition: all var(--transition-fast);
   text-align: left;
@@ -135,6 +137,7 @@ body.dark-theme .login-card {
 body.dark-theme .unit-card {
   background: var(--slate-900);
   border-color: var(--slate-700);
+  border-bottom-color: var(--slate-600);
 }
 
 .unit-card:hover {
@@ -192,14 +195,14 @@ body.dark-theme .unit-card:hover {
   position: sticky;
   top: 0;
   background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 3px solid var(--slate-300);
   z-index: var(--z-sticky);
   padding: 12px 16px 0;
 }
 
 body.dark-theme .dashboard-header {
   background: var(--slate-950);
-  border-bottom-color: var(--slate-800);
+  border-bottom-color: var(--slate-700);
 }
 
 .dashboard-header-top {
@@ -689,6 +692,7 @@ body.dark-theme .task-item:active {
   border-radius: var(--radius-md);
   padding: 14px 16px;
   border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
 }
 
 body.dark-theme .handover-patient-card {
@@ -1156,6 +1160,7 @@ body.dark-theme .handover-patient-card {
   padding: 16px;
   margin-bottom: var(--space-4);
   border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
 }
 
 body.dark-theme .antibiotic-form {
@@ -1239,6 +1244,7 @@ body.dark-theme .antibiotic-result {
   border-radius: var(--radius-md);
   padding: 16px;
   border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
 }
 
 body.dark-theme .oncall-input-area {
@@ -1315,6 +1321,7 @@ body.dark-theme .oncall-result {
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
 }
 
 body.dark-theme .settings-group {
@@ -1363,6 +1370,7 @@ body.dark-theme .settings-group {
   border-radius: var(--radius-md);
   margin-bottom: var(--space-6);
   border: 1px solid var(--border-default);
+  border-bottom: 4px solid var(--slate-300);
 }
 
 body.dark-theme .settings-user-card {
