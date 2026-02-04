@@ -1,4 +1,4 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
@@ -15,7 +15,7 @@ const db = admin.firestore();
 // =============================================================================
 
 // Get or create user profile (called after login to ensure user doc exists)
-export const ensureUserProfile = onCall(async (request) => {
+export const ensureUserProfile = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -56,7 +56,7 @@ export const ensureUserProfile = onCall(async (request) => {
 // DATA OPERATIONS
 // =============================================================================
 
-export const loadData = onCall(async (request) => {
+export const loadData = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -80,7 +80,7 @@ export const loadData = onCall(async (request) => {
       .where('deleted', '==', false)
       .get();
 
-    const patients = patientsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const patients = patientsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
 
     const patientIds = patients.map(p => p.id);
     let tasks: any[] = [];
@@ -92,7 +92,7 @@ export const loadData = onCall(async (request) => {
           .where('patientId', 'in', chunk)
           .where('deleted', '==', false)
           .get();
-        tasks = tasks.concat(tasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        tasks = tasks.concat(tasksSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })));
       }
     }
 
@@ -100,7 +100,7 @@ export const loadData = onCall(async (request) => {
       .where('members', 'array-contains', userId)
       .get();
 
-    const units = unitsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const units = unitsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
 
     return { patients, tasks, units };
   } catch (error: any) {
@@ -110,7 +110,7 @@ export const loadData = onCall(async (request) => {
   }
 });
 
-export const saveData = onCall(async (request) => {
+export const saveData = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -155,7 +155,7 @@ export const saveData = onCall(async (request) => {
   }
 });
 
-export const moveToTrash = onCall(async (request) => {
+export const moveToTrash = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -198,7 +198,7 @@ export const moveToTrash = onCall(async (request) => {
   }
 });
 
-export const restoreFromTrash = onCall(async (request) => {
+export const restoreFromTrash = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -237,7 +237,7 @@ export const restoreFromTrash = onCall(async (request) => {
 // HANDOVER OPERATIONS
 // =============================================================================
 
-export const sendPatient = onCall(async (request) => {
+export const sendPatient = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -268,7 +268,7 @@ export const sendPatient = onCall(async (request) => {
       .where('deleted', '==', false)
       .get();
 
-    const tasks = tasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const tasks = tasksSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
 
     const handoverRef = await db.collection('handovers').add({
       senderId,
@@ -290,7 +290,7 @@ export const sendPatient = onCall(async (request) => {
   }
 });
 
-export const checkInbox = onCall(async (request) => {
+export const checkInbox = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -302,14 +302,14 @@ export const checkInbox = onCall(async (request) => {
       .orderBy('createdAt', 'desc')
       .get();
 
-    return { items: inboxSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) };
+    return { items: inboxSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) };
   } catch (error: any) {
     console.error('checkInbox error:', error);
     throw new HttpsError('internal', 'Failed to check inbox');
   }
 });
 
-export const acceptInboxPatient = onCall(async (request) => {
+export const acceptInboxPatient = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -379,7 +379,7 @@ export const acceptInboxPatient = onCall(async (request) => {
   }
 });
 
-export const declineInboxPatient = onCall(async (request) => {
+export const declineInboxPatient = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -509,7 +509,7 @@ async function callClaude(
   }
 }
 
-export const askClinical = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+export const askClinical = onCall({ secrets: [anthropicApiKey] }, async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -550,7 +550,7 @@ export const askClinical = onCall({ secrets: [anthropicApiKey] }, async (request
   };
 });
 
-export const getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+export const getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -577,7 +577,7 @@ export const getDrugInfo = onCall({ secrets: [anthropicApiKey] }, async (request
   };
 });
 
-export const getAntibioticGuidance = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+export const getAntibioticGuidance = onCall({ secrets: [anthropicApiKey] }, async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -617,7 +617,7 @@ export const getAntibioticGuidance = onCall({ secrets: [anthropicApiKey] }, asyn
 // HANDOVER AI SUMMARY
 // =============================================================================
 
-export const generateHandoverSummary = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+export const generateHandoverSummary = onCall({ secrets: [anthropicApiKey] }, async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -643,16 +643,16 @@ export const generateHandoverSummary = onCall({ secrets: [anthropicApiKey] }, as
       .where('deleted', '==', false)
       .get();
 
-    const tasks = tasksSnap.docs.map(doc => doc.data());
-    const pendingTasks = tasks.filter(t => !t.completed);
-    const completedTasks = tasks.filter(t => t.completed);
+    const tasks = tasksSnap.docs.map((doc: any) => doc.data());
+    const pendingTasks = tasks.filter((t: any) => !t.completed);
+    const completedTasks = tasks.filter((t: any) => t.completed);
 
     // Build prompt with patient data (no PHI sent - use diagnosis, status, tasks only)
     const userMessage = `Generate a concise handover summary for this patient:
 - Diagnosis: ${patient.diagnosis || 'Not specified'}
 - Status: ${patient.status || 'active'}
-- Pending tasks (${pendingTasks.length}): ${pendingTasks.map(t => t.text).join(', ') || 'None'}
-- Completed tasks today (${completedTasks.length}): ${completedTasks.map(t => t.text).join(', ') || 'None'}
+- Pending tasks (${pendingTasks.length}): ${pendingTasks.map((t: any) => t.text).join(', ') || 'None'}
+- Completed tasks today (${completedTasks.length}): ${completedTasks.map((t: any) => t.text).join(', ') || 'None'}
 ${patient.notes ? `- Clinical notes: ${patient.notes.substring(0, 500)}` : ''}
 
 Provide a structured handover summary with:
@@ -680,7 +680,7 @@ Provide a structured handover summary with:
 // ADMIN OPERATIONS
 // =============================================================================
 
-export const exportUserData = onCall(async (request) => {
+export const exportUserData = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -694,7 +694,7 @@ export const exportUserData = onCall(async (request) => {
       .where('members', 'array-contains', userId)
       .get();
 
-    const unitIds = unitsSnap.docs.map(doc => doc.id);
+    const unitIds = unitsSnap.docs.map((doc: any) => doc.id);
     let patients: any[] = [];
     let tasks: any[] = [];
 
@@ -704,7 +704,7 @@ export const exportUserData = onCall(async (request) => {
         .where('createdBy', '==', userId)
         .get();
 
-      const unitPatients = patientsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const unitPatients = patientsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
       patients = patients.concat(unitPatients);
 
       const patientIds = unitPatients.map(p => p.id);
@@ -715,14 +715,14 @@ export const exportUserData = onCall(async (request) => {
             .where('patientId', 'in', chunk)
             .where('createdBy', '==', userId)
             .get();
-          tasks = tasks.concat(tasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          tasks = tasks.concat(tasksSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })));
         }
       }
     }
 
     return {
       user: userDoc.data(),
-      units: unitsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      units: unitsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })),
       patients,
       tasks,
       exportedAt: new Date().toISOString()
@@ -734,7 +734,7 @@ export const exportUserData = onCall(async (request) => {
   }
 });
 
-export const deleteAccount = onCall(async (request) => {
+export const deleteAccount = onCall(async (request: CallableRequest) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be logged in');
   }
@@ -773,7 +773,7 @@ export const cleanupTrash = onSchedule('every 24 hours', async () => {
     .get();
 
   const batch = db.batch();
-  expiredSnap.docs.forEach(doc => batch.delete(doc.ref));
+  expiredSnap.docs.forEach((doc: any) => batch.delete(doc.ref));
 
   if (expiredSnap.docs.length > 0) {
     await batch.commit();
