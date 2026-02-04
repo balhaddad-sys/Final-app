@@ -3,6 +3,7 @@
  * Quick guidance for common on-call scenarios
  */
 import { AI } from '../../services/ai.service.js';
+import { renderClinicalResponse } from '../utils/formatMedicalResponse.js';
 
 let isLoading = false;
 
@@ -62,11 +63,17 @@ export function renderOncallAssistant(container) {
           </div>
         </div>
 
-        <div id="oncall-result" class="oncall-result" style="display: none;">
-          <h3>On-Call Guidance</h3>
-          <div id="oncall-result-content"></div>
-        </div>
       </main>
+    </div>
+
+    <!-- Slide-up result panel -->
+    <div class="result-panel-backdrop" id="oncall-panel-backdrop"></div>
+    <div class="result-panel" id="oncall-result-panel">
+      <div class="panel-header">
+        <h3>On-Call Guidance</h3>
+        <button class="panel-close-btn" id="oncall-panel-close">&times;</button>
+      </div>
+      <div class="panel-content" id="oncall-result-content"></div>
     </div>
   `;
 
@@ -104,17 +111,37 @@ export function renderOncallAssistant(container) {
       if (input) submitQuery(input, selectedUrgency);
     }
   });
+
+  // Panel close handlers
+  document.getElementById('oncall-panel-close').addEventListener('click', hideResultPanel);
+  document.getElementById('oncall-panel-backdrop').addEventListener('click', hideResultPanel);
+}
+
+function showResultPanel() {
+  const panel = document.getElementById('oncall-result-panel');
+  const backdrop = document.getElementById('oncall-panel-backdrop');
+  if (panel) panel.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideResultPanel() {
+  const panel = document.getElementById('oncall-result-panel');
+  const backdrop = document.getElementById('oncall-panel-backdrop');
+  if (panel) panel.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 async function submitQuery(scenario, urgency) {
   if (isLoading) return;
 
-  const resultContainer = document.getElementById('oncall-result');
   const resultContent = document.getElementById('oncall-result-content');
   const submitBtn = document.getElementById('oncall-submit');
 
-  resultContainer.style.display = 'block';
-  resultContent.innerHTML = '<div class="ai-loading-block"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  // Show panel with loading state
+  resultContent.innerHTML = '<div class="panel-loading"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  showResultPanel();
   submitBtn.disabled = true;
   isLoading = true;
 
@@ -127,8 +154,6 @@ async function submitQuery(scenario, urgency) {
     submitBtn.disabled = false;
     isLoading = false;
   }
-
-  resultContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderResult(result) {
@@ -151,10 +176,20 @@ function renderResult(result) {
     for (const [key, section] of Object.entries(result.sections)) {
       const label = sectionLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       const isUrgent = key === 'red_flags' || key === 'immediate_actions';
-      html += `<div class="ai-section ${isUrgent ? 'ai-section-urgent' : ''}">
-        <h4 class="ai-section-title">${label}</h4>
-        <div class="ai-section-content">${renderSection(section)}</div>
-      </div>`;
+
+      if (isUrgent) {
+        html += `<div class="clinical-alert clinical-alert--critical">
+          <div class="clinical-alert__content">
+            <div class="clinical-alert__title">${label}</div>
+            <div class="clinical-alert__body">${renderSection(section)}</div>
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="ai-section">
+          <h4 class="ai-section-title">${label}</h4>
+          <div class="ai-section-content">${renderSection(section)}</div>
+        </div>`;
+      }
     }
     if (result.disclaimer) {
       html += `<div class="ai-response-footer"><span class="ai-disclaimer-small">${escapeHtml(result.disclaimer)}</span></div>`;
@@ -164,12 +199,7 @@ function renderResult(result) {
   }
 
   if (result.raw) {
-    return result.raw
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^### (.*?)$/gm, '<h4>$1</h4>')
-      .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
-      .replace(/^- (.*?)$/gm, '<li>$1</li>')
-      .replace(/\n/g, '<br>');
+    return renderClinicalResponse(result.raw, result.disclaimer);
   }
 
   return '<p>No guidance available.</p>';

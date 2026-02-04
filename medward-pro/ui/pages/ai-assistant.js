@@ -5,6 +5,7 @@
 import { AI } from '../../services/ai.service.js';
 import { Store } from '../../core/store.js';
 import { EventBus } from '../../core/events.js';
+import { renderClinicalResponse } from '../utils/formatMedicalResponse.js';
 
 let messagesContainer = null;
 let inputElement = null;
@@ -131,13 +132,33 @@ export function renderAIAssistant(container) {
       updateMessage(loadingId, response);
 
     } catch (error) {
+      console.error('[AI Assistant] Unhandled error:', error);
+
+      // Show actual error details so the user can debug
+      const errorMsg = error?.message || error?.code || 'Unknown error';
+      const errorCode = error?.code || '';
+
+      let displayMsg;
+      if (errorCode === 'functions/unauthenticated' || errorMsg.includes('unauthenticated')) {
+        displayMsg = 'You must be logged in to use the AI Assistant. Please log in first.';
+      } else if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured') || errorCode === 'functions/failed-precondition') {
+        displayMsg = 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions.';
+      } else if (errorCode === 'functions/resource-exhausted') {
+        displayMsg = 'Rate limit reached. Please wait a moment before trying again.';
+      } else if (errorCode === 'functions/unavailable' || errorMsg.includes('CORS') || errorMsg.includes('Failed to fetch')) {
+        displayMsg = 'Cannot reach AI service. Cloud Functions may not be deployed or there is a network issue.';
+      } else {
+        displayMsg = `Error: ${errorMsg}`;
+      }
+
       updateMessage(loadingId, {
         sections: {
           error: {
             type: 'text',
-            content: 'Sorry, I encountered an error processing your request. Please try again.'
+            content: displayMsg
           }
-        }
+        },
+        disclaimer: 'Check browser console (F12) for more details'
       });
     } finally {
       isLoading = false;
@@ -187,35 +208,61 @@ function updateMessage(id, response) {
 }
 
 function renderStructuredResponse(response) {
+  // If we have raw text, use the clinical formatter for UpToDate-quality rendering
+  if (response.raw) {
+    return renderClinicalResponse(response.raw, response.disclaimer);
+  }
+
   const sections = response.sections || {};
 
   let html = '<div class="ai-structured-response">';
 
   // Render each section
   const sectionLabels = {
-    assessment: '📋 Assessment',
-    red_flags: '🚨 Red Flags',
-    immediate_actions: '⚡ Immediate Actions',
-    differential: '🔍 Differential Diagnosis',
-    workup: '🔬 Workup',
-    treatment: '💊 Treatment',
-    dosing: '📊 Dosing',
-    references: '📚 References',
-    error: '❌ Error'
+    assessment: 'Assessment',
+    red_flags: 'Red Flags',
+    immediate_actions: 'Immediate Actions',
+    differential: 'Differential Diagnosis',
+    workup: 'Workup',
+    treatment: 'Treatment',
+    dosing: 'Dosing',
+    references: 'References',
+    error: 'Error'
   };
 
   for (const [key, section] of Object.entries(sections)) {
     const label = sectionLabels[key] || key;
     const isRedFlag = key === 'red_flags' || key === 'immediate_actions';
+    const isError = key === 'error';
 
-    html += `
-      <div class="ai-section ${isRedFlag ? 'ai-section-urgent' : ''}">
-        <h4 class="ai-section-title">${label}</h4>
-        <div class="ai-section-content">
-          ${renderSectionContent(section)}
+    if (isRedFlag) {
+      html += `
+        <div class="clinical-alert clinical-alert--critical">
+          <div class="clinical-alert__content">
+            <div class="clinical-alert__title">${label}</div>
+            <div class="clinical-alert__body">${renderSectionContent(section)}</div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else if (isError) {
+      html += `
+        <div class="clinical-alert clinical-alert--warning">
+          <div class="clinical-alert__content">
+            <div class="clinical-alert__title">${label}</div>
+            <div class="clinical-alert__body">${renderSectionContent(section)}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="ai-section">
+          <h4 class="ai-section-title">${label}</h4>
+          <div class="ai-section-content">
+            ${renderSectionContent(section)}
+          </div>
+        </div>
+      `;
+    }
   }
 
   // Disclaimer

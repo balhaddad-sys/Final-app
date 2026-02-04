@@ -19,15 +19,18 @@ export function renderDashboard(container) {
   container.innerHTML = `
     <div class="page-dashboard">
       <!-- Header -->
-      <header class="dashboard-header">
+      <header class="dashboard-header glass-header">
         <div class="dashboard-header-top">
           <div class="unit-info">
             <span class="unit-icon" id="unit-icon"></span>
             <h1 class="unit-name" id="unit-name">Loading...</h1>
           </div>
-          <div class="sync-indicator" id="sync-indicator">
-            <span class="sync-icon">&#x27F3;</span>
-            <span class="sync-text">Synced</span>
+          <div class="dashboard-header-right">
+            <span class="patient-count-badge" id="patient-count">0 patients</span>
+            <div class="sync-indicator" id="sync-indicator">
+              <span class="sync-icon">&#x27F3;</span>
+              <span class="sync-text">Synced</span>
+            </div>
           </div>
         </div>
 
@@ -126,6 +129,10 @@ function renderPatientList() {
   }
 
   emptyState?.classList.add('hidden');
+
+  // Update patient count
+  const countEl = document.getElementById('patient-count');
+  if (countEl) countEl.textContent = `${patients.length} patient${patients.length !== 1 ? 's' : ''}`;
 
   // Full re-render for simplicity (keyed diffing can be added later)
   listContainer.innerHTML = '';

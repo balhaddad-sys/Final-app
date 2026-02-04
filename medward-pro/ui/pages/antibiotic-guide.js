@@ -3,6 +3,7 @@
  * AI-powered antibiotic recommendations
  */
 import { AI } from '../../services/ai.service.js';
+import { renderClinicalResponse } from '../utils/formatMedicalResponse.js';
 
 let isLoading = false;
 
@@ -55,15 +56,21 @@ export function renderAntibioticGuide(container) {
                    placeholder="e.g., Penicillin, Sulfa (leave blank if NKDA)">
           </div>
 
-          <div class="form-row" style="margin-top: var(--space-3);">
-            <label class="toggle-label">
-              <input type="checkbox" id="abx-mrsa">
-              <span>MRSA Risk Factors</span>
-            </label>
-            <label class="toggle-label">
-              <input type="checkbox" id="abx-severe">
-              <span>Severe / Septic</span>
-            </label>
+          <div style="margin-top: var(--space-3);">
+            <div class="toggle-row">
+              <span class="toggle-row__label">MRSA Risk Factors</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="abx-mrsa">
+                <span class="toggle-switch__slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-row__label">Severe / Septic</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="abx-severe">
+                <span class="toggle-switch__slider"></span>
+              </label>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary btn-lg" id="abx-submit"
@@ -88,11 +95,17 @@ export function renderAntibioticGuide(container) {
           </div>
         </div>
 
-        <div id="abx-result" class="antibiotic-result" style="display: none;">
-          <h3>Antibiotic Recommendations</h3>
-          <div id="abx-result-content"></div>
-        </div>
       </main>
+    </div>
+
+    <!-- Slide-up result panel -->
+    <div class="result-panel-backdrop" id="abx-panel-backdrop"></div>
+    <div class="result-panel" id="abx-result-panel">
+      <div class="panel-header">
+        <h3>Antibiotic Recommendations</h3>
+        <button class="panel-close-btn" id="abx-panel-close">&times;</button>
+      </div>
+      <div class="panel-content" id="abx-result-content"></div>
     </div>
   `;
 
@@ -105,6 +118,26 @@ export function renderAntibioticGuide(container) {
 
   // Form submission
   document.getElementById('guidance-form').addEventListener('submit', handleSubmit);
+
+  // Panel close handlers
+  document.getElementById('abx-panel-close').addEventListener('click', hideResultPanel);
+  document.getElementById('abx-panel-backdrop').addEventListener('click', hideResultPanel);
+}
+
+function showResultPanel() {
+  const panel = document.getElementById('abx-result-panel');
+  const backdrop = document.getElementById('abx-panel-backdrop');
+  if (panel) panel.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideResultPanel() {
+  const panel = document.getElementById('abx-result-panel');
+  const backdrop = document.getElementById('abx-panel-backdrop');
+  if (panel) panel.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 async function handleSubmit(e) {
@@ -122,12 +155,12 @@ async function handleSubmit(e) {
     severe: document.getElementById('abx-severe').checked
   };
 
-  const resultContainer = document.getElementById('abx-result');
   const resultContent = document.getElementById('abx-result-content');
   const submitBtn = document.getElementById('abx-submit');
 
-  resultContainer.style.display = 'block';
-  resultContent.innerHTML = '<div class="ai-loading-block"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  // Show panel with loading state
+  resultContent.innerHTML = '<div class="panel-loading"><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span><span class="ai-loading-dot"></span></div>';
+  showResultPanel();
   submitBtn.disabled = true;
   isLoading = true;
 
@@ -140,8 +173,6 @@ async function handleSubmit(e) {
     submitBtn.disabled = false;
     isLoading = false;
   }
-
-  resultContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderResult(result) {
@@ -163,9 +194,9 @@ function renderResult(result) {
     return html;
   }
 
-  // Fallback to raw text
+  // Fallback to raw text with clinical formatting
   if (result.raw) {
-    return formatMarkdown(result.raw);
+    return renderClinicalResponse(result.raw, result.disclaimer);
   }
 
   return '<p>No recommendations available.</p>';

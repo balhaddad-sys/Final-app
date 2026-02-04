@@ -12,6 +12,7 @@ import { EventBus } from '../core/events.js';
 const askClinicalFn = httpsCallable(functions, 'askClinical');
 const getDrugInfoFn = httpsCallable(functions, 'getDrugInfo');
 const getAntibioticGuidanceFn = httpsCallable(functions, 'getAntibioticGuidance');
+const analyzeLabReportFn = httpsCallable(functions, 'analyzeLabReport');
 
 // Output sections clinicians want
 const OUTPUT_SECTIONS = [
@@ -35,13 +36,13 @@ export const AI = {
   async askClinical(question, context = null, options = {}) {
     const startTime = Date.now();
 
-    // De-identify context if provided
-    const safeContext = context ? this._deidentify(context) : null;
-
-    // Log for audit (without PHI)
-    this._logQuery(question, !!context);
-
     try {
+      // De-identify context if provided
+      const safeContext = context ? this._deidentify(context) : null;
+
+      // Log for audit (without PHI)
+      this._logQuery(question, !!context);
+
       const result = await askClinicalFn({
         question,
         context: safeContext
@@ -57,18 +58,21 @@ export const AI = {
 
     } catch (error) {
       console.error('[AI] Query failed:', error);
+      console.error('[AI] Error code:', error?.code, 'Message:', error?.message);
 
       // Return structured error for display
       const errorMsg = error?.message || 'AI service unavailable';
-      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured')) {
+      const errorCode = error?.code || '';
+
+      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured') || errorCode === 'functions/failed-precondition') {
         return {
           sections: {
-            error: { type: 'text', content: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase.' }
+            error: { type: 'text', content: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions.' }
           },
           disclaimer: 'Service configuration required'
         };
       }
-      if (error?.code === 'functions/unauthenticated') {
+      if (errorCode === 'functions/unauthenticated') {
         return {
           sections: {
             error: { type: 'text', content: 'You must be logged in to use the AI Assistant.' }
@@ -76,12 +80,20 @@ export const AI = {
           disclaimer: 'Authentication required'
         };
       }
+      if (errorCode === 'functions/unavailable' || errorMsg.includes('Failed to fetch') || errorMsg.includes('CORS')) {
+        return {
+          sections: {
+            error: { type: 'text', content: 'Cannot reach AI service. Cloud Functions may not be deployed or there is a network issue.' }
+          },
+          disclaimer: 'Service unavailable'
+        };
+      }
 
       return {
         sections: {
-          error: { type: 'text', content: `Error: ${errorMsg}. Please try again.` }
+          error: { type: 'text', content: `Error: ${errorMsg}` }
         },
-        disclaimer: 'Service error'
+        disclaimer: 'Check browser console (F12) for details'
       };
     }
   },
@@ -136,6 +148,58 @@ export const AI = {
           error: { type: 'text', content: `Failed to get antibiotic guidance: ${error.message}` }
         },
         disclaimer: 'Service error'
+      };
+    }
+  },
+
+  /**
+   * Analyze lab report image using Claude Vision
+   * @param {string} base64Image - Base64-encoded image data (without data URL prefix)
+   * @param {string} mediaType - MIME type of the image
+   * @param {string} patientContext - Optional patient context string
+   */
+  async analyzeLabReport(base64Image, mediaType = 'image/jpeg', patientContext = null) {
+    const startTime = Date.now();
+
+    try {
+      const result = await analyzeLabReportFn({
+        imageBase64: base64Image,
+        mediaType,
+        patientContext: patientContext || undefined
+      });
+
+      const data = result.data;
+      return {
+        raw: data.answer || '',
+        disclaimer: data.disclaimer || 'AI-extracted lab values. Always verify against the original report.',
+        latencyMs: Date.now() - startTime,
+        source: data.source || 'claude-vision'
+      };
+
+    } catch (error) {
+      console.error('[AI] Lab analysis failed:', error);
+      const errorMsg = error?.message || 'Lab analysis service unavailable';
+      const errorCode = error?.code || '';
+
+      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorCode === 'functions/failed-precondition') {
+        return {
+          raw: '',
+          error: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions.',
+          disclaimer: 'Service configuration required'
+        };
+      }
+      if (errorCode === 'functions/unauthenticated') {
+        return {
+          raw: '',
+          error: 'You must be logged in to use the Lab Scanner.',
+          disclaimer: 'Authentication required'
+        };
+      }
+
+      return {
+        raw: '',
+        error: `Error: ${errorMsg}`,
+        disclaimer: 'Check browser console for details'
       };
     }
   },
