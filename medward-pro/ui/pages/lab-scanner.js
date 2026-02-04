@@ -149,27 +149,30 @@ async function analyzeLab(imageData, patientName) {
 function renderLabResult(result) {
   if (!result) return '<p>No results.</p>';
 
+  // Server returns structured data under labData
+  const data = result.labData || result;
+
   let html = '<div class="ai-structured-response">';
 
   // Critical values
-  if (result.criticalValues?.length) {
+  if (data.criticalValues?.length) {
     html += `<div class="ai-section ai-section-urgent">
       <h4 class="ai-section-title">Critical Values</h4>
       <div class="ai-section-content">
-        <ul class="ai-list">${result.criticalValues.map(v => `<li>${esc(v)}</li>`).join('')}</ul>
+        <ul class="ai-list">${data.criticalValues.map(v => `<li>${esc(v)}</li>`).join('')}</ul>
       </div>
     </div>`;
   }
 
   // Findings
-  if (result.findings?.length) {
+  if (data.findings?.length) {
     html += `<div class="ai-section">
       <h4 class="ai-section-title">Findings</h4>
       <div class="ai-section-content">
         <table class="lab-findings-table">
           <thead><tr><th>Test</th><th>Value</th><th>Status</th><th>Interpretation</th></tr></thead>
           <tbody>
-            ${result.findings.map(f => `
+            ${data.findings.map(f => `
               <tr class="${f.status === 'critical' ? 'text-danger' : f.status === 'abnormal' ? 'text-warning' : ''}">
                 <td>${esc(f.test)}</td>
                 <td>${esc(f.value)} ${esc(f.unit || '')}</td>
@@ -184,32 +187,33 @@ function renderLabResult(result) {
   }
 
   // Patterns
-  if (result.patterns?.length) {
+  if (data.patterns?.length) {
     html += `<div class="ai-section">
       <h4 class="ai-section-title">Patterns Identified</h4>
       <div class="ai-section-content">
-        <ul class="ai-list">${result.patterns.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+        <ul class="ai-list">${data.patterns.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
       </div>
     </div>`;
   }
 
   // Recommendations
-  if (result.recommendations?.length) {
+  if (data.recommendations?.length) {
     html += `<div class="ai-section">
       <h4 class="ai-section-title">Recommendations</h4>
       <div class="ai-section-content">
-        <ul class="ai-list">${result.recommendations.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+        <ul class="ai-list">${data.recommendations.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
       </div>
     </div>`;
   }
 
   // Fallback for raw/text responses
-  if (!result.findings && !result.criticalValues && result.answer) {
-    html += `<div class="ai-section"><div class="ai-section-content"><p>${esc(result.answer)}</p></div></div>`;
+  if (!data.findings && !data.criticalValues && (result.answer || data.answer)) {
+    const answerText = result.answer || data.answer;
+    html += `<div class="ai-section"><div class="ai-section-content"><p>${esc(answerText)}</p></div></div>`;
   }
 
-  if (result.confidence) {
-    html += `<div class="ai-response-footer"><span class="ai-disclaimer-small">Confidence: ${Math.round(result.confidence * 100)}% &mdash; Always verify against original report.</span></div>`;
+  if (data.confidence) {
+    html += `<div class="ai-response-footer"><span class="ai-disclaimer-small">Confidence: ${Math.round(data.confidence * 100)}% &mdash; Always verify against original report.</span></div>`;
   }
 
   html += '</div>';

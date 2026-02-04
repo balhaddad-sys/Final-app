@@ -14,12 +14,13 @@ const { callClaude, extractJsonStrict } = require("../helpers/claude");
 
 /**
  * Verifies electrolyte correction calculations.
- * Returns structured verification with safety checks.
+ * Accepts either a freetext scenario or structured parameters.
  *
  * @param {object} request.data
- * @param {string} request.data.electrolyte - Electrolyte name (e.g., "sodium", "potassium")
- * @param {number} request.data.currentValue - Current measured value
- * @param {number} request.data.targetValue - Target value
+ * @param {string} [request.data.scenario] - Freetext scenario description (alternative input)
+ * @param {string} [request.data.electrolyte] - Electrolyte name (e.g., "sodium", "potassium")
+ * @param {number} [request.data.currentValue] - Current measured value
+ * @param {number} [request.data.targetValue] - Target value
  * @param {string} [request.data.proposedCorrection] - Proposed correction plan
  * @param {object} [request.data.patientData] - Weight, age, sex, comorbidities
  * @returns {{ success: boolean, verification: object, timestamp: string }}
@@ -34,38 +35,49 @@ exports.oncall_verifyElectrolyteCorrection = onCall(
     // 1. Auth
     const uid = assertAuthed(request);
 
-    // 2. Validate
-    const electrolyte = clampText(request.data?.electrolyte, 100);
-    if (!electrolyte) {
-      throw new HttpsError("invalid-argument", "Electrolyte name is required.");
-    }
+    // 2. Validate — accept freetext scenario OR structured params
+    const scenario = clampText(request.data?.scenario || "", UNIFIED_CONFIG.MAX_TEXT_CHARS);
+    const electrolyte = clampText(request.data?.electrolyte || "", 100);
 
-    const currentValue = parseFloat(request.data?.currentValue);
-    const targetValue = parseFloat(request.data?.targetValue);
-    if (isNaN(currentValue) || isNaN(targetValue)) {
-      throw new HttpsError("invalid-argument", "Current and target values must be numbers.");
-    }
+    let userMessage;
 
-    const proposedCorrection = clampText(request.data?.proposedCorrection || "", 1000);
+    if (scenario) {
+      // Freetext scenario mode (from presets or custom text)
+      userMessage = `Verify electrolyte correction:\n${scenario}`;
+    } else {
+      // Structured params mode
+      if (!electrolyte) {
+        throw new HttpsError("invalid-argument", "Electrolyte name or scenario is required.");
+      }
 
-    // 3. Build message
-    let userMessage = [
-      `Verify electrolyte correction:`,
-      `- Electrolyte: ${electrolyte}`,
-      `- Current value: ${currentValue}`,
-      `- Target value: ${targetValue}`
-    ];
+      const currentValue = parseFloat(request.data?.currentValue);
+      const targetValue = parseFloat(request.data?.targetValue);
+      if (isNaN(currentValue) || isNaN(targetValue)) {
+        throw new HttpsError("invalid-argument", "Current and target values must be numbers.");
+      }
 
-    if (proposedCorrection) {
-      userMessage.push(`- Proposed correction: ${proposedCorrection}`);
-    }
+      const proposedCorrection = clampText(request.data?.proposedCorrection || "", 1000);
 
-    const patientData = request.data?.patientData;
-    if (patientData && typeof patientData === "object") {
-      if (patientData.weight) userMessage.push(`- Weight: ${patientData.weight} kg`);
-      if (patientData.age) userMessage.push(`- Age: ${patientData.age}`);
-      if (patientData.sex) userMessage.push(`- Sex: ${patientData.sex}`);
-      if (patientData.comorbidities) userMessage.push(`- Comorbidities: ${clampText(patientData.comorbidities, 500)}`);
+      const parts = [
+        `Verify electrolyte correction:`,
+        `- Electrolyte: ${electrolyte}`,
+        `- Current value: ${currentValue}`,
+        `- Target value: ${targetValue}`
+      ];
+
+      if (proposedCorrection) {
+        parts.push(`- Proposed correction: ${proposedCorrection}`);
+      }
+
+      const patientData = request.data?.patientData;
+      if (patientData && typeof patientData === "object") {
+        if (patientData.weight) parts.push(`- Weight: ${patientData.weight} kg`);
+        if (patientData.age) parts.push(`- Age: ${patientData.age}`);
+        if (patientData.sex) parts.push(`- Sex: ${patientData.sex}`);
+        if (patientData.comorbidities) parts.push(`- Comorbidities: ${clampText(patientData.comorbidities, 500)}`);
+      }
+
+      userMessage = parts.join("\n");
     }
 
     // 4. Call Claude (no caching - safety critical)
@@ -76,7 +88,7 @@ exports.oncall_verifyElectrolyteCorrection = onCall(
       const response = await callClaude({
         apiKey,
         system: SYSTEM_PROMPTS.ELECTROLYTE,
-        message: userMessage.join("\n")
+        message: userMessage
       });
 
       let verification;

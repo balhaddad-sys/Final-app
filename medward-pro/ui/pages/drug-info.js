@@ -127,8 +127,16 @@ function renderDrugResult(result) {
     if (info.dosing.hepatic) html += `<p><strong>Hepatic adjustment:</strong> ${esc(info.dosing.hepatic)}</p>`;
     html += `</div></div>`;
   }
-  if (info.contraindications?.length) {
-    html += `<div class="ai-section ai-section-urgent"><h4 class="ai-section-title">Contraindications</h4><div class="ai-section-content"><ul class="ai-list">${info.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div></div>`;
+  if (info.contraindications) {
+    // Handle both array and {absolute:[], relative:[]} formats
+    if (Array.isArray(info.contraindications) && info.contraindications.length) {
+      html += `<div class="ai-section ai-section-urgent"><h4 class="ai-section-title">Contraindications</h4><div class="ai-section-content"><ul class="ai-list">${info.contraindications.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div></div>`;
+    } else if (info.contraindications.absolute?.length || info.contraindications.relative?.length) {
+      html += `<div class="ai-section ai-section-urgent"><h4 class="ai-section-title">Contraindications</h4><div class="ai-section-content">`;
+      if (info.contraindications.absolute?.length) html += `<p><strong>Absolute:</strong></p><ul class="ai-list">${info.contraindications.absolute.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`;
+      if (info.contraindications.relative?.length) html += `<p><strong>Relative:</strong></p><ul class="ai-list">${info.contraindications.relative.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`;
+      html += `</div></div>`;
+    }
   }
   if (info.sideEffects) {
     html += `<div class="ai-section"><h4 class="ai-section-title">Side Effects</h4><div class="ai-section-content">`;

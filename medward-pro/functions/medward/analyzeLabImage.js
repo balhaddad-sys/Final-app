@@ -37,7 +37,10 @@ exports.medward_analyzeLabImage = onCall(
       throw new HttpsError("invalid-argument", "Image data is required.");
     }
 
-    const { mediaType, data } = parseDataUrlBase64(rawImage);
+    const parsed = parseDataUrlBase64(rawImage);
+    // Prefer client-provided mediaType over the one extracted from data URL
+    const finalMediaType = request.data?.mediaType || parsed.mediaType;
+    const data = parsed.data;
     const patientName = clampText(request.data?.patientName || "", 100);
 
     // 3. Build content array for vision
@@ -48,7 +51,7 @@ exports.medward_analyzeLabImage = onCall(
     const content = [
       {
         type: "image",
-        source: { type: "base64", media_type: mediaType, data }
+        source: { type: "base64", media_type: finalMediaType, data }
       },
       {
         type: "text",
