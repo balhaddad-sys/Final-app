@@ -495,57 +495,54 @@
     }
 
     /**
-     * Compress/resize image using canvas to stay within payload limits.
-     * Max dimension is capped and quality is reduced to keep base64 under ~4MB.
+     * Aggressively compress image to stay well under Firebase's ~6MB payload limit.
+     * Target: base64 output under 2MB. Lab reports are text-heavy so JPEG works fine.
      */
-    function compressImage(dataUrl, maxDimension = 1600, quality = 0.8) {
+    function compressImage(dataUrl) {
+      const MAX_BASE64 = 2 * 1024 * 1024; // 2MB target
+      const steps = [
+        { maxDim: 1200, quality: 0.6 },
+        { maxDim: 1000, quality: 0.5 },
+        { maxDim: 800,  quality: 0.4 },
+        { maxDim: 600,  quality: 0.3 },
+      ];
+
       return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
-          let { width, height } = img;
-
-          // Scale down if larger than maxDimension
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = Math.round(height * (maxDimension / width));
-              width = maxDimension;
-            } else {
-              width = Math.round(width * (maxDimension / height));
-              height = maxDimension;
-            }
-          }
-
           const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
 
-          // Convert to JPEG for smaller size
-          let result = canvas.toDataURL('image/jpeg', quality);
+          for (const { maxDim, quality } of steps) {
+            let { width, height } = img;
 
-          // If still too large (>5MB base64), reduce further
-          if (result.length > 5 * 1024 * 1024) {
-            result = canvas.toDataURL('image/jpeg', 0.5);
-          }
-          if (result.length > 5 * 1024 * 1024) {
-            // Resize to 1000px max
-            const smallerMax = 1000;
-            let w2 = width, h2 = height;
-            if (w2 > h2) {
-              h2 = Math.round(h2 * (smallerMax / w2));
-              w2 = smallerMax;
-            } else {
-              w2 = Math.round(w2 * (smallerMax / h2));
-              h2 = smallerMax;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round(height * (maxDim / width));
+                width = maxDim;
+              } else {
+                width = Math.round(width * (maxDim / height));
+                height = maxDim;
+              }
             }
-            canvas.width = w2;
-            canvas.height = h2;
-            ctx.drawImage(img, 0, 0, w2, h2);
-            result = canvas.toDataURL('image/jpeg', 0.6);
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const result = canvas.toDataURL('image/jpeg', quality);
+            if (result.length <= MAX_BASE64) {
+              console.log(`[LabScanner] Compressed to ${(result.length / 1024).toFixed(0)}KB (${width}x${height}, q=${quality})`);
+              return resolve(result);
+            }
           }
 
+          // Final fallback - very small
+          canvas.width = 500;
+          canvas.height = Math.round(500 * (img.height / img.width));
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const result = canvas.toDataURL('image/jpeg', 0.3);
+          console.log(`[LabScanner] Fallback compressed to ${(result.length / 1024).toFixed(0)}KB`);
           resolve(result);
         };
         img.src = dataUrl;
