@@ -76,7 +76,7 @@ export const AI = {
       : query;
 
     // 5. Call Cloud Function
-    const response = await CloudFunctions.askClinical(userPrompt, fullSystemPrompt, model);
+    const response = await CloudFunctions.askClinical(userPrompt, { systemPrompt: fullSystemPrompt, model });
 
     // 6. Track for learning
     const interactionId = crypto.randomUUID();
@@ -229,8 +229,10 @@ export const AI = {
     Monitor.log('AI', 'Medication identification request');
     return CloudFunctions.askClinical(
       `Identify this medication. ${additionalInfo || ''}`,
-      'You are a pharmacist identifying medications from images. Identify the medication name, dosage form, strength, and manufacturer if visible.',
-      'claude-sonnet-4-20250514'
+      {
+        systemPrompt: 'You are a pharmacist identifying medications from images. Identify the medication name, dosage form, strength, and manufacturer if visible.',
+        model: 'claude-sonnet-4-20250514'
+      }
     );
   },
 
@@ -241,8 +243,10 @@ export const AI = {
     Monitor.log('AI', `Document analysis request: ${documentType || 'general'}`);
     return CloudFunctions.askClinical(
       `Analyze this clinical document. ${documentType ? `Document type: ${documentType}` : ''}`,
-      'You are a medical document analyst. Extract and structure all relevant clinical information from the document.',
-      'claude-sonnet-4-20250514'
+      {
+        systemPrompt: 'You are a medical document analyst. Extract and structure all relevant clinical information from the document.',
+        model: 'claude-sonnet-4-20250514'
+      }
     );
   },
 
@@ -253,8 +257,10 @@ export const AI = {
     Monitor.log('AI', 'Patient list extraction request');
     return CloudFunctions.askClinical(
       `Extract patient list from this image. ${format ? `Expected format: ${format}` : ''}`,
-      'You are extracting patient names and details from a handwritten or printed patient list. Return structured data with patient names, bed numbers, and any visible diagnoses.',
-      'claude-sonnet-4-20250514'
+      {
+        systemPrompt: 'You are extracting patient names and details from a handwritten or printed patient list. Return structured data with patient names, bed numbers, and any visible diagnoses.',
+        model: 'claude-sonnet-4-20250514'
+      }
     );
   },
 
