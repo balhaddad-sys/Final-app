@@ -1,5 +1,6 @@
 /**
  * Patient Card - Main list item component
+ * Clinical-grade card with status borders, icons, and visual hierarchy
  */
 import { Store } from '../../core/store.js';
 import { Data } from '../../core/data.js';
@@ -9,14 +10,27 @@ export function PatientCard(patient) {
   const tasks = Data.tasks.pending(patient.id);
   const taskCount = tasks.length;
 
+  const statusKey = patient.status || 'stable';
   const statusClass = {
     'stable': 'status-dot-stable',
     'attention': 'status-dot-attention',
     'critical': 'status-dot-critical'
-  }[patient.status] || 'status-dot-stable';
+  }[statusKey] || 'status-dot-stable';
+
+  const statusLabel = {
+    'stable': 'Stable',
+    'attention': 'Attention',
+    'critical': 'Critical'
+  }[statusKey] || 'Stable';
+
+  const statusBorderClass = {
+    'stable': 'patient-card--stable',
+    'attention': 'patient-card--attention',
+    'critical': 'patient-card--critical'
+  }[statusKey] || 'patient-card--stable';
 
   const card = document.createElement('div');
-  card.className = 'card card-interactive patient-card';
+  card.className = `card card-interactive patient-card ${statusBorderClass}`;
   card.dataset.patientId = patient.id;
 
   card.innerHTML = `
@@ -29,16 +43,19 @@ export function PatientCard(patient) {
           </div>
           <div class="patient-card-meta">
             ${patient.bed ? `<span class="patient-bed">Bed ${escapeHtml(patient.bed)}</span>` : ''}
-            ${patient.mrn ? `<span class="patient-mrn">MRN: ${escapeHtml(patient.mrn)}</span>` : ''}
+            ${patient.mrn ? `<span class="patient-mrn">MRN ${escapeHtml(patient.mrn)}</span>` : ''}
           </div>
         </div>
-        ${taskCount > 0 ? `
-          <span class="badge badge-count">${taskCount}</span>
-        ` : ''}
+        <div class="patient-card-right">
+          ${taskCount > 0 ? `
+            <span class="badge badge-count">${taskCount}</span>
+          ` : ''}
+          <span class="patient-status-badge patient-status-badge--${statusKey}">${statusLabel}</span>
+        </div>
       </div>
 
       ${patient.diagnosis ? `
-        <p class="patient-card-diagnosis text-secondary truncate">
+        <p class="patient-card-diagnosis truncate">
           ${escapeHtml(patient.diagnosis)}
         </p>
       ` : ''}
@@ -57,7 +74,7 @@ export function PatientCard(patient) {
 // Skeleton version for loading state
 export function PatientCardSkeleton() {
   const card = document.createElement('div');
-  card.className = 'card patient-card';
+  card.className = 'card patient-card patient-card--stable';
   card.innerHTML = `
     <div class="patient-card-content">
       <div class="patient-card-header">
