@@ -614,6 +614,154 @@ export const getAntibioticGuidance = onCall({ secrets: [anthropicApiKey] }, asyn
 });
 
 // =============================================================================
+// HANDOVER AI SUMMARY
+// =============================================================================
+
+export const generateHandoverSummary = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { patientId } = request.data;
+
+  if (!patientId || typeof patientId !== 'string') {
+    throw new HttpsError('invalid-argument', 'Patient ID is required');
+  }
+
+  try {
+    // Get patient data
+    const patientDoc = await db.collection('patients').doc(patientId).get();
+    if (!patientDoc.exists) {
+      throw new HttpsError('not-found', 'Patient not found');
+    }
+
+    const patient = patientDoc.data()!;
+
+    // Get patient tasks
+    const tasksSnap = await db.collection('tasks')
+      .where('patientId', '==', patientId)
+      .where('deleted', '==', false)
+      .get();
+
+    const tasks = tasksSnap.docs.map(doc => doc.data());
+    const pendingTasks = tasks.filter(t => !t.completed);
+    const completedTasks = tasks.filter(t => t.completed);
+
+    // Build prompt with patient data (no PHI sent - use diagnosis, status, tasks only)
+    const userMessage = `Generate a concise handover summary for this patient:
+- Diagnosis: ${patient.diagnosis || 'Not specified'}
+- Status: ${patient.status || 'active'}
+- Pending tasks (${pendingTasks.length}): ${pendingTasks.map(t => t.text).join(', ') || 'None'}
+- Completed tasks today (${completedTasks.length}): ${completedTasks.map(t => t.text).join(', ') || 'None'}
+${patient.notes ? `- Clinical notes: ${patient.notes.substring(0, 500)}` : ''}
+
+Provide a structured handover summary with:
+1. Brief clinical summary
+2. Key pending issues
+3. Overnight plan / things to watch for
+4. Escalation criteria`;
+
+    const result = await callClaude(CLINICAL_SYSTEM_PROMPT, userMessage);
+
+    return {
+      summary: result.answer,
+      disclaimer: 'AI-generated summary. Please verify all details before handover.',
+      usage: result.usage,
+      source: 'claude'
+    };
+  } catch (error: any) {
+    console.error('generateHandoverSummary error:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', 'Failed to generate handover summary');
+  }
+});
+
+// =============================================================================
+// ADMIN OPERATIONS
+// =============================================================================
+
+export const exportUserData = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const userId = request.auth.uid;
+
+  try {
+    // Gather all user data
+    const userDoc = await db.collection('users').doc(userId).get();
+    const unitsSnap = await db.collection('units')
+      .where('members', 'array-contains', userId)
+      .get();
+
+    const unitIds = unitsSnap.docs.map(doc => doc.id);
+    let patients: any[] = [];
+    let tasks: any[] = [];
+
+    for (const unitId of unitIds) {
+      const patientsSnap = await db.collection('patients')
+        .where('unitId', '==', unitId)
+        .where('createdBy', '==', userId)
+        .get();
+
+      const unitPatients = patientsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      patients = patients.concat(unitPatients);
+
+      const patientIds = unitPatients.map(p => p.id);
+      if (patientIds.length > 0) {
+        const chunks = chunkArray(patientIds, 10);
+        for (const chunk of chunks) {
+          const tasksSnap = await db.collection('tasks')
+            .where('patientId', 'in', chunk)
+            .where('createdBy', '==', userId)
+            .get();
+          tasks = tasks.concat(tasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }
+      }
+    }
+
+    return {
+      user: userDoc.data(),
+      units: unitsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      patients,
+      tasks,
+      exportedAt: new Date().toISOString()
+    };
+  } catch (error: any) {
+    console.error('exportUserData error:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', 'Failed to export user data');
+  }
+});
+
+export const deleteAccount = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { confirmation } = request.data;
+  const userId = request.auth.uid;
+
+  if (confirmation !== 'DELETE_MY_ACCOUNT') {
+    throw new HttpsError('invalid-argument', 'Invalid confirmation. Send "DELETE_MY_ACCOUNT" to confirm.');
+  }
+
+  try {
+    // Delete user document
+    await db.collection('users').doc(userId).delete();
+
+    // Delete user from Firebase Auth
+    await admin.auth().deleteUser(userId);
+
+    return { success: true, message: 'Account deleted successfully' };
+  } catch (error: any) {
+    console.error('deleteAccount error:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', 'Failed to delete account');
+  }
+});
+
+// =============================================================================
 // SCHEDULED FUNCTIONS
 // =============================================================================
 

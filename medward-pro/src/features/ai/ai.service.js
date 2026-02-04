@@ -15,7 +15,7 @@ export const AIService = {
     try {
       Monitor.log('AI', `Clinical query: ${question.substring(0, 50)}...`);
 
-      const result = await CloudFunctions.askClinical(question, context);
+      const result = await CloudFunctions.askClinical(question, { context });
 
       return {
         answer: result.answer,

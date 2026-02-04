@@ -125,7 +125,7 @@ export const CloudFunctions = {
 
   async declineInboxItem(itemId) {
     try {
-      const fn = getFunction('declineInboxItem');
+      const fn = getFunction('declineInboxPatient');
       const result = await fn({ itemId });
       Monitor.log('FUNCTIONS', 'Inbox item declined');
       return result.data;
@@ -139,10 +139,10 @@ export const CloudFunctions = {
   // AI OPERATIONS
   // ========================================
 
-  async askClinical(question, context = null, model = 'claude-sonnet-4-20250514') {
+  async askClinical(question, { context = null, systemPrompt = null, model = 'claude-sonnet-4-20250514' } = {}) {
     try {
       const fn = getFunction('askClinical');
-      const result = await fn({ question, context, model });
+      const result = await fn({ question, context, systemPrompt, model });
       Monitor.log('FUNCTIONS', 'AI query completed');
       return result.data;
     } catch (error) {
