@@ -614,6 +614,113 @@ export const getAntibioticGuidance = onCall({ secrets: [anthropicApiKey] }, asyn
 });
 
 // =============================================================================
+// LAB IMAGE ANALYSIS (VISION)
+// =============================================================================
+
+const LAB_ANALYSIS_SYSTEM_PROMPT = `You are a clinical laboratory medicine specialist.
+Use Kuwait SI units throughout (mmol/L, μmol/L, g/L, etc.).
+
+Analyze the provided lab report image following this structure:
+
+1. **CRITICAL VALUES** (if any)
+   - Flag immediately dangerous values requiring urgent action
+
+2. **INTERPRETATION**
+   - Explain each abnormality
+   - Note clinically significant changes
+
+3. **CLINICAL CORRELATION**
+   - Connect abnormalities to potential diagnoses
+   - Explain the physiological mechanisms
+
+4. **PATTERN RECOGNITION**
+   - Identify common lab patterns (e.g., pre-renal AKI, DKA, sepsis)
+
+5. **SUGGESTED WORKUP**
+   - Recommend additional tests if warranted
+   - Prioritize by clinical urgency
+
+Always note when trends indicate improvement vs deterioration.
+This is for educational support only - always remind clinicians to use their own judgment.`;
+
+export const analyzeLabImage = onCall({ secrets: [anthropicApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { imageBase64, mediaType, patientName } = request.data;
+
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    throw new HttpsError('invalid-argument', 'Image data is required');
+  }
+
+  // Validate media type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const resolvedType = allowedTypes.includes(mediaType) ? mediaType : 'image/jpeg';
+
+  // Limit image size (base64 adds ~33% overhead, so 10MB image ≈ 13.3MB base64)
+  if (imageBase64.length > 15_000_000) {
+    throw new HttpsError('invalid-argument', 'Image too large (max 10MB)');
+  }
+
+  const client = getAnthropicClient();
+
+  const userMessage = patientName
+    ? `Analyze this lab report for the patient. Patient reference: ${patientName}`
+    : 'Analyze this lab report.';
+
+  try {
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: LAB_ANALYSIS_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: resolvedType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
+                data: imageBase64,
+              },
+            },
+            {
+              type: 'text',
+              text: userMessage,
+            },
+          ],
+        },
+      ],
+    });
+
+    const textBlock = response.content.find((b: any) => b.type === 'text');
+    const answer = textBlock ? (textBlock as any).text : 'No analysis generated.';
+
+    return {
+      answer,
+      disclaimer: 'AI-generated lab analysis. Always verify with clinical judgment and current guidelines.',
+      usage: {
+        input: response.usage.input_tokens,
+        output: response.usage.output_tokens,
+      },
+      source: 'claude-vision',
+    };
+  } catch (error: any) {
+    console.error('Lab image analysis error:', error);
+
+    if (error.status === 429) {
+      throw new HttpsError('resource-exhausted', 'AI rate limit reached. Please wait before trying again.');
+    }
+    if (error.status === 401) {
+      throw new HttpsError('failed-precondition', 'AI service authentication failed. Check API key configuration.');
+    }
+    throw new HttpsError('internal', 'AI vision service temporarily unavailable.');
+  }
+});
+
+// =============================================================================
 // HANDOVER AI SUMMARY
 // =============================================================================
 

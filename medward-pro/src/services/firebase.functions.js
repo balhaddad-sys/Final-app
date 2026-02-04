@@ -158,6 +158,18 @@ export const CloudFunctions = {
     }
   },
 
+  async analyzeLabImage(imageBase64, mediaType = 'image/jpeg', patientName = null) {
+    try {
+      const fn = getFunction('analyzeLabImage');
+      const result = await fn({ imageBase64, mediaType, patientName });
+      Monitor.log('FUNCTIONS', 'Lab image analysis completed');
+      return result.data;
+    } catch (error) {
+      Monitor.logError('FUNC_LAB_ANALYSIS', error);
+      throw error;
+    }
+  },
+
   async getDrugInfo(drugName, indication = null) {
     try {
       const fn = getFunction('getDrugInfo');
