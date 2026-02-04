@@ -463,31 +463,93 @@
         return;
       }
 
-      // Max 10MB
-      if (file.size > 10 * 1024 * 1024) {
-        Toast.error('Image must be under 10MB');
+      // Max 20MB raw (will be compressed)
+      if (file.size > 20 * 1024 * 1024) {
+        Toast.error('Image must be under 20MB');
         return;
       }
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        const base64 = e.target.result;
-        selectedImageBase64 = base64;
+        const originalBase64 = e.target.result;
 
-        // Show preview
-        const preview = document.getElementById('preview-image');
-        const placeholder = document.getElementById('upload-placeholder');
-        const uploadArea = document.getElementById('upload-area');
+        // Compress image to fit Cloud Function payload limits
+        compressImage(originalBase64, 1600, 0.8).then((compressedBase64) => {
+          selectedImageBase64 = compressedBase64;
 
-        preview.src = base64;
-        preview.style.display = 'block';
-        placeholder.style.display = 'none';
-        uploadArea.classList.add('has-image');
+          // Show preview
+          const preview = document.getElementById('preview-image');
+          const placeholder = document.getElementById('upload-placeholder');
+          const uploadArea = document.getElementById('upload-area');
 
-        // Enable analyze button
-        document.getElementById('analyze-btn').disabled = false;
+          preview.src = compressedBase64;
+          preview.style.display = 'block';
+          placeholder.style.display = 'none';
+          uploadArea.classList.add('has-image');
+
+          // Enable analyze button
+          document.getElementById('analyze-btn').disabled = false;
+        });
       };
       reader.readAsDataURL(file);
+    }
+
+    /**
+     * Compress/resize image using canvas to stay within payload limits.
+     * Max dimension is capped and quality is reduced to keep base64 under ~4MB.
+     */
+    function compressImage(dataUrl, maxDimension = 1600, quality = 0.8) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+
+          // Scale down if larger than maxDimension
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round(height * (maxDimension / width));
+              width = maxDimension;
+            } else {
+              width = Math.round(width * (maxDimension / height));
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to JPEG for smaller size
+          let result = canvas.toDataURL('image/jpeg', quality);
+
+          // If still too large (>5MB base64), reduce further
+          if (result.length > 5 * 1024 * 1024) {
+            result = canvas.toDataURL('image/jpeg', 0.5);
+          }
+          if (result.length > 5 * 1024 * 1024) {
+            // Resize to 1000px max
+            const smallerMax = 1000;
+            let w2 = width, h2 = height;
+            if (w2 > h2) {
+              h2 = Math.round(h2 * (smallerMax / w2));
+              w2 = smallerMax;
+            } else {
+              w2 = Math.round(w2 * (smallerMax / h2));
+              h2 = smallerMax;
+            }
+            canvas.width = w2;
+            canvas.height = h2;
+            ctx.drawImage(img, 0, 0, w2, h2);
+            result = canvas.toDataURL('image/jpeg', 0.6);
+          }
+
+          resolve(result);
+        };
+        img.src = dataUrl;
+      });
     }
 
     async function analyzeLabReport() {
