@@ -24,6 +24,11 @@ import { renderAIAssistant } from '../ui/pages/ai-assistant.js';
 import { renderAntibioticGuide } from '../ui/pages/antibiotic-guide.js';
 import { renderOncallAssistant } from '../ui/pages/oncall-assistant.js';
 import { renderSettings } from '../ui/pages/settings.js';
+import { renderDrugInfo } from '../ui/pages/drug-info.js';
+import { renderLabScanner } from '../ui/pages/lab-scanner.js';
+import { renderDifferential } from '../ui/pages/differential.js';
+import { renderElectrolyteCheck } from '../ui/pages/electrolyte-check.js';
+import { renderClinicalTools } from '../ui/pages/clinical-tools.js';
 
 // Advanced features
 import { Privacy } from '../utils/privacy.js';
@@ -215,6 +220,36 @@ function setupRoutes() {
     if (!requireAuth()) return;
     showBottomNav();
     renderSettings(appContainer);
+  });
+
+  Router.register('/tools', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderClinicalTools(appContainer);
+  });
+
+  Router.register('/drug-info', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderDrugInfo(appContainer);
+  });
+
+  Router.register('/lab-scanner', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderLabScanner(appContainer);
+  });
+
+  Router.register('/differential', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderDifferential(appContainer);
+  });
+
+  Router.register('/electrolyte-check', () => {
+    if (!requireAuth()) return;
+    showBottomNav();
+    renderElectrolyteCheck(appContainer);
   });
 }
 
