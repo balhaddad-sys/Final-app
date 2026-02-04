@@ -3,6 +3,7 @@
  * Quick guidance for common on-call scenarios
  */
 import { AI } from '../../services/ai.service.js';
+import { renderClinicalResponse } from '../utils/formatMedicalResponse.js';
 
 let isLoading = false;
 
@@ -151,10 +152,20 @@ function renderResult(result) {
     for (const [key, section] of Object.entries(result.sections)) {
       const label = sectionLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       const isUrgent = key === 'red_flags' || key === 'immediate_actions';
-      html += `<div class="ai-section ${isUrgent ? 'ai-section-urgent' : ''}">
-        <h4 class="ai-section-title">${label}</h4>
-        <div class="ai-section-content">${renderSection(section)}</div>
-      </div>`;
+
+      if (isUrgent) {
+        html += `<div class="clinical-alert clinical-alert--critical">
+          <div class="clinical-alert__content">
+            <div class="clinical-alert__title">${label}</div>
+            <div class="clinical-alert__body">${renderSection(section)}</div>
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="ai-section">
+          <h4 class="ai-section-title">${label}</h4>
+          <div class="ai-section-content">${renderSection(section)}</div>
+        </div>`;
+      }
     }
     if (result.disclaimer) {
       html += `<div class="ai-response-footer"><span class="ai-disclaimer-small">${escapeHtml(result.disclaimer)}</span></div>`;
@@ -164,12 +175,7 @@ function renderResult(result) {
   }
 
   if (result.raw) {
-    return result.raw
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^### (.*?)$/gm, '<h4>$1</h4>')
-      .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
-      .replace(/^- (.*?)$/gm, '<li>$1</li>')
-      .replace(/\n/g, '<br>');
+    return renderClinicalResponse(result.raw, result.disclaimer);
   }
 
   return '<p>No guidance available.</p>';

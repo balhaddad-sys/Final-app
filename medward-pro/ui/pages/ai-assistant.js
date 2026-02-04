@@ -5,6 +5,7 @@
 import { AI } from '../../services/ai.service.js';
 import { Store } from '../../core/store.js';
 import { EventBus } from '../../core/events.js';
+import { renderClinicalResponse } from '../utils/formatMedicalResponse.js';
 
 let messagesContainer = null;
 let inputElement = null;
@@ -207,35 +208,61 @@ function updateMessage(id, response) {
 }
 
 function renderStructuredResponse(response) {
+  // If we have raw text, use the clinical formatter for UpToDate-quality rendering
+  if (response.raw) {
+    return renderClinicalResponse(response.raw, response.disclaimer);
+  }
+
   const sections = response.sections || {};
 
   let html = '<div class="ai-structured-response">';
 
   // Render each section
   const sectionLabels = {
-    assessment: '📋 Assessment',
-    red_flags: '🚨 Red Flags',
-    immediate_actions: '⚡ Immediate Actions',
-    differential: '🔍 Differential Diagnosis',
-    workup: '🔬 Workup',
-    treatment: '💊 Treatment',
-    dosing: '📊 Dosing',
-    references: '📚 References',
-    error: '❌ Error'
+    assessment: 'Assessment',
+    red_flags: 'Red Flags',
+    immediate_actions: 'Immediate Actions',
+    differential: 'Differential Diagnosis',
+    workup: 'Workup',
+    treatment: 'Treatment',
+    dosing: 'Dosing',
+    references: 'References',
+    error: 'Error'
   };
 
   for (const [key, section] of Object.entries(sections)) {
     const label = sectionLabels[key] || key;
     const isRedFlag = key === 'red_flags' || key === 'immediate_actions';
+    const isError = key === 'error';
 
-    html += `
-      <div class="ai-section ${isRedFlag ? 'ai-section-urgent' : ''}">
-        <h4 class="ai-section-title">${label}</h4>
-        <div class="ai-section-content">
-          ${renderSectionContent(section)}
+    if (isRedFlag) {
+      html += `
+        <div class="clinical-alert clinical-alert--critical">
+          <div class="clinical-alert__content">
+            <div class="clinical-alert__title">${label}</div>
+            <div class="clinical-alert__body">${renderSectionContent(section)}</div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else if (isError) {
+      html += `
+        <div class="clinical-alert clinical-alert--warning">
+          <div class="clinical-alert__content">
+            <div class="clinical-alert__title">${label}</div>
+            <div class="clinical-alert__body">${renderSectionContent(section)}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="ai-section">
+          <h4 class="ai-section-title">${label}</h4>
+          <div class="ai-section-content">
+            ${renderSectionContent(section)}
+          </div>
+        </div>
+      `;
+    }
   }
 
   // Disclaimer

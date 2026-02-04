@@ -3,6 +3,7 @@
  * AI-powered antibiotic recommendations
  */
 import { AI } from '../../services/ai.service.js';
+import { renderClinicalResponse } from '../utils/formatMedicalResponse.js';
 
 let isLoading = false;
 
@@ -55,15 +56,21 @@ export function renderAntibioticGuide(container) {
                    placeholder="e.g., Penicillin, Sulfa (leave blank if NKDA)">
           </div>
 
-          <div class="form-row" style="margin-top: var(--space-3);">
-            <label class="toggle-label">
-              <input type="checkbox" id="abx-mrsa">
-              <span>MRSA Risk Factors</span>
-            </label>
-            <label class="toggle-label">
-              <input type="checkbox" id="abx-severe">
-              <span>Severe / Septic</span>
-            </label>
+          <div style="margin-top: var(--space-3);">
+            <div class="toggle-row">
+              <span class="toggle-row__label">MRSA Risk Factors</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="abx-mrsa">
+                <span class="toggle-switch__slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-row__label">Severe / Septic</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="abx-severe">
+                <span class="toggle-switch__slider"></span>
+              </label>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary btn-lg" id="abx-submit"
@@ -163,9 +170,9 @@ function renderResult(result) {
     return html;
   }
 
-  // Fallback to raw text
+  // Fallback to raw text with clinical formatting
   if (result.raw) {
-    return formatMarkdown(result.raw);
+    return renderClinicalResponse(result.raw, result.disclaimer);
   }
 
   return '<p>No recommendations available.</p>';
