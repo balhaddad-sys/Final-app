@@ -1,7 +1,7 @@
 // services/firebase.functions.js
 // Cloud function calls
 
-import { functions } from './firebase.config.js';
+import { functions, auth } from './firebase.config.js';
 import { httpsCallable } from 'firebase/functions';
 import { Monitor } from '../monitor/monitor.core.js';
 import { EventBus } from '../core/core.events.js';
@@ -14,6 +14,30 @@ function getFunction(name) {
     _functionCache.set(name, httpsCallable(functions, name));
   }
   return _functionCache.get(name);
+}
+
+// Wait for Firebase auth to resolve before calling functions that require auth.
+// Without this, calls made immediately after page load may fail with
+// "unauthenticated" because onAuthStateChanged hasn't fired yet.
+let _authReady = false;
+let _authReadyResolve;
+const _authReadyPromise = new Promise((resolve) => { _authReadyResolve = resolve; });
+
+// Listen for first auth state resolution
+import { onAuthStateChanged } from 'firebase/auth';
+const _unsubAuth = onAuthStateChanged(auth, (user) => {
+  _authReady = true;
+  _authReadyResolve(user);
+  _unsubAuth(); // Only need the first resolution
+});
+
+async function waitForAuth() {
+  if (_authReady) return;
+  // Wait up to 10 seconds for auth to resolve
+  await Promise.race([
+    _authReadyPromise,
+    new Promise((resolve) => setTimeout(resolve, 10000))
+  ]);
 }
 
 export const CloudFunctions = {
@@ -140,18 +164,36 @@ export const CloudFunctions = {
   // ========================================
 
   async askClinical(question, { context = null, systemPrompt = null, model = 'claude-sonnet-4-20250514' } = {}) {
+    await waitForAuth();
+
+    if (!auth.currentUser) {
+      const err = new Error('You must be logged in to use the AI Assistant.');
+      err.code = 'functions/unauthenticated';
+      throw err;
+    }
+
     try {
       const fn = getFunction('askClinical');
       const result = await fn({ question, context, systemPrompt, model });
       Monitor.log('FUNCTIONS', 'AI query completed');
       return result.data;
     } catch (error) {
-      Monitor.logError('FUNC_AI_CLINICAL', error);
+      Monitor.logError('FUNC_AI_CLINICAL', error, {
+        code: error.code,
+        message: error.message,
+        details: error.details
+      });
 
-      if (error.code === 'resource-exhausted') {
+      if (error.code === 'functions/not-found' || error.message?.includes('NOT_FOUND') || error.message?.includes('could not be found')) {
+        EventBus.emit('toast:error', 'AI Cloud Functions are not deployed. Run: firebase deploy --only functions');
+      } else if (error.code === 'resource-exhausted' || error.code === 'functions/resource-exhausted') {
         EventBus.emit('toast:warning', 'Rate limit reached. Please wait before trying again.');
+      } else if (error.code === 'functions/unauthenticated' || error.code === 'unauthenticated') {
+        EventBus.emit('toast:error', 'You must be logged in to use the AI Assistant.');
+      } else if (error.code === 'functions/failed-precondition' || error.message?.includes('ANTHROPIC_API_KEY')) {
+        EventBus.emit('toast:error', 'AI service not configured. ANTHROPIC_API_KEY secret needs to be set.');
       } else {
-        EventBus.emit('toast:error', 'AI service temporarily unavailable');
+        EventBus.emit('toast:error', `AI error: ${error.message || 'Service temporarily unavailable'}`);
       }
 
       throw error;
@@ -159,6 +201,12 @@ export const CloudFunctions = {
   },
 
   async analyzeLabImage(imageBase64, mediaType = 'image/jpeg', patientName = null) {
+    await waitForAuth();
+    if (!auth.currentUser) {
+      const err = new Error('You must be logged in to use Lab Scanner.');
+      err.code = 'functions/unauthenticated';
+      throw err;
+    }
     try {
       const fn = getFunction('analyzeLabImage');
       const result = await fn({ imageBase64, mediaType, patientName });
@@ -171,6 +219,12 @@ export const CloudFunctions = {
   },
 
   async getDrugInfo(drugName, indication = null) {
+    await waitForAuth();
+    if (!auth.currentUser) {
+      const err = new Error('You must be logged in to use Drug Info.');
+      err.code = 'functions/unauthenticated';
+      throw err;
+    }
     try {
       const fn = getFunction('getDrugInfo');
       const result = await fn({ drugName, indication });
@@ -199,6 +253,12 @@ export const CloudFunctions = {
   // ========================================
 
   async getAntibioticGuidance(condition, patientFactors = {}) {
+    await waitForAuth();
+    if (!auth.currentUser) {
+      const err = new Error('You must be logged in to use Antibiotic Guide.');
+      err.code = 'functions/unauthenticated';
+      throw err;
+    }
     try {
       const fn = getFunction('getAntibioticGuidance');
       const result = await fn({ condition, patientFactors });
