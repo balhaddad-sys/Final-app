@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#005eb8">
+  <title>Lab Scanner - MedWard Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-layout">
+    <header class="app-header">
+      <div class="header-left">
+        <a href="./landing.html" class="back-btn" title="Back to Home">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          <span>Back</span>
+        </a>
+        <h1 class="page-title">Lab Scanner</h1>
+      </div>
+    </header>
+
+    <main class="scanner-content">
+      <div class="scanner-intro">
+        <p>Snap a photo of a lab report for instant AI analysis.</p>
+      </div>
+
+      <div class="scanner-upload-area" id="upload-area">
+        <input type="file" id="file-input" accept="image/*" capture="environment" hidden>
+        <input type="file" id="gallery-input" accept="image/*" hidden>
+
+        <div class="upload-placeholder" id="upload-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <p>Tap to capture or upload a lab report image</p>
+        </div>
+
+        <img id="preview-image" class="preview-image" style="display:none" alt="Lab report preview">
+      </div>
+
+      <div class="scanner-actions">
+        <button class="btn btn-primary scanner-btn" id="camera-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Take Photo
+        </button>
+        <button class="btn btn-secondary scanner-btn" id="gallery-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          From Gallery
+        </button>
+      </div>
+
+      <div class="scanner-patient-select">
+        <label class="form-label" for="patient-name">Patient Name (optional)</label>
+        <input type="text" id="patient-name" class="form-input" placeholder="e.g., Patient name for reference">
+      </div>
+
+      <button class="btn btn-primary btn-lg scanner-analyze-btn" id="analyze-btn" disabled>
+        Analyze Lab Report
+      </button>
+
+      <div class="ai-disclaimer scanner-disclaimer">
+        <span>AI-generated analysis. Always verify with clinical judgment and current guidelines.</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- Analysis Results Modal -->
+  <div class="modal-overlay" id="results-modal" style="display:none">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Lab Analysis</h3>
+        <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Results will be rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .page-layout {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-app);
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    .scanner-content {
+      flex: 1;
+      padding: var(--space-md);
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .scanner-intro {
+      margin-bottom: var(--space-md);
+      color: var(--text-secondary);
+    }
+
+    .scanner-upload-area {
+      background: var(--bg-surface);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      overflow: hidden;
+      margin-bottom: var(--space-md);
+    }
+
+    .scanner-upload-area:hover,
+    .scanner-upload-area.has-image {
+      border-color: var(--primary);
+    }
+
+    .scanner-upload-area.has-image {
+      border-style: solid;
+    }
+
+    .upload-placeholder {
+      text-align: center;
+      padding: var(--space-xl);
+      color: var(--text-muted);
+    }
+
+    .upload-placeholder svg {
+      margin-bottom: var(--space-md);
+      opacity: 0.5;
+    }
+
+    .upload-placeholder p {
+      font-size: 0.9rem;
+    }
+
+    .preview-image {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+    }
+
+    .scanner-actions {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .scanner-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    .scanner-patient-select {
+      margin-bottom: var(--space-md);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.1);
+    }
+
+    .scanner-analyze-btn {
+      width: 100%;
+      padding: var(--space-md);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: var(--space-md);
+    }
+
+    .scanner-analyze-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .scanner-disclaimer {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: var(--bg-input);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      text-align: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--primary);
+    }
+
+    .btn-lg {
+      padding: var(--space-md) var(--space-lg);
+      font-size: 1rem;
+    }
+
+    /* Modal Overrides for Lab Scanner */
+    #results-modal {
+      padding: var(--space-md);
+    }
+
+    #results-modal .modal {
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #results-modal .modal-header {
+      flex-shrink: 0;
+    }
+
+    #results-modal .modal-body {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Analysis result styles */
+    .lab-analysis-loading {
+      text-align: center;
+      padding: var(--space-xl);
+    }
+
+    .lab-analysis-loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto var(--space-md);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .lab-analysis-result {
+      line-height: 1.6;
+    }
+
+    .lab-analysis-result h1,
+    .lab-analysis-result h2,
+    .lab-analysis-result h3,
+    .lab-analysis-result h4 {
+      margin-top: var(--space-md);
+      margin-bottom: var(--space-sm);
+      color: var(--text-main);
+    }
+
+    .lab-analysis-result h2 {
+      font-size: 1.1rem;
+      padding-bottom: var(--space-xs);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .lab-analysis-result h3 {
+      font-size: 1rem;
+    }
+
+    .lab-analysis-result ul,
+    .lab-analysis-result ol {
+      padding-left: var(--space-lg);
+      margin-bottom: var(--space-md);
+    }
+
+    .lab-analysis-result li {
+      margin-bottom: var(--space-xs);
+    }
+
+    .lab-analysis-result strong {
+      font-weight: 600;
+    }
+
+    .lab-analysis-result p {
+      margin-bottom: var(--space-sm);
+    }
+
+    .lab-analysis-error {
+      color: var(--danger);
+      padding: var(--space-md);
+    }
+
+    .lab-analysis-disclaimer {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: var(--space-md);
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .scanner-content {
+        padding: var(--space-sm);
+      }
+
+      #results-modal {
+        padding: 0;
+      }
+
+      #results-modal .modal {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        height: 100vh;
+      }
+    }
+  </style>
+
+  <script type="module">
+    import { Toast, Monitor } from './src/main.js';
+    import { CloudFunctions } from './src/services/firebase.functions.js';
+
+    let selectedImageBase64 = null;
+
+    document.addEventListener('medward:ready', init);
+
+    function init() {
+      const fileInput = document.getElementById('file-input');
+      const galleryInput = document.getElementById('gallery-input');
+      const uploadArea = document.getElementById('upload-area');
+      const cameraBtn = document.getElementById('camera-btn');
+      const galleryBtn = document.getElementById('gallery-btn');
+      const analyzeBtn = document.getElementById('analyze-btn');
+      const modalClose = document.getElementById('modal-close');
+
+      // Camera button
+      cameraBtn.addEventListener('click', () => fileInput.click());
+
+      // Gallery button
+      galleryBtn.addEventListener('click', () => galleryInput.click());
+
+      // Upload area tap
+      uploadArea.addEventListener('click', () => galleryInput.click());
+
+      // File selected (camera)
+      fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+
+      // File selected (gallery)
+      galleryInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+
+      // Analyze button
+      analyzeBtn.addEventListener('click', analyzeLabReport);
+
+      // Modal close
+      modalClose.addEventListener('click', closeModal);
+
+      // Close modal on overlay click
+      document.getElementById('results-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'results-modal') closeModal();
+      });
+
+      // Close modal on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+      });
+    }
+
+    function handleFileSelect(file) {
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        Toast.error('Please select an image file');
+        return;
+      }
+
+      // Max 20MB raw (will be compressed)
+      if (file.size > 20 * 1024 * 1024) {
+        Toast.error('Image must be under 20MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const originalBase64 = e.target.result;
+
+        // Compress image to fit Cloud Function payload limits
+        compressImage(originalBase64, 1600, 0.8).then((compressedBase64) => {
+          selectedImageBase64 = compressedBase64;
+
+          // Show preview
+          const preview = document.getElementById('preview-image');
+          const placeholder = document.getElementById('upload-placeholder');
+          const uploadArea = document.getElementById('upload-area');
+
+          preview.src = compressedBase64;
+          preview.style.display = 'block';
+          placeholder.style.display = 'none';
+          uploadArea.classList.add('has-image');
+
+          // Enable analyze button
+          document.getElementById('analyze-btn').disabled = false;
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /**
+     * Compress/resize image using canvas to stay within payload limits.
+     * Max dimension is capped and quality is reduced to keep base64 under ~4MB.
+     */
+    function compressImage(dataUrl, maxDimension = 1600, quality = 0.8) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+
+          // Scale down if larger than maxDimension
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round(height * (maxDimension / width));
+              width = maxDimension;
+            } else {
+              width = Math.round(width * (maxDimension / height));
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to JPEG for smaller size
+          let result = canvas.toDataURL('image/jpeg', quality);
+
+          // If still too large (>5MB base64), reduce further
+          if (result.length > 5 * 1024 * 1024) {
+            result = canvas.toDataURL('image/jpeg', 0.5);
+          }
+          if (result.length > 5 * 1024 * 1024) {
+            // Resize to 1000px max
+            const smallerMax = 1000;
+            let w2 = width, h2 = height;
+            if (w2 > h2) {
+              h2 = Math.round(h2 * (smallerMax / w2));
+              w2 = smallerMax;
+            } else {
+              w2 = Math.round(w2 * (smallerMax / h2));
+              h2 = smallerMax;
+            }
+            canvas.width = w2;
+            canvas.height = h2;
+            ctx.drawImage(img, 0, 0, w2, h2);
+            result = canvas.toDataURL('image/jpeg', 0.6);
+          }
+
+          resolve(result);
+        };
+        img.src = dataUrl;
+      });
+    }
+
+    async function analyzeLabReport() {
+      if (!selectedImageBase64) {
+        Toast.warning('Please capture or upload a lab report image first');
+        return;
+      }
+
+      const patientName = document.getElementById('patient-name').value.trim();
+      const modalTitle = document.getElementById('modal-title');
+      const modalBody = document.getElementById('modal-body');
+
+      // Set modal title
+      modalTitle.textContent = patientName
+        ? `Lab Analysis: ${patientName.toUpperCase()}`
+        : 'Lab Analysis';
+
+      // Show modal with loading
+      showModal();
+      modalBody.innerHTML = `
+        <div class="lab-analysis-loading">
+          <div class="spinner"></div>
+          <p>Analyzing lab report...</p>
+        </div>
+      `;
+
+      try {
+        // Extract base64 data (remove data URL prefix)
+        const base64Data = selectedImageBase64.split(',')[1];
+        const mediaType = selectedImageBase64.split(';')[0].split(':')[1];
+
+        const result = await CloudFunctions.analyzeLabImage(base64Data, mediaType, patientName);
+
+        modalBody.innerHTML = `
+          <div class="lab-analysis-result">
+            ${formatMarkdown(result.answer)}
+          </div>
+          <div class="lab-analysis-disclaimer">
+            ${escapeHtml(result.disclaimer || 'AI-generated analysis. Always verify with clinical judgment.')}
+          </div>
+        `;
+      } catch (error) {
+        console.error('Lab analysis failed:', error);
+        Monitor.logError('LAB_ANALYSIS_FAIL', error);
+
+        const errorMsg = error?.message || 'Unknown error';
+
+        if (errorMsg.includes('unauthenticated') || error?.code === 'functions/unauthenticated') {
+          modalBody.innerHTML = `<p class="lab-analysis-error">Error: You must be logged in to use the Lab Scanner.</p>`;
+        } else if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured')) {
+          modalBody.innerHTML = `<p class="lab-analysis-error">Error: AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase.</p>`;
+        } else if (error?.code === 'functions/resource-exhausted') {
+          modalBody.innerHTML = `<p class="lab-analysis-error">Error: Rate limit reached. Please wait before trying again.</p>`;
+        } else if (error?.code === 'functions/not-found' || errorMsg.includes('not found') || errorMsg.includes('NOT_FOUND')) {
+          modalBody.innerHTML = `<p class="lab-analysis-error">Error: AI vision service not deployed. Please deploy the analyzeLabImage Cloud Function.</p>`;
+        } else {
+          modalBody.innerHTML = `<p class="lab-analysis-error">Error: ${escapeHtml(errorMsg)}</p>`;
+        }
+      }
+    }
+
+    function showModal() {
+      const modal = document.getElementById('results-modal');
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => modal.classList.add('modal-visible'));
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('results-modal');
+      modal.classList.remove('modal-visible');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }, 200);
+    }
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+        .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
+        .replace(/^- (.*?)$/gm, '<li>$1</li>')
+        .replace(/\n/g, '<br>');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
