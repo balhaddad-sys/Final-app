@@ -377,7 +377,29 @@
 
     .lab-analysis-error {
       color: var(--danger);
-      padding: var(--space-md);
+      font-weight: 600;
+      padding: var(--space-md) var(--space-md) 0;
+    }
+
+    .lab-analysis-error-detail {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      padding: var(--space-sm) var(--space-md) var(--space-md);
+      line-height: 1.5;
+    }
+
+    .lab-analysis-error-detail code {
+      display: inline-block;
+      background: var(--bg-input);
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-xs);
+      font-size: 0.8rem;
+      margin-top: var(--space-xs);
+      word-break: break-all;
+    }
+
+    .lab-analysis-error-detail small {
+      color: var(--text-muted);
     }
 
     .lab-analysis-disclaimer {
@@ -590,21 +612,65 @@
         `;
       } catch (error) {
         console.error('Lab analysis failed:', error);
+        console.error('Error details:', JSON.stringify({
+          code: error?.code,
+          message: error?.message,
+          details: error?.details,
+          name: error?.name,
+          customData: error?.customData,
+          stack: error?.stack
+        }, null, 2));
         Monitor.logError('LAB_ANALYSIS_FAIL', error);
 
         const errorMsg = error?.message || 'Unknown error';
+        const errorCode = error?.code || '';
+        const imageSize = selectedImageBase64 ? `${(selectedImageBase64.length / 1024).toFixed(0)}KB` : 'N/A';
 
-        if (errorMsg.includes('unauthenticated') || error?.code === 'functions/unauthenticated') {
-          modalBody.innerHTML = `<p class="lab-analysis-error">Error: You must be logged in to use the Lab Scanner.</p>`;
-        } else if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured')) {
-          modalBody.innerHTML = `<p class="lab-analysis-error">Error: AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase.</p>`;
-        } else if (error?.code === 'functions/resource-exhausted') {
-          modalBody.innerHTML = `<p class="lab-analysis-error">Error: Rate limit reached. Please wait before trying again.</p>`;
-        } else if (error?.code === 'functions/not-found' || errorMsg.includes('not found') || errorMsg.includes('NOT_FOUND')) {
-          modalBody.innerHTML = `<p class="lab-analysis-error">Error: AI vision service not deployed. Please deploy the analyzeLabImage Cloud Function.</p>`;
+        let errorHtml = '';
+
+        if (errorCode === 'functions/unauthenticated' || errorMsg.includes('unauthenticated')) {
+          errorHtml = `
+            <p class="lab-analysis-error">You must be logged in to use the Lab Scanner.</p>
+            <p class="lab-analysis-error-detail">Please sign in and try again.</p>`;
+        } else if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured') || errorCode === 'functions/failed-precondition') {
+          errorHtml = `
+            <p class="lab-analysis-error">AI service is not configured.</p>
+            <p class="lab-analysis-error-detail">The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions.</p>`;
+        } else if (errorCode === 'functions/resource-exhausted') {
+          errorHtml = `
+            <p class="lab-analysis-error">Rate limit reached.</p>
+            <p class="lab-analysis-error-detail">Too many requests. Please wait a minute and try again.</p>`;
+        } else if (errorCode === 'functions/not-found' || errorMsg.includes('not found') || errorMsg.includes('NOT_FOUND') || errorMsg.includes('Could not find')) {
+          errorHtml = `
+            <p class="lab-analysis-error">Cloud Function "analyzeLabImage" not found.</p>
+            <p class="lab-analysis-error-detail">The backend function hasn't been deployed yet. Run:<br>
+            <code>cd functions && npm run build && firebase deploy --only functions:analyzeLabImage</code></p>`;
+        } else if (errorCode === 'functions/invalid-argument' || errorMsg.includes('too large') || errorMsg.includes('Image too large')) {
+          errorHtml = `
+            <p class="lab-analysis-error">Image too large (${imageSize}).</p>
+            <p class="lab-analysis-error-detail">Try a lower resolution photo or crop the lab report area only.</p>`;
+        } else if (errorMsg.includes('Content-Length') || errorMsg.includes('payload') || errorMsg.includes('exceeds')) {
+          errorHtml = `
+            <p class="lab-analysis-error">Image payload too large for network (${imageSize}).</p>
+            <p class="lab-analysis-error-detail">The compressed image is still too big. Try cropping the photo to just the lab results area.</p>`;
+        } else if (errorCode === 'functions/internal' || errorMsg.includes('temporarily unavailable')) {
+          errorHtml = `
+            <p class="lab-analysis-error">AI vision service error.</p>
+            <p class="lab-analysis-error-detail">The Claude API returned an error. This could be a temporary outage. Try again in a moment.</p>`;
+        } else if (errorMsg.includes('network') || errorMsg.includes('Failed to fetch') || errorMsg.includes('timeout')) {
+          errorHtml = `
+            <p class="lab-analysis-error">Network error.</p>
+            <p class="lab-analysis-error-detail">Check your internet connection and try again.</p>`;
         } else {
-          modalBody.innerHTML = `<p class="lab-analysis-error">Error: ${escapeHtml(errorMsg)}</p>`;
+          errorHtml = `
+            <p class="lab-analysis-error">Analysis failed.</p>
+            <p class="lab-analysis-error-detail">
+              ${escapeHtml(errorMsg)}<br>
+              <small>Code: ${escapeHtml(errorCode || 'none')} | Image size: ${imageSize}</small>
+            </p>`;
         }
+
+        modalBody.innerHTML = errorHtml;
       }
     }
 
