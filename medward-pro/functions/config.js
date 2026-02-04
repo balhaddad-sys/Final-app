@@ -4,7 +4,7 @@
 const UNIFIED_CONFIG = {
   // Claude API settings
   CLAUDE: {
-    MODEL: "claude-haiku-4-5-20251001",
+    MODEL: "claude-sonnet-4-20250514",
     MAX_TOKENS: 8000,
     TEMPERATURE: 0.3
   },

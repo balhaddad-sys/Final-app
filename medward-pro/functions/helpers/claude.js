@@ -45,6 +45,8 @@ async function callClaude({ apiKey, system, message, contentParts, model, maxTok
   const bodyText = await res.text();
 
   if (!res.ok) {
+    const logger = require("firebase-functions/logger");
+    logger.error("Claude API error", { status: res.status, body: bodyText.slice(0, 500), model: payload.model });
     throw new Error(`Claude API ${res.status}: ${bodyText.slice(0, 500)}`);
   }
 
