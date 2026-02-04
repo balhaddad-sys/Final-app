@@ -35,13 +35,13 @@ export const AI = {
   async askClinical(question, context = null, options = {}) {
     const startTime = Date.now();
 
-    // De-identify context if provided
-    const safeContext = context ? this._deidentify(context) : null;
-
-    // Log for audit (without PHI)
-    this._logQuery(question, !!context);
-
     try {
+      // De-identify context if provided
+      const safeContext = context ? this._deidentify(context) : null;
+
+      // Log for audit (without PHI)
+      this._logQuery(question, !!context);
+
       const result = await askClinicalFn({
         question,
         context: safeContext
@@ -57,18 +57,21 @@ export const AI = {
 
     } catch (error) {
       console.error('[AI] Query failed:', error);
+      console.error('[AI] Error code:', error?.code, 'Message:', error?.message);
 
       // Return structured error for display
       const errorMsg = error?.message || 'AI service unavailable';
-      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured')) {
+      const errorCode = error?.code || '';
+
+      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured') || errorCode === 'functions/failed-precondition') {
         return {
           sections: {
-            error: { type: 'text', content: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase.' }
+            error: { type: 'text', content: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions.' }
           },
           disclaimer: 'Service configuration required'
         };
       }
-      if (error?.code === 'functions/unauthenticated') {
+      if (errorCode === 'functions/unauthenticated') {
         return {
           sections: {
             error: { type: 'text', content: 'You must be logged in to use the AI Assistant.' }
@@ -76,12 +79,20 @@ export const AI = {
           disclaimer: 'Authentication required'
         };
       }
+      if (errorCode === 'functions/unavailable' || errorMsg.includes('Failed to fetch') || errorMsg.includes('CORS')) {
+        return {
+          sections: {
+            error: { type: 'text', content: 'Cannot reach AI service. Cloud Functions may not be deployed or there is a network issue.' }
+          },
+          disclaimer: 'Service unavailable'
+        };
+      }
 
       return {
         sections: {
-          error: { type: 'text', content: `Error: ${errorMsg}. Please try again.` }
+          error: { type: 'text', content: `Error: ${errorMsg}` }
         },
-        disclaimer: 'Service error'
+        disclaimer: 'Check browser console (F12) for details'
       };
     }
   },

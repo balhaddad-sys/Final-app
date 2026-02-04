@@ -131,13 +131,33 @@ export function renderAIAssistant(container) {
       updateMessage(loadingId, response);
 
     } catch (error) {
+      console.error('[AI Assistant] Unhandled error:', error);
+
+      // Show actual error details so the user can debug
+      const errorMsg = error?.message || error?.code || 'Unknown error';
+      const errorCode = error?.code || '';
+
+      let displayMsg;
+      if (errorCode === 'functions/unauthenticated' || errorMsg.includes('unauthenticated')) {
+        displayMsg = 'You must be logged in to use the AI Assistant. Please log in first.';
+      } else if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured') || errorCode === 'functions/failed-precondition') {
+        displayMsg = 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions.';
+      } else if (errorCode === 'functions/resource-exhausted') {
+        displayMsg = 'Rate limit reached. Please wait a moment before trying again.';
+      } else if (errorCode === 'functions/unavailable' || errorMsg.includes('CORS') || errorMsg.includes('Failed to fetch')) {
+        displayMsg = 'Cannot reach AI service. Cloud Functions may not be deployed or there is a network issue.';
+      } else {
+        displayMsg = `Error: ${errorMsg}`;
+      }
+
       updateMessage(loadingId, {
         sections: {
           error: {
             type: 'text',
-            content: 'Sorry, I encountered an error processing your request. Please try again.'
+            content: displayMsg
           }
-        }
+        },
+        disclaimer: 'Check browser console (F12) for more details'
       });
     } finally {
       isLoading = false;
