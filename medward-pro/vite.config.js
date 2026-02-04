@@ -19,6 +19,7 @@ export default defineConfig({
         ai_assistant: resolve(__dirname, 'ai_assistant.html'),
         antibiotic_guide: resolve(__dirname, 'antibiotic_guide.html'),
         oncall_assistant: resolve(__dirname, 'oncall_assistant.html'),
+        lab_scanner: resolve(__dirname, 'lab_scanner.html'),
         handover: resolve(__dirname, 'handover.html'),
         monitor: resolve(__dirname, 'monitor.html')
       },

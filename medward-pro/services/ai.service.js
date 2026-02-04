@@ -3,8 +3,9 @@
  * Handles clinical queries with structured output format
  * Implements de-identification and source citation
  */
-import { functions } from './firebase.config.js';
+import { functions, auth } from './firebase.config.js';
 import { httpsCallable } from 'firebase/functions';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Store } from '../core/store.js';
 import { EventBus } from '../core/events.js';
 
@@ -12,6 +13,25 @@ import { EventBus } from '../core/events.js';
 const askClinicalFn = httpsCallable(functions, 'askClinical');
 const getDrugInfoFn = httpsCallable(functions, 'getDrugInfo');
 const getAntibioticGuidanceFn = httpsCallable(functions, 'getAntibioticGuidance');
+
+// Auth readiness guard - wait for Firebase auth state to resolve before
+// making function calls. Without this, calls fire before onAuthStateChanged
+// resolves, sending no ID token and causing "unauthenticated" errors.
+let _authReady = false;
+let _authReadyResolve;
+const _authReadyPromise = new Promise((resolve) => { _authReadyResolve = resolve; });
+const _unsubAuth = onAuthStateChanged(auth, (user) => {
+  _authReady = true;
+  _authReadyResolve(user);
+  _unsubAuth();
+});
+async function _waitForAuth() {
+  if (_authReady) return;
+  await Promise.race([
+    _authReadyPromise,
+    new Promise((resolve) => setTimeout(resolve, 10000))
+  ]);
+}
 
 // Output sections clinicians want
 const OUTPUT_SECTIONS = [
@@ -35,6 +55,17 @@ export const AI = {
   async askClinical(question, context = null, options = {}) {
     const startTime = Date.now();
 
+    // Wait for auth state to resolve before calling Cloud Functions
+    await _waitForAuth();
+    if (!auth.currentUser) {
+      return {
+        sections: {
+          error: { type: 'text', content: 'You must be logged in to use the AI Assistant. Please log in first.' }
+        },
+        disclaimer: 'Authentication required'
+      };
+    }
+
     // De-identify context if provided
     const safeContext = context ? this._deidentify(context) : null;
 
@@ -57,29 +88,48 @@ export const AI = {
 
     } catch (error) {
       console.error('[AI] Query failed:', error);
+      console.error('[AI] Error details:', { code: error?.code, message: error?.message, details: error?.details });
 
       // Return structured error for display
       const errorMsg = error?.message || 'AI service unavailable';
-      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured')) {
+      const errorCode = error?.code || '';
+
+      if (errorMsg.includes('ANTHROPIC_API_KEY') || errorMsg.includes('not configured') || errorCode === 'functions/failed-precondition') {
         return {
           sections: {
-            error: { type: 'text', content: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase.' }
+            error: { type: 'text', content: 'AI service is not configured. The ANTHROPIC_API_KEY secret needs to be set in Firebase Cloud Functions secrets.' }
           },
           disclaimer: 'Service configuration required'
         };
       }
-      if (error?.code === 'functions/unauthenticated') {
+      if (errorCode === 'functions/unauthenticated' || errorCode === 'unauthenticated') {
         return {
           sections: {
-            error: { type: 'text', content: 'You must be logged in to use the AI Assistant.' }
+            error: { type: 'text', content: 'You must be logged in to use the AI Assistant. Please log in first.' }
           },
           disclaimer: 'Authentication required'
+        };
+      }
+      if (errorCode === 'functions/not-found' || errorMsg.includes('NOT_FOUND') || errorMsg.includes('could not be found')) {
+        return {
+          sections: {
+            error: { type: 'text', content: 'AI Cloud Functions are not deployed. Deploy with: firebase deploy --only functions' }
+          },
+          disclaimer: 'Deployment required'
+        };
+      }
+      if (errorCode === 'functions/resource-exhausted' || errorCode === 'resource-exhausted') {
+        return {
+          sections: {
+            error: { type: 'text', content: 'Rate limit reached. Please wait a moment before trying again.' }
+          },
+          disclaimer: 'Rate limited'
         };
       }
 
       return {
         sections: {
-          error: { type: 'text', content: `Error: ${errorMsg}. Please try again.` }
+          error: { type: 'text', content: `AI Error (${errorCode || 'unknown'}): ${errorMsg}. Check the browser console (F12) for details.` }
         },
         disclaimer: 'Service error'
       };
@@ -91,6 +141,14 @@ export const AI = {
    */
   async getDrugInfo(drugName, indication = null, patientContext = null) {
     const startTime = Date.now();
+
+    await _waitForAuth();
+    if (!auth.currentUser) {
+      return {
+        sections: { error: { type: 'text', content: 'You must be logged in to use Drug Info.' } },
+        disclaimer: 'Authentication required'
+      };
+    }
 
     try {
       const result = await getDrugInfoFn({
@@ -118,6 +176,14 @@ export const AI = {
    */
   async getAntibioticGuidance(condition, factors = {}) {
     const startTime = Date.now();
+
+    await _waitForAuth();
+    if (!auth.currentUser) {
+      return {
+        sections: { error: { type: 'text', content: 'You must be logged in to use Antibiotic Guide.' } },
+        disclaimer: 'Authentication required'
+      };
+    }
 
     try {
       const result = await getAntibioticGuidanceFn({
