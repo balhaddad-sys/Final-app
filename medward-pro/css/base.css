@@ -23,23 +23,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* === TYPOGRAPHY === */
+/* === TYPOGRAPHY (Clinical Sans) === */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif);
-  font-weight: var(--font-semibold);
+  font-family: var(--font-sans);
+  font-weight: var(--font-bold);
   line-height: var(--leading-tight);
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
-h1 { font-size: var(--text-3xl); }
-h2 { font-size: var(--text-2xl); }
-h3 { font-size: var(--text-xl); }
-h4 { font-size: var(--text-lg); }
+h1 { font-size: var(--text-2xl); }
+h2 { font-size: var(--text-xl); }
+h3 { font-size: var(--text-lg); }
+h4 { font-size: var(--text-base); }
 
-/* Patient names use serif for authority */
+/* Patient names: bold sans for clinical precision */
 .patient-name {
-  font-family: var(--font-serif);
-  font-weight: var(--font-semibold);
+  font-family: var(--font-sans);
+  font-weight: var(--font-bold);
+  color: var(--slate-900);
+}
+
+body.dark-theme .patient-name {
+  color: var(--slate-50);
 }
 
 /* Clinical data uses tabular figures */
