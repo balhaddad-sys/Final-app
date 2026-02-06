@@ -1,23 +1,19 @@
-/**
- * Firebase Configuration
- * Uses Vite environment variables for config
- */
+// services/firebase.config.js
+// Firebase initialization and configuration
+
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { initializeFirestore, connectFirestoreEmulator, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { Config } from '../core/config.js';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'YOUR_API_KEY',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'YOUR_PROJECT.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'YOUR_PROJECT_ID',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'YOUR_PROJECT.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'YOUR_APP_ID'
-};
+// Get Firebase config from environment
+const firebaseConfig = Config.getFirebaseConfig();
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+// Initialize services
 export const auth = getAuth(app);
 // Initialize Firestore with persistent cache (replaces enableIndexedDbPersistence)
 export const db = initializeFirestore(app, {
@@ -28,12 +24,13 @@ export const db = initializeFirestore(app, {
 export const functions = getFunctions(app);
 
 // Connect to emulators in development
-const useEmulators = import.meta.env.VITE_USE_EMULATORS === 'true';
-if (useEmulators) {
+if (Config.useEmulators) {
   try {
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    connectFunctionsEmulator(functions, 'localhost', 5001);
+    connectAuthEmulator(auth, `http://localhost:${Config.EMULATOR_PORTS.auth}`, {
+      disableWarnings: true
+    });
+    connectFirestoreEmulator(db, 'localhost', Config.EMULATOR_PORTS.firestore);
+    connectFunctionsEmulator(functions, 'localhost', Config.EMULATOR_PORTS.functions);
     console.log('[Firebase] Connected to emulators');
   } catch (e) {
     console.warn('[Firebase] Failed to connect to emulators:', e.message);
@@ -41,3 +38,8 @@ if (useEmulators) {
 }
 
 export default app;
+
+// Export for debugging
+if (Config.isDev) {
+  window.__FIREBASE__ = { app, auth, db, functions };
+}
