@@ -1,103 +1,264 @@
-/**
- * Bottom Sheet Modal System
- */
-import { EventBus, Events } from '../../core/events.js';
+// ui/components/modal.js
+// Modal dialog component
 
-let backdrop = null;
-let activeModal = null;
+import { EventBus } from '../../core/core.events.js';
 
-export function initModals() {
-  backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
-  backdrop.id = 'modal-backdrop';
-  document.body.appendChild(backdrop);
-
-  backdrop.addEventListener('click', closeModal);
-
-  EventBus.on(Events.MODAL_OPEN, openModal);
-  EventBus.on(Events.MODAL_CLOSE, closeModal);
-}
-
-export function openModal({ id, title, content, onClose }) {
-  closeModal(); // Close any existing
-
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.id = id || 'modal';
-
-  modal.innerHTML = `
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <h3>${escapeHtml(title || '')}</h3>
-      <button class="btn btn-ghost btn-icon modal-close" aria-label="Close">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    </div>
-    <div class="modal-body"></div>
-  `;
-
-  const body = modal.querySelector('.modal-body');
-  if (typeof content === 'string') {
-    body.innerHTML = content;
-  } else if (content instanceof HTMLElement) {
-    body.appendChild(content);
+class ModalManager {
+  constructor() {
+    this.activeModals = [];
+    this._setupKeyboardListener();
   }
 
-  modal.querySelector('.modal-close').addEventListener('click', closeModal);
+  _setupKeyboardListener() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.activeModals.length > 0) {
+        const topModal = this.activeModals[this.activeModals.length - 1];
+        if (topModal.closeable !== false) {
+          this.close(topModal.id);
+        }
+      }
+    });
+  }
 
-  // Swipe down to close
-  let startY = 0;
-  modal.addEventListener('touchstart', e => {
-    startY = e.touches[0].clientY;
-  }, { passive: true });
+  create(options = {}) {
+    const {
+      id = `modal-${Date.now()}`,
+      title = '',
+      content = '',
+      size = 'medium', // small, medium, large, fullscreen
+      closeable = true,
+      showHeader = true,
+      showFooter = false,
+      footerContent = '',
+      onOpen = null,
+      onClose = null,
+      className = ''
+    } = options;
 
-  modal.addEventListener('touchmove', e => {
-    const deltaY = e.touches[0].clientY - startY;
-    if (deltaY > 0) {
-      modal.style.transform = `translateY(${deltaY}px)`;
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = `modal-overlay ${className}`;
+    overlay.id = id;
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    if (title) overlay.setAttribute('aria-labelledby', `${id}-title`);
+
+    // Create modal content
+    overlay.innerHTML = `
+      <div class="modal modal-${size}">
+        ${showHeader ? `
+          <div class="modal-header">
+            <h3 id="${id}-title" class="modal-title">${title}</h3>
+            ${closeable ? '<button class="modal-close" aria-label="Close">&times;</button>' : ''}
+          </div>
+        ` : ''}
+        <div class="modal-body">
+          ${content}
+        </div>
+        ${showFooter ? `
+          <div class="modal-footer">
+            ${footerContent}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    // Close on overlay click
+    if (closeable) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          this.close(id);
+        }
+      });
+
+      const closeBtn = overlay.querySelector('.modal-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => this.close(id));
+      }
     }
-  }, { passive: true });
 
-  modal.addEventListener('touchend', e => {
-    const deltaY = e.changedTouches[0].clientY - startY;
-    if (deltaY > 100) {
-      closeModal();
-    } else {
-      modal.style.transform = '';
-    }
-  });
+    // Track modal
+    const modalData = { id, overlay, closeable, onClose };
+    this.activeModals.push(modalData);
 
-  document.body.appendChild(modal);
-  activeModal = { modal, onClose };
+    // Add to DOM
+    document.body.appendChild(overlay);
 
-  // Trigger animation
-  requestAnimationFrame(() => {
-    backdrop.classList.add('active');
-    modal.classList.add('active');
-  });
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+
+    // Animate in
+    requestAnimationFrame(() => {
+      overlay.classList.add('modal-visible');
+    });
+
+    // Focus trap
+    this._setupFocusTrap(overlay);
+
+    // Callback
+    if (onOpen) onOpen(overlay);
+
+    EventBus.emit('modal:opened', { id });
+
+    return {
+      id,
+      element: overlay,
+      close: () => this.close(id),
+      setContent: (html) => {
+        overlay.querySelector('.modal-body').innerHTML = html;
+      },
+      setTitle: (text) => {
+        const titleEl = overlay.querySelector('.modal-title');
+        if (titleEl) titleEl.textContent = text;
+      }
+    };
+  }
+
+  close(id) {
+    const index = this.activeModals.findIndex(m => m.id === id);
+    if (index === -1) return;
+
+    const modalData = this.activeModals[index];
+    const overlay = modalData.overlay;
+
+    // Animate out
+    overlay.classList.remove('modal-visible');
+
+    setTimeout(() => {
+      overlay.remove();
+
+      // Remove from tracking
+      this.activeModals.splice(index, 1);
+
+      // Restore body scroll if no more modals
+      if (this.activeModals.length === 0) {
+        document.body.style.overflow = '';
+      }
+
+      // Callback
+      if (modalData.onClose) modalData.onClose();
+
+      EventBus.emit('modal:closed', { id });
+    }, 200);
+  }
+
+  closeAll() {
+    [...this.activeModals].forEach(modal => this.close(modal.id));
+  }
+
+  _setupFocusTrap(overlay) {
+    const modal = overlay.querySelector('.modal');
+    const focusableElements = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // Focus first element
+    firstElement.focus();
+
+    modal.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    });
+  }
+
+  // Convenience methods
+  alert(message, title = 'Alert') {
+    return new Promise((resolve) => {
+      this.create({
+        title,
+        content: `<p>${message}</p>`,
+        size: 'small',
+        showFooter: true,
+        footerContent: '<button class="btn btn-primary modal-ok">OK</button>',
+        onOpen: (overlay) => {
+          overlay.querySelector('.modal-ok').addEventListener('click', () => {
+            this.close(overlay.id);
+            resolve(true);
+          });
+        }
+      });
+    });
+  }
+
+  confirm(message, title = 'Confirm') {
+    return new Promise((resolve) => {
+      const modal = this.create({
+        title,
+        content: `<p>${message}</p>`,
+        size: 'small',
+        showFooter: true,
+        footerContent: `
+          <button class="btn btn-secondary modal-cancel">Cancel</button>
+          <button class="btn btn-primary modal-confirm">Confirm</button>
+        `,
+        onOpen: (overlay) => {
+          overlay.querySelector('.modal-cancel').addEventListener('click', () => {
+            this.close(overlay.id);
+            resolve(false);
+          });
+          overlay.querySelector('.modal-confirm').addEventListener('click', () => {
+            this.close(overlay.id);
+            resolve(true);
+          });
+        },
+        onClose: () => resolve(false)
+      });
+    });
+  }
+
+  prompt(message, defaultValue = '', title = 'Input') {
+    return new Promise((resolve) => {
+      this.create({
+        title,
+        content: `
+          <p>${message}</p>
+          <input type="text" class="form-input modal-input" value="${defaultValue}">
+        `,
+        size: 'small',
+        showFooter: true,
+        footerContent: `
+          <button class="btn btn-secondary modal-cancel">Cancel</button>
+          <button class="btn btn-primary modal-submit">Submit</button>
+        `,
+        onOpen: (overlay) => {
+          const input = overlay.querySelector('.modal-input');
+          input.focus();
+          input.select();
+
+          const submit = () => {
+            this.close(overlay.id);
+            resolve(input.value);
+          };
+
+          overlay.querySelector('.modal-cancel').addEventListener('click', () => {
+            this.close(overlay.id);
+            resolve(null);
+          });
+          overlay.querySelector('.modal-submit').addEventListener('click', submit);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submit();
+          });
+        },
+        onClose: () => resolve(null)
+      });
+    });
+  }
 }
 
-export function closeModal() {
-  if (!activeModal) return;
-
-  const { modal, onClose } = activeModal;
-
-  backdrop.classList.remove('active');
-  modal.classList.remove('active');
-
-  setTimeout(() => {
-    modal.remove();
-    if (onClose) onClose();
-  }, 300);
-
-  activeModal = null;
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+export const Modal = new ModalManager();

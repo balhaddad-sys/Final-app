@@ -1,185 +1,468 @@
-/**
- * Storage Adapter - Abstraction over IndexedDB
- */
-import { getDatabase } from './storage.db.js';
+// services/storage.adapter.js
+// Wraps IndexedDB with Write-Ahead Log for guaranteed durability
+
+import { StorageDB } from './storage.db.js';
 
 export const Storage = {
-  /**
-   * Generic transaction helper
-   */
-  async _tx(storeName, mode, callback) {
-    const db = getDatabase();
-    if (!db) throw new Error('Database not initialized');
+  db: null,
 
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, mode);
-      const store = tx.objectStore(storeName);
-
-      let result;
-      try {
-        result = callback(store);
-      } catch (e) {
-        reject(e);
-        return;
-      }
-
-      tx.oncomplete = () => resolve(result?.result || 'ok');
-      tx.onerror = () => reject(tx.error);
-    });
+  async init() {
+    this.db = await StorageDB.init();
+    return this.db;
   },
 
-  // === Generic CRUD ===
-
-  async get(storeName, key) {
-    return new Promise((resolve, reject) => {
-      const db = getDatabase();
-      if (!db) { reject(new Error('Database not initialized')); return; }
-      const tx = db.transaction(storeName, 'readonly');
-      const request = tx.objectStore(storeName).get(key);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  },
-
-  async getAll(storeName) {
-    return new Promise((resolve, reject) => {
-      const db = getDatabase();
-      if (!db) { reject(new Error('Database not initialized')); return; }
-      const tx = db.transaction(storeName, 'readonly');
-      const request = tx.objectStore(storeName).getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  },
-
-  async put(storeName, item) {
-    return new Promise((resolve, reject) => {
-      const db = getDatabase();
-      if (!db) { reject(new Error('Database not initialized')); return; }
-      const tx = db.transaction(storeName, 'readwrite');
-      const request = tx.objectStore(storeName).put(item);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  },
-
-  async delete(storeName, key) {
-    return new Promise((resolve, reject) => {
-      const db = getDatabase();
-      if (!db) { reject(new Error('Database not initialized')); return; }
-      const tx = db.transaction(storeName, 'readwrite');
-      const request = tx.objectStore(storeName).delete(key);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  },
-
-  async clear(storeName) {
-    return new Promise((resolve, reject) => {
-      const db = getDatabase();
-      if (!db) { reject(new Error('Database not initialized')); return; }
-      const tx = db.transaction(storeName, 'readwrite');
-      const request = tx.objectStore(storeName).clear();
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  },
-
-  // === WAL (Write-Ahead Log) ===
+  // ========================================
+  // WRITE-AHEAD LOG (WAL) OPERATIONS
+  // This is the heart of offline reliability
+  // ========================================
 
   wal: {
     async add(mutation) {
-      return Storage.put('wal', mutation);
+      const record = {
+        id: mutation.id || crypto.randomUUID(),
+        collection: mutation.collection,
+        operation: mutation.operation,
+        docId: mutation.docId,
+        payload: mutation.payload,
+        timestamp: mutation.timestamp || Date.now(),
+        status: 'pending', // pending | synced | failed_fatal
+        retryCount: 0,
+        idempotencyKey: `${mutation.collection}:${mutation.docId}:${mutation.operation}:${Date.now()}`
+      };
+
+      await StorageDB.put('wal', record);
+      return record;
     },
 
     async getPending() {
-      return new Promise((resolve, reject) => {
-        const db = getDatabase();
-        if (!db) { reject(new Error('Database not initialized')); return; }
-        const tx = db.transaction('wal', 'readonly');
-        const index = tx.objectStore('wal').index('by_status');
-        const request = index.getAll('pending');
-        request.onsuccess = () => resolve(request.result || []);
-        request.onerror = () => reject(request.error);
-      });
+      return StorageDB.getByIndex('wal', 'by_status', 'pending');
+    },
+
+    async getAll() {
+      return StorageDB.getAll('wal');
+    },
+
+    async get(id) {
+      return StorageDB.get('wal', id);
     },
 
     async updateStatus(id, status) {
-      const item = await Storage.get('wal', id);
-      if (item) {
-        item.status = status;
-        await Storage.put('wal', item);
+      const record = await StorageDB.get('wal', id);
+      if (record) {
+        record.status = status;
+        record.lastAttempt = Date.now();
+        await StorageDB.put('wal', record);
       }
+      return record;
     },
 
     async incrementRetry(id) {
-      const item = await Storage.get('wal', id);
-      if (item) {
-        item.retryCount = (item.retryCount || 0) + 1;
-        await Storage.put('wal', item);
+      const record = await StorageDB.get('wal', id);
+      if (record) {
+        record.retryCount = (record.retryCount || 0) + 1;
+        record.lastAttempt = Date.now();
+        await StorageDB.put('wal', record);
       }
+      return record;
     },
 
-    async remove(id) {
-      return Storage.delete('wal', id);
-    },
+    async clearSynced(olderThan = 24 * 60 * 60 * 1000) {
+      const all = await StorageDB.getAll('wal');
+      const cutoff = Date.now() - olderThan;
+      const toDelete = [];
 
-    async clearSynced(maxAge = 24 * 60 * 60 * 1000) {
-      const all = await Storage.getAll('wal');
-      const now = Date.now();
-      let cleared = 0;
-
-      for (const m of all) {
-        if (m.status === 'synced' || (m.status === 'failed_fatal' && now - m.timestamp > maxAge)) {
-          await Storage.delete('wal', m.id);
-          cleared++;
+      for (const record of all) {
+        if (record.status === 'synced' && record.timestamp < cutoff) {
+          toDelete.push(record.id);
         }
       }
 
-      return { cleared };
-    },
-
-    async autoCleanup() {
-      const all = await Storage.getAll('wal');
-      const now = Date.now();
-      const MAX_AGE = 24 * 60 * 60 * 1000;
-      let cleared = 0;
-      let enforced = 0;
-
-      for (const m of all) {
-        if (m.status === 'synced') {
-          await Storage.delete('wal', m.id);
-          cleared++;
-        } else if (now - m.timestamp > MAX_AGE && m.status !== 'pending') {
-          await Storage.delete('wal', m.id);
-          enforced++;
-        }
+      if (toDelete.length > 0) {
+        await StorageDB.deleteMany('wal', toDelete);
       }
 
-      return { cleared, enforced };
+      return toDelete.length;
     },
 
     async getStats() {
-      const all = await Storage.getAll('wal');
+      const all = await StorageDB.getAll('wal');
       return {
-        total: all.length,
-        pending: all.filter(m => m.status === 'pending').length,
-        synced: all.filter(m => m.status === 'synced').length,
-        failed: all.filter(m => m.status === 'failed_fatal').length
+        pending: all.filter(r => r.status === 'pending').length,
+        synced: all.filter(r => r.status === 'synced').length,
+        failed: all.filter(r => r.status === 'failed_fatal').length,
+        total: all.length
       };
+    },
+
+    async clear() {
+      return StorageDB.clear('wal');
+    },
+
+    // Enforce max WAL size to prevent unbounded growth
+    async enforceMaxSize(maxEntries = 1000) {
+      const all = await StorageDB.getAll('wal');
+
+      if (all.length <= maxEntries) {
+        return 0;
+      }
+
+      // Sort by timestamp, oldest first
+      all.sort((a, b) => a.timestamp - b.timestamp);
+
+      // Delete oldest synced entries first, then oldest failed, keeping pending
+      const toDelete = [];
+      const pending = all.filter(r => r.status === 'pending');
+      const synced = all.filter(r => r.status === 'synced');
+      const failed = all.filter(r => r.status === 'failed_fatal');
+
+      // Delete synced first (they're already in cloud)
+      let excess = all.length - maxEntries;
+      for (const record of synced) {
+        if (excess <= 0) break;
+        toDelete.push(record.id);
+        excess--;
+      }
+
+      // Then delete old failed entries
+      for (const record of failed) {
+        if (excess <= 0) break;
+        toDelete.push(record.id);
+        excess--;
+      }
+
+      if (toDelete.length > 0) {
+        await StorageDB.deleteMany('wal', toDelete);
+        console.log(`[WAL] Cleaned up ${toDelete.length} entries to enforce max size`);
+      }
+
+      return toDelete.length;
+    },
+
+    // Auto-cleanup: clear synced entries older than 24h and enforce max size
+    async autoCleanup() {
+      const cleared = await this.clearSynced(24 * 60 * 60 * 1000);
+      const enforced = await this.enforceMaxSize(1000);
+      return { cleared, enforced };
     }
   },
 
-  // === Metadata ===
+  // ========================================
+  // PATIENT OPERATIONS
+  // ========================================
+
+  patients: {
+    async upsert(patient) {
+      const record = {
+        ...patient,
+        id: patient.id || crypto.randomUUID(),
+        updatedAt: patient.updatedAt || Date.now()
+      };
+      await StorageDB.put('patients', record);
+      return record;
+    },
+
+    async get(id) {
+      return StorageDB.get('patients', id);
+    },
+
+    async getAll() {
+      return StorageDB.getAll('patients');
+    },
+
+    async getByUnit(unitId) {
+      return StorageDB.getByIndex('patients', 'by_unit', unitId);
+    },
+
+    async getActive(unitId) {
+      const patients = await this.getByUnit(unitId);
+      return patients.filter(p => !p.deleted && p.status !== 'archived');
+    },
+
+    async getDeleted() {
+      return StorageDB.getByIndex('patients', 'by_deleted', true);
+    },
+
+    async softDelete(id) {
+      const patient = await this.get(id);
+      if (patient) {
+        patient.deleted = true;
+        patient.deletedAt = Date.now();
+        await StorageDB.put('patients', patient);
+      }
+      return patient;
+    },
+
+    async restore(id) {
+      const patient = await this.get(id);
+      if (patient) {
+        patient.deleted = false;
+        patient.deletedAt = null;
+        await StorageDB.put('patients', patient);
+      }
+      return patient;
+    },
+
+    async delete(id) {
+      return StorageDB.delete('patients', id);
+    },
+
+    async clear() {
+      return StorageDB.clear('patients');
+    }
+  },
+
+  // ========================================
+  // TASKS OPERATIONS
+  // ========================================
+
+  tasks: {
+    async upsert(task) {
+      const record = {
+        ...task,
+        id: task.id || crypto.randomUUID(),
+        updatedAt: task.updatedAt || Date.now()
+      };
+      await StorageDB.put('tasks', record);
+      return record;
+    },
+
+    async get(id) {
+      return StorageDB.get('tasks', id);
+    },
+
+    async getAll() {
+      return StorageDB.getAll('tasks');
+    },
+
+    async getByPatient(patientId) {
+      return StorageDB.getByIndex('tasks', 'by_patient', patientId);
+    },
+
+    async getCompleted() {
+      return StorageDB.getByIndex('tasks', 'by_completed', true);
+    },
+
+    async getPending() {
+      return StorageDB.getByIndex('tasks', 'by_completed', false);
+    },
+
+    async toggleComplete(id, completed) {
+      const task = await StorageDB.get('tasks', id);
+      if (task) {
+        task.completed = completed;
+        task.completedAt = completed ? Date.now() : null;
+        task.updatedAt = Date.now();
+        await StorageDB.put('tasks', task);
+      }
+      return task;
+    },
+
+    async delete(id) {
+      return StorageDB.delete('tasks', id);
+    },
+
+    async clear() {
+      return StorageDB.clear('tasks');
+    }
+  },
+
+  // ========================================
+  // UNITS OPERATIONS
+  // ========================================
+
+  units: {
+    async upsert(unit) {
+      const record = {
+        ...unit,
+        id: unit.id || crypto.randomUUID(),
+        updatedAt: unit.updatedAt || Date.now()
+      };
+      await StorageDB.put('units', record);
+      return record;
+    },
+
+    async get(id) {
+      return StorageDB.get('units', id);
+    },
+
+    async getAll() {
+      return StorageDB.getAll('units');
+    },
+
+    async delete(id) {
+      return StorageDB.delete('units', id);
+    },
+
+    async clear() {
+      return StorageDB.clear('units');
+    }
+  },
+
+  // ========================================
+  // INBOX OPERATIONS
+  // ========================================
+
+  inbox: {
+    async add(item) {
+      const record = {
+        ...item,
+        id: item.id || crypto.randomUUID(),
+        createdAt: item.createdAt || Date.now(),
+        status: item.status || 'pending'
+      };
+      await StorageDB.put('inbox', record);
+      return record;
+    },
+
+    async get(id) {
+      return StorageDB.get('inbox', id);
+    },
+
+    async getAll() {
+      return StorageDB.getAll('inbox');
+    },
+
+    async getPending() {
+      return StorageDB.getByIndex('inbox', 'by_status', 'pending');
+    },
+
+    async updateStatus(id, status) {
+      const item = await this.get(id);
+      if (item) {
+        item.status = status;
+        item.updatedAt = Date.now();
+        await StorageDB.put('inbox', item);
+      }
+      return item;
+    },
+
+    async delete(id) {
+      return StorageDB.delete('inbox', id);
+    },
+
+    async clear() {
+      return StorageDB.clear('inbox');
+    }
+  },
+
+  // ========================================
+  // METADATA OPERATIONS
+  // ========================================
 
   meta: {
     async get(key) {
-      const item = await Storage.get('meta', key);
-      return item?.value;
+      const record = await StorageDB.get('meta', key);
+      return record?.value;
     },
 
     async set(key, value) {
-      return Storage.put('meta', { key, value });
+      await StorageDB.put('meta', { key, value, updatedAt: Date.now() });
+    },
+
+    async delete(key) {
+      return StorageDB.delete('meta', key);
+    },
+
+    async getAll() {
+      const records = await StorageDB.getAll('meta');
+      const result = {};
+      records.forEach(r => {
+        result[r.key] = r.value;
+      });
+      return result;
     }
+  },
+
+  // ========================================
+  // TRASH OPERATIONS
+  // ========================================
+
+  trash: {
+    async add(item, type) {
+      const record = {
+        ...item,
+        id: item.id || crypto.randomUUID(),
+        type,
+        deletedAt: Date.now()
+      };
+      await StorageDB.put('trash', record);
+      return record;
+    },
+
+    async get(id) {
+      return StorageDB.get('trash', id);
+    },
+
+    async getAll() {
+      return StorageDB.getAll('trash');
+    },
+
+    async getByType(type) {
+      return StorageDB.getByIndex('trash', 'by_type', type);
+    },
+
+    async delete(id) {
+      return StorageDB.delete('trash', id);
+    },
+
+    async clear() {
+      return StorageDB.clear('trash');
+    }
+  },
+
+  // ========================================
+  // EXPORT/IMPORT FOR DEBUGGING
+  // ========================================
+
+  async exportAll() {
+    return {
+      patients: await StorageDB.getAll('patients'),
+      tasks: await StorageDB.getAll('tasks'),
+      units: await StorageDB.getAll('units'),
+      wal: await StorageDB.getAll('wal'),
+      meta: await StorageDB.getAll('meta'),
+      inbox: await StorageDB.getAll('inbox'),
+      trash: await StorageDB.getAll('trash'),
+      exportedAt: Date.now()
+    };
+  },
+
+  async importAll(data) {
+    // Clear existing data
+    await StorageDB.clear('patients');
+    await StorageDB.clear('tasks');
+    await StorageDB.clear('units');
+
+    // Import new data
+    if (data.patients?.length) {
+      await StorageDB.putMany('patients', data.patients);
+    }
+    if (data.tasks?.length) {
+      await StorageDB.putMany('tasks', data.tasks);
+    }
+    if (data.units?.length) {
+      await StorageDB.putMany('units', data.units);
+    }
+
+    return true;
+  },
+
+  // ========================================
+  // UTILITY
+  // ========================================
+
+  async getStats() {
+    return {
+      patients: await StorageDB.count('patients'),
+      tasks: await StorageDB.count('tasks'),
+      units: await StorageDB.count('units'),
+      wal: await this.wal.getStats(),
+      inbox: await StorageDB.count('inbox'),
+      trash: await StorageDB.count('trash')
+    };
+  },
+
+  isReady() {
+    return StorageDB.isReady();
   }
 };
